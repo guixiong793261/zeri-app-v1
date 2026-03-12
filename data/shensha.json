@@ -1,0 +1,88 @@
+{
+  "common": [
+    {
+      "name": "太岁",
+      "score": -20,
+      "description": "年之主宰，不可冒犯"
+    },
+    {
+      "name": "岁破",
+      "score": -15,
+      "description": "与太岁相冲，百事不宜"
+    },
+    {
+      "name": "月破",
+      "score": -10,
+      "description": "与月建相冲，诸事不宜"
+    },
+    {
+      "name": "四离日",
+      "score": -8,
+      "description": "春分、秋分、夏至、冬至前一日"
+    },
+    {
+      "name": "四绝日",
+      "score": -8,
+      "description": "立春、立夏、立秋、立冬前一日"
+    },
+    {
+      "name": "黄道吉日",
+      "score": 15,
+      "description": "诸事皆宜"
+    },
+    {
+      "name": "黑道凶日",
+      "score": -10,
+      "description": "诸事不宜"
+    }
+  ],
+  "marriage": [
+    {
+      "name": "大利月",
+      "score": 20,
+      "description": "婚嫁大利之月"
+    },
+    {
+      "name": "小利月",
+      "score": 10,
+      "description": "婚嫁小利之月"
+    },
+    {
+      "name": "嫁娶吉日",
+      "score": 15,
+      "description": "适合婚嫁的吉日"
+    },
+    {
+      "name": "红砂日",
+      "score": -15,
+      "description": "婚嫁忌日"
+    },
+    {
+      "name": "杨公忌日",
+      "score": -20,
+      "description": "百事不宜"
+    }
+  ],
+  "construction": [
+    {
+      "name": "三煞",
+      "score": -20,
+      "description": "修建大忌"
+    },
+    {
+      "name": "鲁班煞",
+      "score": -15,
+      "description": "修建不宜"
+    },
+    {
+      "name": "破土吉日",
+      "score": 15,
+      "description": "适合破土动工"
+    },
+    {
+      "name": "动土吉日",
+      "score": 15,
+      "description": "适合动土施工"
+    }
+  ]
+}

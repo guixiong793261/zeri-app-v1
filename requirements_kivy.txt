@@ -1,0 +1,15 @@
+# Kivy手机版依赖库
+# 专业级正五行择日软件
+
+# Kivy框架（手机端GUI）
+kivy>=2.3.0
+
+# 高精度农历转换库
+lunar-python>=1.0.0
+
+# 日志库
+loguru>=0.7.0
+
+# Pydroid 3 / QPython 用户需要安装的库
+# 在手机Python IDE中通过pip安装：
+# pip install kivy lunar-python loguru

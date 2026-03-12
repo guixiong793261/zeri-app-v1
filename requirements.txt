@@ -1,0 +1,8 @@
+# 依赖库
+# 高精度农历转换库（纯Python实现，无需编译）
+lunar-python>=1.0.0
+loguru>=0.7.0
+
+# 可选：sxtwl需要C++编译环境
+# Windows用户需安装Visual Studio Build Tools
+# sxtwl>=2.0.0

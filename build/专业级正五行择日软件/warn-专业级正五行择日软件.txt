@@ -1,0 +1,62 @@
+
+This file lists modules PyInstaller was not able to find. This does not
+necessarily mean these modules are required for running your program. Both
+Python's standard library and 3rd-party Python packages often conditionally
+import optional modules, some of which may be available only on certain
+platforms.
+
+Types of import:
+* top-level: imported at the top-level - look at these first
+* conditional: imported within an if-statement
+* delayed: imported within a function
+* optional: imported within a try-except-statement
+
+IMPORTANT: Do NOT post this list to the issue-tracker. Use it as a basis for
+            tracking down the missing module yourself. Thanks!
+
+missing module named pwd - imported by posixpath (delayed, conditional, optional), shutil (delayed, optional), tarfile (optional), pathlib (delayed, optional), subprocess (delayed, conditional, optional), netrc (delayed, conditional), getpass (delayed)
+missing module named grp - imported by shutil (delayed, optional), tarfile (optional), pathlib (delayed, optional), subprocess (delayed, conditional, optional)
+missing module named _posixsubprocess - imported by subprocess (conditional), multiprocessing.util (delayed)
+missing module named fcntl - imported by subprocess (optional)
+missing module named _frozen_importlib_external - imported by importlib._bootstrap (delayed), importlib (optional), importlib.abc (optional), zipimport (top-level)
+excluded module named _frozen_importlib - imported by importlib (optional), importlib.abc (optional), zipimport (top-level)
+missing module named org - imported by pickle (optional)
+missing module named posix - imported by os (conditional, optional), posixpath (optional), shutil (conditional), importlib._bootstrap_external (conditional)
+missing module named resource - imported by posix (top-level)
+missing module named 'org.python' - imported by copy (optional), xml.sax (delayed, conditional)
+missing module named _posixshmem - imported by multiprocessing.resource_tracker (conditional), multiprocessing.shared_memory (conditional)
+missing module named _scproxy - imported by urllib.request (conditional)
+missing module named termios - imported by getpass (optional)
+missing module named java - imported by xml.sax._exceptions (conditional)
+missing module named multiprocessing.BufferTooShort - imported by multiprocessing (top-level), multiprocessing.connection (top-level)
+missing module named multiprocessing.AuthenticationError - imported by multiprocessing (top-level), multiprocessing.connection (top-level)
+missing module named multiprocessing.get_context - imported by multiprocessing (top-level), multiprocessing.pool (top-level), multiprocessing.managers (top-level), multiprocessing.sharedctypes (top-level), loguru._logger (top-level)
+missing module named multiprocessing.TimeoutError - imported by multiprocessing (top-level), multiprocessing.pool (top-level)
+missing module named multiprocessing.set_start_method - imported by multiprocessing (top-level), multiprocessing.spawn (top-level)
+missing module named multiprocessing.get_start_method - imported by multiprocessing (top-level), multiprocessing.spawn (top-level)
+missing module named multiprocessing.current_process - imported by multiprocessing (top-level), loguru._logger (top-level)
+missing module named pyimod02_importers - imported by C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgutil.py (delayed)
+missing module named 'modules.日期测试窗口' - imported by D:\自编择日软件\专业级正五行择日软件\主程序.py (delayed, optional)
+missing module named aiocontextvars - imported by loguru._contextvars (delayed, conditional)
+missing module named exceptiongroup - imported by loguru._better_exceptions (conditional, optional)
+missing module named IPython - imported by loguru._colorama (delayed, conditional, optional)
+missing module named ipykernel - imported by loguru._colorama (delayed, conditional, optional)
+missing module named asyncio.DefaultEventLoopPolicy - imported by asyncio (delayed, conditional), asyncio.events (delayed, conditional)
+missing module named __builtin__ - imported by sxtwl (optional)
+missing module named 工具函数 - imported by modules.八字分析工具 (optional), modules.四柱计算器 (optional), modules.shensha.通用神煞 (delayed, optional), modules.shensha.嫁娶神煞 (optional), modules.shensha.修造神煞 (optional), modules.shensha.入宅神煞 (optional)
+missing module named 八字分析工具 - imported by modules.喜用神计算器 (optional)
+missing module named modules.八字工具整合 - imported by modules.工具函数 (optional), modules.评分器 (optional)
+missing module named 八字工具整合 - imported by modules.评分器 (optional)
+missing module named 喜用神计算器 - imported by modules.评分器 (optional)
+missing module named 黄道 - imported by modules.评分器 (optional)
+missing module named rules - imported by modules.评分器 (optional)
+missing module named shensha - imported by modules.shensha (optional), modules.评分器 (optional)
+missing module named 'shensha.入宅神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.安床神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.安葬神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.出行神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.开业神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.作灶神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.修造神煞' - imported by modules.shensha (optional)
+missing module named 'shensha.嫁娶神煞' - imported by modules.shensha (optional)
+missing module named 神煞基类 - imported by modules.shensha.通用神煞 (optional), modules.shensha.嫁娶神煞 (optional), modules.shensha.修造神煞 (optional), modules.shensha.作灶神煞 (optional), modules.shensha.开业神煞 (optional), modules.shensha.出行神煞 (optional), modules.shensha.安葬神煞 (optional), modules.shensha.安床神煞 (optional), modules.shensha.入宅神煞 (optional)
