@@ -1,5 +1,2 @@
-# 主入口文件
-from main_kivy_complete import ZeriAppKivy
-
-if __name__ == '__main__':
-    ZeriAppKivy().run()
+# 主程序入口 - 转发到Kivy版本
+import 主程序_kivy版

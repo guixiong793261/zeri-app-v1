@@ -1,0 +1,28 @@
+[
+  {
+    "name": "新娘",
+    "year": "1999",
+    "month": "4",
+    "day": "5",
+    "hour": "6",
+    "minute": "0",
+    "gender": "女",
+    "sizhu": "己卯 丁卯 丁亥 癸卯",
+    "xishen": "木、火",
+    "yongshen": "火",
+    "fuzi": "夫星: 金, 子星: 土"
+  },
+  {
+    "name": "新郎",
+    "year": "1998",
+    "month": "10",
+    "day": "13",
+    "hour": "23",
+    "minute": "0",
+    "gender": "男",
+    "sizhu": "戊寅 壬戌 癸巳 甲子",
+    "xishen": "金、水",
+    "yongshen": "金",
+    "fuzi": ""
+  }
+]

@@ -71,6 +71,9 @@
 2. 事主信息为可选输入，但提供后可获得更精准的分析
 3. 修造类事项需要选择山向和宅型
 4. 系统会自动避开明显的大凶之日
+5. 婚嫁择日需提供新娘新郎的完整出生信息（含日柱）以计算夫子星
+6. 造葬择日使用动态计算的山方煞、克山运、星曜煞等函数，更准确
+7. 静态数据中的山方煞、克山运仅供参考，建议以动态计算为准
 
 【版本信息】
 版本: 1.0.0
@@ -84,6 +87,7 @@ from tkinter import ttk, messagebox, scrolledtext, filedialog
 from datetime import date, datetime, timedelta
 import json
 import os
+import re
 import sys
 
 # 添加项目根目录到路径
@@ -92,7 +96,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from modules.四柱计算器 import calculate_sizhu, analyze_sizhu, get_lunar_date
-from modules.评分器 import calculate_score
+from modules.评分器 import calculate_score, Scorer
 from modules.工具函数 import DI_ZHI_WUXING
 from modules.喜用神计算器 import calculate_xishen_yongshen
 from modules.八字排盘 import BaZiPanPan
@@ -201,6 +205,9 @@ class ZeriApp:
         file_menu.add_command(label="导入文件", command=self.import_file)
         file_menu.add_command(label="查看记录", command=self.view_records)
         file_menu.add_separator()
+        file_menu.add_command(label="保存事主信息", command=self.save_owners_info)
+        file_menu.add_command(label="加载事主信息", command=self.load_owners_info)
+        file_menu.add_separator()
         file_menu.add_command(label="退出", command=self.root.quit)
         
         # 工具菜单
@@ -224,24 +231,74 @@ class ZeriApp:
         # 配置全局样式
         self.configure_styles()
         
-        # 创建主滚动区域
-        main_canvas = tk.Canvas(self.root, bg="#ffffff")
-        main_scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=main_canvas.yview)
-        self.main_frame = ttk.Frame(main_canvas, padding="20", style="MainFrame.TFrame")
+        # 创建主滚动区域 - 添加水平和垂直滚动条
+        main_frame_container = ttk.Frame(self.root)
+        main_frame_container.pack(fill=tk.BOTH, expand=True)
         
+        main_canvas = tk.Canvas(main_frame_container, bg="#ffffff")
+        v_scrollbar = ttk.Scrollbar(main_frame_container, orient="vertical", command=main_canvas.yview)
+        h_scrollbar = ttk.Scrollbar(main_frame_container, orient="horizontal", command=main_canvas.xview)
+        
+        self.main_frame = ttk.Frame(main_canvas, padding="10", style="MainFrame.TFrame")
+        
+        # 配置滚动
         self.main_frame.bind(
             "<Configure>",
             lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all"))
         )
         
-        main_canvas.create_window((0, 0), window=self.main_frame, anchor="nw", width=self.root.winfo_screenwidth()-50)
-        main_canvas.configure(yscrollcommand=main_scrollbar.set)
+        # 创建窗口并保存ID
+        window_id = main_canvas.create_window((0, 0), window=self.main_frame, anchor="nw")
         
-        main_canvas.pack(side="left", fill="both", expand=True)
-        main_scrollbar.pack(side="right", fill="y")
+        # 绑定窗口大小变化事件，动态调整Canvas宽度
+        def on_window_resize(event):
+            canvas_width = main_frame_container.winfo_width() - 40  # 进一步缩小宽度
+            if canvas_width > 0:
+                main_canvas.itemconfig(window_id, width=canvas_width)
+            main_canvas.configure(scrollregion=main_canvas.bbox("all"))
         
-        # 绑定鼠标滚轮
-        main_canvas.bind_all("<MouseWheel>", lambda e: main_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        # 绑定窗口大小变化事件
+        main_frame_container.bind("<Configure>", on_window_resize)
+        
+        # 配置Canvas和滚动条
+        main_canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+        
+        # 配置滚动条样式 - 增大三角按键
+        style = ttk.Style()
+        style.configure("Custom.Vertical.TScrollbar", 
+                       arrowsize=20,  # 增大垂直滚动条箭头大小
+                       width=20)     # 增大滚动条宽度
+        style.configure("Custom.Horizontal.TScrollbar", 
+                       arrowsize=20,  # 增大水平滚动条箭头大小
+                       width=20)     # 增大滚动条宽度
+        
+        # 应用自定义样式
+        v_scrollbar.configure(style="Custom.Vertical.TScrollbar")
+        h_scrollbar.configure(style="Custom.Horizontal.TScrollbar")
+        
+        # 布局 - 调整滚动条位置，使其更容易触摸
+        main_canvas.grid(row=0, column=0, sticky="nsew", padx=(0, 5))  # 右边留出空间
+        v_scrollbar.grid(row=0, column=1, sticky="ns", padx=(0, 5))    # 垂直滚动条向左移动
+        h_scrollbar.grid(row=1, column=0, sticky="ew", pady=(5, 0))    # 水平滚动条向上移动
+        
+        # 配置网格权重
+        main_frame_container.grid_rowconfigure(0, weight=1)
+        main_frame_container.grid_columnconfigure(0, weight=1)
+        
+        # 绑定鼠标滚轮（垂直滚动）
+        main_canvas.bind("<MouseWheel>", lambda e: main_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        # 绑定Shift+鼠标滚轮（水平滚动）
+        main_canvas.bind("<Shift-MouseWheel>", lambda e: main_canvas.xview_scroll(int(-1*(e.delta/120)), "units"))
+        
+        # 添加触摸移动功能
+        self._touch_start_x = 0
+        self._touch_start_y = 0
+        self._touch_start_scroll_x = 0
+        self._touch_start_scroll_y = 0
+        
+        # 绑定触摸事件
+        main_canvas.bind("<Button-1>", self._on_touch_start)
+        main_canvas.bind("<B1-Motion>", self._on_touch_move)
         
         # 标题区域
         title_frame = ttk.Frame(self.main_frame, style="TitleFrame.TFrame")
@@ -315,6 +372,10 @@ class ZeriApp:
         button_frame = ttk.Frame(self.main_frame)
         button_frame.pack(fill=tk.X, pady=8, padx=20)
         
+        ttk.Button(button_frame, text="分析年份", command=self.analyze_year, 
+                  width=12).pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="分析月份", command=self.analyze_month, 
+                  width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="开始择日", command=self.start_calculation, 
                   width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="日课评分", command=self.open_score_system, 
@@ -330,62 +391,95 @@ class ZeriApp:
         ttk.Button(button_frame, text="帮助", command=self.show_help, 
                   width=12).pack(side=tk.RIGHT, padx=6)
         
-        # 左右分栏区域（事主信息在左，择日结果在右）
+        # 上下布局区域（事主信息在上，择日结果在下）
         content_frame = ttk.Frame(self.main_frame)
-        content_frame.pack(fill=tk.BOTH, expand=True, pady=15, padx=20)
+        content_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
         
-        # 左侧：事主信息
-        self.owners_frame = ttk.LabelFrame(content_frame, text="事主信息", padding="20")
-        self.owners_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(0, 20))
-        self.owners_frame.configure(width=400)
+        # 上方：事主信息
+        self.owners_frame = ttk.LabelFrame(content_frame, text="事主信息", padding="10")
+        self.owners_frame.pack(side=tk.TOP, fill=tk.X, pady=(0, 10), padx=5)
         self.update_owners_frame()
         
-        # 右侧：择日结果
-        result_frame = ttk.LabelFrame(content_frame, text="择日结果", padding="20")
-        result_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(20, 0))
-        
+        # 下方：择日结果
+        result_frame = ttk.LabelFrame(content_frame, text="择日结果", padding="10")
+        result_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, pady=(10, 0), padx=5)
+
+        # 输出模式选择区域
+        output_mode_frame = ttk.Frame(result_frame)
+        output_mode_frame.pack(fill=tk.X, pady=(0, 5))
+
+        ttk.Label(output_mode_frame, text="输出模式：", font=("微软雅黑", 9)).pack(side=tk.LEFT, padx=(0, 8))
+
+        self.output_mode_var = tk.StringVar(value="normal")
+        output_mode_radio_frame = ttk.Frame(output_mode_frame)
+        output_mode_radio_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # 垂直排列单选按钮，适应屏幕
+        ttk.Radiobutton(output_mode_radio_frame, text="正常平分（含扣分）",
+                       variable=self.output_mode_var, value="normal").pack(side=tk.TOP, anchor=tk.W, pady=2)
+        ttk.Radiobutton(output_mode_radio_frame, text="无扣分输出（各项满分）",
+                       variable=self.output_mode_var, value="nodeduct").pack(side=tk.TOP, anchor=tk.W, pady=2)
+
         # 按钮区域
         result_button_frame = ttk.Frame(result_frame)
-        result_button_frame.pack(fill=tk.X, pady=(0, 15))
+        result_button_frame.pack(fill=tk.X, pady=(0, 10))
         
+        # 垂直排列按钮，适应屏幕
         ttk.Button(result_button_frame, text="全部导入到评分系统", 
-                  command=self.import_all_to_score_system, width=25).pack(side=tk.LEFT, padx=10)
+                  command=self.import_all_to_score_system, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
         ttk.Button(result_button_frame, text="清空结果", 
-                  command=self.clear_results, width=15).pack(side=tk.LEFT, padx=10)
+                  command=self.clear_results, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
+        
+        # 结果列表包装器 - 使用网格布局
+        tree_frame = ttk.Frame(result_frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True)
         
         # 结果列表
-        columns = ("日期/四柱", "评分", "等级", "四柱", "月令得分", "喜用神得分", "黄道得分")
-        self.result_tree = ttk.Treeview(result_frame, columns=columns, show="headings", height=15)
+        columns = ("日期/四柱", "评分", "等级", "四柱", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "吉神信息", "利月", "事主信息")
+        self.result_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
         
-        # 设置列宽
-        self.result_tree.column("日期/四柱", width=120)
-        self.result_tree.column("评分", width=60, anchor=tk.CENTER)
-        self.result_tree.column("等级", width=80, anchor=tk.CENTER)
-        self.result_tree.column("四柱", width=180)
-        self.result_tree.column("月令得分", width=70, anchor=tk.CENTER)
-        self.result_tree.column("喜用神得分", width=80, anchor=tk.CENTER)
-        self.result_tree.column("黄道得分", width=70, anchor=tk.CENTER)
+        # 设置列宽 - 适应屏幕
+        self.result_tree.column("日期/四柱", width=80)
+        self.result_tree.column("评分", width=35, anchor=tk.CENTER)
+        self.result_tree.column("等级", width=40, anchor=tk.CENTER)
+        self.result_tree.column("四柱", width=100)
+        self.result_tree.column("五行得分", width=45, anchor=tk.CENTER)
+        self.result_tree.column("月令得分", width=45, anchor=tk.CENTER)
+        self.result_tree.column("喜用神得分", width=50, anchor=tk.CENTER)
+        self.result_tree.column("黄道得分", width=45, anchor=tk.CENTER)
+        self.result_tree.column("地支关系", width=80)
+        self.result_tree.column("吉神信息", width=80)
+        self.result_tree.column("利月", width=45, anchor=tk.CENTER)
+        self.result_tree.column("事主信息", width=100)
         
         # 设置列标题
         for col in columns:
             self.result_tree.heading(col, text=col, anchor=tk.CENTER)
         
-        # 滚动条
-        tree_scrollbar = ttk.Scrollbar(result_frame, orient="vertical", command=self.result_tree.yview)
-        self.result_tree.configure(yscrollcommand=tree_scrollbar.set)
+        # 滚动条 - 添加垂直和水平滚动条
+        tree_v_scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.result_tree.yview)
+        tree_h_scrollbar = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.result_tree.xview)
+        self.result_tree.configure(yscrollcommand=tree_v_scrollbar.set, xscrollcommand=tree_h_scrollbar.set)
         
-        # 结果列表包装器
-        tree_frame = ttk.Frame(result_frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True)
+        # 使用网格布局 - 调整滚动条位置，使其更容易触摸
+        self.result_tree.grid(row=0, column=0, sticky="nsew", padx=(0, 5))  # 右边留出空间
+        tree_v_scrollbar.grid(row=0, column=1, sticky="ns", padx=(0, 5))    # 垂直滚动条向左移动
+        tree_h_scrollbar.grid(row=1, column=0, sticky="ew", pady=(5, 0))    # 水平滚动条向上移动
         
-        self.result_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        tree_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # 配置网格权重
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
         
         # 绑定双击事件
         self.result_tree.bind("<Double-1>", self.on_result_double_click)
         
         # 绑定鼠标悬停效果
         self.result_tree.bind("<Motion>", self.on_tree_motion)
+        
+        # 绑定触摸事件到结果树
+        self.result_tree.bind("<Button-1>", self._on_tree_touch_start)
+        self.result_tree.bind("<B1-Motion>", self._on_tree_touch_move)
+        self.result_tree.bind("<ButtonRelease-1>", self._on_tree_touch_end)
         
         # 为不同星级设置行背景色
         self.result_tree.tag_configure('5star', background='#FFF9E6')  # 淡金色背景
@@ -878,6 +972,18 @@ class ZeriApp:
         self.owners_info = []
         event_type = self.event_var.get()
         
+        # 存储所有输入框以便键盘导航
+        all_entries = []
+        
+        # 方案名称行
+        plan_row = ttk.Frame(self.owners_frame)
+        plan_row.pack(fill=tk.X, pady=2)
+        ttk.Label(plan_row, text="方案名称:").pack(side=tk.LEFT, padx=5)
+        self.plan_name_var = tk.StringVar(value="")
+        plan_entry = ttk.Entry(plan_row, textvariable=self.plan_name_var, width=20)
+        plan_entry.pack(side=tk.LEFT, padx=2)
+        all_entries.append(plan_entry)
+
         # 添加提示标签
         if event_type != "嫁娶":
             hint_label = ttk.Label(self.owners_frame, 
@@ -889,15 +995,11 @@ class ZeriApp:
         if event_type == "嫁娶":
             owners = ["新娘", "新郎"]
         elif event_type == "安葬":
-            # 安葬需要死者（逝者）和孝子（家属）
             owners = ["死者", "孝子1", "孝子2", "孝子3"]
         elif event_type in ["修造", "动土", "入宅", "作灶", "开业", "出行", "安床"]:
             owners = ["事主1", "事主2", "事主3", "事主4"]
         else:
             owners = ["事主"]
-        
-        # 存储所有输入框以便键盘导航
-        all_entries = []
         
         for owner in owners:
             owner_frame = ttk.Frame(self.owners_frame)
@@ -907,7 +1009,12 @@ class ZeriApp:
             date_row = ttk.Frame(owner_frame)
             date_row.pack(fill=tk.X, pady=2)
             
-            ttk.Label(date_row, text=f"{owner}:", width=10).pack(side=tk.LEFT, padx=5, pady=2)
+            # 姓名输入框（可编辑）
+            name_var = tk.StringVar(value=owner)
+            ttk.Label(date_row, text="姓名:").pack(side=tk.LEFT, padx=5, pady=2)
+            name_entry = ttk.Entry(date_row, textvariable=name_var, width=8)
+            name_entry.pack(side=tk.LEFT, padx=2)
+            all_entries.append(name_entry)
             
             # 默认值设置
             if event_type == "嫁娶":
@@ -933,6 +1040,12 @@ class ZeriApp:
             ttk.Label(date_row, text="性别:").pack(side=tk.LEFT, padx=(10, 0))
             ttk.Radiobutton(date_row, text="男", variable=gender_var, value='男', width=3).pack(side=tk.LEFT, padx=2)
             ttk.Radiobutton(date_row, text="女", variable=gender_var, value='女', width=3).pack(side=tk.LEFT, padx=2)
+            
+            # 公历/农历切换
+            calendar_type_var = tk.StringVar(value='solar')  # 'solar' 或 'lunar'
+            ttk.Label(date_row, text="日历:").pack(side=tk.LEFT, padx=(10, 0))
+            ttk.Radiobutton(date_row, text="公历", variable=calendar_type_var, value='solar', width=4).pack(side=tk.LEFT, padx=1)
+            ttk.Radiobutton(date_row, text="农历", variable=calendar_type_var, value='lunar', width=4).pack(side=tk.LEFT, padx=1)
             
             ttk.Label(date_row, text="年:").pack(side=tk.LEFT)
             year_entry = ttk.Entry(date_row, textvariable=year_var, width=6)
@@ -968,6 +1081,12 @@ class ZeriApp:
             ttk.Label(sizhu_row, textvariable=sizhu_var, 
                      font=("微软雅黑", 10, "bold")).pack(side=tk.LEFT, padx=5)
             
+            # 生肖显示
+            zodiac_var = tk.StringVar(value="")
+            ttk.Label(sizhu_row, text="生肖:").pack(side=tk.LEFT, padx=(20, 0))
+            ttk.Label(sizhu_row, textvariable=zodiac_var, 
+                     font=("微软雅黑", 10, "bold"), foreground="blue").pack(side=tk.LEFT, padx=2)
+            
             # 喜用神显示行
             xishen_var = tk.StringVar(value="")
             yongshen_var = tk.StringVar(value="")
@@ -981,23 +1100,54 @@ class ZeriApp:
             ttk.Label(xishen_row, textvariable=yongshen_var, foreground="green").pack(side=tk.LEFT, padx=5)
             
             # 夫星子星显示（婚嫁专用）
+            fu_xing_var = tk.StringVar(value="")
+            zi_xing_var = tk.StringVar(value="")
             fuzi_var = tk.StringVar(value="")
+            yintai_var = tk.StringVar(value="")
+            yangqi_var = tk.StringVar(value="")
             if event_type == "嫁娶":
-                fuzi_row = ttk.Frame(owner_frame)
-                fuzi_row.pack(fill=tk.X, pady=2)
+                # 夫星显示
+                fu_xing_row = ttk.Frame(owner_frame)
+                fu_xing_row.pack(fill=tk.X, pady=2)
                 
-                ttk.Label(fuzi_row, text="夫星/子星:", width=10).pack(side=tk.LEFT, padx=5)
-                ttk.Label(fuzi_row, textvariable=fuzi_var, foreground="purple").pack(side=tk.LEFT, padx=5)
+                ttk.Label(fu_xing_row, text="夫星:", width=10).pack(side=tk.LEFT, padx=5)
+                ttk.Label(fu_xing_row, textvariable=fu_xing_var, foreground="purple").pack(side=tk.LEFT, padx=5)
+                
+                # 子星显示
+                zi_xing_row = ttk.Frame(owner_frame)
+                zi_xing_row.pack(fill=tk.X, pady=2)
+                
+                ttk.Label(zi_xing_row, text="子星:", width=10).pack(side=tk.LEFT, padx=5)
+                ttk.Label(zi_xing_row, textvariable=zi_xing_var, foreground="purple").pack(side=tk.LEFT, padx=5)
+                
+                # 阴胎阳气显示（仅新娘）
+                if owner == "新娘":
+                    yintai_row = ttk.Frame(owner_frame)
+                    yintai_row.pack(fill=tk.X, pady=2)
+                    
+                    ttk.Label(yintai_row, text="阴胎:", width=10).pack(side=tk.LEFT, padx=5)
+                    ttk.Label(yintai_row, textvariable=yintai_var, foreground="green").pack(side=tk.LEFT, padx=5)
+                    
+                    yangqi_row = ttk.Frame(owner_frame)
+                    yangqi_row.pack(fill=tk.X, pady=2)
+                    
+                    ttk.Label(yangqi_row, text="阳气:", width=10).pack(side=tk.LEFT, padx=5)
+                    ttk.Label(yangqi_row, textvariable=yangqi_var, foreground="red").pack(side=tk.LEFT, padx=5)
+                    
+                    # 保存为实例变量，供calculate_owner_sizhu方法使用
+                    self.yintai_var = yintai_var
+                    self.yangqi_var = yangqi_var
             
             # 计算按钮
             calc_btn = ttk.Button(owner_frame, text="计算四柱", 
                                  command=lambda y=year_var, m=month_var, d=day_var, 
                                  h=hour_var, mi=minute_var, g=gender_var, o=owner, s=sizhu_var, 
-                                 x=xishen_var, yg=yongshen_var, fz=fuzi_var: 
-                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fz))
+                                 x=xishen_var, yg=yongshen_var, fz=fuzi_var, yt=yintai_var, yq=yangqi_var,
+                                 ct=calendar_type_var, z=zodiac_var, fx=fu_xing_var, zx=zi_xing_var: 
+                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fz, yt, yq, ct, z, fx, zx))
             calc_btn.pack(side=tk.LEFT, padx=5, pady=2)
-            
-            # 八字排盘详情按钮
+             
+             # 八字排盘详情按钮
             detail_btn = ttk.Button(owner_frame, text="八字排盘详情", 
                                    command=lambda y=year_var, m=month_var, d=day_var, 
                                    h=hour_var, mi=minute_var, g=gender_var, o=owner: 
@@ -1006,7 +1156,8 @@ class ZeriApp:
             
             # 保存事主信息
             owner_info = {
-                'name': owner,
+                'name': name_var,
+                'role': owner,
                 'year': year_var,
                 'month': month_var,
                 'day': day_var,
@@ -1016,12 +1167,338 @@ class ZeriApp:
                 'sizhu_var': sizhu_var,
                 'xishen_var': xishen_var,
                 'yongshen_var': yongshen_var,
-                'fuzi_var': fuzi_var
+                'fuzi_var': fuzi_var,
+                'yintai_var': yintai_var,
+                'yangqi_var': yangqi_var
             }
             self.owners_info.append(owner_info)
         
         # 为所有输入框绑定键盘导航
         self._bind_entry_navigation(all_entries)
+    
+    def analyze_year(self):
+        """分析年份吉凶"""
+        try:
+            # 获取事项类型
+            event_type = self.event_var.get()
+            
+            # 获取事主信息
+            owners = []
+            for owner_info in self.owners_info:
+                try:
+                    # 添加防御性检查
+                    year_str = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
+                    month_str = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
+                    day_str = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                    
+                    # 检查是否填写了日期（年、月、日都必须填写）
+                    if not (year_str and month_str and day_str):
+                        continue
+                    
+                    hour_str = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
+                    minute_str = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
+                    gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                    
+                    year = int(year_str)
+                    month = int(month_str)
+                    day = int(day_str)
+                    hour = int(hour_str)
+                    minute = int(minute_str)
+                    
+                    name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
+                    role = owner_info.get('role', '')
+                    
+                    # 检查日期有效性
+                    try:
+                        birth_date = date(year, month, day)
+                    except ValueError as e:
+                        # 处理无效日期，使用当月最后一天
+                        import calendar
+                        last_day = calendar.monthrange(year, month)[1]
+                        birth_date = date(year, month, last_day)
+                    
+                    owner = {
+                        'name': name,
+                        'role': role,
+                        'birth_date': birth_date,
+                        'birth_hour': hour,
+                        'birth_minute': minute,
+                        '性别': gender
+                    }
+                    owners.append(owner)
+                except (ValueError, AttributeError):
+                    # 跳过未填写的事主或格式错误的事主
+                    pass
+            
+            # 获取年份范围
+            start_date_str = self.start_date.get()
+            end_date_str = self.end_date.get()
+            
+            # 解析日期字符串获取年份
+            try:
+                start_year = int(start_date_str.split('-')[0])
+                end_year = int(end_date_str.split('-')[0])
+            except (IndexError, ValueError):
+                messagebox.showerror("错误", "日期格式不正确，请使用 YYYY-MM-DD 格式")
+                return
+            
+            if start_year > end_year:
+                messagebox.showerror("错误", "开始年份不能大于结束年份")
+                return
+            
+            # 获取山向信息
+            shan_xiang = getattr(self, 'shan_xiang', None)
+            shan_xiang_value = shan_xiang.get() if shan_xiang else None
+            
+            # 获取兼向信息
+            jian_xiang = getattr(self, 'jian_xiang', None)
+            jian_xiang_value = jian_xiang.get() if jian_xiang else None
+            
+            # 创建评分器
+            scorer = Scorer()
+            
+            # 分析年份
+            results = []
+            for year in range(start_year, end_year + 1):
+                analysis = scorer.analyze_year(year, event_type, owners, shan_xiang_value, jian_xiang_value)
+                results.append(analysis)
+            
+            # 显示年份分析结果
+            self.show_year_analysis(results)
+            
+        except Exception as e:
+            messagebox.showwarning("警告", f"分析年份时出错: {e}")
+    
+    def show_year_analysis(self, results):
+        """显示年份分析结果"""
+        # 创建结果窗口
+        window = tk.Toplevel(self.root)
+        window.title("年份分析结果")
+        window.geometry("800x600")
+        window.resizable(True, True)
+        
+        # 创建结果表格
+        frame = ttk.Frame(window)
+        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # 创建Treeview
+        tree = ttk.Treeview(frame, columns=("year", "year_gz", "level", "score", "suitable", "reasons"), show="headings")
+        
+        # 设置列标题
+        tree.heading("year", text="年份")
+        tree.heading("year_gz", text="干支")
+        tree.heading("level", text="等级")
+        tree.heading("score", text="分数")
+        tree.heading("suitable", text="是否适合")
+        tree.heading("reasons", text="原因")
+        
+        # 设置列宽 - 压缩前面列宽，给原因列更多空间
+        tree.column("year", width=60)
+        tree.column("year_gz", width=60)
+        tree.column("level", width=50)
+        tree.column("score", width=50)
+        tree.column("suitable", width=60)
+        tree.column("reasons", width=450)
+        
+        # 添加滚动条
+        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        tree.pack(fill=tk.BOTH, expand=True)
+        
+        # 添加数据
+        for result in results:
+            suitable = "是" if result['suitable'] else "否"
+            reasons = "; ".join(result['reasons']) if result['reasons'] else "无"
+            
+            tree.insert("", tk.END, values=(
+                result['year'],
+                result['year_gz'],
+                result['level'],
+                result['score'],
+                suitable,
+                reasons
+            ))
+        
+        # 添加选择按钮
+        button_frame = ttk.Frame(window)
+        button_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        def on_select():
+            selected = tree.selection()
+            if selected:
+                item = tree.item(selected[0])
+                year = int(item['values'][0])
+                # 更新主界面的年份范围
+                # 设置开始日期和结束日期为该年的1月1日到12月31日
+                self.start_date.set(f"{year}-01-01")
+                self.end_date.set(f"{year}-12-31")
+                window.destroy()
+                # 自动进入月份分析
+                self.analyze_month()
+            else:
+                messagebox.showinfo("提示", "请选择一个年份")
+        
+        ttk.Button(button_frame, text="选择此年份并分析月份", command=on_select).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="关闭", command=window.destroy).pack(side=tk.RIGHT, padx=5)
+    
+    def analyze_month(self):
+        """分析月份吉凶"""
+        try:
+            # 获取事项类型
+            event_type = self.event_var.get()
+            
+            # 获取事主信息
+            owners = []
+            for owner_info in self.owners_info:
+                try:
+                    # 添加防御性检查
+                    year_str = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
+                    month_str = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
+                    day_str = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                    
+                    # 检查是否填写了日期（年、月、日都必须填写）
+                    if not (year_str and month_str and day_str):
+                        continue
+                    
+                    hour_str = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
+                    minute_str = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
+                    gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                    
+                    year = int(year_str)
+                    month = int(month_str)
+                    day = int(day_str)
+                    hour = int(hour_str)
+                    minute = int(minute_str)
+                    
+                    name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
+                    role = owner_info.get('role', '')
+                    
+                    # 检查日期有效性
+                    try:
+                        birth_date = date(year, month, day)
+                    except ValueError as e:
+                        # 处理无效日期，使用当月最后一天
+                        import calendar
+                        last_day = calendar.monthrange(year, month)[1]
+                        birth_date = date(year, month, last_day)
+                    
+                    owner = {
+                        'name': name,
+                        'role': role,
+                        'birth_date': birth_date,
+                        'birth_hour': hour,
+                        'birth_minute': minute,
+                        '性别': gender
+                    }
+                    owners.append(owner)
+                except (ValueError, AttributeError):
+                    # 跳过未填写的事主或格式错误的事主
+                    pass
+            
+            # 获取年份
+            start_date_str = self.start_date.get()
+            try:
+                year = int(start_date_str.split('-')[0])
+            except (IndexError, ValueError):
+                messagebox.showerror("错误", "日期格式不正确，请使用 YYYY-MM-DD 格式")
+                return
+            
+            # 获取山向信息
+            shan_xiang = getattr(self, 'shan_xiang', None)
+            shan_xiang_value = shan_xiang.get() if shan_xiang else None
+            
+            # 创建评分器
+            scorer = Scorer()
+            
+            # 分析月份
+            results = []
+            for month in range(1, 13):
+                analysis = scorer.analyze_month(year, month, event_type, owners, shan_xiang_value)
+                results.append(analysis)
+            
+            # 显示月份分析结果
+            self.show_month_analysis(results, year)
+            
+        except ValueError as e:
+            messagebox.showwarning("警告", f"请输入有效的年份: {e}")
+    
+    def show_month_analysis(self, results, year):
+        """显示月份分析结果"""
+        # 创建结果窗口
+        window = tk.Toplevel(self.root)
+        window.title(f"{year}年月份分析结果")
+        window.geometry("800x600")
+        window.resizable(True, True)
+        
+        # 创建结果表格
+        frame = ttk.Frame(window)
+        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # 创建Treeview
+        tree = ttk.Treeview(frame, columns=("month", "month_gz", "level", "score", "suitable", "reasons"), show="headings")
+        
+        # 设置列标题
+        tree.heading("month", text="月份")
+        tree.heading("month_gz", text="干支")
+        tree.heading("level", text="等级")
+        tree.heading("score", text="分数")
+        tree.heading("suitable", text="是否适合")
+        tree.heading("reasons", text="原因")
+        
+        # 设置列宽 - 压缩前面列宽，给原因列更多空间
+        tree.column("month", width=50)
+        tree.column("month_gz", width=60)
+        tree.column("level", width=50)
+        tree.column("score", width=50)
+        tree.column("suitable", width=60)
+        tree.column("reasons", width=480)
+        
+        # 添加滚动条
+        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        tree.pack(fill=tk.BOTH, expand=True)
+        
+        # 添加数据
+        for result in results:
+            suitable = "是" if result['suitable'] else "否"
+            reasons = "; ".join(result['reasons']) if result['reasons'] else "无"
+            
+            tree.insert("", tk.END, values=(
+                result['month'],
+                result['month_gz'],
+                result['level'],
+                result['score'],
+                suitable,
+                reasons
+            ))
+        
+        # 添加选择按钮
+        button_frame = ttk.Frame(window)
+        button_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        def on_select():
+            selected = tree.selection()
+            if selected:
+                item = tree.item(selected[0])
+                month = int(item['values'][0])
+                # 更新主界面的日期范围
+                # 设置日期为该月的1日到最后一日
+                import calendar
+                last_day = calendar.monthrange(year, month)[1]
+                self.start_date.set(f"{year}-{month:02d}-01")
+                self.end_date.set(f"{year}-{month:02d}-{last_day:02d}")
+                window.destroy()
+                # 自动开始择日计算
+                self.start_calculation()
+            else:
+                messagebox.showinfo("提示", "请选择一个月份")
+        
+        ttk.Button(button_frame, text="选择此月份并开始择日", command=on_select).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="关闭", command=window.destroy).pack(side=tk.RIGHT, padx=5)
     
     def _bind_entry_navigation(self, entries):
         """为输入框绑定键盘导航功能"""
@@ -1072,9 +1549,257 @@ class ZeriApp:
             entry.bind('<Left>', lambda e, idx=i: on_key_left(e, idx))
             # Tab键默认就是下一个，不需要额外绑定
             # Shift+Tab键默认就是上一个，不需要额外绑定
-    
+
+    def save_owners_info(self):
+        """保存事主信息到JSON文件（支持多方案）"""
+        import json
+        import os
+        
+        plan_name = self.plan_name_var.get().strip()
+        if not plan_name:
+            messagebox.showwarning("提示", "请先输入方案名称再保存")
+            return
+        
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        
+        file_path = os.path.join(data_dir, 'owners_plans.json')
+        
+        # 读取已有方案
+        all_plans = {}
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    all_plans = json.load(f)
+            except:
+                all_plans = {}
+        
+        # 提取当前事主信息
+        save_data = []
+        for owner_info in self.owners_info:
+            # 添加防御性检查
+            name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
+            year = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
+            month = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
+            day = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+            hour = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '')
+            minute = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '')
+            gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+            sizhu = owner_info['sizhu_var'].get() if hasattr(owner_info['sizhu_var'], 'get') else owner_info.get('sizhu_var', '')
+            xishen = owner_info['xishen_var'].get() if hasattr(owner_info['xishen_var'], 'get') else owner_info.get('xishen_var', '')
+            yongshen = owner_info['yongshen_var'].get() if hasattr(owner_info['yongshen_var'], 'get') else owner_info.get('yongshen_var', '')
+            fuzi = owner_info['fuzi_var'].get() if hasattr(owner_info['fuzi_var'], 'get') else owner_info.get('fuzi_var', '')
+            
+            owner_data = {
+                'name': name,
+                'role': owner_info.get('role', ''),
+                'year': year,
+                'month': month,
+                'day': day,
+                'hour': hour,
+                'minute': minute,
+                'gender': gender,
+                'sizhu': sizhu,
+                'xishen': xishen,
+                'yongshen': yongshen,
+                'fuzi': fuzi
+            }
+            save_data.append(owner_data)
+        
+        # 以事项类型+方案名称为key保存
+        event_type = self.event_var.get()
+        plan_key = f"{event_type}__{plan_name}"
+        all_plans[plan_key] = {
+            'event_type': event_type,
+            'plan_name': plan_name,
+            'owners': save_data
+        }
+        
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(all_plans, f, ensure_ascii=False, indent=2)
+            existing_count = len([k for k in all_plans if k.startswith(f"{event_type}__")])
+            messagebox.showinfo("保存成功", f"方案「{plan_name}」已保存\n当前{event_type}类共有 {existing_count} 个方案")
+        except Exception as e:
+            messagebox.showerror("保存失败", f"保存事主信息时出错：{e}")
+
+    def load_owners_info(self):
+        """从JSON文件加载事主信息（弹出方案选择窗口）"""
+        import json
+        import os
+        
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        file_path = os.path.join(data_dir, 'owners_plans.json')
+        
+        if not os.path.exists(file_path):
+            messagebox.showinfo("提示", "没有找到保存的事主信息文件")
+            return
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                all_plans = json.load(f)
+        except Exception as e:
+            messagebox.showerror("加载失败", f"读取文件出错：{e}")
+            return
+        
+        if not all_plans:
+            messagebox.showinfo("提示", "没有已保存的方案")
+            return
+        
+        # 弹出方案选择窗口
+        select_win = tk.Toplevel(self.root)
+        select_win.title("选择要加载的方案")
+        select_win.geometry("450x400")
+        select_win.transient(self.root)
+        select_win.grab_set()
+        
+        ttk.Label(select_win, text="已保存的方案列表：", font=("微软雅黑", 11, "bold")).pack(pady=10)
+        
+        # 列表框
+        list_frame = ttk.Frame(select_win)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=10)
+        
+        scrollbar = ttk.Scrollbar(list_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        plan_listbox = tk.Listbox(list_frame, font=("微软雅黑", 10), yscrollcommand=scrollbar.set)
+        plan_listbox.pack(fill=tk.BOTH, expand=True)
+        scrollbar.config(command=plan_listbox.yview)
+        
+        # 按当前事项类型过滤并显示
+        event_type = self.event_var.get()
+        current_plans = []
+        other_plans = []
+        for key, plan_data in all_plans.items():
+            if plan_data.get('event_type') == event_type:
+                current_plans.append((key, plan_data))
+            else:
+                other_plans.append((key, plan_data))
+        
+        if current_plans:
+            plan_listbox.insert(tk.END, f"--- {event_type}类方案 ---")
+            for key, plan_data in current_plans:
+                owners_count = len(plan_data.get('owners', []))
+                plan_listbox.insert(tk.END, f"  {plan_data['plan_name']}（{owners_count}个事主）")
+        
+        if other_plans:
+            plan_listbox.insert(tk.END, f"--- 其他事项方案 ---")
+            for key, plan_data in other_plans:
+                owners_count = len(plan_data.get('owners', []))
+                plan_listbox.insert(tk.END, f"  [{plan_data.get('event_type', '')}] {plan_data['plan_name']}（{owners_count}个事主）")
+        
+        # 按钮区域
+        btn_frame = ttk.Frame(select_win)
+        btn_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        def on_load():
+            selection = plan_listbox.curselection()
+            if not selection:
+                messagebox.showwarning("提示", "请选择一个方案", parent=select_win)
+                return
+            
+            idx = selection[0]
+            # 计算实际方案索引（跳过分隔行）
+            actual_idx = 0
+            all_items = list(all_plans.items())
+            for i, (key, plan_data) in enumerate(all_items):
+                if plan_data.get('event_type') == event_type:
+                    actual_idx = i
+                    break
+            
+            # 找到选中的方案
+            selected_idx = idx
+            display_items = []
+            if current_plans:
+                display_items.append(None)  # 分隔行
+                for k, p in current_plans:
+                    display_items.append((k, p))
+            if other_plans:
+                display_items.append(None)  # 分隔行
+                for k, p in other_plans:
+                    display_items.append((k, p))
+            
+            selected_item = display_items[selected_idx]
+            if selected_item is None:
+                messagebox.showwarning("提示", "请选择具体的方案（非分隔行）", parent=select_win)
+                return
+            
+            plan_key, plan_data = selected_item
+            self._apply_loaded_plan(plan_data)
+            select_win.destroy()
+        
+        def on_delete():
+            selection = plan_listbox.curselection()
+            if not selection:
+                messagebox.showwarning("提示", "请选择一个方案", parent=select_win)
+                return
+            
+            idx = selection[0]
+            display_items = []
+            if current_plans:
+                display_items.append(None)
+                for k, p in current_plans:
+                    display_items.append((k, p))
+            if other_plans:
+                display_items.append(None)
+                for k, p in other_plans:
+                    display_items.append((k, p))
+            
+            selected_item = display_items[idx]
+            if selected_item is None:
+                return
+            
+            plan_key, plan_data = selected_item
+            result = messagebox.askyesno("确认删除", f"确定要删除方案「{plan_data['plan_name']}」吗？", parent=select_win)
+            if result:
+                del all_plans[plan_key]
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(all_plans, f, ensure_ascii=False, indent=2)
+                    select_win.destroy()
+                    self.load_owners_info()
+                except Exception as e:
+                    messagebox.showerror("删除失败", f"删除方案时出错：{e}", parent=select_win)
+        
+        ttk.Button(btn_frame, text="加载选中方案", command=on_load).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="删除选中方案", command=on_delete).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="取消", command=select_win.destroy).pack(side=tk.RIGHT, padx=5)
+
+    def _apply_loaded_plan(self, plan_data):
+        """将加载的方案应用到界面"""
+        # 切换事项类型（如果不同）
+        loaded_event = plan_data.get('event_type', '')
+        if loaded_event and loaded_event != self.event_var.get():
+            self.event_var.set(loaded_event)
+            self.update_owners_frame()
+        
+        # 设置方案名称
+        self.plan_name_var.set(plan_data.get('plan_name', ''))
+        
+        # 填充事主信息
+        load_data = plan_data.get('owners', [])
+        for i, owner_data in enumerate(load_data):
+            if i < len(self.owners_info):
+                owner_info = self.owners_info[i]
+                owner_info['name'].set(owner_data.get('name', ''))
+                owner_info['year'].set(owner_data.get('year', ''))
+                owner_info['month'].set(owner_data.get('month', ''))
+                owner_info['day'].set(owner_data.get('day', ''))
+                owner_info['hour'].set(owner_data.get('hour', ''))
+                owner_info['minute'].set(owner_data.get('minute', ''))
+                owner_info['gender'].set(owner_data.get('gender', '男'))
+                owner_info['sizhu_var'].set(owner_data.get('sizhu', '未计算'))
+                owner_info['xishen_var'].set(owner_data.get('xishen', ''))
+                owner_info['yongshen_var'].set(owner_data.get('yongshen', ''))
+                owner_info['fuzi_var'].set(owner_data.get('fuzi', ''))
+        
+        messagebox.showinfo("加载成功", f"方案「{plan_data.get('plan_name', '')}」已加载")
+
     def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var, 
-                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var):
+                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var, 
+                              yintai_var=None, yangqi_var=None, calendar_type_var=None, zodiac_var=None,
+                              fu_xing_var=None, zi_xing_var=None):
         """计算事主四柱"""
         try:
             year = int(year_var.get())
@@ -1084,25 +1809,47 @@ class ZeriApp:
             minute = int(minute_var.get())
             gender = gender_var.get()
             
+            # 判断是公历还是农历 - 添加防御性检查
+            calendar_type = 'solar'
+            if calendar_type_var and hasattr(calendar_type_var, 'get'):
+                calendar_type = calendar_type_var.get()
+            
+            if calendar_type == 'lunar':
+                # 农历转公历
+                from modules.高精度农历转换 import get_lunar_converter
+                converter = get_lunar_converter()
+                solar_date = converter.lunar_to_solar(year, month, day, hour, minute, 0)
+                year = solar_date['year']
+                month = solar_date['month']
+                day = solar_date['day']
+            
             # 使用八字排盘模块获取详细信息
             panpan = BaZiPanPan(year, month, day, hour, minute, gender)
             panpan_result = panpan.get_panpan_result()
             
             # 显示四柱
-            sizhu_text = f"{panpan_result['基本信息']['四柱']['年柱']} {panpan_result['基本信息']['四柱']['月柱']} {panpan_result['基本信息']['四柱']['日柱']} {panpan_result['基本信息']['四柱']['时柱']}"
+            sizhu_text = f"{panpan_result['四柱']['年柱']} {panpan_result['四柱']['月柱']} {panpan_result['四柱']['日柱']} {panpan_result['四柱']['时柱']}"
             sizhu_var.set(sizhu_text)
+            
+            # 显示生肖 - 添加防御性检查
+            if zodiac_var and hasattr(zodiac_var, 'set'):
+                year_zhi = panpan_result['四柱']['年柱'][1] if len(panpan_result['四柱']['年柱']) > 1 else ''
+                zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                             '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+                zodiac = zodiac_map.get(year_zhi, '')
+                zodiac_var.set(zodiac)
             
             # 显示喜用神 - 使用统一的喜用神计算器
             # 从sizhu中获取天干地支信息
             sizhu_info = {
-                'year_gan': panpan_result['基本信息']['四柱']['年柱'][0] if panpan_result['基本信息']['四柱']['年柱'] else '',
-                'year_zhi': panpan_result['基本信息']['四柱']['年柱'][1] if len(panpan_result['基本信息']['四柱']['年柱']) > 1 else '',
-                'month_gan': panpan_result['基本信息']['四柱']['月柱'][0] if panpan_result['基本信息']['四柱']['月柱'] else '',
-                'month_zhi': panpan_result['基本信息']['四柱']['月柱'][1] if len(panpan_result['基本信息']['四柱']['月柱']) > 1 else '',
-                'day_gan': panpan_result['基本信息']['四柱']['日柱'][0] if panpan_result['基本信息']['四柱']['日柱'] else '',
-                'day_zhi': panpan_result['基本信息']['四柱']['日柱'][1] if len(panpan_result['基本信息']['四柱']['日柱']) > 1 else '',
-                'hour_gan': panpan_result['基本信息']['四柱']['时柱'][0] if panpan_result['基本信息']['四柱']['时柱'] else '',
-                'hour_zhi': panpan_result['基本信息']['四柱']['时柱'][1] if len(panpan_result['基本信息']['四柱']['时柱']) > 1 else ''
+                'year_gan': panpan_result['四柱']['年柱'][0] if panpan_result['四柱']['年柱'] else '',
+                'year_zhi': panpan_result['四柱']['年柱'][1] if len(panpan_result['四柱']['年柱']) > 1 else '',
+                'month_gan': panpan_result['四柱']['月柱'][0] if panpan_result['四柱']['月柱'] else '',
+                'month_zhi': panpan_result['四柱']['月柱'][1] if len(panpan_result['四柱']['月柱']) > 1 else '',
+                'day_gan': panpan_result['四柱']['日柱'][0] if panpan_result['四柱']['日柱'] else '',
+                'day_zhi': panpan_result['四柱']['日柱'][1] if len(panpan_result['四柱']['日柱']) > 1 else '',
+                'hour_gan': panpan_result['四柱']['时柱'][0] if panpan_result['四柱']['时柱'] else '',
+                'hour_zhi': panpan_result['四柱']['时柱'][1] if len(panpan_result['四柱']['时柱']) > 1 else ''
             }
             xishen, yongshen = calculate_xishen_yongshen(sizhu_info)
             xishen_var.set(xishen)
@@ -1111,15 +1858,57 @@ class ZeriApp:
             # 夫星子星（婚嫁专用）
             if self.event_var.get() == "嫁娶" and owner == "新娘":
                 # 从八字分析中获取夫星子星信息
-                from modules.工具函数 import get_fuzi
-                day_gan = sizhu_info['day_gan']
-                if day_gan:
-                    fuzi_info = get_fuzi(day_gan)
+                from modules.工具函数 import get_fuzi, get_yintai, get_yangqi
+                year_gan = sizhu_info['year_gan']
+                year_zhi = sizhu_info['year_zhi']
+                month_gan = sizhu_info.get('month_gan', '甲')
+                month_zhi = sizhu_info.get('month_zhi', '子')
+                if year_gan and year_zhi:
+                    # 计算夫星子星（基于年干年支）
+                    fuzi_info = get_fuzi(year_gan, year_zhi)
                     fu = fuzi_info.get('fu', '未知')
                     zi = fuzi_info.get('zi', '未知')
-                    fuzi_var.set(f"夫星: {fu}, 子星: {zi}")
+                    if fu_xing_var and hasattr(fu_xing_var, 'set'):
+                        fu_xing_var.set(fu)
+                    if zi_xing_var and hasattr(zi_xing_var, 'set'):
+                        zi_xing_var.set(zi)
+                    
+                    # 计算阴胎（以新娘月柱为基准）
+                    yintai = get_yintai(month_gan, month_zhi)
+                    
+                    # 计算阳气（以新郎月柱为基准）
+                    yangqi = '未知'
+                    for owner_info in self.owners_info:
+                        if owner_info.get('role') == '新郎':
+                            groom_month_gan = ''
+                            groom_month_zhi = ''
+                            if 'sizhu_var' in owner_info and hasattr(owner_info['sizhu_var'], 'get'):
+                                groom_sizhu = owner_info['sizhu_var'].get()
+                                if groom_sizhu:
+                                    # 解析月柱：格式为"年柱 月柱 日柱 时柱"
+                                    parts = groom_sizhu.split()
+                                    if len(parts) >= 2:
+                                        groom_month = parts[1]
+                                        groom_month_gan = groom_month[:1]
+                                        groom_month_zhi = groom_month[1:] if len(groom_month) > 1 else ''
+                            if groom_month_gan and groom_month_zhi:
+                                yangqi = get_yangqi(groom_month_gan, groom_month_zhi)
+                            break
+                    
+                    # 显示阴胎和阳气
+                    if yintai_var and hasattr(yintai_var, 'set'):
+                        yintai_var.set(f"阴胎: {yintai if yintai else '未知'}")
+                    if yangqi_var and hasattr(yangqi_var, 'set'):
+                        yangqi_var.set(f"阳气: {yangqi if yangqi else '未知'}")
                 else:
-                    fuzi_var.set("夫星: 未知, 子星: 未知")
+                    if fu_xing_var and hasattr(fu_xing_var, 'set'):
+                        fu_xing_var.set("未知")
+                    if zi_xing_var and hasattr(zi_xing_var, 'set'):
+                        zi_xing_var.set("未知")
+                    if yintai_var and hasattr(yintai_var, 'set'):
+                        yintai_var.set("阴胎: 未知")
+                    if yangqi_var and hasattr(yangqi_var, 'set'):
+                        yangqi_var.set("阳气: 未知")
             
             # 保存详细的事主信息到owners_data中
             # 这里可以将panpan_result保存到全局变量中，供后续使用
@@ -1127,6 +1916,8 @@ class ZeriApp:
             
         except ValueError as e:
             messagebox.showwarning("警告", f"请输入有效的日期时间: {e}")
+        except Exception as e:
+            messagebox.showwarning("警告", f"日期转换失败: {e}")
     
     def show_owner_bazi_detail(self, year_var, month_var, day_var, hour_var, minute_var, gender_var, owner):
         """显示事主八字排盘详情"""
@@ -1223,58 +2014,231 @@ class ZeriApp:
             owners_data = []
             for owner in self.owners_info:
                 try:
-                    year = int(owner['year'].get())
-                    month = int(owner['month'].get())
-                    day = int(owner['day'].get())
-                    hour = int(owner['hour'].get())
-                    minute = int(owner['minute'].get())
-                    owners_data.append({
-                        'name': owner['name'],
-                        'birth_date': date(year, month, day),
+                    # 添加防御性检查
+                    year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
+                    month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
+                    day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
+                    
+                    # 检查是否填写了日期
+                    if not (year_str and month_str and day_str):
+                        continue
+                    
+                    hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
+                    minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
+                    
+                    year = int(year_str)
+                    month = int(month_str)
+                    day = int(day_str)
+                    hour = int(hour_str)
+                    minute = int(minute_str)
+                    gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
+                    
+                    # 计算年干支
+                    try:
+                        birth_date = date(year, month, day)
+                    except ValueError as e:
+                        # 处理无效日期，使用当月最后一天
+                        import calendar
+                        last_day = calendar.monthrange(year, month)[1]
+                        birth_date = date(year, month, last_day)
+                        messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
+                    
+                    owner_sizhu = calculate_sizhu(birth_date, hour, minute)
+                    year_gan = owner_sizhu.get('year_gan', '')
+                    year_zhi = owner_sizhu.get('year_zhi', '')
+                    
+                    # 获取日柱信息（用于婚嫁评分算法）
+                    day_gan = owner_sizhu.get('day_gan', '')
+                    day_zhi = owner_sizhu.get('day_zhi', '')
+                    
+                    # 构建完整的事主信息
+                    name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
+                    owner_data = {
+                        'name': name,
+                        'role': owner.get('role', ''),
+                        'birth_date': birth_date,
                         'birth_hour': hour,
-                        'birth_minute': minute
-                    })
+                        'birth_minute': minute,
+                        '性别': gender,
+                        '年干': year_gan,
+                        '年支': year_zhi,
+                        '日干': day_gan,
+                        '日支': day_zhi,
+                        '生肖': year_zhi
+                    }
+                    
+                    # 如果有喜用神信息，也添加进去
+                    if 'xishen_var' in owner:
+                        xishen_val = owner['xishen_var'].get() if hasattr(owner['xishen_var'], 'get') else owner.get('xishen_var', '')
+                        if xishen_val:
+                            owner_data['xishen'] = xishen_val
+                    if 'yongshen_var' in owner:
+                        yongshen_val = owner['yongshen_var'].get() if hasattr(owner['yongshen_var'], 'get') else owner.get('yongshen_var', '')
+                        if yongshen_val:
+                            owner_data['yongshen'] = yongshen_val
+                    
+                    owners_data.append(owner_data)
                 except (ValueError, TypeError):
                     pass
             
             # 获取特殊选项
             event_type = self.event_var.get()
             house_type = getattr(self, 'house_type', None)
+            house_type = house_type.get() if house_type else None
             shan_xiang = getattr(self, 'shan_xiang', None)
-            zao_xiang = getattr(self, 'zao_xiang', None)
-            zao_wei = getattr(self, 'zao_wei', None)
-            chuang_wei = getattr(self, 'chuang_wei', None)
+            shan_xiang = shan_xiang.get() if shan_xiang else None
             
+            # 获取兼向信息并合并到山向中
+            jian_xiang = getattr(self, 'jian_xiang', None)
+            jian_xiang_value = jian_xiang.get() if jian_xiang else None
+            if shan_xiang and jian_xiang_value and jian_xiang_value != "正中":
+                shan_xiang = f"{shan_xiang}{jian_xiang_value}"
+            
+            zao_xiang = getattr(self, 'zao_xiang', None)
+            zao_xiang = zao_xiang.get() if zao_xiang else None
+            zao_wei = getattr(self, 'zao_wei', None)
+            zao_wei = zao_wei.get() if zao_wei else None
+            chuang_wei = getattr(self, 'chuang_wei', None)
+            chuang_wei = chuang_wei.get() if chuang_wei else None
+
+            print(f"[调试] 事项类型: {event_type}, 山向: {shan_xiang}, 事主数量: {len(owners_data)}")
+
             # 计算每日吉凶
             current = start
             while current <= end:
                 # 计算四柱
                 sizhu = calculate_sizhu(current, 12, 0)
                 
+                # 添加公历年份、月份和日期到sizhu，用于月份分析
+                sizhu['year'] = current.year
+                sizhu['month'] = current.month
+                sizhu['day'] = current.day
+                sizhu['date'] = current  # 添加date键，用于规则检查
+                
                 # 获取农历
                 try:
                     lunar = get_lunar_date(current)
-                    lunar_str = f"{lunar['月']}{lunar['日']}"
+                    lunar_str = f"{lunar['month']}{lunar['day']}"
                 except:
                     lunar_str = "-"
                 
                 # 计算评分
                 score_result = calculate_score(
-                    sizhu, 
-                    event_type, 
+                    sizhu,
+                    event_type,
                     owners_data,
-                    house_type.get() if house_type else None,
-                    shan_xiang.get() if shan_xiang else None,
-                    zao_xiang.get() if zao_xiang else None,
-                    zao_wei.get() if zao_wei else None,
-                    chuang_wei.get() if chuang_wei else None
+                    house_type,
+                    shan_xiang,
+                    zao_xiang,
+                    zao_wei,
+                    chuang_wei
                 )
                 
                 # 提取各项得分
                 score_details = score_result.get('score_details', {})
+                wuxing_score = score_details.get('五行评分', 100)
                 yueling_score = score_details.get('月令得分', 0)
                 xishen_score = score_details.get('喜用神得分', 0)
                 huangdao_score = score_details.get('黄道得分', 0)
+                
+                # 提取地支关系和吉神信息
+                wu_xing_result = score_result.get('wu_xing_result', {})
+                wu_xing_details = wu_xing_result.get('details', {})
+                dizhi_relations = wu_xing_details.get('地支关系', [])
+                jishen_list = wu_xing_details.get('吉神', [])
+                
+                # 格式化地支关系文本
+                if dizhi_relations:
+                    dizhi_text_list = []
+                    for relation in dizhi_relations:
+                        if '三合' in relation:
+                            match = re.search(r'三合(.)局', relation)
+                            if match:
+                                dizhi_text_list.append(f"三合{match.group(1)}局")
+                            else:
+                                dizhi_text_list.append('三合')
+                        elif '六合' in relation:
+                            dizhi_text_list.append('六合')
+                        elif '六冲' in relation:
+                            dizhi_text_list.append('六冲')
+                        elif '六害' in relation:
+                            dizhi_text_list.append('六害')
+                        elif '三刑' in relation:
+                            dizhi_text_list.append('三刑')
+                        elif '相破' in relation:
+                            dizhi_text_list.append('相破')
+                        else:
+                            dizhi_text_list.append(relation[:10])
+                    dizhi_text = ', '.join(dizhi_text_list[:2])
+                else:
+                    dizhi_text = '-'
+                
+                # 格式化吉神信息文本
+                if jishen_list:
+                    jishen_text_list = []
+                    for jishen in jishen_list:
+                        if '天德贵人' in jishen:
+                            jishen_text_list.append('天德贵人')
+                        elif '月德贵人' in jishen:
+                            jishen_text_list.append('月德贵人')
+                        elif '天乙贵人' in jishen:
+                            jishen_text_list.append('天乙贵人')
+                        elif '文昌贵人' in jishen:
+                            jishen_text_list.append('文昌贵人')
+                        elif '禄神' in jishen:
+                            jishen_text_list.append('禄神')
+                        elif '福星' in jishen:
+                            jishen_text_list.append('福星')
+                        else:
+                            jishen_text_list.append(jishen[:6])
+                    jishen_text = ', '.join(jishen_text_list[:2])
+                else:
+                    jishen_text = '-'
+                
+                # 提取大利月/小利月信息（婚嫁专用）
+                daliyue_text = '-'
+                if event_type in ['嫁娶', '订婚', '纳采']:
+                    shensha_list = score_result.get('shensha_list', [])
+                    for shensha in shensha_list:
+                        if isinstance(shensha, dict):
+                            shensha_name = shensha.get('name', '')
+                            if shensha_name == '大利月':
+                                daliyue_text = '大利月'
+                                break
+                            elif shensha_name == '小利月':
+                                daliyue_text = '小利月'
+                                break
+                
+                # 构建事主信息文本
+                owner_text = []
+                for i, owner in enumerate(self.owners_info[:3], 1):  # 只显示前3个事主
+                    name = ''
+                    if 'name' in owner:
+                        name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
+                    elif '姓名' in owner:
+                        name = owner['姓名']
+                    
+                    gender = ''
+                    if 'gender' in owner:
+                        gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
+                    elif '性别' in owner:
+                        gender = owner['性别']
+                    
+                    role = ''
+                    if 'role' in owner:
+                        role = owner['role'].get() if hasattr(owner['role'], 'get') else owner.get('role', '')
+                    elif '角色' in owner:
+                        role = owner['角色']
+                    
+                    if name:
+                        owner_info = name
+                        if gender:
+                            owner_info += f"({gender})"
+                        if role:
+                            owner_info += f"-{role}"
+                        owner_text.append(owner_info)
+                
+                owners_text = '; '.join(owner_text) if owner_text else '-'
                 
                 # 保存结果
                 result = {
@@ -1283,44 +2247,151 @@ class ZeriApp:
                     'sizhu': f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}",
                     'score': score_result['score'],
                     'level': score_result['level'],
+                    'wuxing_score': wuxing_score,
                     'yueling_score': yueling_score,
                     'xishen_score': xishen_score,
                     'huangdao_score': huangdao_score,
+                    'dizhi_relation': dizhi_text,
+                    'jishen': jishen_text,
+                    'daliyue': daliyue_text,
+                    'owners': owners_text,
                     'detail': score_result
                 }
                 
                 # 筛选：只保留吉及以上的日课，过滤掉不吉的日课
-                # 等级：❌ 凶 → 过滤掉
-                if '❌ 凶' not in result['level']:
-                    self.results.append(result)
-                    
-                    # 根据等级设置行标签（用于颜色区分）
-                    level = result['level']
-                    if '★★★★★' in level:
-                        row_tag = '5star'
-                    elif '★★★★' in level:
-                        row_tag = '4star'
-                    elif '★★★' in level:
-                        row_tag = '3star'
-                    elif '★★' in level:
-                        row_tag = '2star'
-                    elif '★' in level:
-                        row_tag = '1star'
-                    else:
-                        row_tag = ''
-                    
-                    # 添加到树形视图
-                    self.result_tree.insert("", tk.END, values=(
-                        result['date'],
-                        result['score'],
-                        result['level'],
-                        result['sizhu'],
-                        result['yueling_score'],
-                        result['xishen_score'],
-                        result['huangdao_score']
-                    ), tags=(row_tag,))
+                # 提取评分和等级
+                score = score_result['score']
+                level = score_result['level']
+                yi_list = score_result.get('yi_list', [])
+                ji_list = score_result.get('ji_list', [])
+                shensha_list = score_result.get('shensha_list', [])
                 
+                # 过滤条件1：过滤0分的日课
+                wu_xing_hege = score > 0
+                # 过滤条件2：过滤所有包含"凶"的等级（大凶、小凶、凶）
+                is_not_xiong = '凶' not in level
+                # 过滤条件3：过滤忌列表中精确包含"忌{事项类型}"的日课
+                # 使用正则表达式精确匹配，避免"建除平日忌修造"被误判
+                has_ji_event = False
+                for ji in ji_list:
+                    ji_text = str(ji)
+                    if re.search(rf'^忌{re.escape(event_type)}[。\s]?$', ji_text):
+                        has_ji_event = True
+                        break
+
+                # 过滤条件4和5：检查神煞中是否有不宜当前事项类型的信息和严重凶煞信息
+                has_buyi_event = False
+                has_serious_xiong_shen = False
+                for shensha in shensha_list:
+                    # 检查神煞元素的类型
+                    if isinstance(shensha, dict):
+                        # 如果是字典，获取描述或名称
+                        shensha_desc = shensha.get('description', '') or shensha.get('name', '')
+                    else:
+                        # 如果是字符串，直接使用
+                        shensha_desc = str(shensha)
+
+                    # 检查是否包含不宜信息（使用正则表达式精确匹配）
+                    if re.search(rf'不宜{re.escape(event_type)}[。\s]?$', shensha_desc) or re.search(rf'^忌{re.escape(event_type)}[。\s]?$', shensha_desc):
+                        has_buyi_event = True
+
+                    # 检查是否包含严重凶煞信息
+                    serious_xiong_keywords = ['大凶', '绝对不可用']
+                    for keyword in serious_xiong_keywords:
+                        if keyword in shensha_desc:
+                            has_serious_xiong_shen = True
+                            break
+
+                    # 检查是否有明确的"忌{事项}"模式（精确匹配）
+                    if re.search(rf'^忌{re.escape(event_type)}[。\s]?$', shensha_desc):
+                        has_serious_xiong_shen = True
+
+                    if has_buyi_event and has_serious_xiong_shen:
+                        break
+                
+                # 综合过滤条件
+                if wu_xing_hege and is_not_xiong and not has_ji_event and not has_buyi_event and not has_serious_xiong_shen:
+                    # 获取输出方式选择
+                    output_mode = self.output_mode_var.get()
+
+                    # 如果选择"无扣分输出"，检查是否有扣分项
+                    if output_mode == "nodeduct":
+                        # 检查五行部分的扣分
+                        wu_xing_result = score_result.get('wu_xing_result', {})
+                        has_deduction = wu_xing_result.get('has_deduction', False)
+
+                        # 检查其他扣分（月令得分、黄道得分、喜用神得分）
+                        score_details = score_result.get('score_details', {})
+                        yueling_score = score_details.get('月令得分', 0)
+                        huangdao_score = score_details.get('黄道得分', 0)
+                        xishen_score = score_details.get('喜用神得分', 0)
+
+                        # 检查是否有扣分（任何得分项为负都视为有扣分）
+                        if has_deduction or yueling_score < 0 or huangdao_score < 0 or xishen_score < 0:
+                            print(f"[调试] {current} nodeduct过滤: has_deduction={has_deduction}, yueling={yueling_score}, huangdao={huangdao_score}, xishen={xishen_score}")
+                            # 有扣分项，跳过
+                            current += timedelta(days=1)
+                            continue
+
+                    self.results.append(result)
+                    print(f"[调试] 通过: {current}, score={score}, level={level}")
+                else:
+                    # 打印哪个过滤条件失败
+                    filters_failed = []
+                    if not wu_xing_hege:
+                        filters_failed.append(f"score={score}")
+                    if not is_not_xiong:
+                        filters_failed.append(f"level={level}")
+                    if has_ji_event:
+                        filters_failed.append("has_ji_event")
+                    if has_buyi_event:
+                        filters_failed.append("has_buyi_event")
+                    if has_serious_xiong_shen:
+                        filters_failed.append("has_serious_xiong_shen")
+                    print(f"[调试] {current} 被过滤: {', '.join(filters_failed)}")
+
                 current += timedelta(days=1)
+
+            print(f"[调试] 计算完成，共 {len(self.results)} 个结果通过")
+
+            # 按评分从高到低排序
+            self.results.sort(key=lambda x: x['score'], reverse=True)
+            
+            # 清空树形视图并重新添加排序后的结果
+            for item in self.result_tree.get_children():
+                self.result_tree.delete(item)
+            
+            for result in self.results:
+                # 根据等级设置行标签（用于颜色区分）
+                level = result['level']
+                if '★★★★★' in level:
+                    row_tag = '5star'
+                elif '★★★★' in level:
+                    row_tag = '4star'
+                elif '★★★' in level:
+                    row_tag = '3star'
+                elif '★★' in level:
+                    row_tag = '2star'
+                elif '★' in level:
+                    row_tag = '1star'
+                else:
+                    row_tag = ''
+                
+                # 添加到树形视图
+                self.result_tree.insert("", tk.END, values=(
+                    result['date'],
+                    result['score'],
+                    result['level'],
+                    result['sizhu'],
+                    result['wuxing_score'],
+                    result['yueling_score'],
+                    result['xishen_score'],
+                    result['huangdao_score'],
+                    result['dizhi_relation'],
+                    result['jishen'],
+                    result.get('daliyue', '-'),
+                    result.get('owners', '-')
+                ), tags=(row_tag,))
             
             # 保存到记录
             self.save_record()
@@ -1368,6 +2439,10 @@ class ZeriApp:
         
         detail = result['detail']
         
+        # 提取大利月/小利月信息
+        daliyue_info = result.get('daliyue', '-')
+        event_type = self.event_var.get()
+        
         # 插入基本信息
         text.insert(tk.END, f"""
 日期：{result['date']}
@@ -1387,6 +2462,161 @@ class ZeriApp:
         else:
             text.insert(tk.END, level)
         
+        # 如果是婚嫁择日，显示大利月/小利月信息
+        if event_type in ['嫁娶', '订婚', '纳采'] and daliyue_info != '-':
+            text.insert(tk.END, f"\n利月：{daliyue_info}")
+        
+        # 插入事主信息
+        text.insert(tk.END, "\n\n【事主信息】")
+        text.insert(tk.END, "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        
+        # 导入必要的模块
+        from modules.喜用神计算器 import calculate_xishen_yongshen
+        
+        owners_info = getattr(self, 'owners_info', [])
+        if owners_info:
+            for i, owner_info in enumerate(owners_info[:4], 1):  # 只显示前4个事主
+                name = ""
+                if 'name' in owner_info:
+                    name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
+                elif '姓名' in owner_info:
+                    name = owner_info['姓名']
+                
+                gender = ""
+                if 'gender' in owner_info:
+                    gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                elif '性别' in owner_info:
+                    gender = owner_info['性别']
+                
+                if name:
+                    text.insert(tk.END, f"\n  事主{i}：{name}")
+                    if gender:
+                        text.insert(tk.END, f"（{gender}）")
+                    
+                    # 显示事主的公历和农历日期、四柱、喜用神
+                    if 'year' in owner_info:
+                        try:
+                            # 添加防御性检查
+                            year_val = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
+                            month_val = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
+                            day_val = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                            
+                            birth_date = date(
+                                int(year_val),
+                                int(month_val),
+                                int(day_val)
+                            )
+                            # 添加防御性检查
+                            hour_val = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
+                            minute_val = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
+                            birth_hour = int(hour_val)
+                            birth_minute = int(minute_val)
+                            
+                            # 使用原来的八字排盘模块计算四柱
+                            from modules.八字排盘 import BaZiPanPan
+                            panpan = BaZiPanPan(birth_date.year, birth_date.month, birth_date.day, birth_hour, birth_minute, gender)
+                            panpan_result = panpan.get_panpan_result()
+                            
+                            # 获取四柱信息
+                            year_zhu = panpan_result['四柱']['年柱'] if '年柱' in panpan_result['四柱'] else '未知'
+                            month_zhu = panpan_result['四柱']['月柱'] if '月柱' in panpan_result['四柱'] else '未知'
+                            day_zhu = panpan_result['四柱']['日柱'] if '日柱' in panpan_result['四柱'] else '未知'
+                            hour_zhu = panpan_result['四柱']['时柱'] if '时柱' in panpan_result['四柱'] else '未知'
+                            sizhu_text = f"{year_zhu} {month_zhu} {day_zhu} {hour_zhu}"
+                            
+                            # 计算喜用神
+                            sizhu_info = {
+                                'year_gan': year_zhu[:1] if year_zhu else '',
+                                'year_zhi': year_zhu[1:] if len(year_zhu) > 1 else '',
+                                'month_gan': month_zhu[:1] if month_zhu else '',
+                                'month_zhi': month_zhu[1:] if len(month_zhu) > 1 else '',
+                                'day_gan': day_zhu[:1] if day_zhu else '',
+                                'day_zhi': day_zhu[1:] if len(day_zhu) > 1 else '',
+                                'hour_gan': hour_zhu[:1] if hour_zhu else '',
+                                'hour_zhi': hour_zhu[1:] if len(hour_zhu) > 1 else ''
+                            }
+                            xishen, yongshen = calculate_xishen_yongshen(sizhu_info)
+                            
+                            # 显示事主详细信息
+                            text.insert(tk.END, f"\n    公历：{birth_date}")
+                            
+                            # 计算农历日期
+                            try:
+                                from modules.高精度农历转换 import HighPrecisionLunar
+                                lunar_converter = HighPrecisionLunar()
+                                lunar_info = lunar_converter._get_lunar_info_sxtwl(birth_date.year, birth_date.month, birth_date.day, 12, 0, 0)
+                                lunar_str = f"{lunar_info['lunar_year']}年{lunar_info['lunar_month']}月{lunar_info['lunar_day']}日"
+                                if lunar_info['is_leap']:
+                                    lunar_str = f"{lunar_info['lunar_year']}年闰{lunar_info['lunar_month']}月{lunar_info['lunar_day']}日"
+                                text.insert(tk.END, f"\n    农历：{lunar_str}")
+                            except Exception as e:
+                                text.insert(tk.END, "\n    农历：未知")
+                            
+                            text.insert(tk.END, f"\n    四柱：{sizhu_text}")
+                            
+                            # 显示生肖
+                            zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                                         '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+                            year_zhi = year_zhu[1:] if len(year_zhu) > 1 else ''
+                            zodiac = zodiac_map.get(year_zhi, '')
+                            if zodiac:
+                                text.insert(tk.END, "（")
+                                text.insert(tk.END, zodiac, "zodiac")
+                                text.insert(tk.END, "）")
+                                text.tag_config("zodiac", foreground="blue")
+                            
+                            text.insert(tk.END, f"\n    喜用神：{xishen}")
+                            
+                            # 如果是嫁娶，显示新娘的夫子星、阴胎、阳气
+                            if event_type in ['嫁娶', '订婚', '纳采', '结婚'] and gender == '女':
+                                try:
+                                    from modules.工具函数 import get_fuzi, get_yintai, get_yangqi
+                                    
+                                    day_gan = day_zhu[:1] if day_zhu else ''
+                                    day_zhi = day_zhu[1:] if len(day_zhu) > 1 else ''
+                                    month_gan = month_zhu[:1] if month_zhu else '甲'
+                                    month_zhi = month_zhu[1:] if len(month_zhu) > 1 else '子'
+                                    year_gan = year_zhu[:1] if year_zhu else ''
+                                    year_zhi_part = year_zhu[1:] if len(year_zhu) > 1 else ''
+                                    
+                                    if year_gan and year_zhi_part:
+                                        # 计算夫星子星（基于年干年支）
+                                        fuzi_info = get_fuzi(year_gan, year_zhi_part)
+                                        fu = fuzi_info.get('fu', '未知')
+                                        zi = fuzi_info.get('zi', '未知')
+                                        
+                                        # 计算阴胎（以新娘月柱为基准）
+                                        yintai = get_yintai(month_gan, month_zhi)
+                                        
+                                        # 计算阳气（以新郎月柱为基准）
+                                        yangqi = '未知'
+                                        for groom_info in owners_info:
+                                            groom_gender = groom_info['gender'].get() if hasattr(groom_info['gender'], 'get') else groom_info.get('gender', '')
+                                            if groom_gender == '男' and groom_info != owner_info:
+                                                groom_sizhu_var = groom_info.get('sizhu_var')
+                                                if groom_sizhu_var and hasattr(groom_sizhu_var, 'get'):
+                                                    groom_sizhu = groom_sizhu_var.get()
+                                                    if groom_sizhu:
+                                                        parts = groom_sizhu.split()
+                                                        if len(parts) >= 2:
+                                                            groom_month = parts[1]
+                                                            groom_month_gan = groom_month[:1]
+                                                            groom_month_zhi = groom_month[1:] if len(groom_month) > 1 else ''
+                                                            if groom_month_gan and groom_month_zhi:
+                                                                yangqi = get_yangqi(groom_month_gan, groom_month_zhi)
+                                                break
+                                        
+                                        text.insert(tk.END, f"\n    夫星：{fu}")
+                                        text.insert(tk.END, f"\n    子星：{zi}")
+                                        text.insert(tk.END, f"\n    阴胎：{yintai}")
+                                        text.insert(tk.END, f"\n    阳气：{yangqi}")
+                                except:
+                                    pass
+                        except:
+                            pass
+        else:
+            text.insert(tk.END, "\n  暂无事主信息")
+        
         content = f"""
 
 【评分详情】
@@ -1395,35 +2625,625 @@ class ZeriApp:
         # 显示详细得分
         score_details = detail.get('score_details', {})
         if score_details:
-            content += f"  基础分：{score_details.get('基础分', 100)} 分\n"
-            content += f"  月令得分：{score_details.get('月令得分', 0):+d} 分\n"
+            wuxing_score = score_details.get('五行评分', 100)
+            yueling_score = score_details.get('月令得分', 0)
+            xishen_score = score_details.get('喜用神得分', 0)
+            huangdao_score = score_details.get('黄道得分', 0)
+            total_score = score_details.get('总分', result['score'])
+            
+            content += f"  五行评分：{wuxing_score} 分\n"
+            
+            # 五行评分详细得分
+            wu_xing_result = detail.get('wu_xing_result', {})
+            score_breakdown = wu_xing_result.get('score_breakdown', {})
+            if score_breakdown:
+                content += f"    ├─ 基础分：{score_breakdown.get('基础分', 100)} 分\n"
+                shensha_score = score_breakdown.get('神煞得分', 0)
+                if shensha_score != 0:
+                    content += f"    ├─ 神煞得分：{shensha_score:+d} 分\n"
+                yi_score = score_breakdown.get('宜事得分', 0)
+                if yi_score != 0:
+                    content += f"    ├─ 宜事得分：+{yi_score} 分\n"
+                ji_score = score_breakdown.get('忌事得分', 0)
+                if ji_score != 0:
+                    content += f"    ├─ 忌事得分：{ji_score} 分\n"
+                zhangsheng = score_breakdown.get('十二长生得分', 0)
+                if zhangsheng != 0:
+                    content += f"    ├─ 十二长生得分：{zhangsheng:+d} 分\n"
+                zhizhi = score_breakdown.get('地支关系得分', 0)
+                if zhizhi != 0:
+                    content += f"    ├─ 地支关系得分：{zhizhi:+d} 分\n"
+                nayin = score_breakdown.get('纳音匹配得分', 0)
+                if nayin != 0:
+                    content += f"    └─ 纳音匹配得分：{nayin:+d} 分\n"
+            
+            # 显示婚嫁评分详情（夫星受克等）
+            marriage_details = detail.get('marriage_details', [])
+            if marriage_details:
+                for detail_name, detail_score in marriage_details:
+                    if detail_score != 0:
+                        content += f"    {'├─' if score_breakdown else ''}{detail_name}：{detail_score:+d} 分\n"
+            
+            content += f"  月令得分：{yueling_score:+d} 分\n"
             
             # 月令详细得分
             yueling_detail = score_details.get('月令详细', {})
             if yueling_detail:
-                content += f"    └─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分\n"
+                content += f"    ├─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分\n"
                 content += f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分\n"
             
-            content += f"  喜用神得分：{score_details.get('喜用神得分', 0):+d} 分\n"
-            content += f"  黄道得分：{score_details.get('黄道得分', 0):+d} 分\n"
+            content += f"  喜用神得分：{xishen_score:+d} 分\n"
+            content += f"  黄道得分：{huangdao_score:+d} 分\n"
+            sun_moon_score = score_details.get('太阳太阴得分', 0)
+            content += f"  太阳太阴得分：{sun_moon_score:+d} 分\n"
             content += f"  ─────────────────────────────────\n"
-            content += f"  总分：{score_details.get('总分', result['score'])} 分\n"
+            content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {huangdao_score:+d} {sun_moon_score:+d} = {total_score} 分\n"
+            content += f"  总分：{total_score} 分\n"
         else:
             content += "  暂无详细得分数据\n"
         
+        # 月令分析
         content += f"""
-【宜】
-{chr(10).join(detail['yi_list']) if detail['yi_list'] else '无'}
-
-【忌】
-{chr(10).join(detail['ji_list']) if detail['ji_list'] else '无'}
-
-【神煞】
+【月令分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-        for shensha in detail['shensha_list']:
-            content += f"- {shensha['name']}: {shensha['description']}\n"
+        reason = detail.get('reason', '')
+        yueling_info = ""
+        for part in reason.split('；'):
+            if '月令：' in part:
+                yueling_info = part.replace('月令：', '')
+                break
         
-        content += f"\n【评语】\n{detail['reason']}"
+        if yueling_info:
+            content += f"  {yueling_info}\n"
+        else:
+            content += "  月令分析：暂无数据\n"
+        
+        # 四柱信息
+        sizhu = detail.get('sizhu', {})
+        if sizhu:
+            content += f"""
+【四柱八字】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  年柱: {sizhu.get('年柱', 'N/A')}    月柱: {sizhu.get('月柱', 'N/A')}
+  日柱: {sizhu.get('日柱', 'N/A')}    时柱: {sizhu.get('时柱', 'N/A')}
+
+  【天干五行】
+    年干: {sizhu.get('年柱', 'N/A')[0] if sizhu.get('年柱') else 'N/A'}    月干: {sizhu.get('月柱', 'N/A')[0] if sizhu.get('月柱') else 'N/A'}    日干: {sizhu.get('日柱', 'N/A')[0] if sizhu.get('日柱') else 'N/A'}    时干: {sizhu.get('时柱', 'N/A')[0] if sizhu.get('时柱') else 'N/A'}
+  【地支五行】
+    年支: {sizhu.get('年柱', 'N/A')[1] if sizhu.get('年柱') else 'N/A'}    月支: {sizhu.get('月柱', 'N/A')[1] if sizhu.get('月柱') else 'N/A'}    日支: {sizhu.get('日柱', 'N/A')[1] if sizhu.get('日柱') else 'N/A'}    时支: {sizhu.get('时柱', 'N/A')[1] if sizhu.get('时柱') else 'N/A'}
+
+"""
+        
+        # 五行分析
+        wu_xing_result = detail.get('wu_xing_result', {})
+        if wu_xing_result:
+            content += f"""【五行分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  五行评分: {wu_xing_result.get('score', 'N/A')} 分
+"""
+            if wu_xing_result.get('reason'):
+                content += f"  五行评语: {wu_xing_result['reason']}\n"
+            
+            wu_xing_details = wu_xing_result.get('details', {})
+            if wu_xing_details:
+                # 1. 天干地支五行
+                if wu_xing_details.get('天干五行'):
+                    content += "\n  【天干地支五行】\n"
+                    for pillar, info in wu_xing_details['天干五行'].items():
+                        content += f"    {pillar}: {info['天干']}({info['天干五行']}) {info['地支']}({info['地支五行']})\n"
+                
+                # 2. 地支关系（三合、六合、六冲、六害、三刑）
+                if wu_xing_details.get('地支关系') and len(wu_xing_details['地支关系']) > 0:
+                    content += "\n  【地支关系】\n"
+                    for relation in wu_xing_details['地支关系']:
+                        content += f"    • {relation}\n"
+                else:
+                    content += "\n  【地支关系】\n    无明显合冲刑害关系\n"
+                
+                # 3. 十二长生
+                if wu_xing_details.get('十二长生'):
+                    content += "\n  【十二长生】\n"
+                    for pillar, state in wu_xing_details['十二长生'].items():
+                        content += f"    {pillar}: {state}\n"
+                
+                # 4. 纳音五行
+                if wu_xing_details.get('纳音五行'):
+                    content += "\n  【纳音五行】\n"
+                    for pillar, nayin in wu_xing_details['纳音五行'].items():
+                        content += f"    {pillar}: {nayin}\n"
+                
+                # 5. 吉神（天德、月德）
+                if wu_xing_details.get('吉神') and len(wu_xing_details['吉神']) > 0:
+                    content += "\n  【吉神】\n"
+                    for jishen in wu_xing_details['吉神']:
+                        content += f"    ✓ {jishen}\n"
+                else:
+                    content += "\n  【吉神】\n    无天德月德等吉神\n"
+                
+                # 6. 日主旺衰
+                if wu_xing_details.get('日主旺衰'):
+                    content += f"\n  【日主旺衰】\n    {wu_xing_details['日主旺衰']}\n"
+                
+                # 7. 五行生克
+                if wu_xing_details.get('五行生克') and len(wu_xing_details['五行生克']) > 0:
+                    content += "\n  【五行生克】\n"
+                    for relation in wu_xing_details['五行生克']:
+                        content += f"    • {relation}\n"
+            
+            if wu_xing_result.get('wang_xiang'):
+                content += f"  旺相分析: {wu_xing_result['wang_xiang']}\n"
+            if wu_xing_result.get('ke_zhi'):
+                content += f"  克制关系: {wu_xing_result['ke_zhi']}\n"
+            content += "\n"
+        
+        # 黄道信息
+        huangdao_info = detail.get('huangdao_info', {})
+        if huangdao_info:
+            content += """【黄道信息】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+            if huangdao_info.get('da_huang_dao'):
+                da_hd = huangdao_info['da_huang_dao']
+                content += f"  大黄道: {da_hd.get('name', 'N/A')} ({da_hd.get('type', 'N/A')})\n"
+                if da_hd.get('description'):
+                    content += f"    说明: {da_hd['description']}\n"
+            if huangdao_info.get('xiao_huang_dao'):
+                xiao_hd = huangdao_info['xiao_huang_dao']
+                content += f"  小黄道: {xiao_hd.get('name', 'N/A')} ({xiao_hd.get('type', 'N/A')})\n"
+                if xiao_hd.get('description'):
+                    content += f"    说明: {xiao_hd['description']}\n"
+            content += f"  黄道等级: {huangdao_info.get('huang_dao_level', 'N/A')}\n\n"
+        
+        # 宜忌信息
+        content += f"""【宜忌信息】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        yi_list = detail.get('yi_list', [])
+        ji_list = detail.get('ji_list', [])
+        if yi_list:
+            yi_items = yi_list if isinstance(yi_list, list) else yi_list.split(', ')
+            content += f"  宜: {', '.join(yi_items)}\n"
+        if ji_list:
+            ji_items = ji_list if isinstance(ji_list, list) else ji_list.split(', ')
+            content += f"  忌: {', '.join(ji_items)}\n"
+        content += "\n"
+        
+        # 神煞信息
+        shensha_list = detail.get('shensha_list', [])
+        if shensha_list:
+            content += """【神煞信息】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+            # 按分值排序显示
+            sorted_shensha = sorted(shensha_list, key=lambda x: x.get('score', 0), reverse=True)
+            for shensha in sorted_shensha:
+                name = shensha.get('name', '')
+                desc = shensha.get('description', '')
+                score = shensha.get('score', 0)
+                if score > 0:
+                    mark = '✓'
+                elif score < 0:
+                    mark = '✗'
+                else:
+                    mark = '○'
+                content += f"  {mark} {name}（{score:+.0f}分）: {desc}\n"
+            content += "\n"
+        
+        # 评语
+        if detail.get('reason'):
+            content += f"""【综合评语】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {detail['reason']}
+
+"""
+        
+        # 修造专属信息（动土方位、时辰吉凶、扶山相主等）
+        event_type = self.event_var.get()
+        construction_events = ['修造', '动土', '装修']
+        if event_type in construction_events:
+            try:
+                from modules.shensha.修造神煞扩展 import ConstructionShenShaCheckerExt
+                from modules.四柱计算器 import calculate_sizhu
+                
+                zuoshan = None
+                zhuming = None
+                
+                shan_xiang_val2 = getattr(self, 'shan_xiang', None)
+                if shan_xiang_val2 and shan_xiang_val2.get() and '山' in shan_xiang_val2.get():
+                    zuoshan = shan_xiang_val2.get().split('山')[0].strip()
+                
+                # 从owners_info中获取事主信息
+                owners_info = getattr(self, 'owners_info', [])
+                if owners_info:
+                    try:
+                        owner_info = owners_info[0]
+                        if 'year_var' in owner_info:
+                            birth_date = date(
+                                int(owner_info['year_var'].get()),
+                                int(owner_info['month_var'].get()),
+                                int(owner_info['day_var'].get())
+                            )
+                            birth_hour = int(owner_info['hour_var'].get())
+                            birth_minute = int(owner_info['minute_var'].get())
+                            owner_sizhu = calculate_sizhu(birth_date, birth_hour, birth_minute)
+                            zhuming = owner_sizhu.get('年柱', '')
+                    except:
+                        pass
+                
+                # 构建sizhu字典
+                detail_sizhu = {
+                    'year_gan': detail.get('sizhu', {}).get('年柱', '')[:1] if detail.get('sizhu', {}).get('年柱') else '',
+                    'year_zhi': detail.get('sizhu', {}).get('年柱', '')[1:] if detail.get('sizhu', {}).get('年柱') else '',
+                    'month_gan': detail.get('sizhu', {}).get('月柱', '')[:1] if detail.get('sizhu', {}).get('月柱') else '',
+                    'month_zhi': detail.get('sizhu', {}).get('月柱', '')[1:] if detail.get('sizhu', {}).get('月柱') else '',
+                    'day_gan': detail.get('sizhu', {}).get('日柱', '')[:1] if detail.get('sizhu', {}).get('日柱') else '',
+                    'day_zhi': detail.get('sizhu', {}).get('日柱', '')[1:] if detail.get('sizhu', {}).get('日柱') else '',
+                    'hour_gan': detail.get('sizhu', {}).get('时柱', '')[:1] if detail.get('sizhu', {}).get('时柱') else '',
+                    'hour_zhi': detail.get('sizhu', {}).get('时柱', '')[1:] if detail.get('sizhu', {}).get('时柱') else '',
+                }
+                
+                checker = ConstructionShenShaCheckerExt(zuoshan=zuoshan, zhuming=zhuming)
+                
+                # 扶山相主补龙信息
+                if zuoshan:
+                    content += """【修造择日分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+                    if zuoshan:
+                        content += f"  坐山：{zuoshan}"
+                        xiangshan_list = ['壬', '子', '癸', '丑', '艮', '寅', '甲', '卯', '乙', '辰', '巽', '巳',
+                                         '丙', '午', '丁', '未', '坤', '申', '庚', '酉', '辛', '戌', '乾', '亥']
+                        try:
+                            idx = xiangshan_list.index(zuoshan)
+                            xiang = xiangshan_list[(idx + 12) % 24]
+                            content += f"  向方：{xiang}\n"
+                        except:
+                            content += "\n"
+                    
+                    if zhuming:
+                        content += f"  主命：{zhuming}\n"
+                    
+                    # 显示神煞分类
+                    shensha_items = detail.get('shensha_list', [])
+                    fushan_items = []
+                    xiangzhu_items = []
+                    shanjia_items = []
+                    direction_items = []
+                    hour_items = []
+                    jianchu_items = []
+                    other_items = []
+                    
+                    for s in shensha_items:
+                        name = s.get('name', '')
+                        score = s.get('score', 0)
+                        desc = s.get('description', '')
+                        tag = f"{name}: {desc}（{score:+.0f}分）"
+                        
+                        if '扶山' in name or '相主' in name or '补龙' in name or '冲主' in name or '克山' in name:
+                            fushan_items.append(tag)
+                        elif '山家' in name or '冲山' in name:
+                            shanjia_items.append(tag)
+                        elif '方位' in name or '到方' in name:
+                            direction_items.append(tag)
+                        elif '时' in name:
+                            hour_items.append(tag)
+                        elif '建除' in name:
+                            jianchu_items.append(tag)
+                        else:
+                            other_items.append(tag)
+                    
+                    if fushan_items:
+                        content += "\n  【扶山·相主·补龙】\n"
+                        for item in fushan_items:
+                            content += f"    • {item}\n"
+                    
+                    if shanjia_items:
+                        content += "\n  【山家吉凶】\n"
+                        for item in shanjia_items:
+                            content += f"    • {item}\n"
+                    
+                    if direction_items:
+                        content += "\n  【动土方位凶煞】\n"
+                        for item in direction_items:
+                            content += f"    • {item}\n"
+                    
+                    if hour_items:
+                        content += "\n  【时辰吉凶】\n"
+                        for item in hour_items:
+                            content += f"    • {item}\n"
+                    
+                    if jianchu_items:
+                        content += "\n  【建除十二神】\n"
+                        for item in jianchu_items:
+                            content += f"    • {item}\n"
+                    
+                    # 吉利动土方位推荐
+                    lucky_directions = checker.get_lucky_directions(detail_sizhu)
+                    safe_dirs = [d for d in lucky_directions if d['分值'] == 0]
+                    danger_dirs = [d for d in lucky_directions if d['分值'] < 0]
+                    
+                    content += "\n  【二十四山动土方位吉凶】\n"
+                    content += "  （0分=安全可用，负分=犯煞不宜）\n"
+                    
+                    # 按八方位分组显示
+                    fangwei_groups = {
+                        '北方': ['壬', '子', '癸'],
+                        '东北': ['丑', '艮', '寅'],
+                        '东方': ['甲', '卯', '乙'],
+                        '东南': ['辰', '巽', '巳'],
+                        '南方': ['丙', '午', '丁'],
+                        '西南': ['未', '坤', '申'],
+                        '西方': ['庚', '酉', '辛'],
+                        '西北': ['戌', '乾', '亥']
+                    }
+                    
+                    for fang_name, shans in fangwei_groups.items():
+                        content += f"\n    {fang_name}："
+                        dir_infos = []
+                        # 创建方位到信息的映射，方便查找
+                        direction_map = {d['方位']: d for d in lucky_directions}
+                        for shan in shans:
+                            d = direction_map.get(shan, {'分值': 0, '说明': ['无煞']})
+                            if d['分值'] == 0:
+                                dir_infos.append(f"{shan}(0分)")
+                            else:
+                                sha_names = '、'.join(d['说明'])
+                                dir_infos.append(f"{shan}({d['分值']}分:{sha_names})")
+                        content += '  '.join(dir_infos) + '\n'
+                    
+                    if safe_dirs:
+                        safe_names = '、'.join([f"{d['方位']}({d['分值']}分)" for d in safe_dirs])
+                        content += f"\n  ★ 安全方位（共{len(safe_dirs)}个）：{safe_names}\n"
+                    if danger_dirs:
+                        content += f"  ✗ 犯煞方位（共{len(danger_dirs)}个）："
+                        for d in danger_dirs:
+                            content += f"\n    {d['方位']}（{d['分值']}分）：{'、'.join(d['说明'])}"
+                        content += "\n"
+                    
+                    # 吉利时辰推荐
+                    lucky_hours = checker.get_lucky_hours(detail_sizhu)
+                    good_hours = [h for h in lucky_hours if h['分值'] > 0]
+                    bad_hours = [h for h in lucky_hours if h['分值'] < 0]
+                    ok_hours = [h for h in lucky_hours if h['分值'] == 0]
+                    
+                    content += "\n  【十二时辰动土吉凶】\n"
+                    content += "  （正分=吉时，0分=平，负分=凶时）\n"
+                    
+                    # 按时辰顺序显示
+                    hour_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                    for zhi in hour_order:
+                        for h in lucky_hours:
+                            if h['地支'] == zhi:
+                                if h['分值'] > 0:
+                                    mark = '★'
+                                    reasons_str = '、'.join(h['说明'])
+                                    content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
+                                elif h['分值'] < 0:
+                                    mark = '✗'
+                                    reasons_str = '、'.join(h['说明'])
+                                    content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
+                                else:
+                                    content += f"      {h['天干']}{h['地支']}时 {h['时辰']}  平\n"
+                                break
+                    
+                    if good_hours:
+                        good_names = '、'.join([f"{h['天干']}{h['地支']}" for h in good_hours])
+                        content += f"\n  ★ 吉利时辰（共{len(good_hours)}个）：{good_names}\n"
+                    if bad_hours:
+                        bad_names = '、'.join([f"{h['天干']}{h['地支']}" for h in bad_hours])
+                        content += f"  ✗ 凶时（共{len(bad_hours)}个）：{bad_names}\n"
+                    
+                    content += "\n"
+                
+            except Exception as e:
+                content += f"\n【修造分析】\n  分析出错：{str(e)}\n"
+        
+        # 嫁娶专属信息（吉利时辰、大利月等）
+        marriage_events = ['嫁娶', '订婚', '纳采', '结婚']
+        if event_type in marriage_events:
+            try:
+                from modules.shensha.嫁娶神煞扩展 import MarriageShenShaCheckerExt
+                from modules.四柱计算器 import calculate_sizhu
+                
+                bride_gan = None
+                bride_zhi = None
+                groom_gan = None
+                groom_zhi = None
+                
+                # 从owners_info中获取事主信息
+                owners_info = getattr(self, 'owners_info', [])
+                owners = []
+                for owner_info in owners_info:
+                    owner_data = {}
+                    if 'gender' in owner_info:
+                        owner_data['性别'] = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                    if 'year' in owner_info:
+                        try:
+                            # 添加防御性检查
+                            year_val = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
+                            month_val = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
+                            day_val = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                            hour_val = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
+                            minute_val = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
+                            
+                            owner_data['birth_date'] = date(
+                                int(year_val),
+                                int(month_val),
+                                int(day_val)
+                            )
+                            owner_data['birth_hour'] = int(hour_val)
+                            owner_data['birth_minute'] = int(minute_val)
+                        except (ValueError, AttributeError):
+                            pass
+                    owners.append(owner_data)
+                
+                if owners:
+                    for owner in owners:
+                        gender = owner.get('性别', '') or owner.get('gender', '')
+                        if gender == '女':
+                            bride_gan = owner.get('年干', '') or owner.get('year_gan', '')
+                            bride_zhi = owner.get('生肖', '') or owner.get('年支', '') or owner.get('year_zhi', '')
+                            if not bride_gan and owner.get('birth_date'):
+                                try:
+                                    birth_date = owner['birth_date']
+                                    if isinstance(birth_date, str):
+                                        from datetime import datetime
+                                        birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                                    if hasattr(birth_date, 'year'):
+                                        owner_sizhu = calculate_sizhu(birth_date,
+                                            owner.get('birth_hour', 12),
+                                            owner.get('birth_minute', 0))
+                                        bride_gan = owner_sizhu.get('年柱', '')[:1]
+                                        bride_zhi = owner_sizhu.get('年柱', '')[1:]
+                                except:
+                                    pass
+                        elif gender == '男':
+                            groom_gan = owner.get('年干', '') or owner.get('year_gan', '')
+                            groom_zhi = owner.get('生肖', '') or owner.get('年支', '') or owner.get('year_zhi', '')
+                            if not groom_gan and owner.get('birth_date'):
+                                try:
+                                    birth_date = owner['birth_date']
+                                    if isinstance(birth_date, str):
+                                        from datetime import datetime
+                                        birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                                    if hasattr(birth_date, 'year'):
+                                        owner_sizhu = calculate_sizhu(birth_date,
+                                            owner.get('birth_hour', 12),
+                                            owner.get('birth_minute', 0))
+                                        groom_gan = owner_sizhu.get('年柱', '')[:1]
+                                        groom_zhi = owner_sizhu.get('年柱', '')[1:]
+                                except:
+                                    pass
+                
+                detail_sizhu = {
+                    'year_gan': detail.get('sizhu', {}).get('年柱', '')[:1] if detail.get('sizhu', {}).get('年柱') else '',
+                    'year_zhi': detail.get('sizhu', {}).get('年柱', '')[1:] if detail.get('sizhu', {}).get('年柱') else '',
+                    'month_gan': detail.get('sizhu', {}).get('月柱', '')[:1] if detail.get('sizhu', {}).get('月柱') else '',
+                    'month_zhi': detail.get('sizhu', {}).get('月柱', '')[1:] if detail.get('sizhu', {}).get('月柱') else '',
+                    'day_gan': detail.get('sizhu', {}).get('日柱', '')[:1] if detail.get('sizhu', {}).get('日柱') else '',
+                    'day_zhi': detail.get('sizhu', {}).get('日柱', '')[1:] if detail.get('sizhu', {}).get('日柱') else '',
+                    'hour_gan': detail.get('sizhu', {}).get('时柱', '')[:1] if detail.get('sizhu', {}).get('时柱') else '',
+                    'hour_zhi': detail.get('sizhu', {}).get('时柱', '')[1:] if detail.get('sizhu', {}).get('时柱') else '',
+                }
+                
+                checker = MarriageShenShaCheckerExt(
+                    bride_gan=bride_gan, bride_zhi=bride_zhi,
+                    groom_gan=groom_gan, groom_zhi=groom_zhi
+                )
+                
+                content += """【嫁娶择日分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+                # 地支到生肖的映射
+                zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                             '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+                
+                if bride_gan and bride_zhi:
+                    bride_zodiac = zodiac_map.get(bride_zhi, '')
+                    content += f"  新娘：{bride_gan}{bride_zhi}年生"
+                    if bride_zodiac:
+                        content += f"（{bride_zodiac}）"
+                    content += "\n"
+                if groom_gan and groom_zhi:
+                    groom_zodiac = zodiac_map.get(groom_zhi, '')
+                    content += f"  新郎：{groom_gan}{groom_zhi}年生"
+                    if groom_zodiac:
+                        content += f"（{groom_zodiac}）"
+                    content += "\n"
+                
+                daliyue_info = checker.get_daliyue_info(detail_sizhu)
+                content += f"\n  【利月分析】\n"
+                content += f"    大利月：{'、'.join(daliyue_info['大利月']) if daliyue_info['大利月'] else '无'}\n"
+                content += f"    小利月：{'、'.join(daliyue_info['小利月']) if daliyue_info['小利月'] else '无'}\n"
+                content += f"    当前月份：{daliyue_info['当前月份状态']}\n"
+                
+                shensha_items = detail.get('shensha_list', [])
+                jiri_items = []
+                xiongri_items = []
+                chonghe_items = []
+                liyue_items = []
+                other_items = []
+                
+                for s in shensha_items:
+                    name = s.get('name', '')
+                    score = s.get('score', 0)
+                    desc = s.get('description', '')
+                    tag = f"{name}（{score:+.0f}分）: {desc}"
+                    
+                    if '大利月' in name or '小利月' in name:
+                        liyue_items.append(tag)
+                    elif '日' in name and '吉' in desc:
+                        jiri_items.append(tag)
+                    elif '日' in name and ('忌' in desc or '凶' in desc or '大忌' in desc):
+                        xiongri_items.append(tag)
+                    elif '冲' in name or '合' in name:
+                        chonghe_items.append(tag)
+                    elif '煞' in name or '忌' in name:
+                        xiongri_items.append(tag)
+                    else:
+                        other_items.append(tag)
+                
+                if liyue_items:
+                    content += "\n  【利月神煞】\n"
+                    for item in liyue_items:
+                        content += f"    • {item}\n"
+                
+                if jiri_items:
+                    content += "\n  【吉日神煞】\n"
+                    for item in jiri_items:
+                        content += f"    ✓ {item}\n"
+                
+                if xiongri_items:
+                    content += "\n  【凶日神煞】\n"
+                    for item in xiongri_items:
+                        content += f"    ✗ {item}\n"
+                
+                if chonghe_items:
+                    content += "\n  【冲合关系】\n"
+                    for item in chonghe_items:
+                        content += f"    • {item}\n"
+                
+                lucky_hours = checker.get_lucky_hours(detail_sizhu)
+                # 吉利时辰：分值>0 且 未禁用
+                good_hours = [h for h in lucky_hours if h['分值'] > 0 and not h.get('禁用', False)]
+                # 凶时：分值<0 或 已禁用
+                bad_hours = [h for h in lucky_hours if h['分值'] < 0 or h.get('禁用', False)]
+                
+                content += "\n  【十二时辰婚嫁吉凶】\n"
+                content += "  （正分=吉时，0分=平，负分=凶时，禁用=不可用）\n"
+                
+                hour_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                for zhi in hour_order:
+                    for h in lucky_hours:
+                        if h['地支'] == zhi:
+                            if h.get('禁用', False):
+                                mark = '✗'
+                                reasons_str = '、'.join(h['说明'])
+                                content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
+                            elif h['分值'] > 0:
+                                mark = '★'
+                                reasons_str = '、'.join(h['说明'])
+                                content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
+                            elif h['分值'] < 0:
+                                mark = '✗'
+                                reasons_str = '、'.join(h['说明'])
+                                content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
+                            else:
+                                content += f"      {h['天干']}{h['地支']}时 {h['时辰']}  平\n"
+                            break
+                
+                if good_hours:
+                    good_names = '、'.join([f"{h['天干']}{h['地支']}" for h in good_hours])
+                    content += f"\n  ★ 吉利时辰（共{len(good_hours)}个）：{good_names}\n"
+                if bad_hours:
+                    bad_names = '、'.join([f"{h['天干']}{h['地支']}" for h in bad_hours])
+                    content += f"  ✗ 凶时/禁用（共{len(bad_hours)}个）：{bad_names}\n"
+                
+                content += "\n"
+                
+            except Exception as e:
+                content += f"\n【嫁娶分析】\n  分析出错：{str(e)}\n"
         
         # 添加二十四山分析（如果有山向信息）
         shan_xiang_val = getattr(self, 'shan_xiang', None)
@@ -1465,18 +3285,23 @@ class ZeriApp:
                                 content += f"  {d}\n"
                     else:
                         # 正向使用正体五行
-                        level, score, detail_24 = selector.evaluate_by_name(
+                        result_24 = selector.evaluate_by_name(
                             shan_name, year_gz, month_gz, day_gz, hour_gz
                         )
                         
-                        content += f"\n\n【正体五行分析】\n"
-                        content += f"山向：{shan_xiang_val.get()}（坐山：{shan_name}）\n"
-                        content += f"兼向：正中（正向）\n"
-                        content += f"等级：{level}\n"
-                        content += f"得分：{score}\n"
-                        if 'summary' in detail_24:
-                            summary = detail_24['summary']
-                            content += f"坐山得分：{summary.get('mountain_score', 'N/A')}\n"
+                        if result_24.get('success'):
+                            content += f"\n\n【正体五行分析】\n"
+                            content += f"山向：{shan_xiang_val.get()}（坐山：{shan_name}）\n"
+                            content += f"兼向：正中（正向）\n"
+                            content += f"等级：{result_24.get('level', '?')}\n"
+                            content += f"得分：{result_24.get('score', '?')}\n"
+                            if 'summary' in result_24:
+                                summary = result_24['summary']
+                                content += f"坐山得分：{summary.get('mountain_score', 'N/A')}\n"
+                        else:
+                            content += f"\n\n【正体五行分析】\n"
+                            content += f"山向：{shan_xiang_val.get()}（坐山：{shan_name}）\n"
+                            content += f"分析失败：{result_24.get('error', '未知错误')}\n"
             except Exception as e:
                 content += f"\n\n【二十四山分析】\n分析出错：{str(e)}\n"
         
@@ -1576,8 +3401,12 @@ class ZeriApp:
                         f.write(f"四柱：{result['sizhu']}\n")
                         f.write(f"评分：{result['score']} 分\n")
                         f.write(f"等级：{result['level']}\n")
-                        f.write(f"宜：{result['yi']}\n")
-                        f.write(f"忌：{result['ji']}\n")
+                        # 从detail中获取宜/忌列表
+                        detail = result.get('detail', {})
+                        yi_list = detail.get('yi_list', [])
+                        ji_list = detail.get('ji_list', [])
+                        f.write(f"宜：{', '.join(yi_list) if yi_list else '-'}\n")
+                        f.write(f"忌：{', '.join(ji_list) if ji_list else '-'}\n")
                         f.write("-" * 40 + "\n\n")
             
             messagebox.showinfo("成功", f"结果已导出到：\n{file_path}")
@@ -1617,12 +3446,17 @@ class ZeriApp:
                         for result in self.results:
                             self.result_tree.insert("", tk.END, values=(
                                 result['date'],
-                                result.get('lunar', '-'),
-                                result['sizhu'],
                                 result.get('score', '-'),
                                 result.get('level', '-'),
-                                result.get('yi', '-'),
-                                result.get('ji', '-')
+                                result.get('sizhu', result.get('四柱', '-')),
+                                result.get('wuxing_score', '-'),
+                                result.get('yueling_score', '-'),
+                                result.get('xishen_score', '-'),
+                                result.get('huangdao_score', '-'),
+                                result.get('dizhi_relation', '-'),
+                                result.get('jishen', result.get('yi', '-')),
+                                result.get('daliyue', '-'),
+                                result.get('owners', '-')
                             ))
                     
                     # 处理其他JSON格式（如评分系统导出的）
@@ -1651,12 +3485,17 @@ class ZeriApp:
                         for result in self.results:
                             self.result_tree.insert("", tk.END, values=(
                                 result['date'],
-                                result.get('lunar', '-'),
-                                result['sizhu'],
                                 result.get('score', '-'),
                                 result.get('level', '-'),
-                                result.get('yi', '-'),
-                                result.get('ji', '-')
+                                result.get('sizhu', result.get('四柱', '-')),
+                                result.get('wuxing_score', '-'),
+                                result.get('yueling_score', '-'),
+                                result.get('xishen_score', '-'),
+                                result.get('huangdao_score', '-'),
+                                result.get('dizhi_relation', '-'),
+                                result.get('jishen', result.get('yi', '-')),
+                                result.get('daliyue', '-'),
+                                result.get('owners', '-')
                             ))
             
             else:
@@ -1696,12 +3535,17 @@ class ZeriApp:
                     for result in self.results:
                         self.result_tree.insert("", tk.END, values=(
                             result['date'],
-                            result.get('lunar', '-'),
-                            result['sizhu'],
                             result.get('score', '-'),
                             result.get('level', '-'),
-                            result.get('yi', '-'),
-                            result.get('ji', '-')
+                            result.get('sizhu', result.get('四柱', '-')),
+                            result.get('wuxing_score', '-'),
+                            result.get('yueling_score', '-'),
+                            result.get('xishen_score', '-'),
+                            result.get('huangdao_score', '-'),
+                            result.get('dizhi_relation', '-'),
+                            result.get('jishen', result.get('yi', '-')),
+                            result.get('daliyue', '-'),
+                            result.get('owners', '-')
                         ))
             
             if imported_count > 0:
@@ -1767,29 +3611,43 @@ class ZeriApp:
         """打开日课评分系统"""
         try:
             from modules.日课评分系统 import DayScoreWindow
-            score_window = DayScoreWindow()
+            # 传递主程序窗口作为master参数，创建Toplevel窗口
+            score_window = DayScoreWindow(master=self.root)
             
-            # 如果有当前结果，导入到评分系统
-            if self.results:
-                owners_data = []
-                for owner in self.owners_info:
-                    try:
-                        owners_data.append({
-                            'year': int(owner['year'].get()),
-                            'month': int(owner['month'].get()),
-                            'day': int(owner['day'].get()),
-                            'hour': int(owner['hour'].get()),
-                            'minute': int(owner['minute'].get())
-                        })
-                    except:
-                        pass
-                
-                score_window.import_results(
-                    self.results,
-                    self.event_var.get(),
-                    owners_data
-                )
+            # 准备事主数据
+            owners_data = []
+            for owner in self.owners_info:
+                try:
+                    # 添加防御性检查
+                    year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
+                    month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
+                    day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
+                    
+                    # 检查是否填写了日期
+                    if not (year_str and month_str and day_str):
+                        continue
+                    
+                    hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
+                    minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
+                    
+                    owners_data.append({
+                        'year': int(year_str),
+                        'month': int(month_str),
+                        'day': int(day_str),
+                        'hour': int(hour_str),
+                        'minute': int(minute_str)
+                    })
+                except:
+                    pass
             
+            # 导入当前事项类型和事主数据
+            score_window.import_results(
+                self.results if hasattr(self, 'results') else [],
+                self.event_var.get(),
+                owners_data
+            )
+            
+            # 直接启动日课评分系统
             score_window.run()
         except Exception as e:
             messagebox.showerror("错误", f"打开评分系统失败：{str(e)}")
@@ -1808,12 +3666,24 @@ class ZeriApp:
             owners_data = []
             for owner in self.owners_info:
                 try:
+                    # 添加防御性检查
+                    year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
+                    month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
+                    day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
+                    
+                    # 检查是否填写了日期
+                    if not (year_str and month_str and day_str):
+                        continue
+                    
+                    hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
+                    minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
+                    
                     owners_data.append({
-                        'year': int(owner['year'].get()),
-                        'month': int(owner['month'].get()),
-                        'day': int(owner['day'].get()),
-                        'hour': int(owner['hour'].get()),
-                        'minute': int(owner['minute'].get())
+                        'year': int(year_str),
+                        'month': int(month_str),
+                        'day': int(day_str),
+                        'hour': int(hour_str),
+                        'minute': int(minute_str)
                     })
                 except:
                     pass
@@ -1979,9 +3849,27 @@ class ZeriApp:
    - 五行凶 + 任何黄道 → 坚决不用
 
 6. 事主信息
-   - 婚嫁：新娘新郎信息必填
+   - 婚嫁：新娘新郎信息必填（需完整出生日期推算日柱）
    - 安葬：死者信息必填
    - 其他事项：事主信息可选
+
+7. 婚嫁择日说明
+   - 夫子星、阴胎、阳气需新娘日柱才能准确计算
+   - 时辰评分包含：大黄道、小黄道、贵人时、禄神时等
+   - 日破时、冲命时自动标记为禁用，不参与排序
+   - 五不遇时算法已修正（时干克日干，阴阳相同，位移差4）
+
+8. 造葬择日说明
+   - 山方煞：动态计算（戊己日+辰戌支），静态数据仅供参考
+   - 克山运：动态计算（按年干推算山运纳音），静态数据可能错误
+   - 星曜煞：动态计算（按山家五行判断忌日）
+   - 三煞检查：按二十四山三合局归属判断
+   - 阴府：区分正阴府（双干全）和傍阴府（单干见）
+
+9. 模块职责
+   - 婚嫁神煞扩展模块：负责时辰吉利值、大利月、夫子星等
+   - 婚嫁神煞主模块：负责三娘煞、阴错阳差、红纱、杨公忌等日禁
+   - 二十四山模块：负责造葬择日的山家专用检查
 """)
         ]
         
@@ -2132,6 +4020,60 @@ class ZeriApp:
             "更新日期: 2026年\n"
             "作者: 专业择日团队"
         )
+
+    def _on_touch_start(self, event):
+        """触摸开始事件"""
+        self._touch_start_x = event.x
+        self._touch_start_y = event.y
+        self._touch_start_scroll_x = event.widget.xview()[0]
+        self._touch_start_scroll_y = event.widget.yview()[0]
+
+    def _on_touch_move(self, event):
+        """触摸移动事件"""
+        if hasattr(self, '_touch_start_x') and hasattr(self, '_touch_start_y'):
+            delta_x = event.x - self._touch_start_x
+            delta_y = event.y - self._touch_start_y
+            
+            # 计算滚动距离（反向滚动）
+            scroll_delta_x = -delta_x / event.widget.winfo_width()
+            scroll_delta_y = -delta_y / event.widget.winfo_height()
+            
+            # 应用滚动
+            new_x = max(0, min(1, self._touch_start_scroll_x + scroll_delta_x))
+            new_y = max(0, min(1, self._touch_start_scroll_y + scroll_delta_y))
+            
+            event.widget.xview_moveto(new_x)
+            event.widget.yview_moveto(new_y)
+
+    def _on_touch_end(self, event):
+        """触摸结束事件"""
+        # 重置触摸状态
+        self._touch_start_x = 0
+        self._touch_start_y = 0
+        self._touch_start_scroll_x = 0
+        self._touch_start_scroll_y = 0
+
+    def _on_tree_touch_start(self, event):
+        """结果列表触摸开始事件"""
+        # 检查是否点击了项目（避免干扰选择）
+        item = self.result_tree.identify_row(event.y)
+        if item:
+            # 如果点击了项目，不启动触摸滚动
+            self._touch_start_x = 0
+            self._touch_start_y = 0
+        else:
+            # 否则启动触摸滚动
+            self._on_touch_start(event)
+
+    def _on_tree_touch_move(self, event):
+        """结果列表触摸移动事件"""
+        # 只有当触摸开始坐标不为0时才执行滚动
+        if self._touch_start_x != 0 or self._touch_start_y != 0:
+            self._on_touch_move(event)
+
+    def _on_tree_touch_end(self, event):
+        """结果列表触摸结束事件"""
+        self._on_touch_end(event)
 
 def main():
     """主函数"""

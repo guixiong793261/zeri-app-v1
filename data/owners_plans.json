@@ -1,0 +1,386 @@
+{
+  "修造__自建房": {
+    "event_type": "修造",
+    "plan_name": "自建房",
+    "owners": [
+      {
+        "name": "事主1",
+        "role": "事主1",
+        "year": "1972",
+        "month": "1",
+        "day": "8",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛亥 辛丑 戊戌 丙辰",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "事主2",
+        "role": "事主2",
+        "year": "1971",
+        "month": "5",
+        "day": "11",
+        "hour": "8",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "辛亥 癸巳 丙申 壬辰",
+        "xishen": "土、火",
+        "yongshen": "土",
+        "fuzi": ""
+      },
+      {
+        "name": "事主3",
+        "role": "事主3",
+        "year": "",
+        "month": "",
+        "day": "",
+        "hour": "12",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "未计算",
+        "xishen": "",
+        "yongshen": "",
+        "fuzi": ""
+      },
+      {
+        "name": "事主4",
+        "role": "事主4",
+        "year": "",
+        "month": "",
+        "day": "",
+        "hour": "12",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "未计算",
+        "xishen": "",
+        "yongshen": "",
+        "fuzi": ""
+      }
+    ]
+  },
+  "修造__罗平进宅": {
+    "event_type": "修造",
+    "plan_name": "罗平进宅",
+    "owners": [
+      {
+        "name": "贵雄",
+        "role": "事主1",
+        "year": "1972",
+        "month": "1",
+        "day": "8",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛亥 辛丑 戊戌 丙辰",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "美",
+        "role": "事主2",
+        "year": "1971",
+        "month": "5",
+        "day": "11",
+        "hour": "8",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "辛亥 癸巳 丙申 壬辰",
+        "xishen": "土、火",
+        "yongshen": "土",
+        "fuzi": ""
+      },
+      {
+        "name": "文辉",
+        "role": "事主3",
+        "year": "1994",
+        "month": "10",
+        "day": "28",
+        "hour": "3",
+        "minute": "40",
+        "gender": "男",
+        "sizhu": "甲戌 甲戌 丁亥 壬寅",
+        "xishen": "木、火",
+        "yongshen": "火",
+        "fuzi": ""
+      },
+      {
+        "name": "文旺",
+        "role": "事主4",
+        "year": "1998",
+        "month": "10",
+        "day": "13",
+        "hour": "23",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "未计算",
+        "xishen": "",
+        "yongshen": "",
+        "fuzi": ""
+      }
+    ]
+  },
+  "入宅__罗平进宅": {
+    "event_type": "入宅",
+    "plan_name": "罗平进宅",
+    "owners": [
+      {
+        "name": "事主1",
+        "role": "事主1",
+        "year": "1972",
+        "month": "1",
+        "day": "8",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛亥 辛丑 戊戌 丙辰",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "事主2",
+        "role": "事主2",
+        "year": "1971",
+        "month": "5",
+        "day": "11",
+        "hour": "8",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "辛亥 癸巳 丙申 壬辰",
+        "xishen": "土、火",
+        "yongshen": "土",
+        "fuzi": ""
+      },
+      {
+        "name": "事主3",
+        "role": "事主3",
+        "year": "1994",
+        "month": "10",
+        "day": "28",
+        "hour": "4",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "甲戌 甲戌 丁亥 壬寅",
+        "xishen": "木、火",
+        "yongshen": "火",
+        "fuzi": ""
+      },
+      {
+        "name": "事主4",
+        "role": "事主4",
+        "year": "1998",
+        "month": "10",
+        "day": "13",
+        "hour": "23",
+        "minute": "30",
+        "gender": "男",
+        "sizhu": "戊寅 壬戌 癸巳 癸亥",
+        "xishen": "金、水",
+        "yongshen": "金",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__文辉结婚": {
+    "event_type": "嫁娶",
+    "plan_name": "文辉结婚",
+    "owners": [
+      {
+        "name": "新娘",
+        "role": "新娘",
+        "year": "1996",
+        "month": "9",
+        "day": "19",
+        "hour": "9",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "丙子 丁酉 己未 己巳",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": "夫星: 水, 子星: 金"
+      },
+      {
+        "name": "新郎",
+        "role": "新郎",
+        "year": "1994",
+        "month": "10",
+        "day": "28",
+        "hour": "3",
+        "minute": "40",
+        "gender": "男",
+        "sizhu": "甲戌 甲戌 丁亥 壬寅",
+        "xishen": "木、火",
+        "yongshen": "火",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__文生结婚": {
+    "event_type": "嫁娶",
+    "plan_name": "文生结婚",
+    "owners": [
+      {
+        "name": "淑玲",
+        "role": "新娘",
+        "year": "1991",
+        "month": "9",
+        "day": "21",
+        "hour": "6",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "辛未 丁酉 甲午 丁卯",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": "夫星: 金, 子星: 水"
+      },
+      {
+        "name": "文生",
+        "role": "新郎",
+        "year": "1992",
+        "month": "3",
+        "day": "11",
+        "hour": "23",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "壬申 癸卯 丙戌 己亥",
+        "xishen": "土、火",
+        "yongshen": "土",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__文旺结婚": {
+    "event_type": "嫁娶",
+    "plan_name": "文旺结婚",
+    "owners": [
+      {
+        "name": "欢",
+        "role": "新娘",
+        "year": "1999",
+        "month": "4",
+        "day": "5",
+        "hour": "6",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "己卯 丁卯 丁亥 癸卯",
+        "xishen": "水、金",
+        "yongshen": "水",
+        "fuzi": "夫星: 水, 子星: 土"
+      },
+      {
+        "name": "文旺",
+        "role": "新郎",
+        "year": "1998",
+        "month": "10",
+        "day": "13",
+        "hour": "23",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "戊寅 壬戌 癸巳 癸亥",
+        "xishen": "金、水",
+        "yongshen": "金",
+        "fuzi": ""
+      }
+    ]
+  },
+  "修造__重建老家": {
+    "event_type": "修造",
+    "plan_name": "重建老家",
+    "owners": [
+      {
+        "name": "事主1",
+        "role": "事主1",
+        "year": "1961",
+        "month": "9",
+        "day": "13",
+        "hour": "4",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛丑 丁酉 己酉 丙寅",
+        "xishen": "木、水",
+        "yongshen": "木",
+        "fuzi": ""
+      },
+      {
+        "name": "事主2",
+        "role": "事主2",
+        "year": "1967",
+        "month": "10",
+        "day": "23",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "丁未 庚戌 庚申 庚辰",
+        "xishen": "土、金",
+        "yongshen": "土",
+        "fuzi": ""
+      },
+      {
+        "name": "事主3",
+        "role": "事主3",
+        "year": "1972",
+        "month": "1",
+        "day": "8",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛亥 辛丑 戊戌 丙辰",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "事主4",
+        "role": "事主4",
+        "year": "",
+        "month": "",
+        "day": "",
+        "hour": "12",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "未计算",
+        "xishen": "",
+        "yongshen": "",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__家辉择日": {
+    "event_type": "嫁娶",
+    "plan_name": "家辉择日",
+    "owners": [
+      {
+        "name": "新娘",
+        "role": "新娘",
+        "year": "2000",
+        "month": "1",
+        "day": "1",
+        "hour": "14",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "己卯 丙子 戊午 己未",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "新郎",
+        "role": "新郎",
+        "year": "2006",
+        "month": "1",
+        "day": "1",
+        "hour": "2",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "乙酉 戊子 庚寅 丁丑",
+        "xishen": "土、金",
+        "yongshen": "土",
+        "fuzi": ""
+      }
+    ]
+  }
+}

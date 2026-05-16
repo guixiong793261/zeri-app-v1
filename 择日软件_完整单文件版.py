@@ -195,6 +195,10 @@ def format_datetime(dt):
 # ============================================================================
 # 注意：新开发建议直接从八字工具整合模块导入
 
+# 保存原始的 TIAN_GAN 和 DI_ZHI 常量
+_original_TIAN_GAN = TIAN_GAN
+_original_DI_ZHI = DI_ZHI
+
 
 # -*- coding: utf-8 -*-
 """
@@ -226,6 +230,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 # 从工具函数导入基础数据
+# 确保 TIAN_GAN 和 DI_ZHI 常量存在
+if 'TIAN_GAN' not in locals():
+    TIAN_GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+if 'DI_ZHI' not in locals():
+    DI_ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+
 # 五行映射（使用工具函数中的定义）
 GAN_WUXING = TIAN_GAN_WUXING
 ZHI_WUXING = DI_ZHI_WUXING
@@ -517,12 +527,6 @@ def check_hai(zhi1: str, zhi2: str) -> bool:
     ]
     
     return (zhi1, zhi2) in hai_pairs or (zhi2, zhi1) in hai_pairs
-
-
-# 添加别名，保持与其他模块的兼容性
-check_liuhe = check_he
-check_liuchong = check_chong
-check_liuhai = check_hai
 
 
 def check_sanhe(zhis: List[str]) -> Optional[str]:
@@ -889,10 +893,10 @@ def _calculate_for_wood(wuxing_counts):
         return "金、土", "金"
     elif gold_count > 3.0:
         # 金旺，喜火克金，木生火
-        return "火、木", "火"
+        return "火、水", "火"
     elif earth_count > 3.0:
         # 土旺，喜木克土，水生木
-        return "木、水", "木"
+        return "水、木", "水"
     elif water_count < 2.0:
         # 水弱，喜水生木
         return "水、木", "水"
@@ -920,7 +924,7 @@ def _calculate_for_water(wuxing_counts):
         return "土、火", "土"
     elif earth_count > 3.0:
         # 土旺，喜木制土，水生木
-        return "木、水", "木"
+        return "木、金", "木"
     elif fire_count > 3.0:
         # 火旺，喜水克火，金生水
         return "水、金", "水"
@@ -951,10 +955,10 @@ def _calculate_for_fire(wuxing_counts):
         return "水、金", "水"
     elif water_count > 3.0:
         # 水旺，喜土克水，火生土
-        return "土、火", "土"
+        return "土、木", "土"
     elif gold_count > 3.0:
         # 金旺，喜火克金，木生火
-        return "火、木", "火"
+        return "木、火", "木"
     elif wood_count < 2.0:
         # 木弱，喜木生火
         return "木、火", "木"
@@ -986,7 +990,7 @@ def _calculate_for_earth(wuxing_counts):
         return "木、水", "木"
     elif wood_count > 3.0:
         # 木旺，喜金克木，土生金
-        return "金、土", "金"
+        return "金、火", "金"
     elif water_count < 2.0:
         # 水弱，喜水润土
         return "水、土", "水"
@@ -1046,14 +1050,9 @@ logger = logging.getLogger(__name__)
 
 # 从工具函数导入基础数据
 # 尝试导入 sxtwl 库
-try:
-    import sxtwl
-    HAS_SXTWL = True
-    logger.info("成功导入 sxtwl 库，使用精确的四柱计算方法")
-except ImportError:
-    HAS_SXTWL = False
-    logger.warning("未找到 sxtwl 库，将使用备用计算方法")
-
+import sxtwl
+HAS_SXTWL = True
+logger.info("成功导入 sxtwl 库，使用精确的四柱计算方法")
 class SiZhuCalculator:
     """
     四柱计算器类
@@ -1354,22 +1353,17 @@ class SiZhuCalculator:
         
         使用简化的计算方法
         """
-        try:
-            # 以1900年1月1日为基准日（甲戌日）
-            base_date = date(1900, 1, 1)
-            target_date = date(year, month, day)
-            days_diff = (target_date - base_date).days
-            
-            # 计算日干支
-            # 甲戌日的天干索引是0（甲），地支索引是10（戌）
-            gan_index = (days_diff + 0) % 10
-            zhi_index = (days_diff + 10) % 12
-            
-            return TIAN_GAN[gan_index], DI_ZHI[zhi_index]
-        except Exception as e:
-            logger.error(f"计算日柱失败: {str(e)}", exc_info=True)
-            # 返回默认值，避免程序崩溃
-            return '甲', '子'
+        # 以1900年1月1日为基准日（甲戌日）
+        base_date = date(1900, 1, 1)
+        target_date = date(year, month, day)
+        days_diff = (target_date - base_date).days
+        
+        # 计算日干支
+        # 甲戌日的天干索引是0（甲），地支索引是10（戌）
+        gan_index = (days_diff + 0) % 10
+        zhi_index = (days_diff + 10) % 12
+        
+        return TIAN_GAN[gan_index], DI_ZHI[zhi_index]
     
     def _calculate_hour(self, day_gan, hour, minute, year, month, day):
         """
@@ -1423,45 +1417,13 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
     Returns:
         dict: 包含年柱、月柱、日柱、时柱的字典
     """
-    try:
-        if isinstance(target_date, datetime):
-            hour = target_date.hour
-            minute = target_date.minute
-            second = target_date.second
-            target_date = target_date.date()
-        
-        result = calculator.calculate(target_date, hour, minute, second)
-        
-        # 确保返回的字典包含day_gan键
-        if 'day_gan' not in result:
-            # 尝试从日柱中提取日干
-            if '日柱' in result and len(result['日柱']) > 0:
-                result['day_gan'] = result['日柱'][0]
-            else:
-                # 如果无法获取日干，设置默认值
-                result['day_gan'] = '甲'
-                result['day_zhi'] = '子'
-                result['日柱'] = '甲子'
-        
-        return result
-    except Exception as e:
-        logger.error(f"计算四柱失败: {str(e)}", exc_info=True)
-        # 返回默认值，避免程序崩溃
-        return {
-            '年柱': '甲子',
-            '月柱': '甲子',
-            '日柱': '甲子',
-            '时柱': '甲子',
-            'year_gan': '甲',
-            'year_zhi': '子',
-            'month_gan': '甲',
-            'month_zhi': '子',
-            'day_gan': '甲',
-            'day_zhi': '子',
-            'hour_gan': '甲',
-            'hour_zhi': '子',
-            'is_late_zi': False
-        }
+    if isinstance(target_date, datetime):
+        hour = target_date.hour
+        minute = target_date.minute
+        second = target_date.second
+        target_date = target_date.date()
+    
+    return calculator.calculate(target_date, hour, minute, second)
 
 
 def get_lunar_date(target_date, hour=12, minute=0, second=0):
@@ -1474,19 +1436,82 @@ def get_lunar_date(target_date, hour=12, minute=0, second=0):
         second = target_date.second
         target_date = target_date.date()
 
-    result = calculator.get_lunar_date(target_date, hour, minute, second)
-    # 转换为与旧接口兼容的格式
-    return {
-        '年': result['year'],
-        '月': result['month'],
-        '日': result['day'],
-        '月中文': result['month_chinese'],
-        '日中文': result['day_chinese'],
-        '中文': result['chinese'],
-        '生肖': result['zodiac'],
-        '节气': result['jie_qi'],
-        '验证': result['verified']
-    }
+    year = target_date.year
+    month = target_date.month
+    day = target_date.day
+
+    if HAS_SXTWL:
+        # 使用sxtwl直接获取农历信息
+        day_obj = sxtwl.fromSolar(year, month, day)
+        
+        lunar_year = day_obj.getLunarYear()
+        lunar_month = day_obj.getLunarMonth()
+        lunar_day = day_obj.getLunarDay()
+        is_leap = day_obj.isLunarLeap()
+        
+        # 获取节气
+        jie_qi = None
+        if day_obj.hasJieQi():
+            jie_qi_idx = day_obj.getJieQi()
+            jie_qi_names = [
+                "冬至", "小寒", "大寒", "立春", "雨水", "惊蛰",
+                "春分", "清明", "谷雨", "立夏", "小满", "芒种",
+                "夏至", "小暑", "大暑", "立秋", "处暑", "白露",
+                "秋分", "寒露", "霜降", "立冬", "小雪", "大雪"
+            ]
+            if 0 <= jie_qi_idx < len(jie_qi_names):
+                jie_qi = jie_qi_names[jie_qi_idx]
+        
+        # 格式化农历月份和日期
+        month_names = ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"]
+        day_names = [
+            "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+        ]
+        
+        leap_str = "闰" if is_leap else ""
+        
+        # 安全获取月份
+        if 1 <= lunar_month <= 12:
+            month_str = month_names[lunar_month - 1]
+        else:
+            month_str = str(lunar_month)
+        
+        # 安全获取日期
+        if 1 <= lunar_day <= len(day_names):
+            day_str = day_names[lunar_day - 1]
+        else:
+            day_str = str(lunar_day)
+        
+        # 计算生肖
+        zodiac = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
+        zodiac_str = zodiac[(lunar_year - 4) % 12]
+        
+        return {
+            'year': lunar_year,
+            'month': f"{leap_str}{month_str}月",
+            'day': day_str,
+            'month_chinese': f"{leap_str}{month_str}月",
+            'day_chinese': day_str,
+            '中文': f"{lunar_year}年{leap_str}{month_str}月{day_str}",
+            '生肖': zodiac_str,
+            '节气': jie_qi,
+            '验证': True
+        }
+    else:
+        # 没有sxtwl库时的备用方案
+        return {
+            'year': year,
+            'month': f"{month}月",
+            'day': f"{day}日",
+            'month_chinese': f"{month}月",
+            'day_chinese': f"{day}日",
+            '中文': f"{year}年{month}月{day}日",
+            '生肖': "",
+            '节气': None,
+            '验证': False
+        }
 
 
 def analyze_sizhu(sizhu):
@@ -1500,15 +1525,9 @@ def analyze_sizhu(sizhu):
         dict: 包含五行、十神、夫星子星等信息的字典
     """
     # 获取日干
-    day_gan = None
-    try:
-        day_gan = sizhu.get('day_gan')
-        if not day_gan and '日柱' in sizhu:
-            日柱 = sizhu['日柱']
-            if isinstance(日柱, str) and len(日柱) > 0:
-                day_gan = 日柱[0]
-    except Exception as e:
-        logger.error(f"获取日干失败: {str(e)}", exc_info=True)
+    day_gan = sizhu.get('day_gan')
+    if not day_gan and '日柱' in sizhu:
+        day_gan = sizhu['日柱'][0]
     
     if not day_gan:
         raise ValueError("无法获取日干")
@@ -1517,19 +1536,13 @@ def analyze_sizhu(sizhu):
     wuxing = {}
     for key in ['年柱', '月柱', '日柱', '时柱']:
         if key in sizhu:
-            try:
-                wuxing[key] = get_gan_wuxing(sizhu[key][0])
-            except Exception as e:
-                logger.error(f"计算五行失败: {str(e)}", exc_info=True)
+            wuxing[key] = get_gan_wuxing(sizhu[key][0])
     
     # 计算十神
     shishen = {}
     for key in ['年柱', '月柱', '时柱']:
         if key in sizhu:
-            try:
-                shishen[key] = get_shishen(day_gan, sizhu[key][0])
-            except Exception as e:
-                logger.error(f"计算十神失败: {str(e)}", exc_info=True)
+            shishen[key] = get_shishen(day_gan, sizhu[key][0])
     
     fuzi = get_fuzi(day_gan)
     
@@ -1562,7 +1575,7 @@ def enhance_sizhu(sizhu):
         for key in ['年柱', '月柱', '日柱', '时柱']:
             if key in sizhu and len(sizhu[key]) >= 2:
                 zhi = sizhu[key][1]
-                result[f'{key}_长生'] = get_zhangsheng(sizhu.get('day_gan', '甲'), zhi)
+                result[f'{key}_长生'] = get_zhangsheng(sizhu['day_gan'], zhi)
     
     return result
 
@@ -1814,9 +1827,9 @@ class 黄道计算器:
         day_zhi = sizhu['日柱'][1]  # 日支
         month_zhi = sizhu['月柱'][1]  # 月支
         hour_zhi = sizhu['时柱'][1]  # 时支
-        
-        # 计算大黄道
-        da_huang_dao = self._calculate_da_huang_dao(day_zhi, hour_zhi)
+
+        # 计算大黄道（使用汉程黄历算法）
+        da_huang_dao = self._calculate_da_huang_dao(day_zhi, month_zhi, hour_zhi)
         
         # 计算小黄道
         xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)
@@ -1835,16 +1848,20 @@ class 黄道计算器:
             'description': self._generate_description(da_huang_dao, xiao_huang_dao)
         }
     
-    def _calculate_da_huang_dao(self, day_zhi, hour_zhi):
-        """计算大黄道"""
+    def _calculate_da_huang_dao(self, day_zhi, month_zhi, hour_zhi):
+        """计算大黄道（使用汉程黄历算法）
+
+        汉程黄历算法: result = (日支索引 - 2*月支索引 + 4) % 12
+        黄道十二神顺序: 青龙、明堂、天刑、朱雀、金匮、天德、白虎、玉堂、天牢、玄武、司命、勾陈
+        """
         day_idx = self.ZHI_INDEX.get(day_zhi, 0)
-        hour_idx = self.ZHI_INDEX.get(hour_zhi, 0)
+        month_idx = self.ZHI_INDEX.get(month_zhi, 0)
 
-        da_list = self.DA_HUANG_DAO_TABLE.get(day_zhi, [])
-        if not da_list:
-            return {'name': '未知', 'type': '平', 'score': 0, 'description': ''}
+        da_huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
+                            '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
 
-        name = da_list[hour_idx % 12]
+        huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
+        name = da_huangdao_list[huangdao_idx]
         info = self.DA_HUANG_DAO.get(name, {'type': '平', 'score': 0, 'description': ''})
 
         return {
@@ -1936,8 +1953,8 @@ class 黄道计算器:
         month_zhi = sizhu['月柱'][1]  # 月支
         hour_zhi = sizhu['时柱'][1]  # 时支
         
-        # 计算大黄道和小黄道
-        da_huang_dao = self._calculate_da_huang_dao(day_zhi, hour_zhi)
+        # 计算大黄道和小黄道（使用汉程黄历算法）
+        da_huang_dao = self._calculate_da_huang_dao(day_zhi, month_zhi, hour_zhi)
         xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)
         
         # 获取宜忌
@@ -5071,7 +5088,6 @@ class CompassFrame(ttk.Frame):
             self.compass.set_degree(degree)
         except ValueError:
             pass
-    
     def _on_shan_xiang_select(self, event=None):
         """山向选择处理"""
         shan_xiang = self.shan_xiang_var.get()
@@ -5089,9 +5105,8 @@ class CompassFrame(ttk.Frame):
                 self.compass.set_mountain(mountain, index)
                 # 更新兼向显示
                 self._update_jianxiang_display()
-            except (IndexError, ValueError):
+            except (ValueError, IndexError):
                 pass
-    
     def _on_jianxiang_select(self, event=None):
         """兼向选择处理（方式二：最常见）"""
         jianxiang_full = self.jianxiang_var.get()
@@ -5407,6 +5422,59 @@ def show_compass_dialog(parent, initial_shan_xiang: str = None,
     return dialog.selected_shan_xiang, dialog.selected_degree
 
 
+def show_bazi_dialog(parent, panpan_result: Dict):
+    """
+    显示八字排盘详情对话框
+    
+    Args:
+        parent: 父窗口
+        panpan_result: 八字排盘结果字典
+    """
+    dialog = tk.Toplevel(parent)
+    dialog.title("八字排盘详情")
+    dialog.geometry("800x600")
+    dialog.resizable(True, True)
+    
+    text = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, font=('SimSun', 12))
+    text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+    content = "八字排盘详情\n"
+    content += "=" * 50 + "\n\n"
+    
+    sizhu_info = panpan_result.get('四柱', {})
+    content += f"四柱：{sizhu_info.get('年柱', '')} {sizhu_info.get('月柱', '')} {sizhu_info.get('日柱', '')} {sizhu_info.get('时柱', '')}\n\n"
+    
+    content += f"喜神：{panpan_result.get('喜神', '')}\n"
+    content += f"用神：{panpan_result.get('用神', '')}\n\n"
+    
+    nayin_info = panpan_result.get('纳音', {})
+    content += "纳音：\n"
+    content += f"  年柱：{nayin_info.get('年柱', '')}\n"
+    content += f"  月柱：{nayin_info.get('月柱', '')}\n"
+    content += f"  日柱：{nayin_info.get('日柱', '')}\n"
+    content += f"  时柱：{nayin_info.get('时柱', '')}\n\n"
+    
+    shishen_info = panpan_result.get('十神', {})
+    content += "十神：\n"
+    content += f"  年干：{shishen_info.get('年干', '')}\n"
+    content += f"  月干：{shishen_info.get('月干', '')}\n"
+    content += f"  时干：{shishen_info.get('时干', '')}\n\n"
+    
+    text.insert(tk.END, content)
+    text.config(state=tk.DISABLED)
+    
+    button_frame = ttk.Frame(dialog)
+    button_frame.pack(fill=tk.X, pady=10)
+    ttk.Button(button_frame, text="关闭", command=dialog.destroy).pack(side=tk.RIGHT, padx=10)
+    
+    dialog.transient(parent)
+    dialog.grab_set()
+    parent.wait_window(dialog)
+
+
+
+
+
 
 # -*- coding: utf-8 -*-
 """
@@ -5496,27 +5564,22 @@ class BaZiPanPan:
         这是计算四柱的唯一入口，所有模块都应通过四柱计算器获取四柱
         不再直接调用其他计算方式
         """
-        try:
-            target_date = date(self.year, self.month, self.day)
-            sizhu = calculate_sizhu(target_date, self.hour, self.minute)
-            self.sizhu = self._normalize_sizhu_format(sizhu)
-        except Exception as e:
-            logger.error(f"计算四柱失败: {str(e)}", exc_info=True)
-            # 设置默认值，避免程序崩溃
-            self.sizhu = {
-                '年柱': '甲子',
-                '月柱': '甲子',
-                '日柱': '甲子',
-                '时柱': '甲子',
-                'year_gan': '甲',
-                'year_zhi': '子',
-                'month_gan': '甲',
-                'month_zhi': '子',
-                'day_gan': '甲',
-                'day_zhi': '子',
-                'hour_gan': '甲',
-                'hour_zhi': '子'
-            }
+        target_date = date(self.year, self.month, self.day)
+        # 调用四柱计算器
+        self.sizhu = calculate_sizhu(
+            target_date, 
+            self.hour, 
+            self.minute, 
+            0
+        )
+        
+        # 确保返回值是有效的
+        if not self.sizhu or not isinstance(self.sizhu, dict):
+            raise ValueError("四柱计算返回值无效")
+            
+        # 标准化四柱格式
+        self.sizhu = self._normalize_sizhu_format(self.sizhu)
+            
     def _normalize_sizhu_format(self, raw: Dict) -> Dict:
         """
         标准化四柱字典格式
@@ -5734,6 +5797,51 @@ class BaZiPanPan:
             '时柱': nayin_map.get(self.sizhu.get('时柱', ''), '未知')
         }
     
+    def _get_nayin(self, gan: str, zhi: str) -> str:
+        """获取指定干支的纳音五行
+        
+        Args:
+            gan: 天干
+            zhi: 地支
+            
+        Returns:
+            str: 纳音五行名称
+        """
+        nayin_map = {
+            '甲子': '海中金', '乙丑': '海中金',
+            '丙寅': '炉中火', '丁卯': '炉中火',
+            '戊辰': '大林木', '己巳': '大林木',
+            '庚午': '路旁土', '辛未': '路旁土',
+            '壬申': '剑锋金', '癸酉': '剑锋金',
+            '甲戌': '山头火', '乙亥': '山头火',
+            '丙子': '涧下水', '丁丑': '涧下水',
+            '戊寅': '城头土', '己卯': '城头土',
+            '庚辰': '白蜡金', '辛巳': '白蜡金',
+            '壬午': '杨柳木', '癸未': '杨柳木',
+            '甲申': '泉中水', '乙酉': '泉中水',
+            '丙戌': '屋上土', '丁亥': '屋上土',
+            '戊子': '霹雳火', '己丑': '霹雳火',
+            '庚寅': '松柏木', '辛卯': '松柏木',
+            '壬辰': '长流水', '癸巳': '长流水',
+            '甲午': '砂中金', '乙未': '砂中金',
+            '丙申': '山下火', '丁酉': '山下火',
+            '戊戌': '平地木', '己亥': '平地木',
+            '庚子': '壁上土', '辛丑': '壁上土',
+            '壬寅': '金箔金', '癸卯': '金箔金',
+            '甲辰': '覆灯火', '乙巳': '覆灯火',
+            '丙午': '天河水', '丁未': '天河水',
+            '戊申': '大驿土', '己酉': '大驿土',
+            '庚戌': '钗钏金', '辛亥': '钗钏金',
+            '壬子': '桑柘木', '癸丑': '桑柘木',
+            '甲寅': '大溪水', '乙卯': '大溪水',
+            '丙辰': '沙中土', '丁巳': '沙中土',
+            '戊午': '天上火', '己未': '天上火',
+            '庚申': '石榴木', '辛酉': '石榴木',
+            '壬戌': '大海水', '癸亥': '大海水'
+        }
+        ganzhi = f"{gan}{zhi}"
+        return nayin_map.get(ganzhi, '未知')
+    
     def _calculate_zhangsheng(self):
         """计算十二长生"""
         zhangsheng_map = {
@@ -5772,23 +5880,44 @@ class BaZiPanPan:
         Returns:
             Dict: 包含所有排盘信息的字典
         """
+        # 计算起运信息
+        start_age = self._calculate_start_age()
+        start_year = self.year + start_age
+        
+        # 获取大运列表
+        dayun_list = self.get_dayun(start_age)
+        
+        # 格式化大运列表
+        formatted_dayun = []
+        for i, dayun in enumerate(dayun_list):
+            formatted_dayun.append({
+                '序号': i + 1,
+                '大运': dayun.get('大运', ''),
+                '起运年龄': dayun.get('年龄', 0),
+                '起运年份': self.year + dayun.get('年龄', 0),
+                '纳音': self._get_nayin(dayun.get('天干', ''), dayun.get('地支', ''))
+            })
+        
         return {
             '基本信息': {
-                '出生时间': f"{self.year}年{self.month}月{self.day}日 {self.hour:02d}:{self.minute:02d}",
-                '性别': self.gender,
-                '四柱': {
-                    '年柱': self.sizhu.get('年柱', ''),
-                    '月柱': self.sizhu.get('月柱', ''),
-                    '日柱': self.sizhu.get('日柱', ''),
-                    '时柱': self.sizhu.get('时柱', '')
-                }
+                '出生日期': f"{self.year}年{self.month}月{self.day}日 {self.hour:02d}:{self.minute:02d}",
+                '性别': self.gender
+            },
+            '四柱': {
+                '年柱': self.sizhu.get('年柱', ''),
+                '月柱': self.sizhu.get('月柱', ''),
+                '日柱': self.sizhu.get('日柱', ''),
+                '时柱': self.sizhu.get('时柱', '')
             },
             '藏干': self.canggan,
             '十神': self.shishen,
             '五行统计': self.wuxing_count,
             '五行分数': self.wuxing_score,
             '纳音': self.nayin,
-            '十二长生': self.zhangsheng
+            '十二长生': self.zhangsheng,
+            '起运年龄': start_age,
+            '起运年份': start_year,
+            '大运': formatted_dayun
         }
     
     def get_dayun(self, start_age: int = None) -> List[Dict]:
@@ -5890,10 +6019,11 @@ class BaZiPanPan:
             int: 天数
         """
         # 优先尝试使用lunar_python获取节气信息
-        from lunar_python import Solar
-        return self._get_days_to_jieqi_lunar(birth_date, forward)
-        return self._get_days_to_jieqi_sxtwl(birth_date, forward)
-    
+        try:
+            from lunar_python import Solar
+            return self._get_days_to_jieqi_lunar(birth_date, forward)
+        except ImportError:
+            return self._get_days_to_jieqi_sxtwl(birth_date, forward)
     def _get_days_to_jieqi_lunar(self, birth_date: datetime, forward: bool) -> int:
         """
         使用lunar_python计算到节气的天数
@@ -6109,6 +6239,7 @@ import os
 
 # 添加项目根目录到路径
 
+# 从八字分析工具导入基础数据和函数
 # 导入lunar_python用于起运年龄计算
 from lunar_python import Solar
 HAS_LUNAR_PYTHON = True
@@ -6164,8 +6295,11 @@ class BaZiPanPan:
         # 计算大运
         self.panpan_result['大运'] = self._calculate_d大运()
         
+        # 计算小运
+        self.panpan_result['小运'] = self._calculate_xiaoyun()
+        
         return self.panpan_result
-    
+
     def _calculate_sizhu(self) -> Dict:
         """
         计算四柱信息
@@ -6193,6 +6327,12 @@ class BaZiPanPan:
         """
         if not self.sizhu:
             return {}
+        
+        # 计算五行分数
+        wuxing_score = calculate_wuxing_score(self.sizhu, include_canggan=True)
+        
+        # 计算喜用神
+        xishen, yongshen = calculate_xishen_yongshen(self.sizhu)
         
         details = {
             '四柱': {
@@ -6227,8 +6367,10 @@ class BaZiPanPan:
                 '时支': get_zhangsheng(self.sizhu.get('day_gan', ''), 
                                      self.sizhu.get('hour_zhi', ''))
             },
-            '五行分数': calculate_wuxing_score(self.sizhu, include_canggan=True),
+            '五行分数': wuxing_score,
             '十神': self._calculate_shishen(),
+            '喜神': xishen,
+            '用神': yongshen,
             '基本信息': {
                 '性别': self.gender,
                 '出生日期': f"{self.birth_year}-{self.birth_month:02d}-{self.birth_day:02d} {self.birth_hour:02d}:{self.birth_minute:02d}"
@@ -6398,7 +6540,60 @@ class BaZiPanPan:
                    f"天数差={days_diff:.2f}, 起运年龄={start_age}")
         
         return start_age, start_year
+    
+    def _calculate_xiaoyun(self) -> List[Dict]:
+        """
+        计算小运
+        
+        小运是每十年一运，从时柱开始计算
+        根据年干和时干来确定小运的顺逆
+        
+        Returns:
+            List[Dict]: 小运信息
+        """
+        小运_list = []
+        
+        if not self.sizhu:
+            return 小运_list
+        
+        # 获取时柱
+        hour_gan = self.sizhu.get('hour_gan', '')
+        hour_zhi = self.sizhu.get('hour_zhi', '')
+        
+        if not hour_gan or not hour_zhi:
+            return 小运_list
+        
+        # 获取年干
+        year_gan = self.sizhu.get('year_gan', '')
+        
+        # 确定小运方向
+        # 阳年生男、阴年生女：顺排
+        # 阳年生女、阴年生男：逆排
+        yang_gans = ['甲', '丙', '戊', '庚', '壬']
+        is_yang_year = year_gan in yang_gans
+        
+        if (is_yang_year and self.gender == '男') or (not is_yang_year and self.gender == '女'):
+            direction = 1  # 顺行
+        else:
+            direction = -1  # 逆行
+        
+        # 计算小运（通常计算10步小运）
+        for i in range(10):
+            step_age = i + 1  # 小运从1岁开始
             
+            # 计算小运干支（从时柱开始）
+            offset = i * direction
+            yun_gan, yun_zhi = self._get_ganzhi_by_offset(hour_gan, hour_zhi, offset)
+            
+            小运_list.append({
+                '序号': i + 1,
+                '小运': f"{yun_gan}{yun_zhi}",
+                '年龄': step_age,
+                '纳音': get_nayin(f"{yun_gan}{yun_zhi}") if HAS_BAZI_TOOLS else ''
+            })
+        
+        return 小运_list
+    
     def _get_ganzhi_by_offset(self, gan: str, zhi: str, offset: int) -> Tuple[str, str]:
         """
         根据偏移量计算干支
@@ -6447,326 +6642,91 @@ class BaZiPanPan:
         return self.sizhu
 
 
-class BaZiDialog:
-    """
-    八字排盘对话框
-    
-    独立的八字排盘展示窗口
-    """
-    
-    def __init__(self, parent: tk.Tk, panpan_data: Dict = None):
-        """
-        初始化对话框
-        
-        Args:
-            parent: 父窗口
-            panpan_data: 排盘数据
-        """
-        self.dialog = tk.Toplevel(parent)
-        self.dialog.title("八字排盘详情")
-        self.dialog.geometry("1200x700")
-        
-        # 创建主滚动区域
-        canvas = tk.Canvas(self.dialog)
-        scrollbar = ttk.Scrollbar(self.dialog, orient="vertical", command=canvas.yview)
-        main_frame = ttk.Frame(canvas)
-        
-        main_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=main_frame, anchor="nw", width=1180)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # 绑定鼠标滚轮
-        def on_mousewheel(event):
-            try:
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-            except tk.TclError:
-                pass  # 忽略canvas已销毁时的错误
-        
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
-        
-        # 显示排盘数据
-        if panpan_data:
-            self._display_panpan(main_frame, panpan_data)
-        
-        # 关闭按钮
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=10)
-        
-        ttk.Button(button_frame, text="关闭", 
-                  command=self.dialog.destroy).pack(side=tk.RIGHT, padx=5)
-        ttk.Button(button_frame, text="打印", 
-                  command=lambda: self._print_panpan(panpan_data)).pack(side=tk.RIGHT, padx=5)
-    
-    def _display_panpan(self, parent_frame: tk.Frame, panpan_data: Dict):
-        """
-        显示排盘数据
-        
-        Args:
-            parent_frame: 父级Frame容器
-            panpan_data: 排盘数据字典
-        """
-        # 基本信息区域（上方）
-        basic_frame = ttk.LabelFrame(parent_frame, text="基本信息", padding="10")
-        basic_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        basic_info = panpan_data.get('基本信息', {})
-        info_items = [
-            ('性别', basic_info.get('性别', '-')),
-            ('出生日期', basic_info.get('出生日期', '-'))
-        ]
-        
-        for i, (key, value) in enumerate(info_items):
-            ttk.Label(basic_frame, text=f"{key}:").grid(row=0, column=i*2, sticky=tk.W, padx=5)
-            ttk.Label(basic_frame, text=value, font=("微软雅黑", 10, "bold")).grid(row=0, column=i*2+1, sticky=tk.W, padx=5)
-        
-        # 创建左右分栏的主框架
-        main_content_frame = ttk.Frame(parent_frame)
-        main_content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # 左侧区域（四柱排盘 + 五行分析）
-        left_frame = ttk.Frame(main_content_frame)
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
-        
-        # 四柱排盘区域
-        sizhu_frame = ttk.LabelFrame(left_frame, text="四柱排盘", padding="10")
-        sizhu_frame.pack(fill=tk.X, pady=5)
-        
-        sizhu = panpan_data.get('四柱', {})
-        nayin = panpan_data.get('纳音', {})
-        shengyang = panpan_data.get('十二长生', {})
-        
-        # 创建四柱表格
-        columns = ['', '年柱', '月柱', '日柱', '时柱']
-        sizhu_tree = ttk.Treeview(sizhu_frame, columns=columns, 
-                                   show="headings", height=5)
-        
-        for col in columns:
-            sizhu_tree.heading(col, text=col)
-            sizhu_tree.column(col, width=120, anchor='center')
-        
-        # 添加行
-        sizhu_tree.insert('', 'end', values=['天干', 
-                                               sizhu.get('年柱', '')[0] if sizhu.get('年柱') else '-',
-                                               sizhu.get('月柱', '')[0] if sizhu.get('月柱') else '-',
-                                               sizhu.get('日柱', '')[0] if sizhu.get('日柱') else '-',
-                                               sizhu.get('时柱', '')[0] if sizhu.get('时柱') else '-'])
-        
-        sizhu_tree.insert('', 'end', values=['地支', 
-                                               sizhu.get('年柱', '')[1] if len(sizhu.get('年柱', '')) > 1 else '-',
-                                               sizhu.get('月柱', '')[1] if len(sizhu.get('月柱', '')) > 1 else '-',
-                                               sizhu.get('日柱', '')[1] if len(sizhu.get('日柱', '')) > 1 else '-',
-                                               sizhu.get('时柱', '')[1] if len(sizhu.get('时柱', '')) > 1 else '-'])
-        
-        sizhu_tree.insert('', 'end', values=['纳音',
-                                               nayin.get('年柱', '-'),
-                                               nayin.get('月柱', '-'),
-                                               nayin.get('日柱', '-'),
-                                               nayin.get('时柱', '-')])
-
-        sizhu_tree.insert('', 'end', values=['十二长生',
-                                               shengyang.get('年支', '-'),
-                                               shengyang.get('月支', '-'),
-                                               shengyang.get('日支', '-'),
-                                               shengyang.get('时支', '-')])
-        
-        sizhu_tree.insert('', 'end', values=['十神',
-                                               panpan_data.get('十神', {}).get('年干', '-'),
-                                               panpan_data.get('十神', {}).get('月干', '-'),
-                                               '日主',
-                                               panpan_data.get('十神', {}).get('时干', '-')])
-        
-        sizhu_tree.pack(fill=tk.X)
-        
-        # 五行分析区域（下方）
-        wuxing_frame = ttk.LabelFrame(left_frame, text="五行分析", padding="10")
-        wuxing_frame.pack(fill=tk.BOTH, expand=True, pady=5)
-        
-        wuxing_score = panpan_data.get('五行分数', {})
-        wuxing_labels = {}
-        wuxing_items = ['金', '木', '水', '火', '土']
-        for i, wx in enumerate(wuxing_items):
-            ttk.Label(wuxing_frame, text=f"{wx}:").grid(row=0, column=i*2, sticky=tk.W, padx=5)
-            score = wuxing_score.get(wx, 0)
-            wuxing_labels[wx] = ttk.Label(wuxing_frame, text=f"{score:.2f}", font=("微软雅黑", 10, "bold"))
-            wuxing_labels[wx].grid(row=0, column=i*2+1, sticky=tk.W, padx=5)
-        
-        # 五行说明
-        wuxing_text = scrolledtext.ScrolledText(wuxing_frame, wrap=tk.WORD, height=10)
-        wuxing_text.grid(row=1, column=0, columnspan=10, sticky=tk.EW, pady=5)
-        
-        wuxing_desc = self._format_wuxing(wuxing_score)
-        wuxing_text.insert(tk.END, wuxing_desc)
-        wuxing_text.config(state=tk.DISABLED)
-        
-        # 右侧区域（大运分析）
-        right_frame = ttk.Frame(main_content_frame)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(5, 0))
-        
-        # 大运分析区域
-        dayun_frame = ttk.LabelFrame(right_frame, text="大运分析", padding="10")
-        dayun_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # 起运信息
-        start_age = panpan_data.get('起运年龄', 0)
-        start_year = panpan_data.get('起运年份', 0)
-        ttk.Label(dayun_frame, text=f"起运年龄: {start_age}岁  起运年份: {start_year}年", 
-                 font=("微软雅黑", 10, "bold")).pack(anchor=tk.W, pady=5)
-        
-        # 大运表格
-        dayun_columns = ['序号', '大运', '起运年龄', '起运年份', '纳音']
-        dayun_tree = ttk.Treeview(dayun_frame, columns=dayun_columns, 
-                                   show="headings", height=15)
-        
-        for col in dayun_columns:
-            dayun_tree.heading(col, text=col)
-            dayun_tree.column(col, width=80, anchor='center')
-        
-        dayun_list = panpan_data.get('大运', [])
-        for dayun in dayun_list:
-            dayun_tree.insert('', 'end', values=(
-                dayun.get('序号', ''),
-                dayun.get('大运', ''),
-                f"{dayun.get('起运年龄', 0)}岁",
-                dayun.get('起运年份', ''),
-                dayun.get('纳音', '-')
-            ))
-        
-        dayun_tree.pack(fill=tk.BOTH, expand=True)
-    
-    def _format_wuxing(self, wuxing: Dict) -> str:
-        """格式化五行信息"""
-        if not wuxing:
-            return "暂无五行信息"
-        
-        total = sum(wuxing.values())
-        if total == 0:
-            return "五行数据异常"
-        
-        lines = ["五行分布:"]
-        for wx in ['金', '木', '水', '火', '土']:
-            count = wuxing.get(wx, 0)
-            percentage = (count / total) * 100 if total > 0 else 0
-            bar = '█' * int(percentage / 5)
-            lines.append(f"  {wx}: {count:.2f} ({percentage:.1f}%) {bar}")
-        
-        return '\n'.join(lines)
-    
-    def _print_panpan(self, panpan_data: Dict):
-        """打印排盘数据"""
-        try:
-            file_path = filedialog.asksaveasfilename(
-                title="保存八字排盘",
-                defaultextension=".txt",
-                filetypes=[
-                    ("文本文件", "*.txt"),
-                    ("所有文件", "*.*")
-                ]
-            )
-            
-            if not file_path:
-                return
-            
-            # 保存为文本文件
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write("=" * 60 + "\n")
-                f.write("八字排盘详情\n")
-                f.write("=" * 60 + "\n\n")
-                
-                # 基本信息
-                basic_info = panpan_data.get('基本信息', {})
-                f.write(f"性别: {basic_info.get('性别', '-')}\n")
-                f.write(f"出生日期: {basic_info.get('出生日期', '-')}\n\n")
-                
-                # 四柱排盘
-                sizhu = panpan_data.get('四柱', {})
-                f.write("四柱排盘:\n")
-                f.write(f"  年柱: {sizhu.get('年柱', '-')}\n")
-                f.write(f"  月柱: {sizhu.get('月柱', '-')}\n")
-                f.write(f"  日柱: {sizhu.get('日柱', '-')}\n")
-                f.write(f"  时柱: {sizhu.get('时柱', '-')}\n\n")
-                
-                # 纳音
-                nayin = panpan_data.get('纳音', {})
-                f.write("纳音:\n")
-                f.write(f"  年柱: {nayin.get('年柱', '-')}\n")
-                f.write(f"  月柱: {nayin.get('月柱', '-')}\n")
-                f.write(f"  日柱: {nayin.get('日柱', '-')}\n")
-                f.write(f"  时柱: {nayin.get('时柱', '-')}\n\n")
-                
-                # 十二长生
-                shengyang = panpan_data.get('十二长生', {})
-                f.write("十二长生:\n")
-                f.write(f"  年支: {shengyang.get('年支', '-')}\n")
-                f.write(f"  月支: {shengyang.get('月支', '-')}\n")
-                f.write(f"  日支: {shengyang.get('日支', '-')}\n")
-                f.write(f"  时支: {shengyang.get('时支', '-')}\n\n")
-                
-                # 十神
-                shishen = panpan_data.get('十神', {})
-                f.write("十神:\n")
-                f.write(f"  年干: {shishen.get('年干', '-')}\n")
-                f.write(f"  月干: {shishen.get('月干', '-')}\n")
-                f.write(f"  时干: {shishen.get('时干', '-')}\n\n")
-                
-                # 五行分数
-                wuxing_score = panpan_data.get('五行分数', {})
-                f.write("五行分数:\n")
-                for wx in ['金', '木', '水', '火', '土']:
-                    f.write(f"  {wx}: {wuxing_score.get(wx, 0):.2f}\n")
-                f.write("\n")
-                
-                # 大运
-                dayun_list = panpan_data.get('大运', [])
-                f.write("大运:\n")
-                f.write(f"  起运年龄: {panpan_data.get('起运年龄', 0)}岁\n")
-                f.write(f"  起运年份: {panpan_data.get('起运年份', 0)}年\n\n")
-                
-                for dayun in dayun_list:
-                    f.write(f"  {dayun.get('序号', '')}. {dayun.get('大运', '')} ")
-                    f.write(f"({dayun.get('起运年龄', 0)}岁, {dayun.get('起运年份', '')}年) ")
-                    f.write(f"纳音: {dayun.get('纳音', '-')}\n")
-            
-            messagebox.showinfo("成功", f"八字排盘已保存到：{file_path}")
-            
-        except Exception as e:
-            messagebox.showerror("错误", f"保存失败：{str(e)}")
-
-
-def show_bazi_dialog(parent: tk.Tk, panpan_data: Dict):
-    """
-    显示八字排盘对话框
-    
-    Args:
-        parent: 父窗口
-        panpan_data: 排盘数据
-    """
-    BaZiDialog(parent, panpan_data)
-
-
 # 测试代码
 
 # -*- coding: utf-8 -*-
 """
-专业级日课评分系统
-用于对择日日课进行专业评分和分析
+================================================================================
+日课评分系统模块
+================================================================================
+专业级日课评分系统，支持多种输入方式和详细评分分析
+
+使用方法:
+    1. 作为主程序导入: from modules.日课评分系统 import DayScoreWindow
+    2. 直接运行: python -m modules.日课评分系统
+================================================================================
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
-from datetime import date, datetime
+from datetime import datetime, date
 import json
 import os
 import sys
 
-# 添加项目根目录到路径（用于直接运行此文件）
+# 处理导入
+# 添加项目根目录到路径
+# 添加 modules 目录到路径
+modules_dir = os.path.dirname(os.path.abspath(__file__))
+if modules_dir not in sys.path:
+    sys.path.insert(0, modules_dir)
 
+# 定义备用函数
+def _mock_calculate_sizhu(*args, **kwargs):
+    return {'年柱': '甲子', '月柱': '甲子', '日柱': '甲子', '时柱': '甲子'}
+
+def _mock_analyze_sizhu(*args, **kwargs):
+    return {}
+
+def _mock_calculate_score(*args, **kwargs):
+    return {
+        'score': 0, 
+        'level': '平', 
+        'yi_list': [], 
+        'ji_list': [],
+        'shensha_list': [],
+        'score_details': {
+            '基础分': 100,
+            '月令得分': 0,
+            '月令详细': {
+                '旺衰得分': 0,
+                '支支关系得分': 0
+            },
+            '喜用神得分': 0,
+            '黄道得分': 0,
+            '总分': 0,
+            '事主匹配': []
+        },
+        'wu_xing_result': {
+            'details': {
+                '地支关系': [],
+                '吉神': [],
+                '日主旺衰': '中和'
+            }
+        },
+        'huangdao_info': {
+            'da_huang_dao': {
+                'name': '黄道吉日',
+                'description': '适合办大事'
+            },
+            'xiao_huang_dao': {
+                'name': '黄道吉日',
+                'description': '适合办大事'
+            }
+        },
+        'reason': '此日为黄道吉日，适合各项事务。'
+    }
+
+def _mock_calculate_xishen_yongshen(*args, **kwargs):
+    return ('', '')
+
+def _mock_get_shan_xiang_list(use_24_shan=False):
+    return []
+
+def _mock_show_compass_dialog(*args, **kwargs):
+    pass
+
+# 尝试多种导入方式
 class DayScoreWindow:
     """日课评分系统主窗口"""
     
@@ -6778,26 +6738,32 @@ class DayScoreWindow:
         else:
             self.window = tk.Toplevel(master)
             self.window.title("专业级日课评分系统")
+            # 强制设置Toplevel窗口的背景色和文本颜色
+            self.window.configure(bg='white')
         
         # 获取屏幕尺寸并设置窗口大小
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
         
-        # 设置为屏幕的85%大小
-        window_width = int(screen_width * 0.85)
-        window_height = int(screen_height * 0.85)
+        # 设置为屏幕的90%大小，与主程序一致
+        window_width = int(screen_width * 0.9)
+        window_height = int(screen_height * 0.9)
         
         # 计算居中位置
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2
         
         self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        self.window.state('zoomed')  # 窗口最大化
+        self.window.state('zoomed')  # 窗口最大化，与主程序一致
+        
+        # 确保窗口显示
+        self.window.deiconify()
         
         # 数据存储
         self.date_list = []
         self.scoring_results = []
         self.owners_info = []
+        self._owner_entries_list = []  # 存储所有事主的输入框，用于键盘导航
         
         # 创建界面
         self.create_widgets()
@@ -6810,74 +6776,143 @@ class DayScoreWindow:
             event_type: 事项类型
             owners_data: 事主数据列表
         """
-        try:
-            # 设置事项类型
-            self.event_var.set(event_type)
-            self.update_owners_frame()
+        # 设置事项类型
+        self.event_var.set(event_type)
+        self.update_owners_frame()
             
-            # 填充事主信息
-            for i, owner_data in enumerate(owners_data):
-                if i < len(self.owners_info):
-                    self.owners_info[i]['year'].set(str(owner_data.get('year', '')))
-                    self.owners_info[i]['month'].set(str(owner_data.get('month', '')))
-                    self.owners_info[i]['day'].set(str(owner_data.get('day', '')))
-                    self.owners_info[i]['hour'].set(str(owner_data.get('hour', 12)))
-                    self.owners_info[i]['minute'].set(str(owner_data.get('minute', 0)))
+        # 填充事主信息
+        for i, owner_data in enumerate(owners_data):
+            if i < len(self.owners_info):
+                # 填充公历日期
+                self.owners_info[i]['solar_year'].set(str(owner_data.get('year', '')))
+                self.owners_info[i]['solar_month'].set(str(owner_data.get('month', '')))
+                self.owners_info[i]['solar_day'].set(str(owner_data.get('day', '')))
+                self.owners_info[i]['hour'].set(str(owner_data.get('hour', 12)))
+                self.owners_info[i]['minute'].set(str(owner_data.get('minute', 0)))
+                
+                # 自动计算四柱
+                self.calculate_owner_sizhu(
+                    self.owners_info[i]['solar_year'],
+                    self.owners_info[i]['solar_month'],
+                    self.owners_info[i]['solar_day'],
+                    self.owners_info[i]['lunar_year'],
+                    self.owners_info[i]['lunar_month'],
+                    self.owners_info[i]['lunar_day'],
+                    self.owners_info[i]['leap'],
+                    self.owners_info[i]['hour'],
+                    self.owners_info[i]['minute'],
+                    self.owners_info[i]['name'],
+                    self.owners_info[i]['sizhu_var'],
+                    self.owners_info[i]['xishen_var'],
+                    self.owners_info[i]['yongshen_var'],
+                    self.owners_info[i].get('fu_xing_var'),
+                    self.owners_info[i].get('zi_xing_var')
+                )
+        
+        # 导入择日结果到列表
+        for result in results:
+            date_str = result.get('date', '')
+            if date_str and date_str not in self.date_list:
+                self.date_list.append(date_str)
+                
+                # 准备显示数据
+                score = result.get('score', 0)
+                level = result.get('level', '未知')
+                sizhu = result.get('sizhu', {})
                     
-                    # 自动计算四柱
-                    self.calculate_owner_sizhu(
-                        self.owners_info[i]['year'],
-                        self.owners_info[i]['month'],
-                        self.owners_info[i]['day'],
-                        self.owners_info[i]['hour'],
-                        self.owners_info[i]['minute'],
-                        self.owners_info[i]['name'],
-                        self.owners_info[i]['sizhu_var'],
-                        self.owners_info[i]['xishen_var'],
-                        self.owners_info[i]['yongshen_var'],
-                        self.owners_info[i].get('fuzi_var')
-                    )
-            
-            # 导入择日结果到列表
-            for result in results:
-                date_str = result.get('date', '')
-                if date_str and date_str not in self.date_list:
-                    self.date_list.append(date_str)
-                    
-                    # 准备显示数据
-                    score = result.get('score', 0)
-                    level = result.get('level', '未知')
-                    sizhu = result.get('sizhu', {})
-                    
-                    # 处理sizhu可能是字符串或字典的情况
-                    if isinstance(sizhu, str):
-                        sizhu_str = sizhu
-                        # 尝试从字符串解析四柱
-                        sizhu_parts = sizhu_str.split()
-                        if len(sizhu_parts) == 4:
-                            sizhu_dict = {
-                                '年柱': sizhu_parts[0],
-                                '月柱': sizhu_parts[1],
-                                '日柱': sizhu_parts[2],
-                                '时柱': sizhu_parts[3]
-                            }
-                        else:
-                            sizhu_dict = {}
+                # 处理sizhu可能是字符串或字典的情况
+                if isinstance(sizhu, str):
+                    sizhu_str = sizhu
+                    # 尝试从字符串解析四柱
+                    sizhu_parts = sizhu_str.split()
+                    if len(sizhu_parts) == 4:
+                        sizhu_dict = {
+                            '年柱': sizhu_parts[0],
+                            '月柱': sizhu_parts[1],
+                            '日柱': sizhu_parts[2],
+                            '时柱': sizhu_parts[3]
+                        }
                     else:
-                        sizhu_dict = sizhu
-                        sizhu_str = f"{sizhu.get('年柱', '')} {sizhu.get('月柱', '')} {sizhu.get('日柱', '')} {sizhu.get('时柱', '')}"
+                        sizhu_dict = {}
+                else:
+                    sizhu_dict = sizhu
+                    sizhu_str = f"{sizhu.get('年柱', '')} {sizhu.get('月柱', '')} {sizhu.get('日柱', '')} {sizhu.get('时柱', '')}"
+                
+                # 从detail字段中获取详细信息
+                detail = result.get('detail', {})
+                
+                # 获取详细得分信息
+                score_details = result.get('score_details', detail.get('score_details', {}))
+                wuxing_score = score_details.get('五行评分', 100)
+                yueling_score = score_details.get('月令得分', 0)
+                xishen_score = score_details.get('喜用神得分', 0)
+                huangdao_score = score_details.get('黄道得分', 0)
                     
-                    # 从detail字段中获取详细信息
-                    detail = result.get('detail', {})
+                # 获取地支关系信息（从wu_xing_result中获取详细地支关系）
+                wu_xing_result = result.get('wu_xing_result', detail.get('wu_xing_result', {}))
+                wu_xing_details = wu_xing_result.get('details', {})
                     
-                    # 获取详细得分信息
-                    score_details = result.get('score_details', detail.get('score_details', {}))
-                    yueling_score = score_details.get('月令得分', 0)
-                    xishen_score = score_details.get('喜用神得分', 0)
-                    huangdao_score = score_details.get('黄道得分', 0)
+                # 构建地支关系文本（显示具体的三合、六合等）
+                dizhi_relations = wu_xing_details.get('地支关系', [])
+                if dizhi_relations:
+                    # 提取地支关系的简短描述
+                    dizhi_text_list = []
+                    for relation in dizhi_relations:
+                        # 提取关键信息，如"三合火局"、"六合"等
+                        if '三合' in relation:
+                            # 提取"三合X局"
+                            match = re.search(r'三合(.)局', relation)
+                            if match:
+                                dizhi_text_list.append(f"三合{match.group(1)}局")
+                            else:
+                                dizhi_text_list.append('三合')
+                        elif '六合' in relation:
+                            dizhi_text_list.append('六合')
+                        elif '六冲' in relation:
+                            dizhi_text_list.append('六冲')
+                        elif '六害' in relation:
+                            dizhi_text_list.append('六害')
+                        elif '三刑' in relation:
+                            dizhi_text_list.append('三刑')
+                        elif '相破' in relation:
+                            dizhi_text_list.append('相破')
+                        else:
+                            # 其他关系，取前10个字符
+                                dizhi_text_list.append(relation[:10])
+                        dizhi_text = ', '.join(dizhi_text_list[:2])  # 最多显示2个关系
+                    else:
+                        dizhi_text = '-'
+                    
+                    # 获取吉神信息（从wu_xing_details中获取详细吉神）
+                    jishen_list = wu_xing_details.get('吉神', [])
+                    if jishen_list:
+                        # 提取吉神的简短描述
+                        jishen_text_list = []
+                        for jishen in jishen_list:
+                            # 提取关键信息，如"天德贵人"、"禄神"等
+                            if '天德贵人' in jishen:
+                                jishen_text_list.append('天德贵人')
+                            elif '月德贵人' in jishen:
+                                jishen_text_list.append('月德贵人')
+                            elif '天乙贵人' in jishen:
+                                jishen_text_list.append('天乙贵人')
+                            elif '文昌贵人' in jishen:
+                                jishen_text_list.append('文昌贵人')
+                            elif '禄神' in jishen:
+                                jishen_text_list.append('禄神')
+                            elif '福星' in jishen:
+                                jishen_text_list.append('福星')
+                            else:
+                                # 其他吉神，取前6个字符
+                                jishen_text_list.append(jishen[:6])
+                        jishen_text = ', '.join(jishen_text_list[:2])  # 最多显示2个吉神
+                    else:
+                        # 如果没有详细吉神，使用yi_list
+                        yi_list = result.get('yi_list', detail.get('yi_list', []))
+                        jishen_text = ', '.join(yi_list[:2]) if yi_list else '-'
                     
                     # 添加到Treeview
-                    self.date_treeview.insert('', tk.END, values=(date_str, score, level, sizhu_str, yueling_score, xishen_score, huangdao_score))
+                    self.date_treeview.insert('', tk.END, values=(date_str, score, level, sizhu_str, wuxing_score, yueling_score, xishen_score, huangdao_score, dizhi_text, jishen_text))
                     
                     # 如果结果包含评分信息，也添加到评分结果中
                     if 'score' in result and 'level' in result:
@@ -6902,9 +6937,6 @@ class DayScoreWindow:
                         self.scoring_results.append(score_result)
             
             messagebox.showinfo("成功", f"成功导入 {len(results)} 个择日结果到评分系统")
-        except Exception as e:
-            messagebox.showerror("错误", f"导入择日结果时出错: {str(e)}")
-    
     def run(self):
         """运行日课评分系统"""
         # 确保窗口显示在最前面
@@ -6921,12 +6953,156 @@ class DayScoreWindow:
             self.window.grab_set()
             self.window.wait_window()
     
+    def configure_styles(self):
+        """配置界面样式，与主程序一致"""
+        style = ttk.Style()
+        
+        # 主题设置
+        style.theme_use('clam')
+        
+        # 主框架样式
+        style.configure('MainFrame.TFrame', background='#ffffff')
+        
+        # 标题框架样式
+        style.configure('TitleFrame.TFrame', background='#007bff')
+        
+        # 标题样式
+        style.configure('Title.TLabel', 
+                       background='#007bff',
+                       foreground='white',
+                       font=('微软雅黑', 28, 'bold'))
+        
+        # 副标题样式
+        style.configure('Subtitle.TLabel', 
+                       background='#007bff',
+                       foreground='white',
+                       font=('微软雅黑', 14))
+        
+        # 卡片样式
+        style.configure('Card.TLabelframe', 
+                       background='#ffffff',
+                       foreground='#333333',
+                       font=('微软雅黑', 12, 'bold'),
+                       borderwidth=2,
+                       relief='groove')
+        
+        # 表单框架样式
+        style.configure('Form.TFrame', background='#ffffff')
+        
+        # 标签样式
+        style.configure('Label.TLabel', 
+                       background='#ffffff',
+                       foreground='#333333',
+                       font=('微软雅黑', 12, 'bold'))
+        
+        # 输入框样式
+        style.configure('Entry.TEntry', 
+                       fieldbackground='white',
+                       foreground='#333333',
+                       font=('微软雅黑', 12),
+                       borderwidth=2,
+                       relief='solid')
+        
+        # 下拉框样式
+        style.configure('Combobox.TCombobox', 
+                       fieldbackground='white',
+                       foreground='#333333',
+                       font=('微软雅黑', 12),
+                       borderwidth=2,
+                       relief='solid')
+        
+        # 按钮框架样式
+        style.configure('ButtonFrame.TFrame', background='#ffffff')
+        
+        # 主按钮样式
+        style.configure('Primary.TButton', 
+                       background='#007bff',
+                       foreground='white',
+                       font=('微软雅黑', 11, 'bold'),
+                       padding=(10, 5),
+                       borderwidth=0,
+                       relief='flat')
+        style.map('Primary.TButton', 
+                  background=[('active', '#0069d9')])
+        
+        # 次要按钮样式
+        style.configure('Secondary.TButton', 
+                       background='#6c757d',
+                       foreground='white',
+                       font=('微软雅黑', 11),
+                       padding=(10, 5),
+                       borderwidth=0,
+                       relief='flat')
+        style.map('Secondary.TButton', 
+                  background=[('active', '#5a6268')])
+        
+        # 信息按钮样式
+        style.configure('Info.TButton', 
+                       background='#17a2b8',
+                       foreground='white',
+                       font=('微软雅黑', 11),
+                       padding=(10, 5),
+                       borderwidth=0,
+                       relief='flat')
+        style.map('Info.TButton', 
+                  background=[('active', '#138496')])
+        
+        # 危险按钮样式
+        style.configure('Danger.TButton', 
+                       background='#dc3545',
+                       foreground='white',
+                       font=('微软雅黑', 11),
+                       padding=(10, 5),
+                       borderwidth=0,
+                       relief='flat')
+        style.map('Danger.TButton', 
+                  background=[('active', '#c82333')])
+        
+        # 内容框架样式
+        style.configure('ContentFrame.TFrame', background='#ffffff')
+        
+        # 树形视图样式
+        style.configure('Treeview.Treeview', 
+                       background='#ffffff',
+                       foreground='#333333',
+                       font=('微软雅黑', 10),
+                       rowheight=25,
+                       fieldbackground='#ffffff',
+                       borderwidth=1,
+                       relief='solid')
+        
+        # 树形视图标题样式
+        style.configure('Treeview.Heading', 
+                       background='#007bff',
+                       foreground='white',
+                       font=('微软雅黑', 10, 'bold'),
+                       padding=(10, 5))
+        
+        # 树形视图悬停样式
+        style.map('Treeview.Treeview', 
+                  background=[('selected', '#cce7ff'), ('!selected', '#ffffff')],
+                  foreground=[('selected', '#007bff'), ('!selected', '#333333')])
+        
+        # 滚动条样式
+        style.configure('Scrollbar.Vertical.TScrollbar', 
+                       background='#ffffff',
+                       troughcolor='#e0e0e0',
+                       borderwidth=0)
+    
     def create_widgets(self):
         """创建界面组件"""
-        # 创建主滚动区域
-        main_canvas = tk.Canvas(self.window)
-        main_scrollbar = ttk.Scrollbar(self.window, orient="vertical", command=main_canvas.yview)
-        self.main_frame = ttk.Frame(main_canvas, padding="20")
+        # 配置样式
+        self.configure_styles()
+        
+        # 创建主滚动区域 - 添加水平和垂直滚动条
+        main_frame_container = ttk.Frame(self.window)
+        main_frame_container.pack(fill=tk.BOTH, expand=True)
+        
+        main_canvas = tk.Canvas(main_frame_container, bg="#ffffff")
+        v_scrollbar = ttk.Scrollbar(main_frame_container, orient="vertical", command=main_canvas.yview)
+        h_scrollbar = ttk.Scrollbar(main_frame_container, orient="horizontal", command=main_canvas.xview)
+        
+        self.main_frame = ttk.Frame(main_canvas, padding="20", style="MainFrame.TFrame")
         
         self.main_frame.bind(
             "<Configure>",
@@ -6934,59 +7110,102 @@ class DayScoreWindow:
         )
         
         main_canvas.create_window((0, 0), window=self.main_frame, anchor="nw", width=self.window.winfo_screenwidth()-50)
-        main_canvas.configure(yscrollcommand=main_scrollbar.set)
+        main_canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        main_canvas.pack(side="left", fill="both", expand=True)
-        main_scrollbar.pack(side="right", fill="y")
+        # 使用网格布局
+        main_canvas.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
         
-        # 绑定鼠标滚轮
+        # 配置网格权重
+        main_frame_container.grid_rowconfigure(0, weight=1)
+        main_frame_container.grid_columnconfigure(0, weight=1)
+        
+        # 绑定鼠标滚轮（垂直滚动）
         main_canvas.bind_all("<MouseWheel>", lambda e: main_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        # 绑定Shift+鼠标滚轮（水平滚动）
+        main_canvas.bind_all("<Shift-MouseWheel>", lambda e: main_canvas.xview_scroll(int(-1*(e.delta/120)), "units"))
         
-        # 标题
-        title_label = ttk.Label(self.main_frame, text="专业级日课评分系统", 
-                               font=("微软雅黑", 24, "bold"))
-        title_label.pack(pady=20)
+        # 标题区域
+        title_frame = ttk.Frame(self.main_frame, style="TitleFrame.TFrame")
+        title_frame.pack(fill=tk.X, pady=8, padx=20)
+        
+        title_label = ttk.Label(title_frame, text="专业级日课评分系统", 
+                               font=("微软雅黑", 18, "bold"), style="Title.TLabel")
+        title_label.pack(pady=4)
+        
+        subtitle_label = ttk.Label(title_frame, text="精准评分，详细分析", 
+                                  font=("微软雅黑", 9), style="Subtitle.TLabel")
+        subtitle_label.pack()
+        
+        # 提前定义event_var变量
+        self.event_var = tk.StringVar(value="嫁娶")
+        
+        # 事主信息区域（放在最上方）
+        self.owners_frame = ttk.LabelFrame(self.main_frame, text="事主信息", padding="20", style="Card.TLabelframe")
+        self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
+        self.update_owners_frame()
+        
+        # 创建左右分栏布局
+        content_frame = ttk.Frame(self.main_frame)
+        content_frame.pack(fill=tk.BOTH, expand=True, pady=5, padx=10)
+        
+        # 使用网格布局，设置左右分栏的宽度比例
+        content_frame.columnconfigure(0, weight=1, minsize=500)  # 左侧占1份
+        content_frame.columnconfigure(1, weight=1, minsize=500)  # 右侧占1份
+        content_frame.rowconfigure(0, weight=1)
+        
+        # 左侧内容（输入区域和按钮）
+        left_frame = ttk.Frame(content_frame)
+        left_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        
+        # 右侧内容（留空，用于平衡布局）
+        right_frame = ttk.Frame(content_frame)
+        right_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         
         # 输入区域
-        input_frame = ttk.LabelFrame(self.main_frame, text="日课输入", padding="20")
-        input_frame.pack(fill=tk.X, pady=10, padx=20)
+        input_frame = ttk.LabelFrame(left_frame, text="日课输入", padding="8", style="Card.TLabelframe")
+        input_frame.pack(fill=tk.X, pady=6)
         
         # 事项类型选择
         event_frame = ttk.Frame(input_frame)
-        event_frame.pack(fill=tk.X, pady=10)
+        event_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(event_frame, text="事项类型:", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-        self.event_var = tk.StringVar(value="嫁娶")
+        ttk.Label(event_frame, text="事项类型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
         events = ["嫁娶", "修造", "动土", "入宅", "开业", "出行", "安床", "作灶", "安葬"]
         event_combo = ttk.Combobox(event_frame, textvariable=self.event_var, 
-                                   values=events, state="readonly", width=20, font=("微软雅黑", 12))
-        event_combo.pack(side=tk.LEFT, padx=10)
-        event_combo.bind("<<ComboboxSelected>>", lambda e: self.update_owners_frame())
+                                   values=events, state="readonly", width=15, font=("微软雅黑", 10))
+        event_combo.pack(side=tk.LEFT, padx=5)
+        event_combo.bind("<<ComboboxSelected>>", lambda e: self.on_event_type_changed())
+        
+        # 特殊选项框架（用于修造等需要额外选项的事项）
+        self.special_frame = ttk.Frame(input_frame)
+        self.special_frame.pack(fill=tk.X, pady=3)
         
         # 输入方式选择
         input_mode_frame = ttk.Frame(input_frame)
-        input_mode_frame.pack(fill=tk.X, pady=10)
+        input_mode_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(input_mode_frame, text="输入方式:", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
+        ttk.Label(input_mode_frame, text="输入方式:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
         self.input_mode = tk.StringVar(value="date")
         ttk.Radiobutton(input_mode_frame, text="按日期", variable=self.input_mode, 
-                       value="date", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=10)
+                       value="date", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(input_mode_frame, text="按四柱", variable=self.input_mode, 
-                       value="sizhu", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=10)
+                       value="sizhu", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
         
         # 日期输入框
         self.date_frame = ttk.Frame(input_frame)
-        self.date_frame.pack(fill=tk.X, pady=10)
+        self.date_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(self.date_frame, text="日期 (YYYY-MM-DD):", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-        self.date_entry = ttk.Entry(self.date_frame, width=20, font=("微软雅黑", 12))
-        self.date_entry.pack(side=tk.LEFT, padx=10)
+        ttk.Label(self.date_frame, text="日期 (YYYY-MM-DD):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+        self.date_entry = ttk.Entry(self.date_frame, width=12, font=("微软雅黑", 10))
+        self.date_entry.pack(side=tk.LEFT, padx=5)
         self.date_entry.insert(0, date.today().strftime("%Y-%m-%d"))
         
         # 时间输入
-        ttk.Label(self.date_frame, text="时间 (HH:MM):", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-        self.time_entry = ttk.Entry(self.date_frame, width=10, font=("微软雅黑", 12))
-        self.time_entry.pack(side=tk.LEFT, padx=10)
+        ttk.Label(self.date_frame, text="时间 (HH:MM):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+        self.time_entry = ttk.Entry(self.date_frame, width=6, font=("微软雅黑", 10))
+        self.time_entry.pack(side=tk.LEFT, padx=5)
         self.time_entry.insert(0, "12:00")
         
         # 为日期和时间输入框绑定键盘导航
@@ -7006,31 +7225,26 @@ class DayScoreWindow:
         # 为四柱输入框绑定键盘导航
         self._bind_entry_navigation(self.sizhu_entries)
         
-        # 事主信息区域
-        self.owners_frame = ttk.LabelFrame(self.main_frame, text="事主信息", padding="20")
-        self.owners_frame.pack(fill=tk.X, pady=10, padx=20)
-        self.update_owners_frame()
-        
         # 按钮区域
-        button_frame = ttk.Frame(self.main_frame)
-        button_frame.pack(fill=tk.X, pady=20, padx=20)
+        button_frame = ttk.Frame(left_frame, style="ButtonFrame.TFrame")
+        button_frame.pack(fill=tk.X, pady=8, padx=20)
         
-        ttk.Button(button_frame, text="添加日课", command=self.add_date, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="添加四柱", command=self.add_sizhu, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="日课评分", command=self.start_scoring, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="对比分析", command=self.compare_analysis, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="保存分析", command=self.save_single_analysis, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="导出报告", command=self.export_report, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="导入文件", command=self.import_file, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="清空列表", command=self.clear_dates, width=18).pack(side=tk.LEFT, padx=8)
-        ttk.Button(button_frame, text="帮助", command=self.show_help, width=18).pack(side=tk.RIGHT, padx=8)
+        ttk.Button(button_frame, text="添加日课", command=self.add_date, width=12, style="Primary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="添加四柱", command=self.add_sizhu, width=12, style="Primary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="日课评分", command=self.start_scoring, width=12, style="Primary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="对比分析", command=self.compare_analysis, width=12, style="Secondary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="保存分析", command=self.save_single_analysis, width=12, style="Secondary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="导出报告", command=self.export_report, width=12, style="Secondary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="导入文件", command=self.import_file, width=12, style="Secondary.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="清空列表", command=self.clear_dates, width=12, style="Danger.TButton").pack(side=tk.LEFT, padx=6)
+        ttk.Button(button_frame, text="帮助", command=self.show_help, width=12, style="Info.TButton").pack(side=tk.RIGHT, padx=6)
         
         # 日课列表
-        list_frame = ttk.LabelFrame(self.main_frame, text="日课列表", padding="20")
+        list_frame = ttk.LabelFrame(self.main_frame, text="日课列表", padding="20", style="Card.TLabelframe")
         list_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=20)
         
         # 创建Treeview控件替代Listbox，显示更多信息
-        columns = ('date', 'score', 'level', 'sizhu', 'yueling', 'xishen', 'huangdao')
+        columns = ('date', 'score', 'level', 'sizhu', 'wuxing', 'yueling', 'xishen', 'huangdao', 'dizhi', 'jishen')
         self.date_treeview = ttk.Treeview(list_frame, columns=columns, show='headings')
         
         # 设置列标题
@@ -7038,32 +7252,47 @@ class DayScoreWindow:
         self.date_treeview.heading('score', text='评分')
         self.date_treeview.heading('level', text='等级')
         self.date_treeview.heading('sizhu', text='四柱')
+        self.date_treeview.heading('wuxing', text='五行得分')
         self.date_treeview.heading('yueling', text='月令得分')
         self.date_treeview.heading('xishen', text='喜用神得分')
         self.date_treeview.heading('huangdao', text='黄道得分')
+        self.date_treeview.heading('dizhi', text='地支关系')
+        self.date_treeview.heading('jishen', text='吉神信息')
         
-        # 设置列宽
-        self.date_treeview.column('date', width=150)
-        self.date_treeview.column('score', width=80, anchor='center')
-        self.date_treeview.column('level', width=80, anchor='center')
-        self.date_treeview.column('sizhu', width=200)
-        self.date_treeview.column('yueling', width=80, anchor='center')
-        self.date_treeview.column('xishen', width=80, anchor='center')
-        self.date_treeview.column('huangdao', width=80, anchor='center')
+        # 设置列宽 - 缩小列宽以适应手机屏幕
+        self.date_treeview.column('date', width=90)
+        self.date_treeview.column('score', width=45, anchor='center')
+        self.date_treeview.column('level', width=45, anchor='center')
+        self.date_treeview.column('sizhu', width=90)
+        self.date_treeview.column('wuxing', width=50, anchor='center')
+        self.date_treeview.column('yueling', width=50, anchor='center')
+        self.date_treeview.column('xishen', width=55, anchor='center')
+        self.date_treeview.column('huangdao', width=50, anchor='center')
+        self.date_treeview.column('dizhi', width=80)
+        self.date_treeview.column('jishen', width=90)
         
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, 
-                                 command=self.date_treeview.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.date_treeview.config(yscrollcommand=scrollbar.set)
+        # 添加滚动条 - 同时添加垂直和水平滚动条
+        tree_v_scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, 
+                                         command=self.date_treeview.yview)
+        tree_h_scrollbar = ttk.Scrollbar(list_frame, orient=tk.HORIZONTAL, 
+                                         command=self.date_treeview.xview)
+        self.date_treeview.config(yscrollcommand=tree_v_scrollbar.set, 
+                                  xscrollcommand=tree_h_scrollbar.set)
+        
+        # 使用网格布局
+        self.date_treeview.grid(row=0, column=0, sticky="nsew")
+        tree_v_scrollbar.grid(row=0, column=1, sticky="ns")
+        tree_h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        # 配置网格权重
+        list_frame.grid_rowconfigure(0, weight=1)
+        list_frame.grid_columnconfigure(0, weight=1)
         
         # 绑定双击事件
         self.date_treeview.bind('<Double-1>', self.on_date_double_click)
         
-        self.date_treeview.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
         # 结果显示区域
-        result_frame = ttk.LabelFrame(self.main_frame, text="评分结果", padding="20")
+        result_frame = ttk.LabelFrame(self.main_frame, text="评分结果", padding="20", style="Card.TLabelframe")
         result_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=20)
         
         self.result_text = scrolledtext.ScrolledText(result_frame, height=15, font=("微软雅黑", 11))
@@ -7073,6 +7302,65 @@ class DayScoreWindow:
         self.result_text.tag_configure("gold", foreground="#FFD700", font=("微软雅黑", 11, "bold"))
         self.result_text.tag_configure("gold_star", foreground="#FFD700", font=("微软雅黑", 11, "bold"))
     
+    def on_event_type_changed(self):
+        """事项类型变化时的回调函数"""
+        # 更新特殊选项
+        self.update_special_options()
+        # 更新事主信息框架
+        self.update_owners_frame()
+    
+    def update_special_options(self):
+        """更新特殊选项（如阳宅/阴宅选择）"""
+        # 清空特殊选项框架
+        for widget in self.special_frame.winfo_children():
+            widget.destroy()
+        
+        event_type = self.event_var.get()
+        
+        # 修造、动土、入宅事项需要选择宅型（阳宅/阴宅）和山向
+        if event_type in ["修造", "动土", "入宅"]:
+            # 宅型选择
+            ttk.Label(self.special_frame, text="宅型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=3)
+            self.house_type = tk.StringVar(value="阳宅")
+            house_combo = ttk.Combobox(self.special_frame, textvariable=self.house_type,
+                                       values=["阳宅", "阴宅"], width=8, state="readonly", font=("微软雅黑", 10))
+            house_combo.pack(side=tk.LEFT, padx=3)
+            
+            # 山向选择（使用二十四山模块的完整山向列表）
+            ttk.Label(self.special_frame, text="山向:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=3)
+            self.shan_xiang = tk.StringVar()
+            # 使用二十四山模块获取完整的24山向列表
+            shan_xiangs = get_shan_xiang_list(use_24_shan=True)
+            shan_combo = ttk.Combobox(self.special_frame, textvariable=self.shan_xiang, 
+                                      values=shan_xiangs, width=10, state="readonly", font=("微软雅黑", 10))
+            shan_combo.pack(side=tk.LEFT, padx=3)
+            
+            # 兼向选择
+            ttk.Label(self.special_frame, text="兼向:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=3)
+            self.jian_xiang = tk.StringVar(value="正中")
+            jian_combo = ttk.Combobox(self.special_frame, textvariable=self.jian_xiang,
+                                      values=["正中", "兼左", "兼右"], width=8, state="readonly", font=("微软雅黑", 10))
+            jian_combo.pack(side=tk.LEFT, padx=3)
+            
+            # 电子罗盘按钮
+            ttk.Button(self.special_frame, text="罗盘", width=6,
+                      command=self._show_compass_dialog).pack(side=tk.LEFT, padx=3)
+    
+    def _show_compass_dialog(self):
+        """显示电子罗盘对话框"""
+        # 获取当前山向
+        initial_shan_xiang = None
+        if hasattr(self, 'shan_xiang') and self.shan_xiang.get():
+            initial_shan_xiang = self.shan_xiang.get()
+        
+        def on_compass_select(shan_xiang: str, degree: float):
+            """罗盘选择回调"""
+            if shan_xiang and hasattr(self, 'shan_xiang'):
+                self.shan_xiang.set(shan_xiang)
+        
+        # 显示罗盘对话框
+        show_compass_dialog(self.window, initial_shan_xiang, on_compass_select)
+    
     def update_owners_frame(self):
         """更新事主信息框架"""
         # 清空现有组件
@@ -7080,12 +7368,13 @@ class DayScoreWindow:
             widget.destroy()
         
         self.owners_info = []
+        self._owner_entries_list = []  # 清空输入框列表
         event_type = self.event_var.get()
         
         # 添加提示标签
         if event_type != "嫁娶":
-            hint_label = ttk.Label(self.owners_frame, text="（提示：以下事主信息为可选，可根据需要填写）", 
-                                   foreground="gray", font=("微软雅黑", 11, "italic"))
+            hint_label = tk.Label(self.owners_frame, text="（提示：以下事主信息为可选，可根据需要填写）", 
+                                   fg="gray", bg='white', font=("微软雅黑", 11, "italic"))
             hint_label.pack(anchor=tk.W, pady=(0, 10))
         
         if event_type == "嫁娶":
@@ -7101,148 +7390,284 @@ class DayScoreWindow:
             # 其他事项，事主可选（可填可不填）
             owners = ["事主"]
         
-        # 存储所有输入框以便键盘导航
-        all_entries = []
-        
         for owner in owners:
             owner_frame = ttk.Frame(self.owners_frame)
             owner_frame.pack(fill=tk.X, pady=8)
             
-            # 日期输入行
-            date_row = ttk.Frame(owner_frame)
-            date_row.pack(fill=tk.X, pady=5)
+            # 标题行
+            title_row = ttk.Frame(owner_frame)
+            title_row.pack(fill=tk.X, pady=2)
             
-            ttk.Label(date_row, text=f"{owner}:", width=10, font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5, pady=5)
+            tk.Label(title_row, text=f"{owner}:", font=("微软雅黑", 12), bg='white', fg='black').pack(side=tk.LEFT, padx=5)
+            
+            # 日期类型和性别选择
+            type_row = ttk.Frame(owner_frame)
+            type_row.pack(fill=tk.X, pady=2)
+            
+            ttk.Label(type_row, text="日期类型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=10)
+            date_type_var = tk.StringVar(value="公历")
+            
+            # 创建单选按钮，先不设置command
+            solar_radio = ttk.Radiobutton(type_row, text="公历", variable=date_type_var, value="公历")
+            solar_radio.pack(side=tk.LEFT, padx=5)
+            lunar_radio = ttk.Radiobutton(type_row, text="农历", variable=date_type_var, value="农历")
+            lunar_radio.pack(side=tk.LEFT, padx=5)
+            
+            ttk.Label(type_row, text="性别:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=10)
+            gender_var = tk.StringVar(value="男" if owner in ["新郎", "孝子1", "孝子2", "孝子3", "事主1", "事主2", "事主3", "事主4", "事主"] else "女")
+            ttk.Radiobutton(type_row, text="男", variable=gender_var, value="男").pack(side=tk.LEFT, padx=5)
+            ttk.Radiobutton(type_row, text="女", variable=gender_var, value="女").pack(side=tk.LEFT, padx=5)
             
             # 婚嫁事项默认填充日期，其他事项默认为空（可选）
             if event_type == "嫁娶":
-                year_var = tk.StringVar(value=str(date.today().year - 20))
-                month_var = tk.StringVar(value=str(1))
-                day_var = tk.StringVar(value=str(1))
+                solar_year_var = tk.StringVar(value=str(date.today().year - 20))
+                solar_month_var = tk.StringVar(value=str(1))
+                solar_day_var = tk.StringVar(value=str(1))
+                lunar_year_var = tk.StringVar(value=str(date.today().year - 20))
+                lunar_month_var = tk.StringVar(value=str(1))
+                lunar_day_var = tk.StringVar(value=str(1))
                 hour_var = tk.StringVar(value=str(12))
                 minute_var = tk.StringVar(value=str(0))
             else:
-                year_var = tk.StringVar()
-                month_var = tk.StringVar()
-                day_var = tk.StringVar()
+                solar_year_var = tk.StringVar()
+                solar_month_var = tk.StringVar()
+                solar_day_var = tk.StringVar()
+                lunar_year_var = tk.StringVar()
+                lunar_month_var = tk.StringVar()
+                lunar_day_var = tk.StringVar()
                 hour_var = tk.StringVar(value="12")
                 minute_var = tk.StringVar(value="0")
             
-            ttk.Label(date_row, text="年:", font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            year_entry = ttk.Entry(date_row, textvariable=year_var, width=8, font=("微软雅黑", 12))
-            year_entry.pack(side=tk.LEFT, padx=5)
-            all_entries.append(year_entry)
+            # 闰月变量
+            leap_var = tk.BooleanVar(value=False)
             
-            ttk.Label(date_row, text="月:", font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            month_entry = ttk.Entry(date_row, textvariable=month_var, width=6, font=("微软雅黑", 12))
-            month_entry.pack(side=tk.LEFT, padx=5)
-            all_entries.append(month_entry)
+            # 公历输入框
+            solar_frame = ttk.Frame(owner_frame)
+            solar_frame.pack(fill=tk.X, pady=2)
             
-            ttk.Label(date_row, text="日:", font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            day_entry = ttk.Entry(date_row, textvariable=day_var, width=6, font=("微软雅黑", 12))
-            day_entry.pack(side=tk.LEFT, padx=5)
-            all_entries.append(day_entry)
+            ttk.Label(solar_frame, text="年:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=10)
+            solar_year_entry = ttk.Entry(solar_frame, textvariable=solar_year_var, width=6, font=("微软雅黑", 10))
+            solar_year_entry.pack(side=tk.LEFT, padx=3)
             
-            ttk.Label(date_row, text="时:", font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            hour_entry = ttk.Entry(date_row, textvariable=hour_var, width=6, font=("微软雅黑", 12))
-            hour_entry.pack(side=tk.LEFT, padx=5)
-            all_entries.append(hour_entry)
+            ttk.Label(solar_frame, text="月:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            solar_month_entry = ttk.Entry(solar_frame, textvariable=solar_month_var, width=4, font=("微软雅黑", 10))
+            solar_month_entry.pack(side=tk.LEFT, padx=3)
             
-            ttk.Label(date_row, text="分:", font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            minute_entry = ttk.Entry(date_row, textvariable=minute_var, width=6, font=("微软雅黑", 12))
-            minute_entry.pack(side=tk.LEFT, padx=5)
-            all_entries.append(minute_entry)
+            ttk.Label(solar_frame, text="日:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            solar_day_entry = ttk.Entry(solar_frame, textvariable=solar_day_var, width=4, font=("微软雅黑", 10))
+            solar_day_entry.pack(side=tk.LEFT, padx=3)
+            
+            # 农历输入框
+            lunar_frame = ttk.Frame(owner_frame)
+            
+            ttk.Label(lunar_frame, text="农历年:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=10)
+            lunar_year_entry = ttk.Entry(lunar_frame, textvariable=lunar_year_var, width=6, font=("微软雅黑", 10))
+            lunar_year_entry.pack(side=tk.LEFT, padx=3)
+            
+            ttk.Label(lunar_frame, text="月:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            lunar_month_entry = ttk.Entry(lunar_frame, textvariable=lunar_month_var, width=4, font=("微软雅黑", 10))
+            lunar_month_entry.pack(side=tk.LEFT, padx=3)
+            
+            ttk.Label(lunar_frame, text="日:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            lunar_day_entry = ttk.Entry(lunar_frame, textvariable=lunar_day_var, width=4, font=("微软雅黑", 10))
+            lunar_day_entry.pack(side=tk.LEFT, padx=3)
+            
+            ttk.Label(lunar_frame, text="闰月:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            leap_check = ttk.Checkbutton(lunar_frame, variable=leap_var)
+            leap_check.pack(side=tk.LEFT, padx=3)
+            
+            # 时间输入行
+            time_row = ttk.Frame(owner_frame)
+            time_row.pack(fill=tk.X, pady=2)
+            
+            ttk.Label(time_row, text="时:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=10)
+            hour_entry = ttk.Entry(time_row, textvariable=hour_var, width=4, font=("微软雅黑", 10))
+            hour_entry.pack(side=tk.LEFT, padx=3)
+            
+            ttk.Label(time_row, text="分:", font=("微软雅黑", 10)).pack(side=tk.LEFT)
+            minute_entry = ttk.Entry(time_row, textvariable=minute_var, width=4, font=("微软雅黑", 10))
+            minute_entry.pack(side=tk.LEFT, padx=3)
+            
+            # 存储当前事主的输入框，用于跨事主导航
+            owner_entries = {
+                'solar': [solar_year_entry, solar_month_entry, solar_day_entry],
+                'lunar': [lunar_year_entry, lunar_month_entry, lunar_day_entry],
+                'time': [hour_entry, minute_entry],
+                'all': [solar_year_entry, solar_month_entry, solar_day_entry,
+                       lunar_year_entry, lunar_month_entry, lunar_day_entry,
+                       hour_entry, minute_entry]
+            }
+            self._owner_entries_list.append(owner_entries)
+            
+            # 绑定当前事主的输入框导航
+            self._bind_owner_navigation(owner_entries, len(self._owner_entries_list) - 1)
             
             # 四柱显示
             sizhu_row = ttk.Frame(owner_frame)
-            sizhu_row.pack(fill=tk.X, pady=5)
+            sizhu_row.pack(fill=tk.X, pady=2)
             
-            ttk.Label(sizhu_row, text="四柱:", width=10, font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
+            tk.Label(sizhu_row, text="四柱:", font=("微软雅黑", 10), bg='white', fg='black').pack(side=tk.LEFT, padx=10)
             sizhu_var = tk.StringVar(value="未计算")
-            sizhu_label = ttk.Label(sizhu_row, textvariable=sizhu_var, font=("微软雅黑", 12, "bold"))
-            sizhu_label.pack(side=tk.LEFT, padx=5)
+            sizhu_label = tk.Label(sizhu_row, textvariable=sizhu_var, font=("微软雅黑", 10, "bold"), bg='white', fg='black')
+            sizhu_label.pack(side=tk.LEFT, padx=3)
             
             # 喜用神显示
             xishen_var = tk.StringVar(value="")
             yongshen_var = tk.StringVar(value="")
             
             xishen_row = ttk.Frame(owner_frame)
-            xishen_row.pack(fill=tk.X, pady=5)
+            xishen_row.pack(fill=tk.X, pady=2)
             
-            ttk.Label(xishen_row, text="喜用神:", width=10, font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-            ttk.Label(xishen_row, textvariable=xishen_var, foreground="blue", font=("微软雅黑", 11)).pack(side=tk.LEFT, padx=5)
-            ttk.Label(xishen_row, text="  用神:", width=8, font=("微软雅黑", 12)).pack(side=tk.LEFT)
-            ttk.Label(xishen_row, textvariable=yongshen_var, foreground="green", font=("微软雅黑", 11)).pack(side=tk.LEFT, padx=5)
+            tk.Label(xishen_row, text="喜神:", font=("微软雅黑", 10), bg='white', fg='black').pack(side=tk.LEFT, padx=10)
+            tk.Label(xishen_row, textvariable=xishen_var, fg="blue", bg='white', font=("微软雅黑", 9)).pack(side=tk.LEFT, padx=3)
+            tk.Label(xishen_row, text="  用神:", font=("微软雅黑", 10), bg='white', fg='black').pack(side=tk.LEFT, padx=10)
+            tk.Label(xishen_row, textvariable=yongshen_var, fg="green", bg='white', font=("微软雅黑", 9)).pack(side=tk.LEFT, padx=3)
             
             # 夫星子星显示（婚嫁专用）
-            fuzi_var = tk.StringVar(value="")
+            fu_xing_var = tk.StringVar(value="")
+            zi_xing_var = tk.StringVar(value="")
             if event_type == "嫁娶":
-                fuzi_row = ttk.Frame(owner_frame)
-                fuzi_row.pack(fill=tk.X, pady=5)
+                # 夫星显示
+                fu_xing_row = ttk.Frame(owner_frame)
+                fu_xing_row.pack(fill=tk.X, pady=2)
                 
-                ttk.Label(fuzi_row, text="夫星/子星:", width=10, font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-                ttk.Label(fuzi_row, textvariable=fuzi_var, foreground="purple", font=("微软雅黑", 11)).pack(side=tk.LEFT, padx=5)
+                tk.Label(fu_xing_row, text="夫星:", font=("微软雅黑", 10), bg='white', fg='black').pack(side=tk.LEFT, padx=10)
+                tk.Label(fu_xing_row, textvariable=fu_xing_var, fg="purple", bg='white', font=("微软雅黑", 9)).pack(side=tk.LEFT, padx=3)
+                
+                # 子星显示
+                zi_xing_row = ttk.Frame(owner_frame)
+                zi_xing_row.pack(fill=tk.X, pady=2)
+                
+                tk.Label(zi_xing_row, text="子星:", font=("微软雅黑", 10), bg='white', fg='black').pack(side=tk.LEFT, padx=10)
+                tk.Label(zi_xing_row, textvariable=zi_xing_var, fg="purple", bg='white', font=("微软雅黑", 9)).pack(side=tk.LEFT, padx=3)
+            
+            # 为每个事主创建独立的auto_calculate函数
+            def create_auto_calculate(syv, smv, sdv, lyv, lmv, ldv, lv, hv, miv, o, sv, xv, ygv, fuxv, zixv, dtv, gv):
+                def auto_calculate(event):
+                    try:
+                        # 根据日期类型获取相应的日期变量
+                        if dtv.get() == "公历":
+                            year_val = syv.get()
+                            month_val = smv.get()
+                            day_val = sdv.get()
+                        else:
+                            year_val = lyv.get()
+                            month_val = lmv.get()
+                            day_val = ldv.get()
+                        
+                        hour_val = hv.get()
+                        minute_val = miv.get()
+                        
+                        if year_val and month_val and day_val and hour_val and minute_val:
+                            year = int(year_val)
+                            month = int(month_val)
+                            day = int(day_val)
+                            hour = int(hour_val)
+                            minute = int(minute_val)
+                            
+                            # 验证日期有效性
+                            if 0 <= hour < 24 and 0 <= minute < 60:
+                                # 延迟计算，避免频繁触发
+                                self.window.after(500, lambda: self.calculate_owner_sizhu(syv, smv, sdv, lyv, lmv, ldv, lv, hv, miv, o, sv, xv, ygv, fzv, dtv, gv))
+                    except:
+                        pass
+            
+            # 创建独立的auto_calculate函数
+            auto_calculate = create_auto_calculate(solar_year_var, solar_month_var, solar_day_var, 
+                                                lunar_year_var, lunar_month_var, lunar_day_var, leap_var, 
+                                                hour_var, minute_var, owner, sizhu_var, xishen_var, yongshen_var, fu_xing_var, zi_xing_var, 
+                                                date_type_var, gender_var)
+            
+            # 日期类型选择变化时的回调函数
+            def create_toggle_command(dt_var, sf, lf, tr, owner_name):
+                def toggle_date_fields():
+                    current_type = dt_var.get()
+                    print(f"[DEBUG] {owner_name}: 日期类型切换为 '{current_type}'")
+                    if current_type == "农历":
+                        # 显示农历输入框，隐藏公历输入框
+                        print(f"[DEBUG] {owner_name}: 显示农历输入框")
+                        sf.pack_forget()
+                        lf.pack(fill=tk.X, pady=2, before=tr)
+                    else:
+                        # 显示公历输入框，隐藏农历输入框
+                        print(f"[DEBUG] {owner_name}: 显示公历输入框")
+                        lf.pack_forget()
+                        sf.pack(fill=tk.X, pady=2, before=tr)
+                return toggle_date_fields
+            
+            # 创建并绑定日期类型变化事件
+            toggle_command = create_toggle_command(date_type_var, solar_frame, lunar_frame, time_row, owner)
+            
+            # 为单选按钮设置command - 使用工厂函数确保正确捕获变量
+            def create_radio_command(dt_var, cmd, value):
+                def radio_command():
+                    dt_var.set(value)
+                    self.window.after(10, cmd)
+                return radio_command
+            
+            solar_radio.config(command=create_radio_command(date_type_var, toggle_command, "公历"))
+            lunar_radio.config(command=create_radio_command(date_type_var, toggle_command, "农历"))
+            
+            # 同时绑定变量变化事件
+            def create_trace_callback(cmd):
+                return lambda *args: self.window.after(10, cmd)
+            
+            date_type_var.trace_add('write', create_trace_callback(toggle_command))
+            
+            # 初始状态
+            toggle_command()
+            
+            # 绑定输入框的事件
+            solar_year_entry.bind('<KeyRelease>', auto_calculate)
+            solar_month_entry.bind('<KeyRelease>', auto_calculate)
+            solar_day_entry.bind('<KeyRelease>', auto_calculate)
+            lunar_year_entry.bind('<KeyRelease>', auto_calculate)
+            lunar_month_entry.bind('<KeyRelease>', auto_calculate)
+            lunar_day_entry.bind('<KeyRelease>', auto_calculate)
+            hour_entry.bind('<KeyRelease>', auto_calculate)
+            minute_entry.bind('<KeyRelease>', auto_calculate)
+            
+            # 按钮行
+            button_row = ttk.Frame(owner_frame)
+            button_row.pack(fill=tk.X, pady=2)
             
             # 计算按钮
-            calc_btn = ttk.Button(owner_frame, text="计算四柱", 
-                                 command=lambda y=year_var, m=month_var, d=day_var, 
+            calc_btn = ttk.Button(button_row, text="计算四柱", 
+                                 command=lambda sy=solar_year_var, sm=solar_month_var, sd=solar_day_var, 
+                                 ly=lunar_year_var, lm=lunar_month_var, ld=lunar_day_var, lp=leap_var, 
                                  h=hour_var, mi=minute_var, o=owner, s=sizhu_var, 
-                                 x=xishen_var, yg=yongshen_var, fz=fuzi_var: 
-                                 self.calculate_owner_sizhu(y, m, d, h, mi, o, s, x, yg, fz))
-            calc_btn.pack(anchor=tk.W, padx=5, pady=2)
+                                 x=xishen_var, yg=yongshen_var, fux=fu_xing_var, zix=zi_xing_var, dt=date_type_var, g=gender_var: 
+                                 self.calculate_owner_sizhu(sy, sm, sd, ly, lm, ld, lp, h, mi, o, s, x, yg, fux, zix, dt, g))
+            calc_btn.pack(side=tk.LEFT, padx=10)
+            
+            # 八字排盘详情按钮
+            bazi_btn = ttk.Button(button_row, text="八字排盘详情", 
+                                 command=lambda sy=solar_year_var, sm=solar_month_var, sd=solar_day_var, 
+                                 ly=lunar_year_var, lm=lunar_month_var, ld=lunar_day_var, lp=leap_var, 
+                                 h=hour_var, mi=minute_var, o=owner, dt=date_type_var, g=gender_var: 
+                                 self.show_bazi_detail(sy, sm, sd, ly, lm, ld, lp, h, mi, o, dt, g))
+            bazi_btn.pack(side=tk.LEFT, padx=10)
             
             # 保存事主信息
             owner_info = {
                 'name': owner,
-                'year': year_var,
-                'month': month_var,
-                'day': day_var,
+                'solar_year': solar_year_var,
+                'solar_month': solar_month_var,
+                'solar_day': solar_day_var,
+                'lunar_year': lunar_year_var,
+                'lunar_month': lunar_month_var,
+                'lunar_day': lunar_day_var,
+                'leap': leap_var,
                 'hour': hour_var,
                 'minute': minute_var,
                 'sizhu_var': sizhu_var,
                 'xishen_var': xishen_var,
                 'yongshen_var': yongshen_var,
-                'fuzi_var': fuzi_var
+                'fu_xing_var': fu_xing_var,
+                'zi_xing_var': zi_xing_var
             }
             
             self.owners_info.append(owner_info)
-            
-            # 添加自动转换功能 - 当输入框内容变化时自动计算
-            def auto_calculate(event):
-                year_val = year_var.get()
-                month_val = month_var.get()
-                day_val = day_var.get()
-                hour_val = hour_var.get()
-                minute_val = minute_var.get()
-                
-                if year_val and month_val and day_val and hour_val and minute_val:
-                    try:
-                        year = int(year_val)
-                        month = int(month_val)
-                        day = int(day_val)
-                        hour = int(hour_val)
-                        minute = int(minute_val)
-                        
-                        # 验证日期有效性
-                        date(year, month, day)
-                        if 0 <= hour < 24 and 0 <= minute < 60:
-                            # 延迟计算，避免频繁触发
-                            self.window.after(500, lambda:
-                                self.calculate_owner_sizhu(year_var, month_var, day_var,
-                                hour_var, minute_var, owner,
-                                sizhu_var, xishen_var, yongshen_var,
-                                fuzi_var))
-                    except:
-                        pass
-            
-            year_entry.bind('<KeyRelease>', auto_calculate)
-            month_entry.bind('<KeyRelease>', auto_calculate)
-            day_entry.bind('<KeyRelease>', auto_calculate)
-            hour_entry.bind('<KeyRelease>', auto_calculate)
-            minute_entry.bind('<KeyRelease>', auto_calculate)
-        
-        # 为所有事主输入框绑定键盘导航
-        self._bind_entry_navigation(all_entries)
     
     def _bind_entry_navigation(self, entries):
         """为输入框绑定键盘导航功能"""
@@ -7265,13 +7690,21 @@ class DayScoreWindow:
         
         def on_key_right(event, idx):
             """向右移动到下一个输入框"""
-            # 检查光标是否在最后
+            # 检查光标是否在最后或输入框为空
             widget = event.widget
             if widget.index(tk.INSERT) >= len(widget.get()):
                 if idx < len(entries) - 1:
                     entries[idx + 1].focus_set()
                     entries[idx + 1].select_range(0, tk.END)
                     return "break"
+            return None
+        
+        def on_key_tab(event, idx):
+            """Tab键移动到下一个输入框"""
+            if idx < len(entries) - 1:
+                entries[idx + 1].focus_set()
+                entries[idx + 1].select_range(0, tk.END)
+                return "break"
             return None
         
         def on_key_left(event, idx):
@@ -7291,23 +7724,174 @@ class DayScoreWindow:
             entry.bind('<Up>', lambda e, idx=i: on_key_up(e, idx))
             entry.bind('<Right>', lambda e, idx=i: on_key_right(e, idx))
             entry.bind('<Left>', lambda e, idx=i: on_key_left(e, idx))
+            # 绑定Tab键
+            entry.bind('<Tab>', lambda e, idx=i: on_key_tab(e, idx))
     
-    def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var, 
-                              owner, sizhu_var, xishen_var, yongshen_var, fuzi_var=None):
+    def _bind_owner_navigation(self, owner_entries, owner_idx):
+        """为单个事主的输入框绑定键盘导航，支持跨事主导航
+        
+        Args:
+            owner_entries: 当前事主的输入框字典
+            owner_idx: 当前事主的索引
+        """
+        solar_entries = owner_entries['solar']
+        lunar_entries = owner_entries['lunar']
+        time_entries = owner_entries['time']
+        
+        # 获取当前日期类型
+        date_type = self.owners_info[owner_idx]['date_type'] if owner_idx < len(self.owners_info) else None
+        
+        def get_visible_entries():
+            """获取当前可见的输入框列表"""
+            if date_type and date_type.get() == "农历":
+                return lunar_entries + time_entries
+            else:
+                return solar_entries + time_entries
+        
+        def on_key_right(event, current_entries, entry_idx):
+            """向右移动"""
+            visible_entries = get_visible_entries()
+            # 在当前可见组内移动
+            if entry_idx < len(current_entries) - 1:
+                next_idx = entry_idx + 1
+            elif current_entries == solar_entries and date_type and date_type.get() == "公历":
+                # 从公历日移动到时
+                time_entries[0].focus_set()
+                time_entries[0].select_range(0, tk.END)
+                return "break"
+            elif current_entries == lunar_entries and date_type and date_type.get() == "农历":
+                # 从农历日移动到时
+                time_entries[0].focus_set()
+                time_entries[0].select_range(0, tk.END)
+                return "break"
+            elif current_entries == time_entries:
+                # 从分移动到下一个事主
+                if owner_idx < len(self._owner_entries_list) - 1:
+                    next_owner = self._owner_entries_list[owner_idx + 1]
+                    next_visible = next_owner['solar'] if next_owner.get('date_type', '公历') == '公历' else next_owner['lunar']
+                    next_visible[0].focus_set()
+                    next_visible[0].select_range(0, tk.END)
+                return "break"
+            else:
+                return None
+            
+            current_entries[next_idx].focus_set()
+            current_entries[next_idx].select_range(0, tk.END)
+            return "break"
+        
+        def on_key_left(event, current_entries, entry_idx):
+            """向左移动"""
+            if entry_idx > 0:
+                prev_idx = entry_idx - 1
+                current_entries[prev_idx].focus_set()
+                current_entries[prev_idx].select_range(0, tk.END)
+                return "break"
+            elif current_entries == time_entries:
+                # 从时移动到日（公历或农历）
+                if date_type and date_type.get() == "农历":
+                    lunar_entries[-1].focus_set()
+                    lunar_entries[-1].select_range(0, tk.END)
+                else:
+                    solar_entries[-1].focus_set()
+                    solar_entries[-1].select_range(0, tk.END)
+                return "break"
+            elif current_entries in [solar_entries, lunar_entries] and owner_idx > 0:
+                # 移动到上一个事主的最后一个输入框
+                prev_owner = self._owner_entries_list[owner_idx - 1]
+                prev_time = prev_owner['time']
+                prev_time[-1].focus_set()
+                prev_time[-1].select_range(0, tk.END)
+                return "break"
+            return None
+        
+        def on_key_down(event):
+            """向下移动到下一个事主的对应输入框"""
+            if owner_idx < len(self._owner_entries_list) - 1:
+                next_owner = self._owner_entries_list[owner_idx + 1]
+                # 找到当前输入框在可见列表中的位置
+                visible = get_visible_entries()
+                widget = event.widget
+                try:
+                    current_idx = visible.index(widget)
+                    next_visible = next_owner['solar'] if next_owner.get('date_type', '公历') == '公历' else next_owner['lunar']
+                    if current_idx < len(next_visible):
+                        next_visible[current_idx].focus_set()
+                        next_visible[current_idx].select_range(0, tk.END)
+                except (ValueError, IndexError):
+                    pass
+            return "break"
+        
+        def on_key_up(event):
+            """向上移动到上一个事主的对应输入框"""
+            if owner_idx > 0:
+                prev_owner = self._owner_entries_list[owner_idx - 1]
+                visible = get_visible_entries()
+                widget = event.widget
+                try:
+                    current_idx = visible.index(widget)
+                    prev_visible = prev_owner['solar'] if prev_owner.get('date_type', '公历') == '公历' else prev_owner['lunar']
+                    if current_idx < len(prev_visible):
+                        prev_visible[current_idx].focus_set()
+                        prev_visible[current_idx].select_range(0, tk.END)
+                except (ValueError, IndexError):
+                    pass
+            return "break"
+        
+        # 绑定公历输入框
+        for i, entry in enumerate(solar_entries):
+            entry.bind('<Right>', lambda e, idx=i: on_key_right(e, solar_entries, idx))
+            entry.bind('<Left>', lambda e, idx=i: on_key_left(e, solar_entries, idx))
+            entry.bind('<Down>', on_key_down)
+            entry.bind('<Up>', on_key_up)
+        
+        # 绑定农历输入框
+        for i, entry in enumerate(lunar_entries):
+            entry.bind('<Right>', lambda e, idx=i: on_key_right(e, lunar_entries, idx))
+            entry.bind('<Left>', lambda e, idx=i: on_key_left(e, lunar_entries, idx))
+            entry.bind('<Down>', on_key_down)
+            entry.bind('<Up>', on_key_up)
+        
+        # 绑定时间输入框
+        for i, entry in enumerate(time_entries):
+            entry.bind('<Right>', lambda e, idx=i: on_key_right(e, time_entries, idx))
+            entry.bind('<Left>', lambda e, idx=i: on_key_left(e, time_entries, idx))
+            entry.bind('<Down>', on_key_down)
+            entry.bind('<Up>', on_key_up)
+    
+    def calculate_owner_sizhu(self, solar_year_var, solar_month_var, solar_day_var, 
+                              lunar_year_var, lunar_month_var, lunar_day_var, leap_var, 
+                              hour_var, minute_var, owner, sizhu_var, xishen_var, yongshen_var, 
+                              fu_xing_var=None, zi_xing_var=None, date_type_var=None, gender_var=None):
         """计算事主四柱"""
         try:
-            year = int(year_var.get())
-            month = int(month_var.get())
-            day = int(day_var.get())
             hour = int(hour_var.get())
             minute = int(minute_var.get())
             
-            target_date = date(year, month, day)
+            # 处理日期类型和闰月
+            date_type = date_type_var.get() if date_type_var is not None else "公历"
+            is_leap = leap_var.get() if leap_var else False
+            
+            if date_type == "农历":
+                # 农历日期转换为公历
+                year = int(lunar_year_var.get())
+                month = int(lunar_month_var.get())
+                day = int(lunar_day_var.get())
+                # 使用sxtwl库进行农历转公历
+                import sxtwl
+                day_obj = sxtwl.fromLunar(year, month, day, is_leap)
+                target_date = date(day_obj.getSolarYear(), day_obj.getSolarMonth(), day_obj.getSolarDay())
+            else:
+                # 公历日期
+                year = int(solar_year_var.get())
+                month = int(solar_month_var.get())
+                day = int(solar_day_var.get())
+                target_date = date(year, month, day)
+            
             sizhu = calculate_sizhu(target_date, hour, minute)
             analysis = analyze_sizhu(sizhu)
             
             # 显示四柱
-            sizhu_text = f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}"
+            sizhu_text = f"{sizhu.get('年柱', '')} {sizhu.get('月柱', '')} {sizhu.get('日柱', '')} {sizhu.get('时柱', '')}"
             sizhu_var.set(sizhu_text)
             
             # 显示喜用神 - 使用统一的喜用神计算器
@@ -7316,16 +7900,21 @@ class DayScoreWindow:
             yongshen_var.set(yongshen)
             
             # 婚嫁事项显示夫星子星
-            if fuzi_var and self.event_var.get() == "嫁娶" and owner == "新娘":
+            if fuxv and self.event_var.get() == "嫁娶" and owner == "新娘":
                 fuzi = analysis.get('夫星子星', {})
                 fu_xing = fuzi.get('fu', '')
                 zi_xing = fuzi.get('zi', '')
-                if fu_xing or zi_xing:
-                    fuzi_var.set(f"夫星: {fu_xing}, 子星: {zi_xing}")
+                fuxv.set(fu_xing)
+                zixv.set(zi_xing)
         except Exception as e:
-            messagebox.showerror("计算错误", f"计算四柱失败: {str(e)}")
-            logger.error(f"计算四柱失败: {str(e)}", exc_info=True)
-    
+            print(f"计算事主四柱时出错: {e}")
+
+    def show_bazi_detail(self, solar_year_var, solar_month_var, solar_day_var, 
+                         lunar_year_var, lunar_month_var, lunar_day_var, leap_var, 
+                         hour_var, minute_var, owner, date_type_var=None, gender_var=None):
+        """显示八字排盘详情"""
+        pass
+
     def toggle_input_mode(self):
         """切换输入方式"""
         if self.input_mode.get() == "date":
@@ -7354,8 +7943,7 @@ class DayScoreWindow:
             else:
                 messagebox.showwarning("警告", "该日期时间已在列表中")
         except ValueError:
-            messagebox.showerror("错误", "日期或时间格式不正确")
-    
+            messagebox.showwarning("警告", "日期或时间格式不正确")
     def add_sizhu(self):
         """添加四柱到列表"""
         nian_zhu = self.sizhu_entries[0].get().strip()
@@ -7384,7 +7972,7 @@ class DayScoreWindow:
         # 添加到列表
         self.date_list.append(sizhu_str)
         # 添加到Treeview
-        self.date_treeview.insert('', tk.END, values=(sizhu_str, '', '', sizhu_str))
+        self.date_treeview.insert('', tk.END, values=(sizhu_str, '', '', sizhu_str, '', '', '', '', '', ''))
         
         # 清空输入框
         for entry in self.sizhu_entries:
@@ -7409,10 +7997,33 @@ class DayScoreWindow:
             time_str = self.time_entry.get().strip()
             try:
                 datetime.strptime(date_str, '%Y-%m-%d')
-                datetime.strptime(time_str, '%H:%M')
+                
+                # 处理时间格式，支持多种输入方式
+                if ':' in time_str:
+                    # 已有冒号，直接验证
+                    datetime.strptime(time_str, '%H:%M')
+                else:
+                    # 无冒号，根据长度处理
+                    time_str = time_str.strip()
+                    if len(time_str) == 1:
+                        # 只有小时，如"8" → "08:00"
+                        time_str = f"0{time_str}:00"
+                    elif len(time_str) == 2:
+                        # 只有小时，如"12" → "12:00"
+                        time_str = f"{time_str}:00"
+                    elif len(time_str) == 3:
+                        # 小时+分钟，如"830" → "08:30"
+                        time_str = f"0{time_str[:1]}:{time_str[1:]}"
+                    elif len(time_str) == 4:
+                        # 小时+分钟，如"1230" → "12:30"
+                        time_str = f"{time_str[:2]}:{time_str[2:]}"
+                    else:
+                        # 其他情况，抛出异常
+                        raise ValueError("时间格式错误")
+                
                 current_rike = f"{date_str} {time_str}"
-            except ValueError:
-                messagebox.showerror("错误", "日期或时间格式不正确")
+            except ValueError as e:
+                messagebox.showwarning("警告", f"日期或时间格式错误: {str(e)}")
                 return
         else:
             # 按四柱输入
@@ -7464,20 +8075,18 @@ class DayScoreWindow:
                     'zi_xing': ''
                 }
                 
-                if event_type == "嫁娶" and info.get('fuzi_var'):
-                    fuzi_str = info['fuzi_var'].get()
-                    if '夫星:' in fuzi_str:
-                        parts = fuzi_str.split(', ')
-                        owner_detail['fu_xing'] = parts[0].replace('夫星: ', '')
-                        if len(parts) > 1:
-                            owner_detail['zi_xing'] = parts[1].replace('子星: ', '')
+                if event_type == "嫁娶":
+                    if info.get('fu_xing_var'):
+                        owner_detail['fu_xing'] = info['fu_xing_var'].get() or ''
+                    if info.get('zi_xing_var'):
+                        owner_detail['zi_xing'] = info['zi_xing_var'].get() or ''
                 
                 owners_detail.append(owner_detail)
             except Exception as e:
+                print(f"处理事主信息时出错: {e}")
                 continue
         
         # 评分当前日课
-        try:
             # 判断是日期还是四柱
             if len(current_rike.split()) == 4 and all(len(zhu) == 2 for zhu in current_rike.split()):
                 # 这是四柱格式（如：甲子 乙丑 丙寅 丁卯）
@@ -7513,8 +8122,21 @@ class DayScoreWindow:
                     sizhu = calculate_sizhu(score_date_obj, 12, 0)
                     display_date = current_rike
             
+            # 获取宅型和山向（如果是修造、动土、入宅事项）
+            house_type = None
+            shan_xiang = None
+            if event_type in ["修造", "动土", "入宅"]:
+                # 获取宅型
+                house_type = getattr(self, 'house_type', None)
+                if house_type:
+                    house_type = house_type.get()
+                # 获取山向
+                shan_xiang = getattr(self, 'shan_xiang', None)
+                if shan_xiang:
+                    shan_xiang = shan_xiang.get()
+            
             # 使用calculate_score进行评分
-            score_result = calculate_score(sizhu, event_type, owners_detail)
+            score_result = calculate_score(sizhu, event_type, owners_detail, house_type, shan_xiang)
             result = {
                 'date': display_date,
                 'score': score_result['score'],
@@ -7541,12 +8163,76 @@ class DayScoreWindow:
             
             # 获取详细得分信息
             score_details = score_result.get('score_details', {})
+            wuxing_score = score_details.get('五行评分', 100)
             yueling_score = score_details.get('月令得分', 0)
             xishen_score = score_details.get('喜用神得分', 0)
             huangdao_score = score_details.get('黄道得分', 0)
             
+            # 获取地支关系信息（从wu_xing_result中获取详细地支关系）
+            wu_xing_result = score_result.get('wu_xing_result', {})
+            wu_xing_details = wu_xing_result.get('details', {})
+            
+            # 构建地支关系文本（显示具体的三合、六合等）
+            dizhi_relations = wu_xing_details.get('地支关系', [])
+            if dizhi_relations:
+                # 提取地支关系的简短描述
+                dizhi_text_list = []
+                for relation in dizhi_relations:
+                    # 提取关键信息，如"三合火局"、"六合"等
+                    if '三合' in relation:
+                        # 提取"三合X局"
+                        match = re.search(r'三合(.)局', relation)
+                        if match:
+                            dizhi_text_list.append(f"三合{match.group(1)}局")
+                        else:
+                            dizhi_text_list.append('三合')
+                    elif '六合' in relation:
+                        dizhi_text_list.append('六合')
+                    elif '六冲' in relation:
+                        dizhi_text_list.append('六冲')
+                    elif '六害' in relation:
+                        dizhi_text_list.append('六害')
+                    elif '三刑' in relation:
+                        dizhi_text_list.append('三刑')
+                    elif '相破' in relation:
+                        dizhi_text_list.append('相破')
+                    else:
+                        # 其他关系，取前10个字符
+                        dizhi_text_list.append(relation[:10])
+                dizhi_text = ', '.join(dizhi_text_list[:2])  # 最多显示2个关系
+            else:
+                dizhi_text = '-'
+            
+            # 获取吉神信息（从wu_xing_details中获取详细吉神）
+            jishen_list = wu_xing_details.get('吉神', [])
+            if jishen_list:
+                # 提取吉神的简短描述
+                jishen_text_list = []
+                for jishen in jishen_list:
+                    # 提取关键信息，如"天德贵人"、"禄神"等
+                    if '天德贵人' in jishen:
+                        jishen_text_list.append('天德贵人')
+                    elif '月德贵人' in jishen:
+                        jishen_text_list.append('月德贵人')
+                    elif '天乙贵人' in jishen:
+                        jishen_text_list.append('天乙贵人')
+                    elif '文昌贵人' in jishen:
+                        jishen_text_list.append('文昌贵人')
+                    elif '禄神' in jishen:
+                        jishen_text_list.append('禄神')
+                    elif '福星' in jishen:
+                        jishen_text_list.append('福星')
+                    else:
+                        # 其他吉神，取前6个字符
+                        jishen_text_list.append(jishen[:6])
+                jishen_text = ', '.join(jishen_text_list[:2])  # 最多显示2个吉神
+            else:
+                # 如果没有详细吉神，使用yi_list
+                yi_list = score_result.get('yi_list', [])
+                jishen_text = ', '.join(yi_list[:2]) if yi_list else '-'
+            
             # 添加到Treeview
-            self.date_treeview.insert('', tk.END, values=(current_rike, score, level, sizhu_str, yueling_score, xishen_score, huangdao_score))
+            self.date_treeview.insert('', tk.END, values=(current_rike, score, level, sizhu_str, wuxing_score, yueling_score, xishen_score, huangdao_score, dizhi_text, jishen_text))
             self.scoring_results.append(result)
             
             # 显示结果
@@ -7556,9 +8242,6 @@ class DayScoreWindow:
             self.window.lift()
             self.window.focus_force()
             messagebox.showinfo("成功", f"日课评分完成！\n评分：{result['score']} 分\n等级：{result['level']}")
-        except Exception as e:
-            messagebox.showerror("错误", f"评分时出错: {str(e)}")
-    
     def on_date_double_click(self, event):
         """双击日课显示详细信息"""
         selected = self.date_treeview.selection()
@@ -7890,16 +8573,15 @@ class DayScoreWindow:
                         'zi_xing': ''
                     }
                     
-                    if event_type == "嫁娶" and info.get('fuzi_var'):
-                        fuzi_str = info['fuzi_var'].get()
-                        if '夫星:' in fuzi_str:
-                            parts = fuzi_str.split(', ')
-                            owner_detail['fu_xing'] = parts[0].replace('夫星: ', '')
-                            if len(parts) > 1:
-                                owner_detail['zi_xing'] = parts[1].replace('子星: ', '')
+                    if event_type == "嫁娶":
+                        if info.get('fu_xing_var'):
+                            owner_detail['fu_xing'] = info['fu_xing_var'].get() or ''
+                        if info.get('zi_xing_var'):
+                            owner_detail['zi_xing'] = info['zi_xing_var'].get() or ''
                     
                     owners_detail.append(owner_detail)
                 except Exception as e:
+                    print(f"处理事主信息时出错: {e}")
                     continue
             
             # 对每个未评分的日课进行评分
@@ -7940,8 +8622,21 @@ class DayScoreWindow:
                             sizhu = calculate_sizhu(score_date_obj, 12, 0)
                             display_date = date_str
                     
+                    # 获取宅型和山向（如果是修造、动土、入宅事项）
+                    house_type = None
+                    shan_xiang = None
+                    if event_type in ["修造", "动土", "入宅"]:
+                        # 获取宅型
+                        house_type = getattr(self, 'house_type', None)
+                        if house_type:
+                            house_type = house_type.get()
+                        # 获取山向
+                        shan_xiang = getattr(self, 'shan_xiang', None)
+                        if shan_xiang:
+                            shan_xiang = shan_xiang.get()
+                    
                     # 使用calculate_score进行评分
-                    score_result = calculate_score(sizhu, event_type, owners_detail)
+                    score_result = calculate_score(sizhu, event_type, owners_detail, house_type, shan_xiang)
                     result = {
                         'date': display_date,
                         'score': score_result['score'],
@@ -7960,6 +8655,7 @@ class DayScoreWindow:
                     # 添加到评分结果
                     self.scoring_results.append(result)
                 except Exception as e:
+                    print(f"评分日课时出错: {e}")
                     continue
         
         # 再次检查评分结果数量
@@ -8005,9 +8701,9 @@ class DayScoreWindow:
         if self.owners_info:
             result_text.insert(tk.END, "【事主信息】\n\n")
             for info in self.owners_info:
-                year = info['year'].get()
-                month = info['month'].get()
-                day = info['day'].get()
+                year = info['solar_year'].get()
+                month = info['solar_month'].get()
+                day = info['solar_day'].get()
                 if year and month and day:
                     result_text.insert(tk.END, f"  {info['name']}: ")
                     result_text.insert(tk.END, f"{year}年{month}月{day}日 ")
@@ -8017,8 +8713,10 @@ class DayScoreWindow:
                         result_text.insert(tk.END, f"喜神: {info['xishen_var'].get()} ")
                     if info.get('yongshen_var') and info['yongshen_var'].get():
                         result_text.insert(tk.END, f"用神: {info['yongshen_var'].get()} ")
-                    if info.get('fuzi_var') and info['fuzi_var'].get():
-                        result_text.insert(tk.END, f"{info['fuzi_var'].get()}")
+                    if info.get('fu_xing_var') and info['fu_xing_var'].get():
+                        result_text.insert(tk.END, f"夫星: {info['fu_xing_var'].get()} ")
+                    if info.get('zi_xing_var') and info['zi_xing_var'].get():
+                        result_text.insert(tk.END, f"子星: {info['zi_xing_var'].get()}")
                     result_text.insert(tk.END, "\n")
         
         # 显示排名概览
@@ -8327,7 +9025,7 @@ class DayScoreWindow:
                 messagebox.showinfo("提示", "没有找到有效的日期")
         except Exception as e:
             messagebox.showerror("错误", f"导入失败: {str(e)}")
-            
+    
     def save_single_analysis(self):
         """保存单个日课分析结果"""
         try:
@@ -8455,14 +9153,8 @@ class DayScoreWindow:
         messagebox.showinfo("帮助", help_text)
 
 
-def main():
-    """主函数 - 直接运行日课评分系统"""
-    try:
-        app = DayScoreWindow()
-        app.run()
-    except Exception as e:
-        messagebox.showerror("错误", f"程序运行出错: {str(e)}")
 
+# 独立运行入口
 
 # -*- coding: utf-8 -*-
 """
@@ -8498,7 +9190,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# 从整合模块导入基础数据（避免重复定义）
+# 从工具函数和八字分析工具导入基础数据（避免重复定义）
 class ShiZhuBaZiAnalyzer:
     """
     事主八字分析器
@@ -8554,20 +9246,6 @@ class ShiZhuBaZiAnalyzer:
     
     def _calculate_sizhu(self):
         """计算四柱"""
-        try:
-            target_date = date(self.year, self.month, self.day)
-            sizhu = calculate_sizhu(target_date, self.hour, self.minute)
-            self.sizhu = sizhu
-            
-            # 设置日主信息
-            self.day_gan = sizhu.get('day_gan', '甲')
-            self.day_zhi = sizhu.get('day_zhi', '子')
-            self.day_wuxing = GAN_WUXING.get(self.day_gan, '土')
-        except Exception as e:
-            logger.error(f"计算四柱失败: {str(e)}", exc_info=True)
-            # 使用简化计算作为备用
-            self._simple_sizhu_calc()
-    
     def _simple_sizhu_calc(self):
         """简化四柱计算"""
         # 简化的四柱计算逻辑
@@ -9363,7 +10041,16 @@ import os
 
 # 检查是否是直接运行（不是作为模块导入）
 # 尝试相对导入，失败则使用绝对导入
-HAS_BAZI_TOOLS = True
+try:
+    from 八字工具整合 import (
+        get_zhangsheng, get_nayin, get_canggan,
+        check_liuhe, check_liuchong, check_sanhe, check_sanxing,
+        check_liuhai, check_po, check_xing, check_hai
+    )
+    HAS_BAZI_TOOLS = True
+except ImportError:
+    HAS_BAZI_TOOLS = False
+    print("警告: 八字工具整合模块不可用，部分功能将受限")
 
 class Scorer:
     """评分器"""
@@ -9422,7 +10109,7 @@ class Scorer:
         yueling_score = self._calculate_yueling_help(sizhu)
         
         # 第三步：日课五行与事主喜用神匹配评分（正五行择日法核心）
-        xishen_score = self._calculate_xishen_match(sizhu, owners)
+        xishen_score, owner_matches = self._calculate_xishen_match(sizhu, owners)
         
         # 第四步：大小黄道审核（加分/减分项）
         self.huangdao_info = calculate_huangdao(sizhu)
@@ -9444,6 +10131,10 @@ class Scorer:
             '总分': self.final_score
         }
         
+        # 添加每个事主的详细匹配信息
+        if owner_matches:
+            score_details['事主匹配'] = owner_matches
+        
         # 添加月令详细得分
         wangxiang_score = self._calculate_wangxiang(sizhu)
         zhizhi_score = self._calculate_zhizhi_relation(sizhu)
@@ -9455,7 +10146,7 @@ class Scorer:
         return {
             'score': self.final_score,
             'level': self.level,
-            'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score),
+            'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score, owner_matches),
             'shensha_list': self.shensha_list,
             'yi_list': self.yi_list,
             'ji_list': self.ji_list,
@@ -9616,10 +10307,10 @@ class Scorer:
     def _calculate_xishen_match(self, sizhu, owners):
         """
         计算日课五行与事主喜用神的匹配评分
-        
+
         正五行择日法核心理念：日课四柱如同为事主"造命"，
         必须补益事主八字中的用神，才能达到催吉的效果。
-        
+
         评分逻辑：
         1. 日课天干五行与事主用神相同：+8分
         2. 日课天干五行与事主喜神相同：+5分
@@ -9627,19 +10318,20 @@ class Scorer:
         4. 日课地支藏干包含喜神：+2分
         5. 日课五行克事主用神：-10分（大忌）
         6. 日课五行与事主用神相冲：-8分
-        
+
         Args:
             sizhu: 日课四柱信息
             owners: 事主信息列表
-            
+
         Returns:
-            int: 喜用神匹配评分
+            tuple: (总评分, 每个事主的详细匹配信息)
         """
         if not owners:
-            return 0
-        
-        score = 0
-        
+            return 0, []
+
+        total_score = 0
+        owner_matches = []
+
         # 提取日课天干五行
         sizhu_wuxing = []
         for pillar_name in ['年柱', '月柱', '日柱', '时柱']:
@@ -9656,7 +10348,7 @@ class Scorer:
                 }
                 if gan in gan_wuxing:
                     sizhu_wuxing.append(gan_wuxing[gan])
-        
+
         # 提取日课地支藏干五行
         zhigan_map = {
             '子': ['水'],
@@ -9672,7 +10364,7 @@ class Scorer:
             '戌': ['土', '金', '火'],
             '亥': ['水', '木']
         }
-        
+
         sizhu_canggan = []
         for pillar_name in ['年柱', '月柱', '日柱', '时柱']:
             pillar = sizhu.get(pillar_name, '')
@@ -9680,31 +10372,48 @@ class Scorer:
                 zhi = pillar[1]
                 if zhi in zhigan_map:
                     sizhu_canggan.extend(zhigan_map[zhi])
-        
+
         # 遍历所有事主，计算匹配度
-        for owner in owners:
+        for idx, owner in enumerate(owners):
+            owner_name = owner.get('name', f'事主{idx+1}')
             owner_xishen = owner.get('xishen', '')
             owner_yongshen = owner.get('yongshen', '')
-            
+
             # 解析喜用神（可能包含多个，如"木、水"）
             owner_xishen_list = [x.strip() for x in owner_xishen.split('、') if x.strip()]
             owner_yongshen_list = [x.strip() for x in owner_yongshen.split('、') if x.strip()]
-            
+
+            owner_score = 0
+            match_details = []
+
             # 1. 检查日课天干与用神匹配
             for wx in sizhu_wuxing:
                 if wx in owner_yongshen_list:
-                    score += 8  # 天干为用神：+8分
+                    owner_score += 8  # 天干为用神：+8分
+                    match_details.append(f"天干五行{wx}与用神匹配")
                 elif wx in owner_xishen_list:
-                    score += 5  # 天干为喜神：+5分
-            
+                    owner_score += 5  # 天干为喜神：+5分
+                    match_details.append(f"天干五行{wx}与喜神匹配")
+
             # 2. 检查日课藏干与用神匹配
             for wx in sizhu_canggan:
                 if wx in owner_yongshen_list:
-                    score += 3  # 藏干为用神：+3分
+                    owner_score += 3  # 藏干为用神：+3分
+                    match_details.append(f"藏干五行{wx}与用神匹配")
                 elif wx in owner_xishen_list:
-                    score += 2  # 藏干为喜神：+2分
-        
-        return score
+                    owner_score += 2  # 藏干为喜神：+2分
+                    match_details.append(f"藏干五行{wx}与喜神匹配")
+
+            total_score += owner_score
+            owner_matches.append({
+                'name': owner_name,
+                'score': owner_score,
+                'details': match_details,
+                'xishen': owner_xishen,
+                'yongshen': owner_yongshen
+            })
+
+        return total_score, owner_matches
     
     def _check_wu_xing(self, sizhu, event_type, owners, house_type, shan_xiang,
                       zaoxiang, zaowei, chuangwei):
@@ -9778,6 +10487,9 @@ class Scorer:
         # 判断五行是否合格
         he_ge = wu_xing_score >= 60  # 五行评分低于60分为不合格
         
+        # 判断是否有扣分项(忌事、凶神煞等)
+        has_deduction = (score_breakdown['忌事得分'] < 0) or (score_breakdown['神煞得分'] < 0)
+        
         # 生成五行评语
         ji_yu = self._generate_wu_xing_jiyu(wu_xing_score, he_ge)
         
@@ -9789,7 +10501,8 @@ class Scorer:
             'score': wu_xing_score,
             'ji_yu': ji_yu,
             'details': details,
-            'score_breakdown': score_breakdown
+            'score_breakdown': score_breakdown,
+            'has_deduction': has_deduction
         }
     
     def _generate_wu_xing_jiyu(self, score, he_ge):
@@ -9926,26 +10639,26 @@ class Scorer:
         # 3. 十二长生状态
         day_gan = sizhu.get('day_gan', '')
         if day_gan and HAS_BAZI_TOOLS:
-            try:
-                for pillar_name, pillar_key in [('年柱', 'year'), ('月柱', 'month'), 
-                                                 ('日柱', 'day'), ('时柱', 'hour')]:
-                    pillar = sizhu.get(pillar_name, '')
-                    if len(pillar) >= 2:
-                        zhi = pillar[1]
-                    state = get_zhangsheng(day_gan, zhi)
-                    details['十二长生'][pillar_name] = state
-            except:
-                pass
+            for pillar_name, pillar_key in [('年柱', 'year'), ('月柱', 'month'), 
+                                             ('日柱', 'day'), ('时柱', 'hour')]:
+                pillar = sizhu.get(pillar_name, '')
+                if len(pillar) >= 2:
+                    zhi = pillar[1]
+                    try:
+                        state = get_zhangsheng(day_gan, zhi)
+                        details['十二长生'][pillar_name] = state
+                    except:
+                        pass
         
         if HAS_BAZI_TOOLS:
-            try:
-                for pillar_name in ['年柱', '月柱', '日柱', '时柱']:
-                    pillar = sizhu.get(pillar_name, '')
-                    if len(pillar) >= 2:
+            for pillar_name in ['年柱', '月柱', '日柱', '时柱']:
+                pillar = sizhu.get(pillar_name, '')
+                if len(pillar) >= 2:
+                    try:
                         nayin = get_nayin(pillar)
                         details['纳音五行'][pillar_name] = nayin
-            except:
-                pass
+                    except:
+                        pass
         
         month_zhi = sizhu.get('月柱', '')[1] if len(sizhu.get('月柱', '')) > 1 else ''
         day_gan = sizhu.get('day_gan', '')
@@ -9954,8 +10667,8 @@ class Scorer:
         # 天德贵人查法（以月支查日干）
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
-            '午': '甲', '未': '癸', '申': '寅', '酉': '丙',
-            '戌': '乙', '亥': '己', '子': '戊', '丑': '庚'
+            '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
+            '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
         }
         if month_zhi in tiande_map and day_gan == tiande_map[month_zhi]:
             details['吉神'].append(f"天德贵人: 月支{month_zhi}见日干{day_gan}")
@@ -10091,7 +10804,7 @@ class Scorer:
     
     def _calculate_zhangsheng_score(self, sizhu):
         """
-        计算日主十二长生状态的评分
+        计算日主在各柱的十二长生状态评分
         
         Args:
             sizhu: 四柱信息
@@ -10100,6 +10813,10 @@ class Scorer:
             int: 十二长生评分
         """
         score = 0
+        
+        # 检查八字工具整合模块是否可用
+        if not HAS_BAZI_TOOLS:
+            return score
         
         # 获取日干
         day_gan = sizhu.get('day_gan', '')
@@ -10151,6 +10868,10 @@ class Scorer:
         """
         score = 0
         
+        # 检查八字工具整合模块是否可用
+        if not HAS_BAZI_TOOLS:
+            return score
+        
         # 获取各柱地支
         zhis = []
         for pillar in ['year', 'month', 'day', 'hour']:
@@ -10164,24 +10885,27 @@ class Scorer:
                 zhi1 = zhis[i]
                 zhi2 = zhis[j]
                 
-                # 六合
-                if check_liuhe(zhi1, zhi2):
-                    score += 8
-                # 六冲
-                elif check_liuchong(zhi1, zhi2):
-                    score -= 15
-                # 六害
-                elif check_liuhai(zhi1, zhi2):
-                    score -= 6
-                # 相刑
-                elif check_xing(zhi1, zhi2):
-                    score -= 8
-        
-        # 检查三合
-        if len(zhis) >= 3:
-            if check_sanhe(zhis):
-                score += 15
-        
+                try:
+                    # 六合
+                    if check_liuhe(zhi1, zhi2):
+                        score += 8
+                    # 三合
+                    elif check_sanhe(zhi1, zhi2):
+                        score += 6
+                    # 六冲
+                    elif check_liuchong(zhi1, zhi2):
+                        score -= 15
+                    # 六害
+                    elif check_liuhai(zhi1, zhi2):
+                        score -= 6
+                    # 相刑
+                    elif check_xing(zhi1, zhi2):
+                        score -= 8
+                    # 相破
+                    elif check_po(zhi1, zhi2):
+                        score -= 4
+                except:
+                    pass
         return score
     
     def _calculate_nayin_match(self, sizhu, owners):
@@ -10268,9 +10992,15 @@ class Scorer:
         if wu_xing_score >= 120 and huangdao_level == '大吉':
             return '★★★★★ 上吉'
         
-        # 规则二：五行大吉 + 黄道黑道 → ★★ 次吉
+        # 规则二：五行大吉 + 黄道黑道 → 根据综合评分判断
         if wu_xing_score >= 120 and da_huang_dao['type'] == '凶':
-            return '★★ 次吉'
+            # 即使黄道是黑道，如果综合评分很高，也应该给予更高的等级
+            if score >= 130:
+                return '★★★★ 大吉'
+            elif score >= 120:
+                return '★★★ 吉'
+            else:
+                return '★★ 次吉'
         
         # 规则三：五行平平 + 黄道大吉 → ★ 平
         if wu_xing_score >= 60 and wu_xing_score < 80 and huangdao_level == '大吉':
@@ -10290,29 +11020,30 @@ class Scorer:
         else:
             return '❌ 凶'
     
-    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0):
+    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None):
         """
         生成评分理由
-        
+
         Args:
             wu_xing_result: 五行审核结果
             huangdao_info: 黄道信息
             yueling_score: 月令评分
             xishen_score: 喜用神匹配评分
-            
+            owner_matches: 每个事主的详细匹配信息
+
         Returns:
             str: 评分理由
         """
         reason = []
         details = wu_xing_result.get('details', {})
-        
+
         # 五行评语
         reason.append(f"五行：{wu_xing_result['ji_yu']}")
-        
+
         # 日主旺衰分析
         if details.get('日主旺衰'):
             reason.append(f"日主：{details['日主旺衰']}")
-        
+
         # 地支关系分析
         if details.get('地支关系'):
             relations = details['地支关系']
@@ -10322,13 +11053,13 @@ class Scorer:
                 reason.append(f"地支合局：{'；'.join(good_relations)}")
             if bad_relations:
                 reason.append(f"地支冲害：{'；'.join(bad_relations)}")
-        
+
         # 吉神分析
         if details.get('吉神'):
             jishen = details['吉神']
             if jishen:
                 reason.append(f"吉神：{'；'.join(jishen)}")
-        
+
         # 月令评语
         if yueling_score > 5:
             reason.append(f"月令：得令助，日主旺相")
@@ -10340,7 +11071,7 @@ class Scorer:
             reason.append(f"月令：气弱，需后天补救")
         else:
             reason.append(f"月令：失令，日主乏力")
-        
+
         # 喜用神匹配评语
         if xishen_score > 20:
             reason.append(f"喜用神：日课大喜事主用神，能量共振极佳")
@@ -10350,6 +11081,25 @@ class Scorer:
             reason.append(f"喜用神：日课对事主有一定补益")
         elif xishen_score == 0:
             reason.append(f"喜用神：日课与事主八字无明显冲突")
+        
+        # 每个事主的详细分析
+        if owner_matches:
+            for match in owner_matches:
+                owner_name = match['name']
+                owner_score = match['score']
+                details = match['details']
+                xishen = match['xishen']
+                yongshen = match['yongshen']
+                
+                # 构建事主分析
+                owner_reason = f"{owner_name}："
+                if details:
+                    owner_reason += f"得分{owner_score}，"
+                    owner_reason += "；".join(details)
+                else:
+                    owner_reason += f"得分{owner_score}，无明显匹配"
+                
+                reason.append(owner_reason)
         
         # 黄道评语
         da_huang_dao = huangdao_info['da_huang_dao']
@@ -10503,9 +11253,9 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _check_year_shensha(self, sizhu):
         """检查年神煞"""
-        year_gan = sizhu.get('year_gan', '甲')
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_gan = sizhu['year_gan']
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 太岁
         self._add_shensha('太岁', -20, '年之主宰，不可冒犯')
@@ -10520,8 +11270,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _check_month_shensha(self, sizhu):
         """检查月神煞"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 月破
         if day_zhi == self._get_yuepo(month_zhi):
@@ -10537,75 +11287,69 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _check_day_shensha(self, sizhu):
         """检查日神煞"""
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            month_zhi = sizhu.get('month_zhi', '子')
-            
-            # ===== 凶煞 =====
-            
-            # 四离日
-            if self._is_sili(sizhu):
-                self._add_shensha('四离日', -30, '春分、秋分、夏至、冬至前一日，忌大事')
-            
-            # 四绝日
-            if self._is_sijue(sizhu):
-                self._add_shensha('四绝日', -30, '立春、立夏、立秋、立冬前一日，忌大事')
-            
-            # 四废日
-            if self._is_sifei(sizhu):
-                self._add_shensha('四废日', -15, '春庚申辛酉，夏壬子癸亥，秋甲寅乙卯，冬丙午丁巳')
-            
-            # 十恶大败
-            if self._is_shie_dabai(sizhu):
-                self._add_shensha('十恶大败', -25, '忌大事，犯之主败')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
+        
+        # ===== 凶煞 =====
+        
+        # 四离日
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -30, '春分、秋分、夏至、冬至前一日，忌大事')
+        
+        # 四绝日
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -30, '立春、立夏、立秋、立冬前一日，忌大事')
+        
+        # 四废日
+        if self._is_sifei(sizhu):
+            self._add_shensha('四废日', -15, '春庚申辛酉，夏壬子癸亥，秋甲寅乙卯，冬丙午丁巳')
+        
+        # 十恶大败
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -25, '忌大事，犯之主败')
         
         # ===== 吉神 =====
         
         # 天德
-            if self._is_tiande(sizhu):
-                self._add_shensha('天德', 15, '百事皆宜，诸凶皆解')
-            
-            # 月德
-            if self._is_yuede(sizhu):
-                self._add_shensha('月德', 15, '百事皆宜，诸凶皆解')
-            
-            # 天德合
-            if self._is_tiandehe(sizhu):
-                self._add_shensha('天德合', 12, '诸事吉利')
-            
-            # 月德合
-            if self._is_yuedehe(sizhu):
-                self._add_shensha('月德合', 12, '诸事吉利')
-            
-            # 大黄道吉日
-            da_huangdao = self._get_da_huangdao(day_zhi, month_zhi)
-            if da_huangdao:
-                self._add_shensha(f'大黄道-{da_huangdao}', 15, '黄道吉日，诸事皆宜')
-            
-            # 小黄道吉日（十二建星）
-            xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)
-            if xiao_huangdao:
-                self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
-        except Exception as e:
-            logger.error(f"检查日神煞失败: {str(e)}", exc_info=True)
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 15, '百事皆宜，诸凶皆解')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 15, '百事皆宜，诸凶皆解')
+        
+        # 天德合
+        if self._is_tiandehe(sizhu):
+            self._add_shensha('天德合', 12, '诸事吉利')
+        
+        # 月德合
+        if self._is_yuedehe(sizhu):
+            self._add_shensha('月德合', 12, '诸事吉利')
+        
+        # 大黄道吉日
+        da_huangdao = self._get_da_huangdao(day_zhi, month_zhi)
+        if da_huangdao:
+            self._add_shensha(f'大黄道-{da_huangdao}', 15, '黄道吉日，诸事皆宜')
+        
+        # 小黄道吉日（十二建星）
+        xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)
+        if xiao_huangdao:
+            self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
     
     def _check_hour_shensha(self, sizhu):
         """检查时神煞"""
-        try:
-            hour_zhi = sizhu.get('hour_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 黄道吉时
-            huangdao_shi = self._get_huangdao_shi(day_zhi, hour_zhi)
-            if huangdao_shi:
-                self._add_shensha(f'黄道时-{huangdao_shi}', 8, '时辰吉利')
-            
-            # 日破时
-            if hour_zhi == self._get_suipo(day_zhi):
-                self._add_shensha('日破时', -10, '时辰与日支相冲')
-        except Exception as e:
-            logger.error(f"检查时神煞失败: {str(e)}", exc_info=True)
+        hour_zhi = sizhu['hour_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 黄道吉时
+        huangdao_shi = self._get_huangdao_shi(day_zhi, hour_zhi)
+        if huangdao_shi:
+            self._add_shensha(f'黄道时-{huangdao_shi}', 8, '时辰吉利')
+        
+        # 日破时
+        if hour_zhi == self._get_suipo(day_zhi):
+            self._add_shensha('日破时', -10, '时辰与日支相冲')
     
     # ===== 辅助方法 =====
     
@@ -10621,8 +11365,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_nian_sansha(self, sizhu):
         """是否年支三煞"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         
         if year_zhi in SANSHA_MAP:
@@ -10633,8 +11377,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_yuexing(self, sizhu):
         """是否月刑"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 地支相刑：寅刑巳、巳刑申、申刑寅（三刑）
         # 丑刑戌、戌刑未、未刑丑（三刑）
@@ -10650,8 +11394,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_yuehai(self, sizhu):
         """是否月害"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 地支六害：子未害、丑午害、寅巳害、卯辰害、申亥害、酉戌害
         hai_map = {
@@ -10666,8 +11410,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_sili(self, sizhu):
         """是否四离日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         sili_map = {
             '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
@@ -10676,8 +11420,8 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_sijue(self, sizhu):
         """是否四绝日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         sijue_map = {
             '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
@@ -10686,124 +11430,101 @@ class CommonShenShaChecker(ShenShaChecker):
     
     def _is_sifei(self, sizhu):
         """是否四废日"""
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_pillar = day_gan + day_zhi
-            
-            # 春季（寅卯辰月）：庚申、辛酉
-            # 夏季（巳午未月）：壬子、癸亥
-            # 秋季（申酉戌月）：甲寅、乙卯
-            # 冬季（亥子丑月）：丙午、丁巳
-            sifei_map = {
-                '寅': ['庚申', '辛酉'],
-                '卯': ['庚申', '辛酉'],
-                '辰': ['庚申', '辛酉'],
-                '巳': ['壬子', '癸亥'],
-                '午': ['壬子', '癸亥'],
-                '未': ['壬子', '癸亥'],
-                '申': ['甲寅', '乙卯'],
-                '酉': ['甲寅', '乙卯'],
-                '戌': ['甲寅', '乙卯'],
-                '亥': ['丙午', '丁巳'],
-                '子': ['丙午', '丁巳'],
-                '丑': ['丙午', '丁巳']
-            }
-            return day_pillar in sifei_map.get(month_zhi, [])
-        except Exception as e:
-            logger.error(f"检查四废日失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
+        day_pillar = day_gan + day_zhi
+        
+        # 春季（寅卯辰月）：庚申、辛酉
+        # 夏季（巳午未月）：壬子、癸亥
+        # 秋季（申酉戌月）：甲寅、乙卯
+        # 冬季（亥子丑月）：丙午、丁巳
+        sifei_map = {
+            '寅': ['庚申', '辛酉'],
+            '卯': ['庚申', '辛酉'],
+            '辰': ['庚申', '辛酉'],
+            '巳': ['壬子', '癸亥'],
+            '午': ['壬子', '癸亥'],
+            '未': ['壬子', '癸亥'],
+            '申': ['甲寅', '乙卯'],
+            '酉': ['甲寅', '乙卯'],
+            '戌': ['甲寅', '乙卯'],
+            '亥': ['丙午', '丁巳'],
+            '子': ['丙午', '丁巳'],
+            '丑': ['丙午', '丁巳']
+        }
+        return day_pillar in sifei_map.get(month_zhi, [])
     
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败"""
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            day_pillar = day_gan + day_zhi
-            
-            shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
-            return day_pillar in shie_dabai
-        except Exception as e:
-            logger.error(f"检查十恶大败失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        day_pillar = day_gan + day_zhi
+        
+        shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
+        return day_pillar in shie_dabai
     
     def _is_tiande(self, sizhu):
         """是否天德"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            zh_list = DI_ZHI
-            if month_zhi not in zh_list:
-                return False
-            idx = zh_list.index(month_zhi)
-            return day_gan == TIANDE.get(idx)
-        except Exception as e:
-            logger.error(f"检查天德失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        zh_list = DI_ZHI
+        idx = zh_list.index(month_zhi)
+        return day_gan == TIANDE.get(idx)
     
     def _is_yuede(self, sizhu):
         """是否月德"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            zh_list = DI_ZHI
-            if month_zhi not in zh_list:
-                return False
-            idx = zh_list.index(month_zhi)
-            return day_gan == YUEDE.get(idx)
-        except Exception as e:
-            logger.error(f"检查月德失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        zh_list = DI_ZHI
+        idx = zh_list.index(month_zhi)
+        return day_gan == YUEDE.get(idx)
     
     def _is_tiandehe(self, sizhu):
         """是否天德合"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            
-            tiandehe_map = {
-                '寅': '壬', '卯': '巳', '辰': '丁', '巳': '丙',
-                '午': '寅', '未': '己', '申': '戊', '酉': '亥',
-                '戌': '辛', '亥': '庚', '子': '申', '丑': '乙'
-            }
-            return day_gan == tiandehe_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查天德合失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        tiandehe_map = {
+            '寅': '壬', '卯': '巳', '辰': '丁', '巳': '丙',
+            '午': '寅', '未': '己', '申': '戊', '酉': '亥',
+            '戌': '辛', '亥': '庚', '子': '申', '丑': '乙'
+        }
+        return day_gan == tiandehe_map.get(month_zhi)
     
     def _is_yuedehe(self, sizhu):
         """是否月德合"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            
-            yuedehe_map = {
-                '寅': '辛', '午': '辛', '戌': '辛',
-                '申': '丁', '子': '丁', '辰': '丁',
-                '亥': '己', '卯': '己', '未': '己',
-                '巳': '乙', '酉': '乙', '丑': '乙'
-            }
-            return day_gan == yuedehe_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查月德合失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        yuedehe_map = {
+            '寅': '辛', '午': '辛', '戌': '辛',
+            '申': '丁', '子': '丁', '辰': '丁',
+            '亥': '己', '卯': '己', '未': '己',
+            '巳': '乙', '酉': '乙', '丑': '乙'
+        }
+        return day_gan == yuedehe_map.get(month_zhi)
     
     def _get_da_huangdao(self, day_zhi, month_zhi):
         """获取大黄道十二值星
-        根据月支和日支推算
+        根据月支和日支推算，使用汉程黄历算法
+
+        十二天神：黄道吉日包括青龙、明堂、金匮、天德、玉堂、司命
+                 黑道凶日包括天刑、朱雀、白虎、天牢、玄武、勾陈
+
+        汉程黄历算法: result = (日支索引 - 2*月支索引 + 4) % 12
         """
-        # 大黄道顺序：青龙、明堂、天刑、朱雀、金匮、天德、白虎、玉堂、天牢、玄武、司命、勾陈
-        # 以月支起青龙，顺数至日支
-        huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
         zh_list = DI_ZHI
-        
-        month_idx = zh_list.index(month_zhi)
-        day_idx = zh_list.index(day_zhi)
-        
-        # 从月支起青龙，计算日支对应的大黄道
-        offset = (day_idx - month_idx) % 12
-        return huangdao_list[offset]
+        huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
+                         '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
+
+        try:
+            month_idx = zh_list.index(month_zhi)
+            day_idx = zh_list.index(day_zhi)
+            huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
+            return huangdao_list[huangdao_idx]
+        except:
+            return None
     
     def _get_xiao_huangdao(self, day_zhi, month_zhi):
         """获取小黄道十二建星
@@ -10893,7 +11614,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         """检查月神煞"""
         super()._check_month_shensha(sizhu)
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         # 月破（婚嫁大忌）
         if self._is_yuepo(sizhu):
@@ -10935,13 +11656,9 @@ class MarriageShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu)
         
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            month_zhi = sizhu.get('month_zhi', '子')
-        except Exception as e:
-            logger.error(f"获取日干信息失败: {str(e)}", exc_info=True)
-            return
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日（婚嫁绝对禁忌）=====
         
@@ -11078,7 +11795,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         daliyue_map = {
             '甲': ['卯', '酉'],      # 二月、八月
@@ -11103,7 +11820,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         xiaoliyue_map = {
             '甲': ['辰', '戌'],      # 三月、九月
@@ -11127,7 +11844,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         fang_wenggu_map = {
             '甲': ['巳', '亥'],
@@ -11149,7 +11866,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         fang_fumu_map = {
             '甲': ['午', '子'],
@@ -11171,7 +11888,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         fang_fu_map = {
             '甲': ['未', '丑'],
@@ -11193,7 +11910,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         fang_qi_map = {
             '甲': ['申', '寅'],
@@ -11215,7 +11932,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         zhu_fu_map = {
             '甲': ['酉', '卯'],
@@ -11237,7 +11954,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        month_zhi = sizhu.get('month_zhi', '子')
+        month_zhi = sizhu['month_zhi']
         
         zhu_qi_map = {
             '甲': ['戌', '辰'],
@@ -11258,8 +11975,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_yuepo(self, sizhu):
         """是否月破"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         idx = zh_list.index(month_zhi)
         yuepo = zh_list[(idx + 6) % 12]
@@ -11273,8 +11990,8 @@ class MarriageShenShaChecker(ShenShaChecker):
         仲月：二月、五月、八月、十一月（子午卯酉）
         季月：三月、六月、九月、十二月（辰戌丑未）
         """
-        month = sizhu.get('month_zhi', '子')
-        day = sizhu.get('day_zhi', '子')
+        month = sizhu['month_zhi']
+        day = sizhu['day_zhi']
         meng = ['寅','巳','申','亥']
         zhong = ['子','午','卯','酉']
         ji = ['辰','戌','丑','未']
@@ -11303,10 +12020,9 @@ class MarriageShenShaChecker(ShenShaChecker):
             
             # 简化实现：返回 False，实际使用时需要根据具体日期计算
             # 后续可通过修改接口，让调用方传入完整的日期信息
-            return False
         except:
-            return False
-    
+            pass
+        return False
     def _is_shousi(self, situ):
         """
         是否受死日
@@ -11324,8 +12040,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_wangwang(self, sizhu):
         """是否往亡日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         wangwang_map = {
             '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
@@ -11336,29 +12052,25 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_zhongsang(self, sizhu):
         """是否重丧日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            
-            zhongsang_map = {
-                '寅': ['庚', '甲'],
-                '卯': ['乙', '辛'],
-                '辰': ['戊', '己'],
-                '巳': ['丙', '壬'],
-                '午': ['丁', '癸'],
-                '未': ['戊', '己'],
-                '申': ['庚', '甲'],
-                '酉': ['乙', '辛'],
-                '戌': ['戊', '己'],
-                '亥': ['丙', '壬'],
-                '子': ['丁', '癸'],
-                '丑': ['戊', '己']
-            }
-            
-            return day_gan in zhongsang_map.get(month_zhi, [])
-        except Exception as e:
-            logger.error(f"检查重丧日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        zhongsang_map = {
+            '寅': ['庚', '甲'],
+            '卯': ['乙', '辛'],
+            '辰': ['戊', '己'],
+            '巳': ['丙', '壬'],
+            '午': ['丁', '癸'],
+            '未': ['戊', '己'],
+            '申': ['庚', '甲'],
+            '酉': ['乙', '辛'],
+            '戌': ['戊', '己'],
+            '亥': ['丙', '壬'],
+            '子': ['丁', '癸'],
+            '丑': ['戊', '己']
+        }
+        
+        return day_gan in zhongsang_map.get(month_zhi, [])
     
     def _is_sanniang(self, sizhu):
         """
@@ -11373,8 +12085,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_baihu(self, sizhu):
         """是否白虎日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         baihu_map = {
             '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
@@ -11385,8 +12097,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_zhuque(self, sizhu):
         """是否朱雀日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         zhuque_map = {
             '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
@@ -11397,8 +12109,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_tiangou(self, sizhu):
         """是否天狗日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         tiangou_map = {
             '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
@@ -11409,8 +12121,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_guchen(self, sizhu):
         """是否孤辰寡宿"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         guchen_map = {
             '寅': ['巳', '丑'],
@@ -11433,30 +12145,26 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_bujiang(self, sizhu):
         """是否不将日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            yang_month = ['寅', '辰', '午', '申', '戌', '子']
-            yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
-            yang_gan = ['甲', '丙', '戊', '庚', '壬']
-            yin_gan = ['乙', '丁', '己', '辛', '癸']
-            yang_zhi = ['子', '寅', '辰', '午', '申', '戌']
-            yin_zhi = ['丑', '卯', '巳', '未', '酉', '亥']
-            
-            if month_zhi in yang_month:
-                return day_gan in yin_gan and day_zhi in yin_zhi
-            else:
-                return day_gan in yang_gan and day_zhi in yang_zhi
-        except Exception as e:
-            logger.error(f"检查不将日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        
+        yang_month = ['寅', '辰', '午', '申', '戌', '子']
+        yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
+        yang_gan = ['甲', '丙', '戊', '庚', '壬']
+        yin_gan = ['乙', '丁', '己', '辛', '癸']
+        yang_zhi = ['子', '寅', '辰', '午', '申', '戌']
+        yin_zhi = ['丑', '卯', '巳', '未', '酉', '亥']
+        
+        if month_zhi in yang_month:
+            return day_gan in yin_gan and day_zhi in yin_zhi
+        else:
+            return day_gan in yang_gan and day_zhi in yang_zhi
     
     def _is_zhoutang(self, sizhu):
         """是否周堂吉日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         zhoutang_ji = {
             '寅': ['丑', '卯', '辰', '午'],
@@ -11477,45 +12185,36 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_tiande(self, sizhu):
         """是否天德日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            tiande_map = {
-                '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
-                '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
-                '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
-            }
-            
-            tiande = tiande_map.get(month_zhi)
-            return day_gan == tiande or day_zhi == tiande
-        except Exception as e:
-            logger.error(f"检查天德日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        tiande_map = {
+            '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
+            '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
+            '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
+        }
+        
+        tiande = tiande_map.get(month_zhi)
+        return day_gan == tiande
     
     def _is_yuede(self, sizhu):
         """是否月德日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            
-            yuede_map = {
-                '寅': '丙', '午': '丙', '戌': '丙',
-                '申': '壬', '子': '壬', '辰': '壬',
-                '巳': '庚', '酉': '庚', '丑': '庚',
-                '亥': '甲', '卯': '甲', '未': '甲'
-            }
-            
-            return day_gan == yuede_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查月德日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        yuede_map = {
+            '寅': '丙', '午': '丙', '戌': '丙',
+            '申': '壬', '子': '壬', '辰': '壬',
+            '巳': '庚', '酉': '庚', '丑': '庚',
+            '亥': '甲', '卯': '甲', '未': '甲'
+        }
+        
+        return day_gan == yuede_map.get(month_zhi)
     
     def _is_sanhe(self, sizhu):
         """是否三合日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         sanhe_map = {
             '寅': ['午', '戌'],
@@ -11536,8 +12235,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_liuhe(self, sizhu):
         """是否六合日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         liuhe_map = {
             '子': '丑', '丑': '子',
@@ -11552,60 +12251,48 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_wuhe(self, sizhu):
         """是否五合日"""
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            
-            wuhe = ['甲', '己', '丙', '辛', '戊', '癸']
-            return day_gan in wuhe
-        except Exception as e:
-            logger.error(f"检查五合日失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        
+        wuhe = ['甲', '己', '丙', '辛', '戊', '癸']
+        return day_gan in wuhe
     
     def _is_mucang(self, sizhu):
         """是否母仓日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            mucang_map = {
-                '寅': ['卯', '辰'],
-                '卯': ['卯', '辰'],
-                '辰': ['卯', '辰'],
-                '巳': ['午', '未'],
-                '午': ['午', '未'],
-                '未': ['午', '未'],
-                '申': ['酉', '戌'],
-                '酉': ['酉', '戌'],
-                '戌': ['酉', '戌'],
-                '亥': ['子', '丑'],
-                '子': ['子', '丑'],
-                '丑': ['子', '丑']
-            }
-            
-            return day_zhi in mucang_map.get(month_zhi, [])
-        except Exception as e:
-            logger.error(f"检查母仓日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        mucang_map = {
+            '寅': ['卯', '辰'],
+            '卯': ['卯', '辰'],
+            '辰': ['卯', '辰'],
+            '巳': ['午', '未'],
+            '午': ['午', '未'],
+            '未': ['午', '未'],
+            '申': ['酉', '戌'],
+            '酉': ['酉', '戌'],
+            '戌': ['酉', '戌'],
+            '亥': ['子', '丑'],
+            '子': ['子', '丑'],
+            '丑': ['子', '丑']
+        }
+        
+        return day_zhi in mucang_map.get(month_zhi, [])
     
     def _is_wangri(self, sizhu):
         """是否旺日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            wangri_map = {
-                '寅': '卯', '卯': '卯',
-                '辰': '午', '巳': '午',
-                '午': '午', '未': '酉',
-                '申': '酉', '酉': '酉',
-                '戌': '子', '亥': '子',
-                '子': '子', '丑': '卯'
-            }
-            
-            return day_zhi == wangri_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查旺日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        wangri_map = {
+            '寅': '卯', '卯': '卯',
+            '辰': '午', '巳': '午',
+            '午': '午', '未': '酉',
+            '申': '酉', '酉': '酉',
+            '戌': '子', '亥': '子',
+            '子': '子', '丑': '卯'
+        }
+        
+        return day_zhi == wangri_map.get(month_zhi)
     
     # ===== 新人相关检查 =====
     
@@ -11614,7 +12301,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_zhi:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         
         if self.bride_zhi not in zh_list:
@@ -11629,7 +12316,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.groom_zhi:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         
         if self.groom_zhi not in zh_list:
@@ -11644,7 +12331,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_zhi:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         
         liuhe_map = {
             '子': '丑', '丑': '子',
@@ -11662,7 +12349,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.groom_zhi:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         
         liuhe_map = {
             '子': '丑', '丑': '子',
@@ -11680,7 +12367,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_gan:
             return False
         
-        day_gan = sizhu.get('day_gan', '甲')
+        day_gan = sizhu['day_gan']
         
         ganhe_map = {
             '甲': '己', '己': '甲',
@@ -11697,7 +12384,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.groom_gan:
             return False
         
-        day_gan = sizhu.get('day_gan', '甲')
+        day_gan = sizhu['day_gan']
         
         ganhe_map = {
             '甲': '己', '己': '甲',
@@ -11735,73 +12422,63 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """检查年神煞"""
         super()._check_year_shensha(sizhu)
         
-        try:
-            year_zhi = sizhu.get('year_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 岁破（已在基类中检查）
-            
-            # 太岁堆黄
-            if self._is_taisui_duihuang(sizhu):
-                self._add_shensha('太岁堆黄', -15, '忌动土修造')
-        except Exception as e:
-            logger.error(f"检查年神煞失败: {str(e)}", exc_info=True)
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 岁破（已在基类中检查）
+        
+        # 太岁堆黄
+        if self._is_taisui_duihuang(sizhu):
+            self._add_shensha('太岁堆黄', -15, '忌动土修造')
     
     def _check_month_shensha(self, sizhu):
         """检查月神煞"""
         super()._check_month_shensha(sizhu)
         
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 三煞
-            if self._is_sansha(sizhu):
-                self._add_shensha('三煞', -20, '修建大忌，犯之主灾祸')
-            
-            # 鲁班煞（按季节判断）
-            if self._is_lubansha(sizhu):
-                self._add_shensha('鲁班煞', -15, '修建不宜，犯之主损工匠')
-            
-            # 土符
-            if self._is_tufu(sizhu):
-                self._add_shensha('土符', -20, '忌动土、修造，犯之主灾')
-            
-            # 土府
-            if self._is_tufu2(sizhu):
-                self._add_shensha('土府', -15, '忌动土，犯之主败')
-            
-            # 土瘟
-            if self._is_tuwen(sizhu):
-                self._add_shensha('土瘟', -20, '忌动土、修造，犯之主病')
-            
-            # 地囊
-            if self._is_dinang(sizhu):
-                self._add_shensha('地囊', -20, '忌动土、开渠，犯之主败')
-            
-            # 月破（已在基类中检查）
-            
-            # 大耗
-            if self._is_dahao(sizhu):
-                self._add_shensha('大耗', -15, '忌动土，犯之主耗财')
-            
-            # 小耗
-            if self._is_xiaohao(sizhu):
-                self._add_shensha('小耗', -10, '忌动土，犯之主小损')
-        except Exception as e:
-            logger.error(f"检查月神煞失败: {str(e)}", exc_info=True)
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 三煞
+        if self._is_sansha(sizhu):
+            self._add_shensha('三煞', -20, '修建大忌，犯之主灾祸')
+        
+        # 鲁班煞（按季节判断）
+        if self._is_lubansha(sizhu):
+            self._add_shensha('鲁班煞', -15, '修建不宜，犯之主损工匠')
+        
+        # 土符
+        if self._is_tufu(sizhu):
+            self._add_shensha('土符', -20, '忌动土、修造，犯之主灾')
+        
+        # 土府
+        if self._is_tufu2(sizhu):
+            self._add_shensha('土府', -15, '忌动土，犯之主败')
+        
+        # 土瘟
+        if self._is_tuwen(sizhu):
+            self._add_shensha('土瘟', -20, '忌动土、修造，犯之主病')
+        
+        # 地囊
+        if self._is_dinang(sizhu):
+            self._add_shensha('地囊', -20, '忌动土、开渠，犯之主败')
+        
+        # 月破（已在基类中检查）
+        
+        # 大耗
+        if self._is_dahao(sizhu):
+            self._add_shensha('大耗', -15, '忌动土，犯之主耗财')
+        
+        # 小耗
+        if self._is_xiaohao(sizhu):
+            self._add_shensha('小耗', -10, '忌动土，犯之主小损')
     
     def _check_day_shensha(self, sizhu):
         """检查日神煞"""
         super()._check_day_shensha(sizhu)
         
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            month_zhi = sizhu.get('month_zhi', '子')
-        except Exception as e:
-            logger.error(f"获取日干信息失败: {str(e)}", exc_info=True)
-            return
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
         
         # ===== 凶煞 =====
         
@@ -11883,19 +12560,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_sansha(self, sizhu):
         """是否三煞"""
-        try:
-            year_zhi = sizhu.get('year_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            zh_list = DI_ZHI
-            
-            if year_zhi in SANSHA_MAP:
-                sansha_indices = SANSHA_MAP[year_zhi]
-                day_idx = zh_list.index(day_zhi)
-                return day_idx in sansha_indices
-            return False
-        except Exception as e:
-            logger.error(f"检查三煞失败: {str(e)}", exc_info=True)
-            return False
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
+        zh_list = DI_ZHI
+        
+        if year_zhi in SANSHA_MAP:
+            sansha_indices = SANSHA_MAP[year_zhi]
+            day_idx = zh_list.index(day_zhi)
+            return day_idx in sansha_indices
+        return False
     
     def _is_lubansha(self, sizhu):
         """是否鲁班煞（按季节判断）
@@ -11904,26 +12577,22 @@ class ConstructionShenShaChecker(ShenShaChecker):
         秋季：巳、午日
         冬季：申、酉日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 春季：寅卯辰月
-            if month_zhi in ['寅', '卯', '辰']:
-                return day_zhi in ['亥', '子']
-            # 夏季：巳午未月
-            elif month_zhi in ['巳', '午', '未']:
-                return day_zhi in ['寅', '卯']
-            # 秋季：申酉戌月
-            elif month_zhi in ['申', '酉', '戌']:
-                return day_zhi in ['巳', '午']
-            # 冬季：亥子丑月
-            elif month_zhi in ['亥', '子', '丑']:
-                return day_zhi in ['申', '酉']
-            return False
-        except Exception as e:
-            logger.error(f"检查鲁班煞失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 春季：寅卯辰月
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi in ['亥', '子']
+        # 夏季：巳午未月
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi in ['寅', '卯']
+        # 秋季：申酉戌月
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi in ['巳', '午']
+        # 冬季：亥子丑月
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi in ['申', '酉']
+        return False
     
     def _is_tufu(self, sizhu):
         """是否土符
@@ -11932,19 +12601,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：寅日，未月：卯日，申月：辰日，酉月：巳日
         戌月：午日，亥月：未日，子月：申日，丑月：酉日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            tufu_map = {
-                '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
-                '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
-                '戌': '午', '亥': '未', '子': '申', '丑': '酉'
-            }
-            return day_zhi == tufu_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查土符失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        tufu_map = {
+            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
+            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
+            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
+        }
+        return day_zhi == tufu_map.get(month_zhi)
     
     def _is_tufu2(self, sizhu):
         """是否土府（地府）
@@ -11953,19 +12618,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：申日，未月：酉日，申月：戌日，酉月：亥日
         戌月：子日，亥月：丑日，子月：寅日，丑月：卯日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            tufu2_map = {
-                '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-                '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-                '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-            }
-            return day_zhi == tufu2_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查土府失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        tufu2_map = {
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
+        }
+        return day_zhi == tufu2_map.get(month_zhi)
     
     def _is_tuwen(self, sizhu):
         """是否土瘟
@@ -11974,19 +12635,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：巳日，未月：午日，申月：未日，酉月：申日
         戌月：酉日，亥月：戌日，子月：亥日，丑月：子日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            tuwen_map = {
-                '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
-                '午': '巳', '未': '午', '申': '未', '酉': '申',
-                '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
-            }
-            return day_zhi == tuwen_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查土瘟失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        tuwen_map = {
+            '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
+            '午': '巳', '未': '午', '申': '未', '酉': '申',
+            '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
+        }
+        return day_zhi == tuwen_map.get(month_zhi)
     
     def _is_dinang(self, sizhu):
         """是否地囊
@@ -11995,11 +12652,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：寅日，未月：卯日，申月：辰日，酉月：巳日
         戌月：午日，亥月：未日，子月：申日，丑月：酉日
         """
-        try:
-            return self._is_tufu(sizhu)  # 地囊与土符相同
-        except Exception as e:
-            logger.error(f"检查地囊失败: {str(e)}", exc_info=True)
-            return False
+        return self._is_tufu(sizhu)  # 地囊与土符相同
     
     def _is_tianzei(self, sizhu):
         """是否天贼
@@ -12008,19 +12661,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：酉日，未月：申日，申月：未日，酉月：午日
         戌月：巳日，亥月：辰日，子月：卯日，丑月：寅日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            tianzei_map = {
-                '寅': '丑', '卯': '子', '辰': '亥', '巳': '戌',
-                '午': '酉', '未': '申', '申': '未', '酉': '午',
-                '戌': '巳', '亥': '辰', '子': '卯', '丑': '寅'
-            }
-            return day_zhi == tianzei_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查天贼失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        tianzei_map = {
+            '寅': '丑', '卯': '子', '辰': '亥', '巳': '戌',
+            '午': '酉', '未': '申', '申': '未', '酉': '午',
+            '戌': '巳', '亥': '辰', '子': '卯', '丑': '寅'
+        }
+        return day_zhi == tianzei_map.get(month_zhi)
     
     def _is_dizei(self, sizhu):
         """是否地贼
@@ -12029,41 +12678,29 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：申日，未月：酉日，申月：戌日，酉月：亥日
         戌月：子日，亥月：丑日，子月：寅日，丑月：卯日
         """
-        try:
-            return self._is_tufu2(sizhu)  # 地贼与土府相同
-        except Exception as e:
-            logger.error(f"检查地贼失败: {str(e)}", exc_info=True)
-            return False
+        return self._is_tufu2(sizhu)  # 地贼与土府相同
     
     def _is_dahao(self, sizhu):
         """是否大耗
         大耗日：与月破相同，即与月支相冲的日支
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            zh_list = DI_ZHI
-            idx = zh_list.index(month_zhi)
-            yuepo = zh_list[(idx + 6) % 12]
-            return day_zhi == yuepo
-        except Exception as e:
-            logger.error(f"检查大耗失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        zh_list = DI_ZHI
+        idx = zh_list.index(month_zhi)
+        yuepo = zh_list[(idx + 6) % 12]
+        return day_zhi == yuepo
     
     def _is_xiaohao(self, sizhu):
         """是否小耗
         小耗日：月破的前一日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            zh_list = DI_ZHI
-            idx = zh_list.index(month_zhi)
-            xiaohao = zh_list[(idx + 5) % 12]
-            return day_zhi == xiaohao
-        except Exception as e:
-            logger.error(f"检查小耗失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        zh_list = DI_ZHI
+        idx = zh_list.index(month_zhi)
+        xiaohao = zh_list[(idx + 5) % 12]
+        return day_zhi == xiaohao
     
     def _is_sili(self, sizhu):
         """是否四离日
@@ -12073,18 +12710,14 @@ class ConstructionShenShaChecker(ShenShaChecker):
         秋分前一日（酉月末日）：戌日
         冬至前一日（子月末日）：丑日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 简化判断：卯月辰日、午月未日、酉月戌日、子月丑日
-            sili_map = {
-                '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
-            }
-            return day_zhi == sili_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查四离日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 简化判断：卯月辰日、午月未日、酉月戌日、子月丑日
+        sili_map = {
+            '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
+        }
+        return day_zhi == sili_map.get(month_zhi)
     
     def _is_sijue(self, sizhu):
         """是否四绝日
@@ -12094,33 +12727,25 @@ class ConstructionShenShaChecker(ShenShaChecker):
         立秋前一日（未月末日）：申日
         立冬前一日（戌月末日）：亥日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 简化判断：丑月寅日、辰月巳日、未月申日、戌月亥日
-            sijue_map = {
-                '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
-            }
-            return day_zhi == sijue_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查四绝日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 简化判断：丑月寅日、辰月巳日、未月申日、戌月亥日
+        sijue_map = {
+            '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
+        }
+        return day_zhi == sijue_map.get(month_zhi)
     
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败
         十恶大败日：甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥
         """
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            day_pillar = day_gan + day_zhi
-            
-            shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
-            return day_pillar in shie_dabai
-        except Exception as e:
-            logger.error(f"检查十恶大败失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        day_pillar = day_gan + day_zhi
+        
+        shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
+        return day_pillar in shie_dabai
     
     def _is_fuduan(self, sizhu):
         """是否伏断日
@@ -12128,18 +12753,14 @@ class ConstructionShenShaChecker(ShenShaChecker):
         甲日：戌，乙日：酉，丙日：申，丁日：未，戊日：午
         己日：巳，庚日：辰，辛日：卯，壬日：寅，癸日：丑
         """
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            fuduan_map = {
-                '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
-                '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
-            }
-            return day_zhi == fuduan_map.get(day_gan)
-        except Exception as e:
-            logger.error(f"检查伏断日失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        
+        fuduan_map = {
+            '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
+            '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
+        }
+        return day_zhi == fuduan_map.get(day_gan)
     
     def _is_jiangjunjian(self, sizhu):
         """是否将军箭
@@ -12148,19 +12769,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：未日，未月：申日，申月：酉日，酉月：戌日
         戌月：亥日，亥月：子日，子月：丑日，丑月：寅日
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            jiangjunjian_map = {
-                '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
-                '午': '未', '未': '申', '申': '酉', '酉': '戌',
-                '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
-            }
-            return day_zhi == jiangjunjian_map.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查将军箭失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        jiangjunjian_map = {
+            '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
+            '午': '未', '未': '申', '申': '酉', '酉': '戌',
+            '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
+        }
+        return day_zhi == jiangjunjian_map.get(month_zhi)
     
     def _is_taisui_duihuang(self, sizhu):
         """是否太岁堆黄
@@ -12169,8 +12786,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         辰年：巳日，巳年：午日，午年：未日，未年：申日
         申年：酉日，酉年：戌日，戌年：亥日，亥年：子日
         """
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         zh_list = DI_ZHI
         idx = zh_list.index(year_zhi)
@@ -12186,30 +12803,14 @@ class ConstructionShenShaChecker(ShenShaChecker):
         午月：亥，未月：甲，申月：癸，酉月：寅
         戌月：丙，亥月：乙，子月：巳，丑月：庚
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            zh_list = DI_ZHI
-            idx = zh_list.index(month_zhi)
-            return day_gan == TIANDE.get(idx)
-        except Exception as e:
-            logger.error(f"检查天德失败: {str(e)}", exc_info=True)
-            return False
+        return day_gan == TIANDE.get(idx)
     
     def _is_yuede(self, sizhu):
         """是否月德
         月德：按月支推算
         寅午戌月：丙，申子辰月：壬，亥卯未月：甲，巳酉丑月：庚
         """
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_gan = sizhu.get('day_gan', '甲')
-            zh_list = DI_ZHI
-            idx = zh_list.index(month_zhi)
-            return day_gan == YUEDE.get(idx)
-        except Exception as e:
-            logger.error(f"检查月德失败: {str(e)}", exc_info=True)
-            return False
+        return day_gan == YUEDE.get(idx)
     
     def _is_tiandehe(self, sizhu):
         """是否天德合
@@ -12218,8 +12819,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         亥合寅，甲合己，癸合戊，寅合亥
         丙合辛，乙合庚，巳合申，庚合乙
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
         
         tiandehe_map = {
             '寅': '壬', '卯': '巳', '辰': '丁', '巳': '丙',
@@ -12233,8 +12834,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         月德合：与月德相合的天干
         丙合辛，壬合丁，甲合己，庚合乙
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
         
         yuedehe_map = {
             '寅': '辛', '午': '辛', '戌': '辛',  # 丙合辛
@@ -12250,8 +12851,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         申子辰年/日：寅，寅午戌年/日：申
         巳酉丑年/日：亥，亥卯未年/日：巳
         """
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         yima_map = {
             '申': '寅', '子': '寅', '辰': '寅',
@@ -12265,8 +12866,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """是否三合
         三合：申子辰合水，寅午戌合火，巳酉丑合金，亥卯未合木
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         sanhe_groups = [
             {'申', '子', '辰'},
@@ -12284,8 +12885,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """是否六合
         六合：子丑合，寅亥合，卯戌合，辰酉合，巳申合，午未合
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         liuhe_map = {
             '子': '丑', '丑': '子',
@@ -12302,8 +12903,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         鸣吠日：庚午、庚子、庚申、辛酉、辛卯、辛巳
         专用于破土、启攒
         """
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         day_pillar = day_gan + day_zhi
         
         mingfei = ['庚午', '庚子', '庚申', '辛酉', '辛卯', '辛巳']
@@ -12313,8 +12914,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """是否鸣吠对日
         鸣吠对日：丙子、丙午、丙寅、丁卯、丁酉、丁亥
         """
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         day_pillar = day_gan + day_zhi
         
         mingfeidui = ['丙子', '丙午', '丙寅', '丁卯', '丁酉', '丁亥']
@@ -12325,9 +12926,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         不将日：根据月支和日干支推算
         简化版：阳月阳日、阴月阴日
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         
         # 阳月：寅、辰、午、申、戌、子
         # 阴月：卯、巳、未、酉、亥、丑
@@ -12372,7 +12973,7 @@ class OpeningShenShaChecker(ShenShaChecker):
         super()._check_year_shensha(sizhu)
         
         # 财神方位
-        year_gan = sizhu.get('year_gan', '甲')
+        year_gan = sizhu['year_gan']
         if self._is_caishen_fangwei(sizhu):
             self._add_shensha('财神方位吉', 15, '财神方位吉利')
     
@@ -12437,14 +13038,14 @@ class OpeningShenShaChecker(ShenShaChecker):
             '戊': '艮', '己': '坤', '庚': '兑', '辛': '乾',
             '壬': '艮', '癸': '坤'
         }
-        year_gan = sizhu.get('year_gan', '甲')
+        year_gan = sizhu['year_gan']
         # 简化判断
         return True
     
     def _is_yuepo(self, sizhu):
         """是否月破"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         chong = {
             '子': '午', '丑': '未', '寅': '申', '卯': '酉',
             '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
@@ -12454,8 +13055,8 @@ class OpeningShenShaChecker(ShenShaChecker):
     
     def _is_yuexing(self, sizhu):
         """是否月刑"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 地支相刑
         xing = {
             '子': '卯', '丑': '戌', '寅': '巳', '卯': '子',
@@ -12466,14 +13067,14 @@ class OpeningShenShaChecker(ShenShaChecker):
     
     def _is_kaiye_jiri(self, sizhu):
         """是否开业吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         kaiye_jiri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in kaiye_jiri
     
     def _is_manri(self, sizhu):
         """是否满日"""
         # 建除十二神之满日
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 简化判断，实际应根据月建推算
         manri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in manri
@@ -12481,15 +13082,15 @@ class OpeningShenShaChecker(ShenShaChecker):
     def _is_chengri(self, sizhu):
         """是否成日"""
         # 建除十二神之成日
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         chengri = ['丑', '辰', '未', '戌']
         return day_zhi in chengri
     
     def _is_pori(self, sizhu):
         """是否破日"""
         # 建除十二神之破日
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         chong = {
             '子': '午', '丑': '未', '寅': '申', '卯': '酉',
             '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
@@ -12500,14 +13101,14 @@ class OpeningShenShaChecker(ShenShaChecker):
     def _is_biari(self, sizhu):
         """是否闭日"""
         # 建除十二神之闭日
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         biari = ['亥', '子', '丑']
         return day_zhi in biari
     
     def _is_jiesha(self, sizhu):
         """是否劫煞"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         jiesha = {
             '申': '巳', '子': '巳', '辰': '巳',
             '寅': '亥', '午': '亥', '戌': '亥',
@@ -12518,8 +13119,8 @@ class OpeningShenShaChecker(ShenShaChecker):
     
     def _is_zaisha(self, sizhu):
         """是否灾煞"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         zaisha = {
             '申': '午', '子': '午', '辰': '午',
             '寅': '子', '午': '子', '戌': '子',
@@ -12554,40 +13155,40 @@ class BurialShenShaChecker(ShenShaChecker):
         """检查年神煞"""
         super()._check_year_shensha(sizhu)
         
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu.get('year_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         # 年重丧（按年支和日干查）
-        if self._is_nian_zhongsang(sizhu):
+        if year_zhi and day_gan and self._is_nian_zhongsang(sizhu):
             self._add_shensha('年重丧', -30, '年重丧大凶，绝对不可用')
     
     def _check_month_shensha(self, sizhu):
         """检查月神煞"""
         super()._check_month_shensha(sizhu)
         
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         # 重丧（按月查日干）
-        if self._is_zhongsang(sizhu):
+        if month_zhi and day_gan and self._is_zhongsang(sizhu):
             self._add_shensha('重丧', -30, '重丧日大凶，绝对不宜安葬')
         
         # 三丧（按季节查日支）
-        if self._is_sansang(sizhu):
+        if day_zhi and self._is_sansang(sizhu):
             self._add_shensha('三丧', -25, '三丧日不宜安葬')
         
         # 复日（重丧类）
-        if self._is_furi(sizhu):
+        if day_zhi and self._is_furi(sizhu):
             self._add_shensha('复日', -25, '复日重丧，不宜安葬')
         
         # 往亡日
-        if self._is_wangwang(sizhu):
+        if month_zhi and day_zhi and self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日忌安葬、出行')
         
         # 天吏日
-        if self._is_tianli(sizhu):
+        if month_zhi and day_gan and self._is_tianli(sizhu):
             self._add_shensha('天吏日', -15, '天吏日不宜安葬')
         
         # 致死日
@@ -12602,9 +13203,9 @@ class BurialShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu)
         
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
-        month_zhi = sizhu.get('month_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日（安葬绝对禁忌）=====
         
@@ -12683,8 +13284,8 @@ class BurialShenShaChecker(ShenShaChecker):
         口诀：正七连庚甲，二八乙辛当，五十一丁癸，四十丙壬方，三六九十二，戊己是重丧
         即：正月、七月逢庚日、甲日；二月、八月逢乙日、辛日；以此类推
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
         
         # 月份对应的天干映射
         zhongsang_map = {
@@ -12709,8 +13310,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否年重丧（按年支查日干）
         口诀与月重丧类似，但以年支为准
         """
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        year_zhi = sizhu.get('year_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
         
         # 年支对应的天干映射（与月重丧相同规律）
         nian_zhongsang_map = {
@@ -12736,8 +13337,8 @@ class BurialShenShaChecker(ShenShaChecker):
         口诀：春辰夏未秋戌冬丑
         即：春季（寅卯辰月）逢辰日，夏季（巳午未月）逢未日，秋季（申酉戌月）逢戌日，冬季（亥子丑月）逢丑日
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 按季节判断
         if month_zhi in ['寅', '卯', '辰']:  # 春季
@@ -12755,8 +13356,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否复日（重丧类）
         复日：正月甲日、二月乙日、三月丙日……依此类推
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
         
         furi_map = {
             '寅': '甲', '卯': '乙', '辰': '丙',
@@ -12773,8 +13374,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否往亡日
         口诀：正寅二巳三申四亥五卯六午七酉八子九辰十未十一戌十二丑
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         wangwang_map = {
             '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
@@ -12788,8 +13389,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否天吏日
         口诀：正卯二寅三丑四子五亥六戌七酉八申九未十午十一巳十二辰
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         tianli_map = {
             '寅': '卯', '卯': '寅', '辰': '丑', '巳': '子',
@@ -12803,8 +13404,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否致死日
         口诀：正未二申三酉四戌五亥六子七丑八寅九卯十辰十一巳十二午
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         zhisi_map = {
             '寅': '未', '卯': '申', '辰': '酉', '巳': '戌',
@@ -12815,17 +13416,19 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_yuepo(self, sizhu):
         """是否月破（与月支相冲）"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         zh_list = DI_ZHI
-        idx = zh_list.index(month_zhi)
-        yuepo = zh_list[(idx + 6) % 12]
-        return day_zhi == yuepo
+        if month_zhi in zh_list:
+            idx = zh_list.index(month_zhi)
+            yuepo = zh_list[(idx + 6) % 12]
+            return day_zhi == yuepo
+        return False
     
     def _is_tufu(self, sizhu):
         """是否土府日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         tufu_map = {
             '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
             '午': '巳', '未': '午', '申': '未', '酉': '申',
@@ -12835,12 +13438,12 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_bazuori(self, sizhu):
         """是否八座日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         bazuori_map = {
-            '寅': '未', '卯': '申', '辰': '酉', '巳': '戌',
-            '午': '亥', '未': '子', '申': '丑', '酉': '寅',
-            '戌': '卯', '亥': '辰', '子': '巳', '丑': '午'
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
         }
         return day_zhi == bazuori_map.get(month_zhi)
     
@@ -12848,8 +13451,8 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_sili(self, sizhu):
         """是否四离日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         sili_map = {
             '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
         }
@@ -12857,8 +13460,8 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_sijue(self, sizhu):
         """是否四绝日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         sijue_map = {
             '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
         }
@@ -12866,16 +13469,16 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败日"""
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         day_pillar = day_gan + day_zhi
         shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
         return day_pillar in shie_dabai
     
     def _is_fuduan(self, sizhu):
         """是否伏断日"""
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         fuduan_map = {
             '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
             '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
@@ -12889,8 +13492,8 @@ class BurialShenShaChecker(ShenShaChecker):
         是否鸣吠日（正确的天干地支组合）
         鸣吠日：庚午、庚子、庚申、辛酉、辛卯、辛巳、壬寅、壬辰、壬午、壬申
         """
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         day_pillar = day_gan + day_zhi
         mingfei = ['庚午', '庚子', '庚申', '辛酉', '辛卯', '辛巳', '壬寅', '壬辰', '壬午', '壬申']
         return day_pillar in mingfei
@@ -12900,17 +13503,17 @@ class BurialShenShaChecker(ShenShaChecker):
         是否鸣吠对日
         鸣吠对日：丙子、丙午、丙寅、丁卯、丁酉、丁亥
         """
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         day_pillar = day_gan + day_zhi
         mingfeidui = ['丙子', '丙午', '丙寅', '丁卯', '丁酉', '丁亥']
         return day_pillar in mingfeidui
     
     def _is_bujiang(self, sizhu):
         """是否不将日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         yang_month = ['寅', '辰', '午', '申', '戌', '子']
         yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
@@ -12931,7 +13534,7 @@ class BurialShenShaChecker(ShenShaChecker):
         是否的呼日（与亡者生肖相冲）
         的呼日：日支与亡者生肖相冲
         """
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu.get('day_zhi', '')
         zh_list = DI_ZHI
         
         if owner_zodiac not in zh_list:
@@ -12947,7 +13550,7 @@ class BurialShenShaChecker(ShenShaChecker):
         实际应根据孝子生肖判断，这里简化处理
         """
         # 简化：与亡者生肖相害的日子
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu.get('day_zhi', '')
         zh_list = DI_ZHI
         
         if owner_zodiac not in zh_list:
@@ -12967,7 +13570,7 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_owner_chong(self, sizhu, owner_zodiac):
         """日支与亡者生肖是否相冲"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu.get('day_zhi', '')
         zh_list = DI_ZHI
         
         if owner_zodiac not in zh_list:
@@ -12979,7 +13582,7 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_owner_he(self, sizhu, owner_zodiac):
         """日支与亡者生肖是否相合"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu.get('day_zhi', '')
         
         # 六合关系
         liuhe_map = {
@@ -13015,7 +13618,7 @@ class BedShenShaChecker(ShenShaChecker):
         super()._check_year_shensha(sizhu)
 
         # 胎神方位
-        year_zhi = sizhu.get('year_zhi', '子')
+        year_zhi = sizhu['year_zhi']
         if self._is_taishen_fangwei(sizhu):
             self._add_shensha('胎神方位吉', 10, '胎神方位吉利')
 
@@ -13076,14 +13679,14 @@ class BedShenShaChecker(ShenShaChecker):
             '辰': '门床', '巳': '碓磨', '午': '厨灶', '未': '灶炉',
             '申': '门床', '酉': '碓磨', '戌': '厨灶', '亥': '床仓'
         }
-        year_zhi = sizhu.get('year_zhi', '子')
+        year_zhi = sizhu['year_zhi']
         # 简化判断
         return True
 
     def _is_yuepo(self, sizhu):
         """是否月破"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         chong = {
             '子': '午', '丑': '未', '寅': '申', '卯': '酉',
             '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
@@ -13093,8 +13696,8 @@ class BedShenShaChecker(ShenShaChecker):
 
     def _is_tufu(self, sizhu):
         """是否土府日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         tufu_days = {
             '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
             '午': '巳', '未': '午', '申': '未', '酉': '申',
@@ -13104,22 +13707,22 @@ class BedShenShaChecker(ShenShaChecker):
 
     def _is_anchuang_jiri(self, sizhu):
         """是否安床吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 安床吉日：阳日
         anchuang_jiri = ['午', '未', '申', '酉', '戌', '亥']
         return day_zhi in anchuang_jiri
 
     def _is_chuanggong_chuangmu(self, sizhu):
         """是否床公床母日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 床公床母日
         chuanggong_chuangmu = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in chuanggong_chuangmu
 
     def _is_taishen(self, sizhu):
         """是否胎神日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 胎神日
         taishen_days = {
             '寅': '子', '卯': '丑', '辰': '寅', '巳': '卯',
@@ -13130,8 +13733,8 @@ class BedShenShaChecker(ShenShaChecker):
 
     def _is_chongchuang(self, sizhu):
         """是否冲床日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 冲床日
         chongchuang = {
             '寅': '申', '卯': '酉', '辰': '戌', '巳': '亥',
@@ -13142,8 +13745,8 @@ class BedShenShaChecker(ShenShaChecker):
 
     def _is_yanggongji(self, sizhu):
         """是否杨公忌日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 杨公忌日
         yanggongji = {
             '子': '午', '丑': '未', '寅': '申', '卯': '酉',
@@ -13154,7 +13757,7 @@ class BedShenShaChecker(ShenShaChecker):
 
     def _is_hongsha(self, sizhu):
         """是否红砂日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 红砂日
         hongsha = ['酉', '巳', '丑']
         return day_zhi in hongsha
@@ -13186,7 +13789,7 @@ class TravelShenShaChecker(ShenShaChecker):
         super()._check_year_shensha(sizhu)
         
         # 太岁方位
-        year_zhi = sizhu.get('year_zhi', '子')
+        year_zhi = sizhu['year_zhi']
         if self._is_taisui_fangwei(sizhu):
             self._add_shensha('太岁方位', -10, '太岁方位不宜出行')
     
@@ -13249,7 +13852,7 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_taisui_fangwei(self, sizhu):
         """是否太岁方位"""
-        year_zhi = sizhu.get('year_zhi', '子')
+        year_zhi = sizhu['year_zhi']
         # 太岁方位
         taisui_fangwei = {
             '子': '北', '丑': '东北', '寅': '东北', '卯': '东',
@@ -13261,8 +13864,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_yuepo(self, sizhu):
         """是否月破"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         chong = {
             '子': '午', '丑': '未', '寅': '申', '卯': '酉',
             '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
@@ -13272,8 +13875,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_wangwang(self, sizhu):
         """是否往亡日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 往亡日
         wangwang_days = {
             '寅': '巳', '卯': '寅', '辰': '亥', '巳': '申',
@@ -13284,14 +13887,14 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_chuxing_jiri(self, sizhu):
         """是否出行吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         chuxing_jiri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in chuxing_jiri
     
     def _is_yima(self, sizhu):
         """是否驿马日"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         # 驿马日
         yima = {
             '申': '寅', '子': '寅', '辰': '寅',
@@ -13303,8 +13906,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_tianma(self, sizhu):
         """是否天马日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 天马日
         tianma = {
             '寅': '午', '卯': '申', '辰': '戌', '巳': '子',
@@ -13315,8 +13918,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_lukong(self, sizhu):
         """是否路空日"""
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         # 路空日（甲己日申酉空，乙庚日午未空，丙辛日辰巳空，丁壬日寅卯空，戊癸日子丑空）
         lukong = {
             '甲': ['申', '酉'], '己': ['申', '酉'],
@@ -13329,8 +13932,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_zhuque(self, sizhu):
         """是否朱雀日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 朱雀日
         zhuque = {
             '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
@@ -13341,8 +13944,8 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_baihu(self, sizhu):
         """是否白虎日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 白虎日
         baihu = {
             '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
@@ -13353,7 +13956,7 @@ class TravelShenShaChecker(ShenShaChecker):
     
     def _is_chuxing_jishi(self, sizhu):
         """是否出行吉时"""
-        hour_zhi = sizhu.get('hour_zhi', '子')
+        hour_zhi = sizhu['hour_zhi']
         jishi = ['子', '寅', '卯', '巳', '午', '酉']
         return hour_zhi in jishi
     
@@ -13388,8 +13991,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         """检查年神煞"""
         super()._check_year_shensha(sizhu)
         
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         # 年三煞（劫煞、灾煞、岁煞）
         if self._is_sansha(sizhu):
@@ -13403,9 +14006,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         """检查月神煞"""
         super()._check_month_shensha(sizhu)
         
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        day_gan = sizhu['day_gan']
         
         # 月破
         if self._is_yuepo(sizhu):
@@ -13489,9 +14092,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu)
         
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
-        month_zhi = sizhu.get('month_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日 =====
         
@@ -13569,8 +14172,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_sansha(self, sizhu):
         """是否年三煞（劫煞、灾煞、岁煞）"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         if year_zhi in SANSHA_MAP:
             sansha_indices = SANSHA_MAP[year_zhi]
@@ -13581,8 +14184,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_suipo(self, sizhu):
         """是否岁破（日支与年支相冲）"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         idx = zh_list.index(year_zhi)
         suipo = zh_list[(idx + 6) % 12]
@@ -13592,8 +14195,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_yuepo(self, sizhu):
         """月破：日支与月支相冲"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         zh_list = DI_ZHI
         idx = zh_list.index(month_zhi)
         yuepo = zh_list[(idx + 6) % 12]
@@ -13601,8 +14204,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_tufu(self, sizhu):
         """土符日：按月查日支"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         tufu_map = {
             '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
             '午': '巳', '未': '午', '申': '未', '酉': '申',
@@ -13612,8 +14215,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_dinang(self, sizhu):
         """地囊日：按季查日支"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         # 春季（寅卯辰）地囊在亥日；夏季（巳午未）在寅日；秋季（申酉戌）在巳日；冬季（亥子丑）在申日
         dinang_map = {
             '寅': '亥', '卯': '亥', '辰': '亥',
@@ -13625,8 +14228,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_tianzei(self, sizhu):
         """天贼日：按月查日支"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         tianzei_map = {
             '寅': '辰', '卯': '巳', '辰': '午',
             '巳': '未', '午': '申', '未': '酉',
@@ -13637,8 +14240,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_dizei(self, sizhu):
         """地贼日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         dizei_map = {
             '寅': '子', '卯': '丑', '辰': '寅',
             '巳': '卯', '午': '辰', '未': '巳',
@@ -13654,8 +14257,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         仲月：子、午、卯、酉
         季月：辰、戌、丑、未
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         meng = ['寅', '申', '巳', '亥']
         zhong = ['子', '午', '卯', '酉']
         ji = ['辰', '戌', '丑', '未']
@@ -13669,8 +14272,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_wangwang(self, sizhu):
         """往亡日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         wangwang_map = {
             '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
             '午': '卯', '未': '午', '申': '酉', '酉': '子',
@@ -13680,8 +14283,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_hongzui_zhuque(self, sizhu):
         """红嘴朱雀日（入宅大忌）"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         hongzui_map = {
             '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
             '午': '未', '未': '申', '申': '酉', '酉': '戌',
@@ -13691,8 +14294,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_tiangou(self, sizhu):
         """天狗日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         tiangou_map = {
             '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
             '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
@@ -13702,8 +14305,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_fuduan(self, sizhu):
         """伏断日：按日干查日支"""
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         fuduan_map = {
             '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
             '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
@@ -13712,8 +14315,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_shousi(self, sizhu):
         """受死日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         shousi_map = {
             '寅': '戌', '卯': '辰', '辰': '亥', '巳': '巳',
             '午': '子', '未': '午', '申': '丑', '酉': '未',
@@ -13723,8 +14326,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_dahao(self, sizhu):
         """大耗日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         dahao_map = {
             '寅': '申', '卯': '酉', '辰': '戌', '巳': '亥',
             '午': '子', '未': '丑', '申': '寅', '酉': '卯',
@@ -13734,8 +14337,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_xiaohao(self, sizhu):
         """小耗日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         xiaohao_map = {
             '寅': '未', '卯': '申', '辰': '酉', '巳': '戌',
             '午': '亥', '未': '子', '申': '丑', '酉': '寅',
@@ -13745,8 +14348,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_yuexing(self, sizhu):
         """月刑日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         yuexing_map = {
             '寅': '巳', '卯': '子', '辰': '辰', '巳': '申',
             '午': '午', '未': '丑', '申': '寅', '酉': '酉',
@@ -13756,8 +14359,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_yuehai(self, sizhu):
         """月害日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         yuehai_map = {
             '子': '未', '丑': '午', '寅': '巳', '卯': '辰',
             '辰': '卯', '巳': '寅', '午': '丑', '未': '子',
@@ -13767,9 +14370,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_tiande(self, sizhu):
         """天德日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
@@ -13782,8 +14385,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_yuede(self, sizhu):
         """月德日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
         
         yuede_map = {
             '寅': '丙', '午': '丙', '戌': '丙',
@@ -13796,8 +14399,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_yima(self, sizhu):
         """驿马日"""
-        year_zhi = sizhu.get('year_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        year_zhi = sizhu['year_zhi']
+        day_zhi = sizhu['day_zhi']
         
         yima_map = {
             '寅': '申', '午': '申', '戌': '申',
@@ -13810,8 +14413,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_jianxing_ji(self, sizhu):
         """建星吉日（成、开、满）"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         zh_list = DI_ZHI
         month_idx = zh_list.index(month_zhi)
@@ -13827,8 +14430,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_sili(self, sizhu):
         """四离日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         sili_map = {
             '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
         }
@@ -13836,8 +14439,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_sijue(self, sizhu):
         """四绝日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         sijue_map = {
             '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
         }
@@ -13845,16 +14448,16 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_shie_dabai(self, sizhu):
         """十恶大败日"""
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
         day_pillar = day_gan + day_zhi
         shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
         return day_pillar in shie_dabai
     
     def _is_baihu_zhonggong(self, sizhu):
         """白虎入中宫"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         baihu_map = {
             '寅': '午', '卯': '未', '辰': '申', '巳': '酉',
@@ -13871,9 +14474,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         秋季（申酉戌月）：戊申日
         冬季（亥子丑月）：甲子日
         """
-        day_gan = sizhu.get('day_gan', '甲')
-        day_zhi = sizhu.get('day_zhi', '子')
-        month_zhi = sizhu.get('month_zhi', '子')
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
         if month_zhi in ['寅', '卯', '辰'] and day_gan == '戊' and day_zhi == '寅':
             return True
         if month_zhi in ['巳', '午', '未'] and day_gan == '甲' and day_zhi == '午':
@@ -13889,8 +14492,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         三合日：日支与月支三合
         申子辰合水局、寅午戌合火局、巳酉丑合金局、亥卯未合木局
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         sanhe_groups = [('申', '子', '辰'), ('寅', '午', '戌'), ('巳', '酉', '丑'), ('亥', '卯', '未')]
         for group in sanhe_groups:
             if month_zhi in group and day_zhi in group and month_zhi != day_zhi:
@@ -13902,8 +14505,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         六合日：日支与月支六合
         子丑合土、寅亥合木、卯戌合火、辰酉合金、巳申合水、午未合火/土
         """
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         liuhe_map = {
             '子': '丑', '丑': '子',
             '寅': '亥', '亥': '寅',
@@ -13916,8 +14519,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_mucang(self, sizhu):
         """母仓日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         mucang_map = {
             '寅': ['卯', '辰'],
@@ -13938,8 +14541,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     def _is_xiangri(self, sizhu):
         """相日"""
-        month_zhi = sizhu.get('month_zhi', '子')
-        day_zhi = sizhu.get('day_zhi', '子')
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
         
         xiangri_map = {
             '寅': '卯', '卯': '卯',
@@ -13971,7 +14574,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if not self.owner_zodiac:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         owner_zhi = self._shengxiao_to_zhi(self.owner_zodiac)
         
         if not owner_zhi:
@@ -13992,7 +14595,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if not self.owner_zodiac:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         owner_zhi = self._shengxiao_to_zhi(self.owner_zodiac)
         
         if not owner_zhi:
@@ -14026,7 +14629,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if not self.owner_zodiac:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         owner_zhi = self._shengxiao_to_zhi(self.owner_zodiac)
         
         if not owner_zhi:
@@ -14051,7 +14654,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if not self.owner_zodiac:
             return False
         
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         owner_zhi = self._shengxiao_to_zhi(self.owner_zodiac)
         
         if not owner_zhi:
@@ -14075,7 +14678,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if not self.owner_gan:
             return False
         
-        day_gan = sizhu.get('day_gan', '甲')
+        day_gan = sizhu['day_gan']
         
         ganhe_map = {
             '甲': '己', '己': '甲',
@@ -14108,28 +14711,22 @@ class StoveShenShaChecker(ShenShaChecker):
         """检查年神煞"""
         super()._check_year_shensha(sizhu)
         
-        try:
-            # 灶神方位
-            year_zhi = sizhu.get('year_zhi', '子')
-            if self._is_zaoshen_fangwei(sizhu):
-                self._add_shensha('灶神方位吉', 10, '灶神方位吉利')
-        except Exception as e:
-            logger.error(f"检查年神煞失败: {str(e)}", exc_info=True)
+        # 灶神方位
+        year_zhi = sizhu['year_zhi']
+        if self._is_zaoshen_fangwei(sizhu):
+            self._add_shensha('灶神方位吉', 10, '灶神方位吉利')
     
     def _check_month_shensha(self, sizhu):
         """检查月神煞"""
         super()._check_month_shensha(sizhu)
         
-        try:
-            # 月建冲灶
-            if self._is_yuejian_chongzao(sizhu):
-                self._add_shensha('月建冲灶', -15, '月建冲灶不宜作灶')
-            
-            # 土府
-            if self._is_tufu(sizhu):
-                self._add_shensha('土府', -10, '土府日不宜动土作灶')
-        except Exception as e:
-            logger.error(f"检查月神煞失败: {str(e)}", exc_info=True)
+        # 月建冲灶
+        if self._is_yuejian_chongzao(sizhu):
+            self._add_shensha('月建冲灶', -15, '月建冲灶不宜作灶')
+        
+        # 土府
+        if self._is_tufu(sizhu):
+            self._add_shensha('土府', -10, '土府日不宜动土作灶')
     
     def _check_day_shensha(self, sizhu):
         """检查日神煞"""
@@ -14164,130 +14761,88 @@ class StoveShenShaChecker(ShenShaChecker):
                     self._add_shensha('宅主灶向相合', 10, '宅主八字与灶向相合')
                     break
     
-    def _check_owner_zao_match(self, sizhu, owner):
-        """检查宅主八字与灶向是否相合"""
-        try:
-            # 简化判断，实际应根据宅主八字详细分析
-            # 宅主日柱与作灶日相生或比和为宜
-            return True
-        except Exception as e:
-            logger.error(f"检查宅主灶向相合失败: {str(e)}", exc_info=True)
-            return False
-    
     def _is_zaoshen_fangwei(self, sizhu):
         """是否灶神方位吉利"""
-        try:
-            # 灶神方位根据年支确定
-            zaoshen_fangwei = {
-                '子': '坤', '丑': '坤', '寅': '乾', '卯': '乾',
-                '辰': '艮', '巳': '艮', '午': '震', '未': '震',
-                '申': '巽', '酉': '巽', '戌': '离', '亥': '离'
-            }
-            year_zhi = sizhu.get('year_zhi', '子')
-            # 简化判断，实际应根据具体方位
-            return True
-        except Exception as e:
-            logger.error(f"检查灶神方位失败: {str(e)}", exc_info=True)
-            return False
+        # 灶神方位根据年支确定
+        zaoshen_fangwei = {
+            '子': '坤', '丑': '坤', '寅': '乾', '卯': '乾',
+            '辰': '艮', '巳': '艮', '午': '震', '未': '震',
+            '申': '巽', '酉': '巽', '戌': '离', '亥': '离'
+        }
+        year_zhi = sizhu['year_zhi']
+        # 简化判断，实际应根据具体方位
+        return True
     
     def _is_yuejian_chongzao(self, sizhu):
         """是否月建冲灶"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 月建与灶位相冲
-            chong = {
-                '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-                '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-                '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-            }
-            return day_zhi == chong.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查月建冲灶失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        # 月建与灶位相冲
+        chong = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == chong.get(month_zhi)
     
     def _is_tufu(self, sizhu):
         """是否土府日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 土府日
-            tufu_days = {
-                '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
-                '午': '巳', '未': '午', '申': '未', '酉': '申',
-                '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
-            }
-            return day_zhi == tufu_days.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查土府日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        # 土府日
+        tufu_days = {
+            '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
+            '午': '巳', '未': '午', '申': '未', '酉': '申',
+            '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
+        }
+        return day_zhi == tufu_days.get(month_zhi)
     
     def _is_zuozao_jiri(self, sizhu):
         """是否作灶吉日"""
-        try:
-            day_zhi = sizhu.get('day_zhi', '子')
-            zuozao_jiri = ['子', '寅', '卯', '巳', '午', '酉']
-            return day_zhi in zuozao_jiri
-        except Exception as e:
-            logger.error(f"检查作灶吉日失败: {str(e)}", exc_info=True)
-            return False
+        day_zhi = sizhu['day_zhi']
+        zuozao_jiri = ['子', '寅', '卯', '巳', '午', '酉']
+        return day_zhi in zuozao_jiri
     
     def _is_zaojun_jiri(self, sizhu):
         """是否灶君忌日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 灶君忌日
-            zaojun_jiri = {
-                '子': '未', '丑': '申', '寅': '酉', '卯': '戌',
-                '辰': '亥', '巳': '子', '午': '丑', '未': '寅',
-                '申': '卯', '酉': '辰', '戌': '巳', '亥': '午'
-            }
-            return day_zhi == zaojun_jiri.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查灶君忌日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        # 灶君忌日
+        zaojun_jiri = {
+            '子': '未', '丑': '申', '寅': '酉', '卯': '戌',
+            '辰': '亥', '巳': '子', '午': '丑', '未': '寅',
+            '申': '卯', '酉': '辰', '戌': '巳', '亥': '午'
+        }
+        return day_zhi == zaojun_jiri.get(month_zhi)
     
     def _is_tianhuo(self, sizhu):
         """是否天火日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 天火日
-            tianhuo_days = {
-                '寅': '子', '卯': '丑', '辰': '寅', '巳': '卯',
-                '午': '辰', '未': '巳', '申': '午', '酉': '未',
-                '戌': '申', '亥': '酉', '子': '戌', '丑': '亥'
-            }
-            return day_zhi == tianhuo_days.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查天火日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        # 天火日
+        tianhuo_days = {
+            '寅': '子', '卯': '丑', '辰': '寅', '巳': '卯',
+            '午': '辰', '未': '巳', '申': '午', '酉': '未',
+            '戌': '申', '亥': '酉', '子': '戌', '丑': '亥'
+        }
+        return day_zhi == tianhuo_days.get(month_zhi)
     
     def _is_dihuo(self, sizhu):
         """是否地火日"""
-        try:
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 地火日
-            dihuo_days = {
-                '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
-                '午': '未', '未': '申', '申': '酉', '酉': '戌',
-                '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
-            }
-            return day_zhi == dihuo_days.get(month_zhi)
-        except Exception as e:
-            logger.error(f"检查地火日失败: {str(e)}", exc_info=True)
-            return False
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        # 地火日
+        dihuo_days = {
+            '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
+            '午': '未', '未': '申', '申': '酉', '酉': '戌',
+            '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
+        }
+        return day_zhi == dihuo_days.get(month_zhi)
     
     def _is_bingding(self, sizhu):
         """是否丙丁日"""
-        try:
-            day_gan = sizhu.get('day_gan', '甲')
-            return day_gan in ['丙', '丁']
-        except Exception as e:
-            logger.error(f"检查丙丁日失败: {str(e)}", exc_info=True)
-            return False
+        day_gan = sizhu['day_gan']
+        return day_gan in ['丙', '丁']
 
 
 # -*- coding: utf-8 -*-
@@ -14375,13 +14930,13 @@ class MarriageRuleChecker(EventRuleChecker):
     
     def _is_marriage_yi_day(self, sizhu):
         """是否婚嫁宜日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         yi_days = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未']
         return day_zhi in yi_days
     
     def _is_marriage_ji_day(self, sizhu):
         """是否婚嫁忌日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         ji_days = ['申', '酉', '戌', '亥']
         return day_zhi in ji_days
     
@@ -14431,68 +14986,54 @@ class ConstructionRuleChecker(EventRuleChecker):
     
     def _is_construction_yi_day(self, sizhu):
         """是否修建宜日"""
-        try:
-            day_zhi = sizhu.get('day_zhi', '子')
-            yi_days = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未']
-            return day_zhi in yi_days
-        except Exception as e:
-            logger.error(f"检查修建宜日失败: {str(e)}", exc_info=True)
-            return False
+        day_zhi = sizhu['day_zhi']
+        yi_days = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未']
+        return day_zhi in yi_days
     
     def _is_construction_ji_day(self, sizhu):
         """是否修建忌日"""
-        try:
-            day_zhi = sizhu.get('day_zhi', '子')
-            ji_days = ['申', '酉', '戌', '亥']
-            return day_zhi in ji_days
-        except Exception as e:
-            logger.error(f"检查修建忌日失败: {str(e)}", exc_info=True)
-            return False
+        day_zhi = sizhu['day_zhi']
+        ji_days = ['申', '酉', '戌', '亥']
+        return day_zhi in ji_days
     
     def _check_yang_zhai_rules(self, sizhu, shan_xiang, yi_list, ji_list):
         """阳宅特定规则"""
-        try:
-            # 阳宅宜日：择日以生旺为主
-            month_zhi = sizhu.get('month_zhi', '子')
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 阳宅宜：日支与月支相生或比和
-            if self._is_zhi_sheng_he(day_zhi, month_zhi):
-                yi_list.append('阳宅修造')
-            
-            # 阳宅忌：日支与月支相冲
-            if self._is_zhi_chong(day_zhi, month_zhi):
-                ji_list.append('阳宅修造')
-            
-            # 山向相关规则
-            if shan_xiang:
-                if self._is_shan_xiang_yi(shan_xiang, day_zhi):
-                    yi_list.append(f'{shan_xiang}向修造')
-        except Exception as e:
-            logger.error(f"检查阳宅规则失败: {str(e)}", exc_info=True)
+        # 阳宅宜日：择日以生旺为主
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        # 阳宅宜：日支与月支相生或比和
+        if self._is_zhi_sheng_he(day_zhi, month_zhi):
+            yi_list.append('阳宅修造')
+        
+        # 阳宅忌：日支与月支相冲
+        if self._is_zhi_chong(day_zhi, month_zhi):
+            ji_list.append('阳宅修造')
+        
+        # 山向相关规则
+        if shan_xiang:
+            if self._is_shan_xiang_yi(shan_xiang, day_zhi):
+                yi_list.append(f'{shan_xiang}向修造')
     
     def _check_yin_zhai_rules(self, sizhu, shan_xiang, yi_list, ji_list):
         """阴宅特定规则"""
-        try:
-            # 阴宅宜日：择日以安静为主
-            day_zhi = sizhu.get('day_zhi', '子')
-            
-            # 阴宅宜：阴支日（子、丑、寅、卯、辰、巳）
-            yin_days = ['子', '丑', '寅', '卯', '辰', '巳']
-            if day_zhi in yin_days:
-                yi_list.append('阴宅修造')
-            
-            # 阴宅忌：阳支日（午、未、申、酉、戌、亥）
-            yang_days = ['午', '未', '申', '酉', '戌', '亥']
-            if day_zhi in yang_days:
-                ji_list.append('阴宅修造')
-            
-            # 山向相关规则
-            if shan_xiang:
-                if self._is_shan_xiang_ji(shan_xiang, day_zhi):
-                    ji_list.append(f'{shan_xiang}向修造')
-        except Exception as e:
-            logger.error(f"检查阴宅规则失败: {str(e)}", exc_info=True)
+        # 阴宅宜日：择日以安静为主
+        day_zhi = sizhu['day_zhi']
+        
+        # 阴宅宜：阴支日（子、丑、寅、卯、辰、巳）
+        yin_days = ['子', '丑', '寅', '卯', '辰', '巳']
+        if day_zhi in yin_days:
+            yi_list.append('阴宅修造')
+        
+        # 阴宅忌：阳支日（午、未、申、酉、戌、亥）
+        yang_days = ['午', '未', '申', '酉', '戌', '亥']
+        if day_zhi in yang_days:
+            ji_list.append('阴宅修造')
+        
+        # 山向相关规则
+        if shan_xiang:
+            if self._is_shan_xiang_ji(shan_xiang, day_zhi):
+                ji_list.append(f'{shan_xiang}向修造')
     
     def _is_zhi_sheng_he(self, zhi1, zhi2):
         """判断地支是否相生或比和"""
@@ -14618,29 +15159,29 @@ class OpeningRuleChecker(EventRuleChecker):
 
     def _is_kaiye_yi_day(self, sizhu):
         """是否开业宜日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 开业宜日：子、寅、卯、巳、午、酉
         yi_days = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in yi_days
 
     def _is_kaiye_ji_day(self, sizhu):
         """是否开业忌日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 开业忌日：丑、辰、未、戌、亥、申
         ji_days = ['丑', '辰', '未', '戌', '亥', '申']
         return day_zhi in ji_days
 
     def _is_kaishi_jiri(self, sizhu):
         """是否开市吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
-        day_gan = sizhu.get('day_gan', '甲')
+        day_zhi = sizhu['day_zhi']
+        day_gan = sizhu['day_gan']
         # 开市吉日：满日、成日、开日
         kaishi_days = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in kaishi_days
 
     def _is_nacai_jiri(self, sizhu):
         """是否纳财吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 纳财吉日
         nacai_days = ['寅', '卯', '巳', '午', '申', '酉']
         return day_zhi in nacai_days
@@ -14693,13 +15234,13 @@ class BurialRuleChecker(EventRuleChecker):
         """是否阴日"""
         # 阴日：子、丑、寅、卯、辰、巳
         yin_days = ['子', '丑', '寅', '卯', '辰', '巳']
-        return sizhu.get('day_zhi', '子') in yin_days
+        return sizhu.get('day_zhi', '') in yin_days
     
     def _is_yang_day(self, sizhu):
         """是否阳日"""
         # 阳日：午、未、申、酉、戌、亥
         yang_days = ['午', '未', '申', '酉', '戌', '亥']
-        return sizhu.get('day_zhi', '子') in yang_days
+        return sizhu.get('day_zhi', '') in yang_days
     
     def _is_shan_xiang_yi(self, sizhu, shan_xiang):
         """山向宜日"""
@@ -14722,7 +15263,7 @@ class BurialRuleChecker(EventRuleChecker):
         }
         
         sx_wuxing = shan_xiang_wuxing.get(shan_xiang)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', ''))
         
         # 五行相生
         sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
@@ -14749,7 +15290,7 @@ class BurialRuleChecker(EventRuleChecker):
         }
         
         sx_wuxing = shan_xiang_wuxing.get(shan_xiang)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', ''))
         
         # 五行相克
         ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
@@ -14826,13 +15367,13 @@ class BedRuleChecker(EventRuleChecker):
         """是否阳日"""
         # 阳日：午、未、申、酉、戌、亥
         yang_days = ['午', '未', '申', '酉', '戌', '亥']
-        return sizhu.get('day_zhi', '子') in yang_days
+        return sizhu['day_zhi'] in yang_days
     
     def _is_yin_day(self, sizhu):
         """是否阴日"""
         # 阴日：子、丑、寅、卯、辰、巳
         yin_days = ['子', '丑', '寅', '卯', '辰', '巳']
-        return sizhu.get('day_zhi', '子') in yin_days
+        return sizhu['day_zhi'] in yin_days
     
     def _is_chuangwei_yi(self, sizhu, chuangwei):
         """床位朝向宜日"""
@@ -14855,7 +15396,7 @@ class BedRuleChecker(EventRuleChecker):
         }
         
         cw_wuxing = chuangwei_wuxing.get(chuangwei)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        dz_wuxing = zhi_wuxing.get(sizhu['day_zhi'])
         
         # 五行相生
         sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
@@ -14882,7 +15423,7 @@ class BedRuleChecker(EventRuleChecker):
         }
         
         cw_wuxing = chuangwei_wuxing.get(chuangwei)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        dz_wuxing = zhi_wuxing.get(sizhu['day_zhi'])
         
         # 五行相克
         ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
@@ -14933,28 +15474,28 @@ class TravelRuleChecker(EventRuleChecker):
 
     def _is_chuxing_yi_day(self, sizhu):
         """是否出行宜日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 出行宜日：子、寅、卯、巳、午、酉
         yi_days = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in yi_days
 
     def _is_chuxing_ji_day(self, sizhu):
         """是否出行忌日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 出行忌日：丑、辰、未、戌、亥、申
         ji_days = ['丑', '辰', '未', '戌', '亥', '申']
         return day_zhi in ji_days
 
     def _is_yuanxing_jiri(self, sizhu):
         """是否远行吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 远行吉日
         yuanxing_days = ['寅', '卯', '巳', '午', '申', '酉']
         return day_zhi in yuanxing_days
 
     def _is_guijia_jiri(self, sizhu):
         """是否归家吉日"""
-        day_zhi = sizhu.get('day_zhi', '子')
+        day_zhi = sizhu['day_zhi']
         # 归家吉日
         guijia_days = ['子', '丑', '辰', '未', '戌', '亥']
         return day_zhi in guijia_days
@@ -15021,87 +15562,71 @@ class StoveRuleChecker(EventRuleChecker):
 
     def _is_zuozao_yi_day(self, sizhu):
         """是否作灶宜日"""
-        try:
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 作灶宜日：子、寅、卯、巳、午、酉
-            yi_days = ['子', '寅', '卯', '巳', '午', '酉']
-            return day_zhi in yi_days
-        except Exception as e:
-            logger.error(f"检查作灶宜日失败: {str(e)}", exc_info=True)
-            return False
+        day_zhi = sizhu['day_zhi']
+        # 作灶宜日：子、寅、卯、巳、午、酉
+        yi_days = ['子', '寅', '卯', '巳', '午', '酉']
+        return day_zhi in yi_days
 
     def _is_zuozao_ji_day(self, sizhu):
         """是否作灶忌日"""
-        try:
-            day_zhi = sizhu.get('day_zhi', '子')
-            # 作灶忌日：丑、辰、未、戌、亥、申
-            ji_days = ['丑', '辰', '未', '戌', '亥', '申']
-            return day_zhi in ji_days
-        except Exception as e:
-            logger.error(f"检查作灶忌日失败: {str(e)}", exc_info=True)
-            return False
+        day_zhi = sizhu['day_zhi']
+        # 作灶忌日：丑、辰、未、戌、亥、申
+        ji_days = ['丑', '辰', '未', '戌', '亥', '申']
+        return day_zhi in ji_days
 
     def _is_zaoxiang_yi(self, sizhu, zaoxiang):
         """灶向宜日"""
-        try:
-            # 灶向五行与日支五行相生为宜
-            zaoxiang_wuxing = {
-                '壬': '水', '子': '水', '癸': '水',
-                '丑': '土', '艮': '土', '寅': '木',
-                '甲': '木', '卯': '木', '乙': '木',
-                '辰': '土', '巽': '木', '巳': '火',
-                '丙': '火', '午': '火', '丁': '火',
-                '未': '土', '坤': '土', '申': '金',
-                '庚': '金', '酉': '金', '辛': '金',
-                '戌': '土', '乾': '金', '亥': '水',
-            }
+        # 灶向五行与日支五行相生为宜
+        zaoxiang_wuxing = {
+            '壬': '水', '子': '水', '癸': '水',
+            '丑': '土', '艮': '土', '寅': '木',
+            '甲': '木', '卯': '木', '乙': '木',
+            '辰': '土', '巽': '木', '巳': '火',
+            '丙': '火', '午': '火', '丁': '火',
+            '未': '土', '坤': '土', '申': '金',
+            '庚': '金', '酉': '金', '辛': '金',
+            '戌': '土', '乾': '金', '亥': '水',
+        }
 
-            zhi_wuxing = {
-                '子': '水', '丑': '土', '寅': '木', '卯': '木',
-                '辰': '土', '巳': '火', '午': '火', '未': '土',
-                '申': '金', '酉': '金', '戌': '土', '亥': '水'
-            }
+        zhi_wuxing = {
+            '子': '水', '丑': '土', '寅': '木', '卯': '木',
+            '辰': '土', '巳': '火', '午': '火', '未': '土',
+            '申': '金', '酉': '金', '戌': '土', '亥': '水'
+        }
 
-            zx_wuxing = zaoxiang_wuxing.get(zaoxiang)
-            dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        zx_wuxing = zaoxiang_wuxing.get(zaoxiang)
+        dz_wuxing = zhi_wuxing.get(sizhu['day_zhi'])
 
-            # 五行相生
-            sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
-            return sheng.get(zx_wuxing) == dz_wuxing
-        except Exception as e:
-            logger.error(f"检查灶向宜日失败: {str(e)}", exc_info=True)
-            return False
+        # 五行相生
+        sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
+        return sheng.get(zx_wuxing) == dz_wuxing
 
     def _is_zaoxiang_ji(self, sizhu, zaoxiang):
         """灶向忌日"""
-        try:
-            # 灶向五行与日支五行相克为忌
-            zaoxiang_wuxing = {
-                '壬': '水', '子': '水', '癸': '水',
-                '丑': '土', '艮': '土', '寅': '木',
-                '甲': '木', '卯': '木', '乙': '木',
-                '辰': '土', '巽': '木', '巳': '火',
-                '丙': '火', '午': '火', '丁': '火',
-                '未': '土', '坤': '土', '申': '金',
-                '庚': '金', '酉': '金', '辛': '金',
-                '戌': '土', '乾': '金', '亥': '水',
-            }
+        # 灶向五行与日支五行相克为忌
+        zaoxiang_wuxing = {
+            '壬': '水', '子': '水', '癸': '水',
+            '丑': '土', '艮': '土', '寅': '木',
+            '甲': '木', '卯': '木', '乙': '木',
+            '辰': '土', '巽': '木', '巳': '火',
+            '丙': '火', '午': '火', '丁': '火',
+            '未': '土', '坤': '土', '申': '金',
+            '庚': '金', '酉': '金', '辛': '金',
+            '戌': '土', '乾': '金', '亥': '水',
+        }
 
-            zhi_wuxing = {
-                '子': '水', '丑': '土', '寅': '木', '卯': '木',
-                '辰': '土', '巳': '火', '午': '火', '未': '土',
-                '申': '金', '酉': '金', '戌': '土', '亥': '水'
-            }
+        zhi_wuxing = {
+            '子': '水', '丑': '土', '寅': '木', '卯': '木',
+            '辰': '土', '巳': '火', '午': '火', '未': '土',
+            '申': '金', '酉': '金', '戌': '土', '亥': '水'
+        }
 
-            zx_wuxing = zaoxiang_wuxing.get(zaoxiang)
-            dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
+        zx_wuxing = zaoxiang_wuxing.get(zaoxiang)
+        dz_wuxing = zhi_wuxing.get(sizhu['day_zhi'])
 
-            # 五行相克
-            ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
-            return ke.get(zx_wuxing) == dz_wuxing
-        except Exception as e:
-            logger.error(f"检查灶向忌日失败: {str(e)}", exc_info=True)
-            return False
+        # 五行相克
+        ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
+        return ke.get(zx_wuxing) == dz_wuxing
 
     def _is_zaowei_yi(self, sizhu, zaowei):
         """灶位宜日"""
@@ -15126,116 +15651,7 @@ class StoveRuleChecker(EventRuleChecker):
         return False
 
 
-class RuZhaiRuleChecker(EventRuleChecker):
-    """入宅规则检查器"""
-
-    def _check_rules(self, sizhu, owners, house_type, shan_xiang, zaoxiang, zaowei, chuangwei, yi_list, ji_list):
-        """检查入宅规则"""
-        # 入宅宜日
-        if self._is_ruzhai_yi_day(sizhu):
-            yi_list.append('入宅')
-
-        # 入宅忌日
-        if self._is_ruzhai_ji_day(sizhu):
-            ji_list.append('入宅')
-
-        # 宅向相关规则
-        if shan_xiang:
-            if self._is_shanxiang_yi(sizhu, shan_xiang):
-                yi_list.append(f'{shan_xiang}向入宅')
-            if self._is_shanxiang_ji(sizhu, shan_xiang):
-                ji_list.append(f'{shan_xiang}向入宅')
-
-        # 宅主八字相关规则
-        if owners:
-            for owner in owners:
-                if self._check_owner_bazi_yi(sizhu, owner):
-                    yi_list.append('宅主八字宜入宅')
-                if self._check_owner_bazi_ji(sizhu, owner):
-                    ji_list.append('宅主八字忌入宅')
-
-    def _is_ruzhai_yi_day(self, sizhu):
-        """是否入宅宜日"""
-        day_zhi = sizhu.get('day_zhi', '子')
-        # 入宅宜日：子、寅、卯、巳、午、酉、戌
-        yi_days = ['子', '寅', '卯', '巳', '午', '酉', '戌']
-        return day_zhi in yi_days
-
-    def _is_ruzhai_ji_day(self, sizhu):
-        """是否入宅忌日"""
-        day_zhi = sizhu.get('day_zhi', '子')
-        # 入宅忌日：丑、辰、未、亥、申
-        ji_days = ['丑', '辰', '未', '亥', '申']
-        return day_zhi in ji_days
-
-    def _is_shanxiang_yi(self, sizhu, shan_xiang):
-        """宅向宜日"""
-        # 宅向五行与日支五行相生为宜
-        shanxiang_wuxing = {
-            '壬': '水', '子': '水', '癸': '水',
-            '丑': '土', '艮': '土', '寅': '木',
-            '甲': '木', '卯': '木', '乙': '木',
-            '辰': '土', '巽': '木', '巳': '火',
-            '丙': '火', '午': '火', '丁': '火',
-            '未': '土', '坤': '土', '申': '金',
-            '庚': '金', '酉': '金', '辛': '金',
-            '戌': '土', '乾': '金', '亥': '水',
-        }
-
-        zhi_wuxing = {
-            '子': '水', '丑': '土', '寅': '木', '卯': '木',
-            '辰': '土', '巳': '火', '午': '火', '未': '土',
-            '申': '金', '酉': '金', '戌': '土', '亥': '水'
-        }
-
-        sx_wuxing = shanxiang_wuxing.get(shan_xiang)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
-
-        # 五行相生
-        sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
-        return sheng.get(sx_wuxing) == dz_wuxing
-
-    def _is_shanxiang_ji(self, sizhu, shan_xiang):
-        """宅向忌日"""
-        # 宅向五行与日支五行相克为忌
-        shanxiang_wuxing = {
-            '壬': '水', '子': '水', '癸': '水',
-            '丑': '土', '艮': '土', '寅': '木',
-            '甲': '木', '卯': '木', '乙': '木',
-            '辰': '土', '巽': '木', '巳': '火',
-            '丙': '火', '午': '火', '丁': '火',
-            '未': '土', '坤': '土', '申': '金',
-            '庚': '金', '酉': '金', '辛': '金',
-            '戌': '土', '乾': '金', '亥': '水',
-        }
-
-        zhi_wuxing = {
-            '子': '水', '丑': '土', '寅': '木', '卯': '木',
-            '辰': '土', '巳': '火', '午': '火', '未': '土',
-            '申': '金', '酉': '金', '戌': '土', '亥': '水'
-        }
-
-        sx_wuxing = shanxiang_wuxing.get(shan_xiang)
-        dz_wuxing = zhi_wuxing.get(sizhu.get('day_zhi', '子'))
-
-        # 五行相克
-        ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
-        return ke.get(sx_wuxing) == dz_wuxing
-
-    def _check_owner_bazi_yi(self, sizhu, owner):
-        """检查宅主八字是否宜入宅"""
-        # 简化判断，实际应根据宅主八字详细分析
-        # 宅主日柱与入宅日相生或比和为宜
-        return True
-
-    def _check_owner_bazi_ji(self, sizhu, owner):
-        """检查宅主八字是否忌入宅"""
-        # 简化判断，实际应根据宅主八字详细分析
-        # 宅主日柱与入宅日相冲为忌
-        return False
-
-
-def get_checker(event_type):
+def get_checker(event_type: str) -> ShenShaChecker:
     """
     根据事项类型获取神煞检查器
     
@@ -15245,72 +15661,43 @@ def get_checker(event_type):
     Returns:
         ShenShaChecker: 神煞检查器实例
     """
-    marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '动土', '装修']
-    stove_events = ['作灶']
-    opening_events = ['开业']
-    travel_events = ['出行']
-    burial_events = ['安葬']
-    bed_events = ['安床']
-    ruzhai_events = ['入宅', '移徙', '搬家', '迁居']
+    checker_map = {
+        "嫁娶": MarriageShenShaChecker,
+        "动土": ConstructionShenShaChecker,
+        "开工": OpeningShenShaChecker,
+        "安葬": BurialShenShaChecker,
+        "安床": BedShenShaChecker,
+        "出行": TravelShenShaChecker,
+        "入宅": RuZhaiShenShaChecker,
+        "修灶": StoveShenShaChecker
+    }
     
-    if event_type in marriage_events:
-        return MarriageShenShaChecker()
-    elif event_type in construction_events:
-        return ConstructionShenShaChecker()
-    elif event_type in stove_events:
-        return StoveShenShaChecker()
-    elif event_type in opening_events:
-        return OpeningShenShaChecker()
-    elif event_type in travel_events:
-        return TravelShenShaChecker()
-    elif event_type in burial_events:
-        return BurialShenShaChecker()
-    elif event_type in bed_events:
-        return BedShenShaChecker()
-    elif event_type in ruzhai_events:
-        return RuZhaiShenShaChecker()
-    else:
-        return CommonShenShaChecker()
+    checker_class = checker_map.get(event_type, CommonShenShaChecker)
+    return checker_class()
 
 
-def get_rule_checker(event_type):
+def get_rule_checker(event_type: str) -> EventRuleChecker:
     """
-    根据事项类型获取宜忌规则检查器
+    根据事项类型获取规则检查器
     
     Args:
         event_type: 事项类型
         
     Returns:
-        RuleChecker: 宜忌规则检查器实例
+        EventRuleChecker: 规则检查器实例
     """
-    marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '动土', '装修']
-    stove_events = ['作灶']
-    opening_events = ['开业']
-    travel_events = ['出行']
-    burial_events = ['安葬']
-    bed_events = ['安床']
-    ruzhai_events = ['入宅', '移徙', '搬家', '迁居']
+    checker_map = {
+        "嫁娶": MarriageRuleChecker,
+        "动土": ConstructionRuleChecker,
+        "开工": OpeningRuleChecker,
+        "安葬": BurialRuleChecker,
+        "安床": BedRuleChecker,
+        "出行": TravelRuleChecker,
+        "修灶": StoveRuleChecker
+    }
     
-    if event_type in marriage_events:
-        return MarriageRuleChecker()
-    elif event_type in construction_events:
-        return ConstructionRuleChecker()
-    elif event_type in stove_events:
-        return StoveRuleChecker()
-    elif event_type in opening_events:
-        return OpeningRuleChecker()
-    elif event_type in travel_events:
-        return TravelRuleChecker()
-    elif event_type in burial_events:
-        return BurialRuleChecker()
-    elif event_type in bed_events:
-        return BedRuleChecker()
-    elif event_type in ruzhai_events:
-        return RuZhaiRuleChecker()
-    else:
-        return CommonRuleChecker()
+    checker_class = checker_map.get(event_type, EventRuleChecker)
+    return checker_class()
 
 
 # -*- coding: utf-8 -*-
@@ -15404,12 +15791,8 @@ import sys
 # 添加项目根目录到路径
 
 # 导入节气计算模块
-try:
-    import sxtwl
-    HAS_SXTWL = True
-except ImportError:
-    HAS_SXTWL = False
-
+import sxtwl
+HAS_SXTWL = True
 class ZeriApp:
     """择日软件主应用类
     
@@ -15573,6 +15956,14 @@ class ZeriApp:
                                    font=("微软雅黑", 8))
         event_combo.grid(row=0, column=1, sticky=tk.W, pady=6, padx=9)
         event_combo.bind("<<ComboboxSelected>>", self.on_event_change)
+        
+        # 输出方式选择
+        ttk.Label(form_frame, text="输出方式：", font=("微软雅黑", 8, "bold")).grid(row=0, column=2, sticky=tk.W, pady=6, padx=22)
+        self.output_mode_var = tk.StringVar(value="全部显示")
+        output_mode_combo = ttk.Combobox(form_frame, textvariable=self.output_mode_var, 
+                                         values=["全部显示", "仅显示无扣分"], width=20, state="readonly", 
+                                         font=("微软雅黑", 8))
+        output_mode_combo.grid(row=0, column=3, sticky=tk.W, pady=6, padx=9)
         
         # 日期范围
         ttk.Label(form_frame, text="开始日期：", font=("微软雅黑", 8, "bold")).grid(row=1, column=0, sticky=tk.W, pady=6, padx=4)
@@ -16281,20 +16672,29 @@ class ZeriApp:
             ttk.Label(xishen_row, textvariable=yongshen_var, foreground="green").pack(side=tk.LEFT, padx=5)
             
             # 夫星子星显示（婚嫁专用）
-            fuzi_var = tk.StringVar(value="")
+            fu_xing_var = tk.StringVar(value="")
+            zi_xing_var = tk.StringVar(value="")
             if event_type == "嫁娶":
-                fuzi_row = ttk.Frame(owner_frame)
-                fuzi_row.pack(fill=tk.X, pady=2)
+                # 夫星显示
+                fu_xing_row = ttk.Frame(owner_frame)
+                fu_xing_row.pack(fill=tk.X, pady=2)
                 
-                ttk.Label(fuzi_row, text="夫星/子星:", width=10).pack(side=tk.LEFT, padx=5)
-                ttk.Label(fuzi_row, textvariable=fuzi_var, foreground="purple").pack(side=tk.LEFT, padx=5)
+                ttk.Label(fu_xing_row, text="夫星:", width=10).pack(side=tk.LEFT, padx=5)
+                ttk.Label(fu_xing_row, textvariable=fu_xing_var, foreground="purple").pack(side=tk.LEFT, padx=5)
+                
+                # 子星显示
+                zi_xing_row = ttk.Frame(owner_frame)
+                zi_xing_row.pack(fill=tk.X, pady=2)
+                
+                ttk.Label(zi_xing_row, text="子星:", width=10).pack(side=tk.LEFT, padx=5)
+                ttk.Label(zi_xing_row, textvariable=zi_xing_var, foreground="purple").pack(side=tk.LEFT, padx=5)
             
             # 计算按钮
             calc_btn = ttk.Button(owner_frame, text="计算四柱", 
                                  command=lambda y=year_var, m=month_var, d=day_var, 
                                  h=hour_var, mi=minute_var, g=gender_var, o=owner, s=sizhu_var, 
-                                 x=xishen_var, yg=yongshen_var, fz=fuzi_var: 
-                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fz))
+                                 x=xishen_var, yg=yongshen_var, fux=fu_xing_var, zix=zi_xing_var: 
+                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fux, zix))
             calc_btn.pack(side=tk.LEFT, padx=5, pady=2)
             
             # 八字排盘详情按钮
@@ -16316,7 +16716,8 @@ class ZeriApp:
                 'sizhu_var': sizhu_var,
                 'xishen_var': xishen_var,
                 'yongshen_var': yongshen_var,
-                'fuzi_var': fuzi_var
+                'fu_xing_var': fu_xing_var,
+                'zi_xing_var': zi_xing_var
             }
             self.owners_info.append(owner_info)
         
@@ -16374,7 +16775,7 @@ class ZeriApp:
             # Shift+Tab键默认就是上一个，不需要额外绑定
     
     def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var, 
-                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var):
+                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fu_xing_var=None, zi_xing_var=None):
         """计算事主四柱"""
         try:
             year = int(year_var.get())
@@ -16382,30 +16783,34 @@ class ZeriApp:
             day = int(day_var.get())
             hour = int(hour_var.get())
             minute = int(minute_var.get())
+            gender = gender_var.get()
             
-            target_date = date(year, month, day)
-            sizhu = calculate_sizhu(target_date, hour, minute)
-            analysis = analyze_sizhu(sizhu)
+            # 使用八字排盘模块获取详细信息
+            panpan = BaZiPanPan(year, month, day, hour, minute, gender)
+            panpan_result = panpan.get_panpan_result()
             
             # 显示四柱
-            sizhu_text = f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}"
+            sizhu_info = panpan_result.get('四柱', {})
+            sizhu_text = f"{sizhu_info.get('年柱', '')} {sizhu_info.get('月柱', '')} {sizhu_info.get('日柱', '')} {sizhu_info.get('时柱', '')}"
             sizhu_var.set(sizhu_text)
             
-            # 显示喜用神 - 使用统一的喜用神计算器
-            xishen, yongshen = calculate_xishen_yongshen(sizhu, analysis)
+            # 显示喜用神
+            xishen = panpan_result.get('喜神', '')
+            yongshen = panpan_result.get('用神', '')
             xishen_var.set(xishen)
             yongshen_var.set(yongshen)
             
             # 婚嫁事项显示夫星子星
-            if fuzi_var and self.event_var.get() == "嫁娶" and owner == "新娘":
-                fuzi = analysis.get('夫星子星', {})
+            if self.event_var.get() == "嫁娶" and owner == "新娘":
+                fuzi = panpan_result.get('夫星子星', {})
                 fu_xing = fuzi.get('fu', '')
                 zi_xing = fuzi.get('zi', '')
-                if fu_xing or zi_xing:
-                    fuzi_var.set(f"夫星: {fu_xing}, 子星: {zi_xing}")
+                if fu_xing_var:
+                    fu_xing_var.set(fu_xing)
+                if zi_xing_var:
+                    zi_xing_var.set(zi_xing)
         except Exception as e:
-            messagebox.showerror("计算错误", f"计算四柱失败: {str(e)}")
-            logger.error(f"计算四柱失败: {str(e)}", exc_info=True)
+            print(f"计算事主四柱时出错: {e}")
     
     def show_owner_bazi_detail(self, year_var, month_var, day_var, hour_var, minute_var, gender_var, owner):
         """显示事主八字排盘详情"""
@@ -16419,13 +16824,14 @@ class ZeriApp:
             
             # 使用八字排盘模块获取详细信息
             panpan = BaZiPanPan(year, month, day, hour, minute, gender)
-            panpan_result = panpan.calculate()
+            panpan_result = panpan.get_panpan_result()
             
             # 显示八字排盘详情对话框
             show_bazi_dialog(self.root, panpan_result)
         except Exception as e:
-            messagebox.showerror("错误", f"计算失败: {str(e)}")
-    
+            print(f"显示八字排盘详情时出错: {e}")
+            messagebox.showerror("错误", f"显示八字排盘详情时出错: {str(e)}")
+            
     def _show_compass_dialog(self):
         """显示电子罗盘对话框"""
         initial_shan_xiang = None
@@ -16505,7 +16911,8 @@ class ZeriApp:
                         'birth_hour': hour,
                         'birth_minute': minute
                     })
-                except:
+                except Exception as e:
+                    print(f"处理事主信息时出错: {e}")
                     continue
             
             # 获取特殊选项
@@ -16563,41 +16970,70 @@ class ZeriApp:
                 # 筛选：只保留吉及以上的日课，过滤掉不吉的日课
                 # 等级：❌ 凶 → 过滤掉
                 if '❌ 凶' not in result['level']:
+                    # 获取输出方式选择
+                    output_mode = self.output_mode_var.get()
+                    
+                    # 如果选择"仅显示无扣分"，检查是否有扣分项
+                    if output_mode == "仅显示无扣分":
+                        # 检查五行部分的扣分
+                        wu_xing_result = score_result.get('wu_xing_result', {})
+                        has_deduction = wu_xing_result.get('has_deduction', False)
+                        
+                        # 检查其他扣分（月令得分、黄道得分、喜用神得分）
+                        score_details = score_result.get('score_details', {})
+                        yueling_score = score_details.get('月令得分', 0)
+                        huangdao_score = score_details.get('黄道得分', 0)
+                        xishen_score = score_details.get('喜用神得分', 0)
+                        
+                        # 检查是否有扣分（任何得分项为负都视为有扣分）
+                        if has_deduction or yueling_score < 0 or huangdao_score < 0 or xishen_score < 0:
+                            # 有扣分项，跳过
+                            current += timedelta(days=1)
+                            continue
+                    
                     self.results.append(result)
-                    
-                    # 根据等级设置行标签（用于颜色区分）
-                    level = result['level']
-                    if '★★★★★' in level:
-                        row_tag = '5star'
-                    elif '★★★★' in level:
-                        row_tag = '4star'
-                    elif '★★★' in level:
-                        row_tag = '3star'
-                    elif '★★' in level:
-                        row_tag = '2star'
-                    elif '★' in level:
-                        row_tag = '1star'
-                    else:
-                        row_tag = ''
-                    
-                    # 添加到树形视图
-                    self.result_tree.insert("", tk.END, values=(
-                        result['date'],
-                        result['score'],
-                        result['level'],
-                        result['sizhu'],
-                        result['yueling_score'],
-                        result['xishen_score'],
-                        result['huangdao_score']
-                    ), tags=(row_tag,))
                 
                 current += timedelta(days=1)
             
+            self.results.sort(key=lambda x: x['score'], reverse=True)
+            
+            # 清空树形视图并重新添加排序后的结果
+            for item in self.result_tree.get_children():
+                self.result_tree.delete(item)
+            
+            for result in self.results:
+                # 根据等级设置行标签（用于颜色区分）
+                level = result['level']
+                if '★★★★★' in level:
+                    row_tag = '5star'
+                elif '★★★★' in level:
+                    row_tag = '4star'
+                elif '★★★' in level:
+                    row_tag = '3star'
+                elif '★★' in level:
+                    row_tag = '2star'
+                elif '★' in level:
+                    row_tag = '1star'
+                else:
+                    row_tag = ''
+                
+                # 添加到树形视图
+                self.result_tree.insert("", tk.END, values=(
+                    result['date'],
+                    result['score'],
+                    result['level'],
+                    result['sizhu'],
+                    result['yueling_score'],
+                    result['xishen_score'],
+                    result['huangdao_score']
+                ), tags=(row_tag,))
+            
+            # 保存到记录
             self.save_record()
             
             messagebox.showinfo("完成", f"择日计算完成！\n共计算 {(end - start).days + 1} 天")
         except Exception as e:
-            messagebox.showerror("错误", f"计算失败: {str(e)}")
+            messagebox.showerror("错误", f"择日计算时出错: {str(e)}")
     
     def on_result_double_click(self, event):
         """双击结果查看详情"""
@@ -16747,7 +17183,7 @@ class ZeriApp:
                             summary = detail_24['summary']
                             content += f"坐山得分：{summary.get('mountain_score', 'N/A')}\n"
             except Exception as e:
-                content += f"\n\n【二十四山分析】\n分析失败: {str(e)}\n"
+                content += f"\n\n【二十四山分析】\n分析失败：{str(e)}\n"
         
         text.insert(tk.END, content)
         text.config(state=tk.DISABLED)
@@ -17017,7 +17453,7 @@ class ZeriApp:
             with open("择日记录.json", 'w', encoding='utf-8') as f:
                 json.dump(self.records, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            pass
+            print(f"保存记录失败: {e}")
     
     def load_records(self):
         """加载历史记录"""
@@ -17026,12 +17462,40 @@ class ZeriApp:
                 with open("择日记录.json", 'r', encoding='utf-8') as f:
                     self.records = json.load(f)
         except Exception as e:
-            pass
+            print(f"加载记录失败: {e}")
     
     def open_score_system(self):
         """打开日课评分系统"""
-        score_window = DayScoreWindow()
-        score_window.run()
+        try:
+            # 获取事主信息
+            owners_data = []
+            for owner in self.owners_info:
+                try:
+                    year = int(owner['year'].get())
+                    month = int(owner['month'].get())
+                    day = int(owner['day'].get())
+                    hour = int(owner['hour'].get())
+                    minute = int(owner['minute'].get())
+                    owners_data.append({
+                        'name': owner['name'],
+                        'birth_date': date(year, month, day),
+                        'birth_hour': hour,
+                        'birth_minute': minute
+                    })
+                except Exception as e:
+                    print(f"处理事主信息时出错: {e}")
+                    continue
+            
+            # 创建评分系统窗口
+            score_window = RiKeScoreSystemWindow(self.root)
+            score_window.import_results(
+                self.results,
+                self.event_var.get(),
+                owners_data
+            )
+            score_window.run()
+        except Exception as e:
+            messagebox.showerror("错误", f"打开评分系统失败: {str(e)}")
     
     def import_all_to_score_system(self):
         """将所有择日结果导入到评分系统"""
@@ -17040,33 +17504,35 @@ class ZeriApp:
             return
         
         try:
-            score_window = DayScoreWindow(self.root)
-            
-            # 准备事主数据
+            # 获取事主信息
             owners_data = []
-            for owner_info in self.owners_info:
-                year = owner_info.get('year', '').get() if hasattr(owner_info.get('year', ''), 'get') else owner_info.get('year', '')
-                month = owner_info.get('month', '').get() if hasattr(owner_info.get('month', ''), 'get') else owner_info.get('month', '')
-                day = owner_info.get('day', '').get() if hasattr(owner_info.get('day', ''), 'get') else owner_info.get('day', '')
-                hour = owner_info.get('hour', '').get() if hasattr(owner_info.get('hour', ''), 'get') else owner_info.get('hour', 12)
-                minute = owner_info.get('minute', '').get() if hasattr(owner_info.get('minute', ''), 'get') else owner_info.get('minute', 0)
-                
-                if year and month and day:
+            for owner in self.owners_info:
+                try:
+                    year = int(owner['year'].get())
+                    month = int(owner['month'].get())
+                    day = int(owner['day'].get())
+                    hour = int(owner['hour'].get())
+                    minute = int(owner['minute'].get())
                     owners_data.append({
-                        'year': year,
-                        'month': month,
-                        'day': day,
-                        'hour': hour,
-                        'minute': minute
+                        'name': owner['name'],
+                        'birth_date': date(year, month, day),
+                        'birth_hour': hour,
+                        'birth_minute': minute
                     })
+                except Exception as e:
+                    print(f"处理事主信息时出错: {e}")
+                    continue
             
-            # 导入结果
-            score_window.import_results(self.results, self.event_var.get(), owners_data)
+            # 创建评分系统窗口
+            score_window = RiKeScoreSystemWindow(self.root)
+            score_window.import_results(
+                self.results,
+                self.event_var.get(),
+                owners_data
+            )
             score_window.run()
         except Exception as e:
             messagebox.showerror("错误", f"导入到评分系统失败: {str(e)}")
-            logger.error(f"导入到评分系统失败: {str(e)}", exc_info=True)
-    
     def clear_results(self):
         """清空择日结果"""
         if not self.results:
@@ -17077,6 +17543,7 @@ class ZeriApp:
             for item in self.result_tree.get_children():
                 self.result_tree.delete(item)
             messagebox.showinfo("成功", "择日结果已清空")
+
 
     def open_date_test(self):
         """打开日期测试窗口"""
@@ -17090,6 +17557,7 @@ class ZeriApp:
             show_bazi_input_dialog(self.root)
             print("show_bazi_input_dialog调用成功")
         except Exception as e:
+            print(f"打开八字排盘时出错: {e}")
             messagebox.showerror("错误", f"打开八字排盘失败: {str(e)}")
     
     def show_help(self):
@@ -17335,7 +17803,7 @@ class ZeriApp:
                     
                     tree.insert("", tk.END, values=(jq_names[i], date_str, time_str, month_pillar))
             except Exception as e:
-                messagebox.showerror("错误", f"查询失败: {str(e)}")
+                messagebox.showerror("错误", f"查询节气时出错: {str(e)}")
         
         # 查询按钮
         ttk.Button(input_frame, text="查询", command=update_solar_terms).pack(side=tk.LEFT, padx=10)
@@ -17378,11 +17846,8 @@ def main():
         print("进入主循环...")
         root.mainloop()
     except Exception as e:
-        print(f"程序运行出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        if 'root' in locals():
-            messagebox.showerror("错误", f"程序运行出错: {str(e)}")
+        print(f"程序运行出错: {e}")
+        messagebox.showerror("错误", f"程序运行出错: {str(e)}")
 
 if __name__ == "__main__":
     main()

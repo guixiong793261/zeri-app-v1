@@ -1,93 +1,346 @@
 import sys
 import os
 
-# 检查是否是直接运行（不是作为模块导入）
 if __name__ == '__main__' and __package__ is None:
-    # 添加项目根目录到路径
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
-    # 添加 modules 目录到路径
-    modules_dir = os.path.dirname(os.path.abspath(__file__))
-    if modules_dir not in sys.path:
-        sys.path.insert(0, modules_dir)
 
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-开业规则模块
+开业规则模块（基于《协纪辨方书》）
 ================================================================================
-实现开业择日的宜忌规则
+实现开业、开市、纳财等事项的宜忌规则
+
+核心规则：
+1. 建除十二神：宜成、开、定、满；忌破、闭、平
+2. 天德、月德日宜
+3. 不将日宜
+4. 忌月破、岁破、四离四绝
+5. 黄道吉日（青龙、明堂等）
+6. 与事主年命相合（三合、六合）
 ================================================================================
 """
 
 from .规则基类 import EventRuleChecker
-
+from datetime import date
 
 class OpeningRuleChecker(EventRuleChecker):
     """开业规则检查器"""
-
-    def _check_rules(self, sizhu, owners, house_type, shan_xiang, zaoxiang, zaowei, chuangwei, yi_list, ji_list):
-        """检查开业规则"""
-        # 开业宜日
-        if self._is_kaiye_yi_day(sizhu):
-            yi_list.append('开业')
-
-        # 开业忌日
-        if self._is_kaiye_ji_day(sizhu):
-            ji_list.append('开业')
-
-        # 开市吉日
-        if self._is_kaishi_jiri(sizhu):
-            yi_list.append('开市')
-
-        # 纳财吉日
-        if self._is_nacai_jiri(sizhu):
-            yi_list.append('纳财')
-
-        # 事主八字相关规则
-        if owners:
-            for owner in owners:
-                if self._check_owner_bazi_yi(sizhu, owner):
-                    yi_list.append('事主八字宜开业')
-                if self._check_owner_bazi_ji(sizhu, owner):
-                    ji_list.append('事主八字忌开业')
-
-    def _is_kaiye_yi_day(self, sizhu):
-        """是否开业宜日"""
-        day_zhi = sizhu['day_zhi']
-        # 开业宜日：子、寅、卯、巳、午、酉
-        yi_days = ['子', '寅', '卯', '巳', '午', '酉']
-        return day_zhi in yi_days
-
-    def _is_kaiye_ji_day(self, sizhu):
-        """是否开业忌日"""
-        day_zhi = sizhu['day_zhi']
-        # 开业忌日：丑、辰、未、戌、亥、申
-        ji_days = ['丑', '辰', '未', '戌', '亥', '申']
-        return day_zhi in ji_days
-
-    def _is_kaishi_jiri(self, sizhu):
-        """是否开市吉日"""
-        day_zhi = sizhu['day_zhi']
-        day_gan = sizhu['day_gan']
-        # 开市吉日：满日、成日、开日
-        kaishi_days = ['子', '寅', '卯', '巳', '午', '酉']
-        return day_zhi in kaishi_days
-
-    def _is_nacai_jiri(self, sizhu):
-        """是否纳财吉日"""
-        day_zhi = sizhu['day_zhi']
-        # 纳财吉日
-        nacai_days = ['寅', '卯', '巳', '午', '申', '酉']
-        return day_zhi in nacai_days
-
-    def _check_owner_bazi_yi(self, sizhu, owner):
-        """检查事主八字是否宜开业"""
-        # 简化判断
-        return True
-
-    def _check_owner_bazi_ji(self, sizhu, owner):
-        """检查事主八字是否忌开业"""
-        # 简化判断
+    
+    # 地支对应生肖
+    ZHI_TO_ZODIAC = {
+        '子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔',
+        '辰': '龙', '巳': '蛇', '午': '马', '未': '羊',
+        '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'
+    }
+    
+    ZODIAC_TO_ZHI = {v: k for k, v in ZHI_TO_ZODIAC.items()}
+    
+    # 建除十二神吉凶
+    JIANCHU_YI = ['成', '开', '定', '满']
+    JIANCHU_JI = ['破', '闭', '平']
+    
+    def __init__(self):
+        super().__init__()
+        self._init_dependencies()
+    
+    def _init_dependencies(self):
+        """初始化依赖模块"""
+        self.has_marriage_shensha = False
+        self.get_jianchu = None
+        self.is_tiande_day = None
+        self.is_yuede_day = None
+        self.is_bujiang_day = None
+        self.is_month_break = None
+        self.is_year_break = None
+        self.is_sili_sijue = None
+        
+        try:
+            from ..shensha.marriage_shensha import (
+                get_jianchu, is_tiande_day, is_yuede_day,
+                is_bujiang_day, is_month_break, is_year_break, is_sili_sijue
+            )
+            self.get_jianchu = get_jianchu
+            self.is_tiande_day = is_tiande_day
+            self.is_yuede_day = is_yuede_day
+            self.is_bujiang_day = is_bujiang_day
+            self.is_month_break = is_month_break
+            self.is_year_break = is_year_break
+            self.is_sili_sijue = is_sili_sijue
+            self.has_marriage_shensha = True
+        except ImportError:
+            pass
+    
+    def _sizhu_to_date(self, sizhu):
+        """从sizhu构建日期对象"""
+        if 'date' in sizhu:
+            return sizhu['date']
+        
+        try:
+            year = int(sizhu.get('year', sizhu.get('年柱', '2000')[0:4]))
+            month = int(sizhu.get('month', 1))
+            day = int(sizhu.get('day', 1))
+            return date(year, month, day)
+        except:
+            return None
+    
+    def _get_owner_year_zhi(self, owner):
+        """获取事主年支"""
+        if '生肖' in owner:
+            return self.ZODIAC_TO_ZHI.get(owner['生肖'], '')
+        
+        if 'zodiac' in owner:
+            return self.ZODIAC_TO_ZHI.get(owner['zodiac'], '')
+        
+        if 'birth_date' in owner:
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_date'],
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                return birth_sizhu['年柱'][1]
+            except:
+                pass
+        
+        return ''
+    
+    def _is_sanheliuhe(self, zhi1, zhi2):
+        """检查两个地支是否三合或六合"""
+        # 六合
+        liuhe_pairs = [('子','丑'), ('寅','亥'), ('卯','戌'), ('辰','酉'), ('巳','申'), ('午','未')]
+        if (zhi1, zhi2) in liuhe_pairs or (zhi2, zhi1) in liuhe_pairs:
+            return True
+        
+        # 三合
+        sanhe_groups = [['申','子','辰'], ['寅','午','戌'], ['巳','酉','丑'], ['亥','卯','未']]
+        for group in sanhe_groups:
+            if zhi1 in group and zhi2 in group:
+                return True
+        
         return False
+    
+    def _check_rules(self, sizhu, owners=None, **kwargs):
+        """检查开业规则"""
+        yi_list = []
+        ji_list = []
+        
+        date_obj = self._sizhu_to_date(sizhu)
+        if not date_obj:
+            return yi_list, ji_list
+        
+        day_zhi = sizhu.get('day_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        year_zhi = sizhu.get('year_zhi', '')
+        
+        # 1. 建除十二神
+        self._check_jianchu(date_obj, yi_list, ji_list)
+        
+        # 2. 天德、月德日
+        self._check_tiande_yuede(date_obj, yi_list)
+        
+        # 3. 不将日
+        self._check_bujiang(date_obj, yi_list)
+        
+        # 4. 月破、岁破、四离四绝
+        self._check_po_and_sili(date_obj, year_zhi, owners, ji_list)
+        
+        # 5. 与事主年命相合
+        self._check_owner_match(sizhu, owners, yi_list)
+        
+        # 6. 事主相冲检查（新增）
+        self._check_shengxiao_chong(sizhu, owners, ji_list)
+        
+        # 7. 综合判断开业、开市、纳财
+        self._check_opening_types(sizhu, yi_list, ji_list)
+        
+        return yi_list, ji_list
+    
+    def _check_jianchu(self, date_obj, yi_list, ji_list):
+        """检查建除十二神"""
+        if not self.get_jianchu:
+            return
+        
+        try:
+            jianchu = self.get_jianchu(date_obj)
+            if jianchu in self.JIANCHU_YI:
+                yi_list.append(f'建除{jianchu}日宜开业')
+            elif jianchu in self.JIANCHU_JI:
+                ji_list.append(f'建除{jianchu}日忌开业')
+        except Exception:
+            pass
+    
+    def _check_tiande_yuede(self, date_obj, yi_list):
+        """检查天德、月德日"""
+        if not self.has_marriage_shensha:
+            return
+        
+        try:
+            if self.is_tiande_day(date_obj):
+                yi_list.append('天德日宜开业')
+            if self.is_yuede_day(date_obj):
+                yi_list.append('月德日宜开业')
+        except Exception:
+            pass
+    
+    def _check_bujiang(self, date_obj, yi_list):
+        """检查不将日"""
+        if not self.has_marriage_shensha:
+            return
+        
+        try:
+            if self.is_bujiang_day(date_obj):
+                yi_list.append('不将日宜开业')
+        except Exception:
+            pass
+    
+    def _check_po_and_sili(self, date_obj, year_zhi, owners, ji_list):
+        """检查月破、岁破、四离四绝"""
+        if not self.has_marriage_shensha:
+            return
+        
+        try:
+            if self.is_month_break(date_obj):
+                ji_list.append('月破日忌开业')
+            
+            if self.is_sili_sijue(date_obj):
+                ji_list.append('四离四绝日忌开业')
+            
+            if year_zhi and self.is_year_break(date_obj, year_zhi):
+                ji_list.append('岁破日忌开业')
+            
+            if owners:
+                for owner in owners:
+                    owner_zhi = self._get_owner_year_zhi(owner)
+                    if owner_zhi and self.is_year_break(date_obj, owner_zhi):
+                        name = owner.get('name', '事主')
+                        ji_list.append(f'与{name}岁破，忌开业')
+                        break
+        except Exception:
+            pass
+    
+    def _check_owner_match(self, sizhu, owners, yi_list):
+        """检查与事主年命相合"""
+        if not owners:
+            return
+        
+        day_zhi = sizhu.get('day_zhi', '')
+        if not day_zhi:
+            return
+        
+        for owner in owners:
+            name = owner.get('name', '事主')
+            owner_zhi = self._get_owner_year_zhi(owner)
+            
+            if owner_zhi and self._is_sanheliuhe(day_zhi, owner_zhi):
+                yi_list.append(f'与{name}年支相合')
+    
+    def _check_opening_types(self, sizhu, yi_list, ji_list):
+        """综合判断开业、开市、纳财"""
+        # 如果有忌项，添加开业忌
+        if ji_list:
+            ji_list.append('开业')
+            ji_list.append('开市')
+            ji_list.append('纳财')
+        # 如果有宜项且没有忌项，添加开业宜
+        elif yi_list:
+            yi_list.append('开业')
+            yi_list.append('开市')
+            yi_list.append('纳财')
+    
+    def _check_shengxiao_chong(self, sizhu, owners, ji_list):
+        """
+        检查四柱与事主生肖相冲（开业专用）
+        传统择日：日 > 时；店主/负责人为主
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
+        if not owners:
+            return
+        
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
+        if not day_zhi:
+            return
+        
+        # 地支六冲表（键值都是地支）
+        chong_map = {
+            '子': '午', '午': '子',
+            '丑': '未', '未': '丑',
+            '寅': '申', '申': '寅',
+            '卯': '酉', '酉': '卯',
+            '辰': '戌', '戌': '辰',
+            '巳': '亥', '亥': '巳'
+        }
+        
+        # 检查每个事主
+        for owner in owners:
+            name = owner.get('name', '事主')
+            role = owner.get('role', '').lower()
+            
+            # 获取事主年支（地支）
+            owner_zhi = self._get_owner_year_zhi(owner)
+            
+            if not owner_zhi:
+                continue
+            
+            # 判断是否为店主/负责人
+            is_owner = role in ('店主', '老板', '负责人', '法人') or name in ('店主', '老板', '负责人')
+            target_chong_zhi = chong_map.get(owner_zhi, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查日柱（最重要）
+            if day_zhi == target_chong_zhi:
+                if is_owner:
+                    ji_list.append(f'日柱{day_zhi}冲店主{name}')
+                else:
+                    ji_list.append(f'日柱{day_zhi}冲{name}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                ji_list.append(f'时柱{hour_zhi}冲{name}')
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                ji_list.append(f'年柱{year_zhi}冲{name}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                ji_list.append(f'月柱{month_zhi}冲{name}')
+
+# 测试
+if __name__ == '__main__':
+    checker = OpeningRuleChecker()
+    
+    test_sizhu = {
+        'day_gan': '丙',
+        'day_zhi': '寅',
+        'month_zhi': '寅',
+        'year_zhi': '子',
+        'month': 2,
+        'day': 10,
+        'year': 2024
+    }
+    
+    test_owners = [{
+        'name': '张三',
+        '生肖': '虎'
+    }]
+    
+    # 使用新接口测试
+    yi_list, ji_list = checker._check_rules(test_sizhu, test_owners)
+    
+    print("宜：", yi_list)
+    print("忌：", ji_list)

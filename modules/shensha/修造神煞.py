@@ -132,7 +132,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 将军箭
         if self._is_jiangjunjian(sizhu):
             self._add_shensha('将军箭', -15, '忌修造，犯之主伤')
-        
+
+        # 杀师日（修造大忌，伤工匠）
+        if self._is_shashi(sizhu):
+            self._add_shensha('杀师日', -25, '修造大忌，犯之伤害工匠')
+
         # ===== 吉神 =====
         
         # 天德
@@ -178,7 +182,130 @@ class ConstructionShenShaChecker(ShenShaChecker):
     def _check_hour_shensha(self, sizhu):
         """检查时神煞"""
         super()._check_hour_shensha(sizhu)
+
+    def _check_special_shensha(self, sizhu, owners):
+        """检查特殊神煞，主要处理事主（宅主/工匠）生肖与日课的冲合"""
+        if not owners:
+            return
+        
+        for i, owner in enumerate(owners):
+            owner_zodiac = owner.get('生肖', '')
+            owner_year_zhi = owner.get('年支', '')
+            owner_name = owner.get('姓名', f'事主{i+1}')
+            is_zhuzhu = owner.get('is_zhuzhu', False)  # 是否宅主/家长
+            
+            if not owner_zodiac and not owner_year_zhi:
+                continue
+            
+            # 宅主/家长冲克权重更重
+            base_penalty = 1.0
+            if is_zhuzhu:
+                base_penalty = 1.5  # 宅主冲克扣分乘1.5倍
+            
+            # 年支相冲
+            year_zhi = sizhu['year_zhi']
+            if self._is_chong(year_zhi, owner_year_zhi or owner_zodiac):
+                penalty = int(-20 * base_penalty)
+                self._add_shensha(f'年冲{owner_name}', penalty, f'年支与{owner_name}生肖相冲')
+            
+            # 月支相冲
+            month_zhi = sizhu['month_zhi']
+            if self._is_chong(month_zhi, owner_year_zhi or owner_zodiac):
+                penalty = int(-15 * base_penalty)
+                self._add_shensha(f'月冲{owner_name}', penalty, f'月支与{owner_name}生肖相冲')
+            
+            # 日支相冲
+            day_zhi = sizhu['day_zhi']
+            if self._is_chong(day_zhi, owner_year_zhi or owner_zodiac):
+                penalty = int(-25 * base_penalty)
+                self._add_shensha(f'日冲{owner_name}', penalty, f'日支与{owner_name}生肖相冲，大忌')
+            elif self._is_liuhe(day_zhi, owner_year_zhi or owner_zodiac):
+                self._add_shensha(f'日合{owner_name}', 10, f'日支与{owner_name}生肖六合')
+            elif self._is_sanhe_pair(day_zhi, owner_year_zhi or owner_zodiac):
+                self._add_shensha(f'日半三合{owner_name}', 5, f'日支与{owner_name}生肖半三合')
+            
+            # 时支相冲
+            hour_zhi = sizhu.get('hour_zhi', '')
+            if hour_zhi and self._is_chong(hour_zhi, owner_year_zhi or owner_zodiac):
+                penalty = int(-12 * base_penalty)
+                self._add_shensha(f'时冲{owner_name}', penalty, f'时支与{owner_name}生肖相冲')
+            elif hour_zhi and self._is_liuhe(hour_zhi, owner_year_zhi or owner_zodiac):
+                self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖六合')
+            elif hour_zhi and self._is_sanhe_pair(hour_zhi, owner_year_zhi or owner_zodiac):
+                self._add_shensha(f'时半三合{owner_name}', 3, f'时支与{owner_name}生肖半三合')
     
+    def _shengxiao_to_zhi(self, shengxiao):
+        """生肖转换为地支"""
+        shengxiao_map = {
+            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
+        }
+        return shengxiao_map.get(shengxiao)
+    
+    def _is_chong(self, zhi1, zhi2):
+        """检查两个地支是否相冲"""
+        if not zhi1 or not zhi2:
+            return False
+        
+        # 如果zhi2是生肖，转换为地支
+        if zhi2 not in DI_ZHI:
+            zhi2 = self._shengxiao_to_zhi(zhi2)
+            if not zhi2:
+                return False
+        
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return zhi1 == chong_map.get(zhi2)
+    
+    def _is_liuhe(self, zhi1, zhi2):
+        """检查两个地支是否六合"""
+        if not zhi1 or not zhi2:
+            return False
+        
+        # 如果zhi2是生肖，转换为地支
+        if zhi2 not in DI_ZHI:
+            zhi2 = self._shengxiao_to_zhi(zhi2)
+            if not zhi2:
+                return False
+        
+        # 六合
+        liuhe_map = {
+            '子': '丑', '丑': '子',
+            '寅': '亥', '亥': '寅',
+            '卯': '戌', '戌': '卯',
+            '辰': '酉', '酉': '辰',
+            '巳': '申', '申': '巳',
+            '午': '未', '未': '午'
+        }
+        return liuhe_map.get(zhi1) == zhi2
+    
+    def _is_sanhe_pair(self, zhi1, zhi2):
+        """检查两个地支是否半三合（用于事主冲合分析）"""
+        if not zhi1 or not zhi2:
+            return False
+        
+        # 如果zhi2是生肖，转换为地支
+        if zhi2 not in DI_ZHI:
+            zhi2 = self._shengxiao_to_zhi(zhi2)
+            if not zhi2:
+                return False
+        
+        # 三合（半三合）
+        sanhe_sets = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
+        for s in sanhe_sets:
+            if zhi1 in s and zhi2 in s and zhi1 != zhi2:
+                return True
+        
+        return False
+    
+    def _is_he(self, zhi1, zhi2):
+        """检查两个地支是否相合（六合或三合）"""
+        return self._is_liuhe(zhi1, zhi2) or self._is_sanhe_pair(zhi1, zhi2)
+
     # ===== 凶煞判断方法 =====
     
     def _is_sansha(self, sizhu):
@@ -195,6 +322,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_lubansha(self, sizhu):
         """是否鲁班煞（按季节判断）
+        注：传统鲁班煞有多种说法，常见版本是按天干：
+        春三月忌庚辛日，夏三月忌壬癸日，秋三月忌甲乙日，冬三月忌丙丁日。
+        此处用地支版本，与常见版本不同，供参考使用。
         春季：亥、子日
         夏季：寅、卯日
         秋季：巳、午日
@@ -219,6 +349,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_tufu(self, sizhu):
         """是否土符
+        注：传统土符映射表因流派不同而有差异，当前映射表来源待验证。
         土符日：按月支推算
         寅月：戌日，卯月：亥日，辰月：子日，巳月：丑日
         午月：寅日，未月：卯日，申月：辰日，酉月：巳日
@@ -226,16 +357,17 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
+
         tufu_map = {
             '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
             '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
             '戌': '午', '亥': '未', '子': '申', '丑': '酉'
         }
         return day_zhi == tufu_map.get(month_zhi)
-    
+
     def _is_tufu2(self, sizhu):
         """是否土府（地府）
+        注：传统土府映射表因流派不同而有差异，当前映射表来源待验证。
         土府日：按月支推算
         寅月：辰日，卯月：巳日，辰月：午日，巳月：未日
         午月：申日，未月：酉日，申月：戌日，酉月：亥日
@@ -243,16 +375,17 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
+
         tufu2_map = {
             '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
             '午': '申', '未': '酉', '申': '戌', '酉': '亥',
             '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
         }
         return day_zhi == tufu2_map.get(month_zhi)
-    
+
     def _is_tuwen(self, sizhu):
         """是否土瘟
+        注：传统土瘟映射表因流派不同而有差异，当前映射表来源待验证。
         土瘟日：按月支推算
         寅月：丑日，卯月：寅日，辰月：卯日，巳月：辰日
         午月：巳日，未月：午日，申月：未日，酉月：申日
@@ -260,16 +393,17 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
+
         tuwen_map = {
             '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
             '午': '巳', '未': '午', '申': '未', '酉': '申',
             '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
         }
         return day_zhi == tuwen_map.get(month_zhi)
-    
+
     def _is_dinang(self, sizhu):
         """是否地囊
+        注：传统地囊是"土王用事后"，不是固定日支，当前映射与土符相同，来源待验证。
         地囊日：按月支推算
         寅月：戌日，卯月：亥日，辰月：子日，巳月：丑日
         午月：寅日，未月：卯日，申月：辰日，酉月：巳日
@@ -279,6 +413,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_tianzei(self, sizhu):
         """是否天贼
+        注：传统天贼映射表因流派不同而有差异，当前映射表来源待验证。
         天贼日：按月支推算
         寅月：丑日，卯月：子日，辰月：亥日，巳月：戌日
         午月：酉日，未月：申日，申月：未日，酉月：午日
@@ -286,16 +421,17 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
+
         tianzei_map = {
             '寅': '丑', '卯': '子', '辰': '亥', '巳': '戌',
             '午': '酉', '未': '申', '申': '未', '酉': '午',
             '戌': '巳', '亥': '辰', '子': '卯', '丑': '寅'
         }
         return day_zhi == tianzei_map.get(month_zhi)
-    
+
     def _is_dizei(self, sizhu):
         """是否地贼
+        注：传统地贼映射表因流派不同而有差异，当前映射表与土府相同，来源待验证。
         地贼日：按月支推算
         寅月：辰日，卯月：巳日，辰月：午日，巳月：未日
         午月：申日，未月：酉日，申月：戌日，酉月：亥日
@@ -305,6 +441,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_dahao(self, sizhu):
         """是否大耗
+        注：简化版本。传统大耗是月神煞，并非简单的月破。
+        此处简化为月破日，仅供参考。
         大耗日：与月破相同，即与月支相冲的日支
         """
         month_zhi = sizhu['month_zhi']
@@ -313,9 +451,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         idx = zh_list.index(month_zhi)
         yuepo = zh_list[(idx + 6) % 12]
         return day_zhi == yuepo
-    
+
     def _is_xiaohao(self, sizhu):
         """是否小耗
+        注：简化版本。传统小耗定义不一，并非简单的月破前一日。
+        此处简化为月破前一日，仅供参考。
         小耗日：月破的前一日
         """
         month_zhi = sizhu['month_zhi']
@@ -327,7 +467,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_sili(self, sizhu):
         """是否四离日
-        四离日：春分、秋分、夏至、冬至的前一日
+        注：简化版本，不考虑节气具体日期。
+        传统四离日是春分、夏至、秋分、冬至的前一日。
+        此处用月支+日支组合简化判断，可能有偏差。
         春分前一日（卯月末日）：辰日
         夏至前一日（午月末日）：未日
         秋分前一日（酉月末日）：戌日
@@ -335,8 +477,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
-        # 简化判断：卯月辰日、午月未日、酉月戌日、子月丑日
+
         sili_map = {
             '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
         }
@@ -344,7 +485,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_sijue(self, sizhu):
         """是否四绝日
-        四绝日：立春、立夏、立秋、立冬的前一日
+        注：简化版本，不考虑节气具体日期。
+        传统四绝日是立春、立夏、立秋、立冬的前一日。
+        此处用月支+日支组合简化判断，可能有偏差。
         立春前一日（丑月末日）：寅日
         立夏前一日（辰月末日）：巳日
         立秋前一日（未月末日）：申日
@@ -352,8 +495,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
-        # 简化判断：丑月寅日、辰月巳日、未月申日、戌月亥日
+
         sijue_map = {
             '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
         }
@@ -372,21 +514,16 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_fuduan(self, sizhu):
         """是否伏断日
-        伏断日：按日干支推算
-        甲日：戌，乙日：酉，丙日：申，丁日：未，戊日：午
-        己日：巳，庚日：辰，辛日：卯，壬日：寅，癸日：丑
+        注意：传统伏断日指"建除十二神"中的"危"日，并非按天干查地支。
+        当前实现无权威依据，已禁用。
+        如需使用，请使用建除十二神判断。
         """
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        
-        fuduan_map = {
-            '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
-            '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
-        }
-        return day_zhi == fuduan_map.get(day_gan)
+        return False
     
     def _is_jiangjunjian(self, sizhu):
         """是否将军箭
+        注：将军箭有多个版本，此处为简化版本，仅供参考。
+        传统版本可能更复杂，需结合时柱判断。
         将军箭：按月支推算
         寅月：卯日，卯月：辰日，辰月：巳日，巳月：午日
         午月：未日，未月：申日，申月：酉日，酉月：戌日
@@ -394,14 +531,73 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
+
         jiangjunjian_map = {
             '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
             '午': '未', '未': '申', '申': '酉', '酉': '戌',
             '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
         }
         return day_zhi == jiangjunjian_map.get(month_zhi)
-    
+
+    def _is_shashi(self, sizhu):
+        """是否杀师日（修造大忌，伤工匠）
+
+        杀师日传统算法：
+        1. 根据年支和月支的关系确定：
+           - 子午卯酉年：辰戌丑未月为杀师月
+           - 辰戌丑未年：寅申巳亥月为杀师月
+           - 寅申巳亥年：丙丁壬癸月为杀师月
+        2. 杀师之日：春戌夏丑秋辰冬未（四季月的丑、辰、戌、未日）
+
+        这里采用简化版本：四季月（辰戌丑未）的特定日支为杀师日
+        另一种常用算法：基于年支确定杀师之时
+        """
+        year_zhi = sizhu['year_zhi']
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+
+        # 算法1：四季月（辰戌丑未月）的特定日支为杀师日
+        # 春季（寅卯辰月）的戌日、夏季（巳午未月）的丑日
+        # 秋季（申酉戌月）的辰日、冬季（亥子丑月）的未日
+        season_to_month = {
+            '寅': '辰', '卯': '戌', '辰': '丑',  # 春：辰戌丑
+            '巳': '未', '午': '辰', '未': '戌',  # 夏：未辰戌
+            '申': '丑', '酉': '未', '戌': '辰',  # 秋：丑未辰
+            '亥': '戌', '子': '丑', '丑': '未'   # 冬：戌丑未
+        }
+
+        expected_day_zhi = season_to_month.get(month_zhi)
+        if expected_day_zhi and day_zhi == expected_day_zhi:
+            return True
+
+        # 算法2：基于年支的杀师日
+        # 子午年：卯酉月；卯酉年：子午月；辰戌年：丑未月；丑未年：辰戌月
+        # 寅申年：巳亥月；巳亥年：寅申月
+        year_to_month = {
+            '子': ['卯', '酉'], '午': ['卯', '酉'],
+            '卯': ['子', '午'], '酉': ['子', '午'],
+            '辰': ['丑', '未'], '戌': ['丑', '未'],
+            '丑': ['辰', '戌'], '未': ['辰', '戌'],
+            '寅': ['巳', '亥'], '申': ['巳', '亥'],
+            '巳': ['寅', '申'], '亥': ['寅', '申']
+        }
+
+        if year_zhi in year_to_month and month_zhi in year_to_month[year_zhi]:
+            # 这些月份的特定日支为杀师日
+            # 子午卯酉年：忌辰戌丑未日；辰戌丑未年：忌寅申巳亥日
+            shashi_day_for_year = {
+                '子': ['辰', '戌', '丑', '未'], '午': ['辰', '戌', '丑', '未'],
+                '卯': ['辰', '戌', '丑', '未'], '酉': ['辰', '戌', '丑', '未'],
+                '辰': ['寅', '申', '巳', '亥'], '戌': ['寅', '申', '巳', '亥'],
+                '丑': ['寅', '申', '巳', '亥'], '未': ['寅', '申', '巳', '亥'],
+                '寅': ['子', '午', '卯', '酉'], '申': ['子', '午', '卯', '酉'],
+                '巳': ['子', '午', '卯', '酉'], '亥': ['子', '午', '卯', '酉']
+            }
+            if year_zhi in shashi_day_for_year and day_zhi in shashi_day_for_year[year_zhi]:
+                return True
+
+        return False
+
     def _is_taisui_duihuang(self, sizhu):
         """是否太岁堆黄
         太岁堆黄：按年支推算
@@ -448,19 +644,27 @@ class ConstructionShenShaChecker(ShenShaChecker):
     def _is_tiandehe(self, sizhu):
         """是否天德合
         天德合：与天德相合的天干
-        丁合壬，申合巳，壬合丁，辛合丙
-        亥合寅，甲合己，癸合戊，寅合亥
-        丙合辛，乙合庚，巳合申，庚合乙
+        五合规则：甲己合、乙庚合、丙辛合、丁壬合、戊癸合
+        天德为天干时，检查日干是否为其五合
         """
+        from ..工具函数 import TIANDE
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
-        
-        tiandehe_map = {
-            '寅': '壬', '卯': '巳', '辰': '丁', '巳': '丙',
-            '午': '寅', '未': '己', '申': '戊', '酉': '亥',
-            '戌': '辛', '亥': '庚', '子': '申', '丑': '乙'
-        }
-        return day_gan == tiandehe_map.get(month_zhi)
+        zh_list = DI_ZHI
+        idx = zh_list.index(month_zhi)
+        tiande = TIANDE.get(idx)
+
+        if not tiande:
+            return False
+
+        # 五合天干
+        wuhe = {'甲': '己', '己': '甲', '乙': '庚', '庚': '乙',
+                '丙': '辛', '辛': '丙', '丁': '壬', '壬': '丁', '戊': '癸', '癸': '戊'}
+
+        # 天德为天干时，日干为其五合即为天德合
+        if tiande in wuhe:
+            return day_gan == wuhe.get(tiande)
+        return False
     
     def _is_yuedehe(self, sizhu):
         """是否月德合
@@ -556,30 +760,10 @@ class ConstructionShenShaChecker(ShenShaChecker):
     
     def _is_bujiang(self, sizhu):
         """是否不将日
-        不将日：根据月支和日干支推算
-        简化版：阳月阳日、阴月阴日
+        注意：简化版不将日判断不可靠，易产生大量误判。
+        正确的实现需要参考婚嫁模块的 is_bujiang_day 函数，
+        但该函数需要完整的 date_obj 来计算日干支。
+        此处简化版已禁用，返回 False。
+        如需使用不将日，请在调用前通过日期对象调用婚嫁模块的 is_bujiang_day。
         """
-        month_zhi = sizhu['month_zhi']
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        
-        # 阳月：寅、辰、午、申、戌、子
-        # 阴月：卯、巳、未、酉、亥、丑
-        yang_month = ['寅', '辰', '午', '申', '戌', '子']
-        yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
-        
-        # 阳干：甲、丙、戊、庚、壬
-        # 阴干：乙、丁、己、辛、癸
-        yang_gan = ['甲', '丙', '戊', '庚', '壬']
-        yin_gan = ['乙', '丁', '己', '辛', '癸']
-        
-        # 阳支：子、寅、辰、午、申、戌
-        # 阴支：丑、卯、巳、未、酉、亥
-        yang_zhi = ['子', '寅', '辰', '午', '申', '戌']
-        yin_zhi = ['丑', '卯', '巳', '未', '酉', '亥']
-        
-        # 不将日：阳月取阴干阴支，阴月取阳干阳支
-        if month_zhi in yang_month:
-            return day_gan in yin_gan and day_zhi in yin_zhi
-        else:
-            return day_gan in yang_gan and day_zhi in yang_zhi
+        return False

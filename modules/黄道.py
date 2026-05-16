@@ -45,18 +45,18 @@ class 黄道计算器:
     
     # 小黄道十二建星
     XIAO_HUANG_DAO = {
-        '建': {'type': '平', 'score': 0, 'description': '建日，宜出行、上任，忌动土、安葬'},
+        '建': {'type': '凶', 'score': -10, 'description': '建日，宜出行、上任，忌动土、安葬'},
         '除': {'type': '吉', 'score': 5, 'description': '除日，宜扫除、清洁，忌安葬'},
-        '满': {'type': '吉', 'score': 5, 'description': '满日，宜祭祀、祈福，忌动土'},
-        '平': {'type': '平', 'score': 0, 'description': '平日，诸事皆宜'},
+        '满': {'type': '凶', 'score': -10, 'description': '满日，宜祭祀、祈福，忌动土'},
+        '平': {'type': '凶', 'score': -10, 'description': '平日，诸事皆宜'},
         '定': {'type': '吉', 'score': 5, 'description': '定日，宜嫁娶、立约，忌出行'},
-        '执': {'type': '平', 'score': 0, 'description': '执日，宜修造、动土，忌嫁娶'},
+        '执': {'type': '吉', 'score': 5, 'description': '执日，宜修造、动土，忌嫁娶'},
         '破': {'type': '凶', 'score': -10, 'description': '破日，诸事不宜'},
-        '危': {'type': '凶', 'score': -10, 'description': '危日，诸事不宜'},
+        '危': {'type': '吉', 'score': 5, 'description': '危日，宜祭祀、祈福，忌动土'},
         '成': {'type': '吉', 'score': 5, 'description': '成日，诸事皆宜'},
-        '收': {'type': '平', 'score': 0, 'description': '收日，宜收敛、积蓄，忌嫁娶'},
+        '收': {'type': '凶', 'score': -10, 'description': '收日，宜收敛、积蓄，忌嫁娶'},
         '开': {'type': '吉', 'score': 5, 'description': '开日，诸事皆宜'},
-        '闭': {'type': '平', 'score': 0, 'description': '闭日，宜闭门、静养，忌出行'},
+        '闭': {'type': '凶', 'score': -10, 'description': '闭日，宜闭门、静养，忌出行'},
     }
     
     # 大黄道计算表（根据日支和时辰）
@@ -244,9 +244,9 @@ class 黄道计算器:
         day_zhi = sizhu['日柱'][1]  # 日支
         month_zhi = sizhu['月柱'][1]  # 月支
         hour_zhi = sizhu['时柱'][1]  # 时支
-        
-        # 计算大黄道
-        da_huang_dao = self._calculate_da_huang_dao(day_zhi, hour_zhi)
+
+        # 计算大黄道（使用汉程黄历算法）
+        da_huang_dao = self._calculate_da_huang_dao(day_zhi, month_zhi, hour_zhi)
         
         # 计算小黄道
         xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)
@@ -265,16 +265,20 @@ class 黄道计算器:
             'description': self._generate_description(da_huang_dao, xiao_huang_dao)
         }
     
-    def _calculate_da_huang_dao(self, day_zhi, hour_zhi):
-        """计算大黄道"""
+    def _calculate_da_huang_dao(self, day_zhi, month_zhi, hour_zhi):
+        """计算大黄道（使用汉程黄历算法）
+
+        汉程黄历算法: result = (日支索引 - 2*月支索引 + 4) % 12
+        黄道十二神顺序: 青龙、明堂、天刑、朱雀、金匮、天德、白虎、玉堂、天牢、玄武、司命、勾陈
+        """
         day_idx = self.ZHI_INDEX.get(day_zhi, 0)
-        hour_idx = self.ZHI_INDEX.get(hour_zhi, 0)
+        month_idx = self.ZHI_INDEX.get(month_zhi, 0)
 
-        da_list = self.DA_HUANG_DAO_TABLE.get(day_zhi, [])
-        if not da_list:
-            return {'name': '未知', 'type': '平', 'score': 0, 'description': ''}
+        da_huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
+                            '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
 
-        name = da_list[hour_idx % 12]
+        huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
+        name = da_huangdao_list[huangdao_idx]
         info = self.DA_HUANG_DAO.get(name, {'type': '平', 'score': 0, 'description': ''})
 
         return {
@@ -365,9 +369,9 @@ class 黄道计算器:
         day_zhi = sizhu['日柱'][1]  # 日支
         month_zhi = sizhu['月柱'][1]  # 月支
         hour_zhi = sizhu['时柱'][1]  # 时支
-        
-        # 计算大黄道和小黄道
-        da_huang_dao = self._calculate_da_huang_dao(day_zhi, hour_zhi)
+
+        # 计算大黄道和小黄道（使用汉程黄历算法）
+        da_huang_dao = self._calculate_da_huang_dao(day_zhi, month_zhi, hour_zhi)
         xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)
         
         # 获取宜忌

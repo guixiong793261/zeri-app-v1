@@ -1,0 +1,18 @@
+# 备份目录 - 太深嵌套导致Git无法处理
+备份/
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 构建产物
+build/
+dist/
+*.spec
+
+# 日志文件
+*.log
+
+# 隐藏文件
+.git/
