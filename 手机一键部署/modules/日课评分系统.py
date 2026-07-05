@@ -223,6 +223,11 @@ class DayScoreWindow:
                     self.owners_info[i]['hour'].set(str(owner_data.get('hour', 12)))
                     self.owners_info[i]['minute'].set(str(owner_data.get('minute', 0)))
                     
+                    # 获取事主名称（从name变量中获取字符串值）
+                    owner_name = self.owners_info[i]['name']
+                    if hasattr(owner_name, 'get'):
+                        owner_name = owner_name.get()
+                    
                     # 自动计算四柱
                     self.calculate_owner_sizhu(
                         self.owners_info[i]['solar_year'],
@@ -234,7 +239,7 @@ class DayScoreWindow:
                         self.owners_info[i]['leap'],
                         self.owners_info[i]['hour'],
                         self.owners_info[i]['minute'],
-                        self.owners_info[i]['name'],
+                        owner_name,  # 传递字符串而不是StringVar
                         self.owners_info[i]['sizhu_var'],
                         self.owners_info[i]['xishen_var'],
                         self.owners_info[i]['yongshen_var'],
@@ -351,23 +356,35 @@ class DayScoreWindow:
                     
                     # 如果结果包含评分信息，也添加到评分结果中
                     if 'score' in result and 'level' in result:
-                        # 从detail字段中获取详细信息
+                        # 从detail字段中获取详细信息（detail保存了完整的calculate_score结果）
                         detail = result.get('detail', {})
+                        
+                        # 保留原始分数和详细评分信息（来自条件择日，这是标准分数）
+                        score_details = detail.get('score_details', result.get('score_details', {}))
+                        original_score = score  # 使用条件择日的原始分数（标准分数）
+                        original_level = level  # 使用条件择日的原始等级
                         
                         score_result = {
                             'date': date_str,
-                            'score': score,
-                            'level': level,
-                            'reason': result.get('reason', detail.get('reason', '')),
+                            'score': original_score,  # 标准分数
+                            'level': original_level,  # 标准等级
+                            'reason': detail.get('reason', result.get('reason', '')),
                             'sizhu': sizhu_dict,
                             'event_type': event_type,
-                            'owners_detail': [],
-                            'huangdao_info': result.get('huangdao_info', detail.get('huangdao_info', {})),
-                            'wu_xing_result': result.get('wu_xing_result', detail.get('wu_xing_result', {})),
-                            'yi_list': result.get('yi_list', detail.get('yi_list', [])),
-                            'ji_list': result.get('ji_list', detail.get('ji_list', [])),
-                            'shensha_list': result.get('shensha_list', detail.get('shensha_list', [])),
-                            'score_details': result.get('score_details', detail.get('score_details', {}))
+                            'owners_detail': owners_detail,
+                            'huangdao_info': detail.get('huangdao_info', result.get('huangdao_info', {})),
+                            'wu_xing_result': detail.get('wu_xing_result', result.get('wu_xing_result', {})),
+                            'yi_list': detail.get('yi_list', result.get('yi_list', [])),
+                            'ji_list': detail.get('ji_list', result.get('ji_list', [])),
+                            'shensha_list': detail.get('shensha_list', result.get('shensha_list', [])),
+                            'score_details': score_details,
+                            'wuxing_score': result.get('wuxing_score', score_details.get('五行评分', 100)),
+                            'yueling_score': result.get('yueling_score', score_details.get('月令得分', 0)),
+                            'xishen_score': result.get('xishen_score', score_details.get('喜用神得分', 0)),
+                            'huangdao_score': result.get('huangdao_score', score_details.get('黄道得分', 0)),
+                            'marriage_details': detail.get('marriage_details', []),  # 婚嫁评分详情
+                            'original_result': result,  # 保存原始结果引用
+                            'is_imported': True  # 标记为导入结果
                         }
                         self.scoring_results.append(score_result)
             
@@ -1381,14 +1398,12 @@ class DayScoreWindow:
         """计算事主四柱"""
         try:
             # 防御性检查：获取小时和分钟
-            hour_str = hour_var.get() if hasattr(hour_var, 'get') else str(hour_var)
-            minute_str = minute_var.get() if hasattr(minute_var, 'get') else str(minute_var)
+            hour_str = hour_var.get() if hour_var and hasattr(hour_var, 'get') else str(hour_var) if hour_var else ''
+            minute_str = minute_var.get() if minute_var and hasattr(minute_var, 'get') else str(minute_var) if minute_var else ''
             
-            if not hour_str or not minute_str:
-                return
-            
-            hour = int(hour_str)
-            minute = int(minute_str)
+            # 使用默认值而不是直接返回
+            hour = int(hour_str) if hour_str else 12
+            minute = int(minute_str) if minute_str else 0
             
             # 处理日期类型和闰月
             date_type = date_type_var.get() if date_type_var and hasattr(date_type_var, 'get') else "公历"
@@ -1396,9 +1411,9 @@ class DayScoreWindow:
             
             if date_type == "农历":
                 # 农历日期转换为公历
-                lunar_year_str = lunar_year_var.get() if hasattr(lunar_year_var, 'get') else str(lunar_year_var)
-                lunar_month_str = lunar_month_var.get() if hasattr(lunar_month_var, 'get') else str(lunar_month_var)
-                lunar_day_str = lunar_day_var.get() if hasattr(lunar_day_var, 'get') else str(lunar_day_var)
+                lunar_year_str = lunar_year_var.get() if lunar_year_var and hasattr(lunar_year_var, 'get') else str(lunar_year_var) if lunar_year_var else ''
+                lunar_month_str = lunar_month_var.get() if lunar_month_var and hasattr(lunar_month_var, 'get') else str(lunar_month_var) if lunar_month_var else ''
+                lunar_day_str = lunar_day_var.get() if lunar_day_var and hasattr(lunar_day_var, 'get') else str(lunar_day_var) if lunar_day_var else ''
                 
                 if not (lunar_year_str and lunar_month_str and lunar_day_str):
                     return
@@ -1412,9 +1427,9 @@ class DayScoreWindow:
                 target_date = date(day_obj.getSolarYear(), day_obj.getSolarMonth(), day_obj.getSolarDay())
             else:
                 # 公历日期
-                solar_year_str = solar_year_var.get() if hasattr(solar_year_var, 'get') else str(solar_year_var)
-                solar_month_str = solar_month_var.get() if hasattr(solar_month_var, 'get') else str(solar_month_var)
-                solar_day_str = solar_day_var.get() if hasattr(solar_day_var, 'get') else str(solar_day_var)
+                solar_year_str = solar_year_var.get() if solar_year_var and hasattr(solar_year_var, 'get') else str(solar_year_var) if solar_year_var else ''
+                solar_month_str = solar_month_var.get() if solar_month_var and hasattr(solar_month_var, 'get') else str(solar_month_var) if solar_month_var else ''
+                solar_day_str = solar_day_var.get() if solar_day_var and hasattr(solar_day_var, 'get') else str(solar_day_var) if solar_day_var else ''
                 
                 if not (solar_year_str and solar_month_str and solar_day_str):
                     return
@@ -1430,6 +1445,15 @@ class DayScoreWindow:
             # 显示四柱
             sizhu_text = f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}"
             sizhu_var.set(sizhu_text)
+            
+            # 显示生肖
+            year_zhi = sizhu['年柱'][1] if len(sizhu['年柱']) > 1 else ''
+            zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                         '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+            zodiac = zodiac_map.get(year_zhi, '')
+            # 如果有生肖显示变量，则设置生肖
+            if hasattr(self, 'zodiac_var') and self.zodiac_var and hasattr(self.zodiac_var, 'set'):
+                self.zodiac_var.set(zodiac)
             
             # 显示喜用神 - 使用统一的喜用神计算器
             xishen, yongshen = calculate_xishen_yongshen(sizhu, analysis)
@@ -1644,11 +1668,12 @@ class DayScoreWindow:
         for info in self.owners_info:
             try:
                 # 添加防御性检查
-                year_val = info['year'].get() if hasattr(info['year'], 'get') else info.get('year', '')
-                month_val = info['month'].get() if hasattr(info['month'], 'get') else info.get('month', '')
-                day_val = info['day'].get() if hasattr(info['day'], 'get') else info.get('day', '')
-                hour_val = info['hour'].get() if hasattr(info['hour'], 'get') else info.get('hour', '12')
-                minute_val = info['minute'].get() if hasattr(info['minute'], 'get') else info.get('minute', '0')
+                # 修正：使用正确的字段名称
+                year_val = info['solar_year'].get() if hasattr(info['solar_year'], 'get') else ''
+                month_val = info['solar_month'].get() if hasattr(info['solar_month'], 'get') else ''
+                day_val = info['solar_day'].get() if hasattr(info['solar_day'], 'get') else ''
+                hour_val = info['hour'].get() if hasattr(info['hour'], 'get') else '12'
+                minute_val = info['minute'].get() if hasattr(info['minute'], 'get') else '0'
                 
                 # 检查是否有完整的日期信息
                 if not (year_val and month_val and day_val):
@@ -2201,15 +2226,45 @@ class DayScoreWindow:
             self._insert_colored_text("""【神煞信息】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
+            # 分离吉神和凶煞
+            ji_shen = []
+            xiong_shen = []
             for shensha in result['shensha_list']:
-                # 处理shensha可能是字符串或字典的情况
                 if isinstance(shensha, dict):
-                    name = shensha.get('name', '')
-                    desc = shensha.get('description', '')
-                    self._insert_colored_text(f"  • {name}: {desc}\n")
+                    score = shensha.get('score', 0)
+                    if score > 0:
+                        ji_shen.append(shensha)
+                    elif score < 0:
+                        xiong_shen.append(shensha)
                 else:
-                    # 如果是字符串，直接显示
-                    self._insert_colored_text(f"  • {shensha}\n")
+                    ji_shen.append(shensha)
+            
+            # 显示吉神
+            if ji_shen:
+                self._insert_colored_text("【吉神】\n")
+                for shensha in ji_shen:
+                    if isinstance(shensha, dict):
+                        name = shensha.get('name', '')
+                        desc = shensha.get('description', '')
+                        score = shensha.get('score', 0)
+                        if score > 0:
+                            self._insert_colored_text(f"  • {name} (+{score}分): {desc}\n")
+                        else:
+                            self._insert_colored_text(f"  • {name}: {desc}\n")
+                    else:
+                        self._insert_colored_text(f"  • {shensha}\n")
+            
+            # 显示凶煞
+            if xiong_shen:
+                self._insert_colored_text("\n【凶煞】\n")
+                for shensha in xiong_shen:
+                    if isinstance(shensha, dict):
+                        name = shensha.get('name', '')
+                        desc = shensha.get('description', '')
+                        score = shensha.get('score', 0)
+                        self._insert_colored_text(f"  • {name} ({score}分): {desc}\n")
+                    else:
+                        self._insert_colored_text(f"  • {shensha}\n")
             self._insert_colored_text("\n")
         
         # 二十四山动土方位吉凶（仅限修造相关事件）

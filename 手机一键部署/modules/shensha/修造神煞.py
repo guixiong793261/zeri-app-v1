@@ -155,6 +155,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_yuedehe(sizhu):
             self._add_shensha('月德合', 15, '动土修造吉利')
         
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，修造上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，修造吉')
+        
         # 驿马
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '动土催吉，主迁动')

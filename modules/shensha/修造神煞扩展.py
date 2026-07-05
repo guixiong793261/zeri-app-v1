@@ -201,6 +201,9 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         if direction:
             self.direction = direction
         
+        # 标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
+        
         # 调用基类检查
         super().check(sizhu, owners)
         
@@ -405,7 +408,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_in_year_sansha(self, sizhu):
         """年三煞到方：根据年支的三合局对冲方"""
-        year_zhi = sizhu['year_zhi']
+        year_zhi = sizhu.get('year_zhi', '')
         # 年三煞方位映射（简化版）
         sansha_map = {
             '申': ['巳', '丙', '午'],  # 申子辰年煞南
@@ -426,7 +429,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_in_month_sansha(self, sizhu):
         """月三煞到方：根据月支的三合局对冲方"""
-        month_zhi = sizhu['month_zhi']
+        month_zhi = sizhu.get('month_zhi', '')
         # 月三煞方位映射
         # 传统风水理论：寅午戌月煞北（亥子丑壬癸）、巳酉丑月煞东（寅甲卯乙）
         # 申子辰月煞南（巳丙午丁）、亥卯未月煞西（申庚酉辛）
@@ -449,7 +452,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_taisui(self, sizhu):
         """太岁到方：年支对应方位"""
-        year_zhi = sizhu['year_zhi']
+        year_zhi = sizhu.get('year_zhi', '')
         # 地支对应方位
         zhi_fang = {
             '子': '子', '丑': '丑', '寅': '寅', '卯': '卯',
@@ -461,7 +464,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_suipo(self, sizhu):
         """岁破到方：太岁对冲方位"""
-        year_zhi = sizhu['year_zhi']
+        year_zhi = sizhu.get('year_zhi', '')
         # 地支对冲
         chong_zhi = {
             '子': '午', '午': '子',
@@ -476,7 +479,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_yuepo(self, sizhu):
         """月破到方：月支对冲方位"""
-        month_zhi = sizhu['month_zhi']
+        month_zhi = sizhu.get('month_zhi', '')
         # 地支对冲
         chong_zhi = {
             '子': '午', '午': '子',
@@ -1101,6 +1104,43 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
 
         return min(score, 15)
     
+    def _parse_sizhu(self, sizhu_input):
+        """
+        解析sizhu输入，支持字符串格式和字典格式
+        
+        Args:
+            sizhu_input: 字符串格式("甲子 乙丑 丙寅 丁卯")或字典格式
+            
+        Returns:
+            dict: 包含year_gan, year_zhi, month_gan, month_zhi, day_gan, day_zhi, hour_gan, hour_zhi的字典
+        """
+        if isinstance(sizhu_input, dict):
+            # 已经是字典格式，直接返回
+            return sizhu_input
+        
+        if isinstance(sizhu_input, str):
+            # 字符串格式，解析为字典
+            parts = sizhu_input.split()
+            if len(parts) >= 3:
+                year_zhu = parts[0] if len(parts) > 0 else ''
+                month_zhu = parts[1] if len(parts) > 1 else ''
+                day_zhu = parts[2] if len(parts) > 2 else ''
+                hour_zhu = parts[3] if len(parts) > 3 else ''
+                
+                return {
+                    'year_gan': year_zhu[0] if len(year_zhu) >= 1 else '',
+                    'year_zhi': year_zhu[1] if len(year_zhu) >= 2 else '',
+                    'month_gan': month_zhu[0] if len(month_zhu) >= 1 else '',
+                    'month_zhi': month_zhu[1] if len(month_zhu) >= 2 else '',
+                    'day_gan': day_zhu[0] if len(day_zhu) >= 1 else '',
+                    'day_zhi': day_zhu[1] if len(day_zhu) >= 2 else '',
+                    'hour_gan': hour_zhu[0] if len(hour_zhu) >= 1 else '',
+                    'hour_zhi': hour_zhu[1] if len(hour_zhu) >= 2 else '',
+                }
+        
+        # 返回空字典作为默认
+        return {}
+    
     def get_lucky_directions(self, sizhu):
         """
         计算当日吉利的动土方位
@@ -1109,11 +1149,15 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         返回安全（不犯煞）的方位列表，按吉凶排序。
         
         Args:
-            sizhu: 四柱信息
+            sizhu: 四柱信息（字符串或字典格式）
             
         Returns:
             list: [{'方位': '子', '分值': 0, '说明': [...]}, ...]
         """
+        # 先解析sizhu为字典格式
+        sizhu = self._parse_sizhu(sizhu)
+        # 再标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
         results = []
         old_direction = self.direction
         
@@ -1162,14 +1206,18 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         返回按时辰排序的吉凶列表。
         
         Args:
-            sizhu: 四柱信息
+            sizhu: 四柱信息（字符串或字典格式）
             
         Returns:
             list: [{'时辰': '子时', '地支': '子', '分值': 0, '说明': [...]}, ...]
         """
+        # 先解析sizhu为字典格式
+        sizhu = self._parse_sizhu(sizhu)
+        # 再标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
         results = []
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         hour_names = {
             '子': '子时(23-1)', '丑': '丑时(1-3)', '寅': '寅时(3-5)',

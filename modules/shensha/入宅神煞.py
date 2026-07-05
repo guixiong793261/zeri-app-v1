@@ -47,9 +47,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         year_zhi = sizhu['year_zhi']
         day_zhi = sizhu['day_zhi']
         
-        # 年三煞（劫煞、灾煞、岁煞）
-        if self._is_sansha(sizhu):
-            self._add_shensha('年三煞', -25, '入宅大忌，犯之主凶灾')
+        # 年三煞检查已移除
+        # 注意：年三煞的正确判断应该基于山向（山家三煞），而非仅看日支是否在流年三煞方位
+        # 对于入宅，年三煞的判断应该在评分器中根据具体山向进行，不在此处统一扣分
+        # if self._is_sansha(sizhu):
+        #     self._add_shensha('年三煞', -25, '入宅大忌，犯之主凶灾')
         
         # 岁破（日支与年支相冲）
         if self._is_suipo(sizhu):
@@ -132,6 +134,23 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 月德
         if self._is_yuede(sizhu):
             self._add_shensha('月德', 12, '月德吉星，入宅大吉')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，入宅吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，入宅吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，入宅上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，入宅吉')
         
         # 驿马
         if self._is_yima(sizhu):
@@ -353,15 +372,25 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return day_zhi == hongzui_map.get(month_zhi)
     
     def _is_tiangou(self, sizhu):
-        """天狗日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        tiangou_map = {
-            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
-            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
-            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
-        }
-        return day_zhi == tiangou_map.get(month_zhi)
+        """天狗日 - 根据《钦定协纪辨方书》，天狗为建除十二神中的"满"日"""
+        try:
+            from ..shensha.marriage_shensha import get_jianchu
+            if 'date' in sizhu:
+                jianchu = get_jianchu(sizhu['date'])
+                return jianchu == '满'
+        except Exception as e:
+            # 回退方案：使用月支起建法计算满日
+            month_zhi = sizhu['month_zhi']
+            day_zhi = sizhu['day_zhi']
+            zhi_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+            if month_zhi in zhi_order and day_zhi in zhi_order:
+                month_idx = zhi_order.index(month_zhi)
+                day_idx = zhi_order.index(day_zhi)
+                # 建除十二神顺序：建、除、满、平、定、执、破、危、成、收、开、闭
+                # "满"是第2位(index=2)
+                offset = (day_idx - month_idx) % 12
+                return offset == 2
+        return False
     
     def _is_fuduan(self, sizhu):
         """伏断日
@@ -467,7 +496,6 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         """天德日"""
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
         
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
@@ -476,7 +504,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         }
         
         tiande = tiande_map.get(month_zhi)
-        return day_gan == tiande or day_zhi == tiande
+        return day_gan == tiande
     
     def _is_yuede(self, sizhu):
         """月德日"""
@@ -505,6 +533,110 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         }
         
         return day_zhi == yima_map.get(year_zhi)
+    
+    def _is_tiande_he(self, sizhu):
+        """天德合日"""
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        # 天德
+        tiande_map = {
+            '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
+            '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
+            '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
+        }
+        
+        tiande = tiande_map.get(month_zhi, '')
+        if not tiande:
+            return False
+        
+        # 天德合：与天德五行相合
+        he_map = {'甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸',
+                 '己': '甲', '庚': '乙', '辛': '丙', '壬': '丁', '癸': '戊',
+                 '寅': '亥', '申': '巳', '亥': '寅', '巳': '申'}
+        
+        tiande_he = he_map.get(tiande, '')
+        return day_gan == tiande_he or tiande_he == day_gan
+    
+    def _is_yuede_he(self, sizhu):
+        """月德合日"""
+        month_zhi = sizhu['month_zhi']
+        day_gan = sizhu['day_gan']
+        
+        # 月德
+        yuede_map = {
+            '寅': '丙', '午': '丙', '戌': '丙',
+            '申': '壬', '子': '壬', '辰': '壬',
+            '巳': '庚', '酉': '庚', '丑': '庚',
+            '亥': '甲', '卯': '甲', '未': '甲'
+        }
+        
+        yuede = yuede_map.get(month_zhi, '')
+        if not yuede:
+            return False
+        
+        # 月德合：与月德五行相合
+        he_map = {'甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸',
+                 '己': '甲', '庚': '乙', '辛': '丙', '壬': '丁', '癸': '戊'}
+        
+        yuede_he = he_map.get(yuede, '')
+        return day_gan == yuede_he
+    
+    def _is_sanqi(self, sizhu):
+        """三奇日（乙丙丁日奇、甲戊庚月奇、壬癸辛星奇）"""
+        year_gan = sizhu.get('year_gan', '')
+        month_gan = sizhu.get('month_gan', '')
+        day_gan = sizhu.get('day_gan', '')
+        hour_gan = sizhu.get('hour_gan', '')
+        
+        all_gans = [year_gan, month_gan, day_gan, hour_gan]
+        
+        # 日奇：乙丙丁
+        riqi = ['乙', '丙', '丁']
+        riqi_count = sum(1 for g in riqi if g in all_gans)
+        
+        # 月奇：甲戊庚
+        yueqi = ['甲', '戊', '庚']
+        yueqi_count = sum(1 for g in yueqi if g in all_gans)
+        
+        # 星奇：壬癸辛
+        xingqi = ['壬', '癸', '辛']
+        xingqi_count = sum(1 for g in xingqi if g in all_gans)
+        
+        # 有两奇以上为吉
+        if riqi_count >= 2:
+            return '日'
+        if yueqi_count >= 2:
+            return '月'
+        if xingqi_count >= 2:
+            return '星'
+        
+        return None
+    
+    def _is_jiangxing(self, sizhu):
+        """将星日"""
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
+        
+        # 将星：日支三合方为将星
+        # 将星查法：日支的三合地支为将星
+        sanhe_groups = {
+            '寅': ['午', '戌'],  # 寅午戌三合
+            '午': ['寅', '戌'],
+            '戌': ['寅', '午'],
+            '亥': ['卯', '未'],  # 亥卯未三合
+            '卯': ['亥', '未'],
+            '未': ['亥', '卯'],
+            '申': ['子', '辰'],  # 申子辰三合
+            '子': ['申', '辰'],
+            '辰': ['申', '子'],
+            '巳': ['酉', '丑'],  # 巳酉丑三合
+            '酉': ['巳', '丑'],
+            '丑': ['巳', '酉']
+        }
+        
+        jiangxing_list = sanhe_groups.get(day_zhi, [])
+        return month_zhi in jiangxing_list
     
     def _is_jianxing_ji(self, sizhu):
         """建星吉日（成、开、满）"""

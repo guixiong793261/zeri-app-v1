@@ -245,6 +245,23 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_yuede(sizhu):
             self._add_shensha('月德日', 10, '月德日百事吉')
         
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，婚嫁吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，婚嫁吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，婚嫁上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，婚嫁吉')
+        
         # 三合日
         if self._is_sanhe(sizhu):
             self._add_shensha('三合日', 8, '三合日婚嫁吉')
@@ -911,16 +928,24 @@ class MarriageShenShaChecker(ShenShaChecker):
         return day_zhi == zhuque_map.get(month_zhi)
     
     def _is_tiangou(self, sizhu):
-        """是否天狗日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        tiangou_map = {
-            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
-            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
-            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
-        }
-        return day_zhi == tiangou_map.get(month_zhi)
+        """是否天狗日 - 根据《钦定协纪辨方书》，天狗为建除十二神中的"满"日"""
+        try:
+            if 'date' in sizhu:
+                jianchu = get_jianchu(sizhu['date'])
+                return jianchu == '满'
+        except Exception as e:
+            # 回退方案：使用月支起建法计算满日
+            month_zhi = sizhu['month_zhi']
+            day_zhi = sizhu['day_zhi']
+            zhi_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+            if month_zhi in zhi_order and day_zhi in zhi_order:
+                month_idx = zhi_order.index(month_zhi)
+                day_idx = zhi_order.index(day_zhi)
+                # 建除十二神顺序：建、除、满、平、定、执、破、危、成、收、开、闭
+                # "满"是第2位(index=2)
+                offset = (day_idx - month_idx) % 12
+                return offset == 2
+        return False
     
     def _is_guchen(self, sizhu):
         """是否孤辰寡宿"""

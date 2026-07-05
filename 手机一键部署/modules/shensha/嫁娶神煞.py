@@ -245,6 +245,23 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_yuede(sizhu):
             self._add_shensha('月德日', 10, '月德日百事吉')
         
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，婚嫁吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，婚嫁吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，婚嫁上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，婚嫁吉')
+        
         # 三合日
         if self._is_sanhe(sizhu):
             self._add_shensha('三合日', 8, '三合日婚嫁吉')

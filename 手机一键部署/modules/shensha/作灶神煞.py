@@ -64,6 +64,35 @@ class StoveShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu, **kwargs)
         
+        # ===== 吉神 =====
+        
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 15, '天德吉星，作灶大吉')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 12, '月德吉星，作灶大吉')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，作灶吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，作灶吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，作灶上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，作灶吉')
+        
+        # ===== 作灶专用 =====
+        
         # 丙丁日（火旺适合作灶）
         if self._is_bingding(sizhu):
             self._add_shensha('丙丁日', 5, '丙丁日火旺适合作灶（需结合其他神煞）')

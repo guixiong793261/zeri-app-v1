@@ -40,6 +40,8 @@ try:
     from .安葬神煞 import BurialShenShaChecker
     from .安床神煞 import BedShenShaChecker
     from .入宅神煞 import RuZhaiShenShaChecker
+    from .拆舍神煞 import DemolitionShenShaChecker
+    from .动土神煞 import DiggingShenShaChecker
 except ImportError:
     # 导入失败时，设置正确的导入路径
     import sys
@@ -69,6 +71,8 @@ except ImportError:
         from 安葬神煞 import BurialShenShaChecker
         from 安床神煞 import BedShenShaChecker
         from 入宅神煞 import RuZhaiShenShaChecker
+        from 拆舍神煞 import DemolitionShenShaChecker
+        from 动土神煞 import DiggingShenShaChecker
     except ImportError as e:
         print(f"导入神煞模块失败: {e}")
         # 如果仍然失败，使用空实现
@@ -90,6 +94,10 @@ except ImportError:
             pass
         class RuZhaiShenShaChecker:
             pass
+        class DemolitionShenShaChecker:
+            pass
+        class DiggingShenShaChecker:
+            pass
 
 
 def get_checker(event_type):
@@ -103,7 +111,9 @@ def get_checker(event_type):
         ShenShaChecker: 神煞检查器实例
     """
     marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '动土', '装修']
+    construction_events = ['修造', '装修']
+    digging_events = ['动土', '破土']
+    demolition_events = ['拆舍', '拆除']
     stove_events = ['作灶']
     opening_events = ['开业']
     travel_events = ['出行']
@@ -115,6 +125,10 @@ def get_checker(event_type):
         return MarriageShenShaChecker()
     elif event_type in construction_events:
         return ConstructionShenShaChecker()
+    elif event_type in digging_events:
+        return DiggingShenShaChecker()
+    elif event_type in demolition_events:
+        return DemolitionShenShaChecker()
     elif event_type in stove_events:
         return StoveShenShaChecker()
     elif event_type in opening_events:

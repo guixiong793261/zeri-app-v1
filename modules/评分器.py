@@ -352,7 +352,9 @@ class Scorer:
                                 'warnings': marriage_result.get('warnings', []),
                                 'wu_xing_result': wu_xing_result,
                                 'score_details': score_details,
-                                'sizhu': sizhu
+                                'sizhu': sizhu,
+                                'sansha_info': {},
+                                'shan_xiang': shan_xiang
                             }
                         
                         # 计算正五行喜用神得分（作为补充）
@@ -516,7 +518,9 @@ class Scorer:
                             'score_details': score_details,
                             'wu_xing_result': wu_xing_result,
                             'sun_moon_info': sun_moon_info,
-                            'sizhu': sizhu  # 添加sizhu信息，用于二十四山等后续处理
+                            'sizhu': sizhu,
+                            'sansha_info': {},
+                            'shan_xiang': shan_xiang
                         }
                     else:
                         # date_obj为None，无法进行婚嫁评分，继续执行通用评分逻辑
@@ -525,6 +529,9 @@ class Scorer:
                     logger.warning("婚嫁评分算法模块未找到，使用通用评分")
             
             # ========== 通用评分逻辑 ==========
+            # 预先计算三煞信息（用于日课详情显示）
+            sansha_info = self._get_sansha_info(sizhu, shan_xiang)
+            
             # 第一步：正五行审核（核心门槛）
             wu_xing_result = self._check_wu_xing(sizhu, event_type, owners,
                                                     house_type, shan_xiang,
@@ -585,7 +592,9 @@ class Scorer:
                     'wu_xing_result': wu_xing_result,
                     'score_details': score_details,
                     'sun_moon_info': sun_moon_info,
-                    'sizhu': sizhu  # 添加sizhu信息，用于二十四山等后续处理
+                    'sizhu': sizhu,
+                    'sansha_info': sansha_info,
+                    'shan_xiang': shan_xiang
                 }
 
             # 第二步：月令对日主的帮助评分
@@ -593,6 +602,9 @@ class Scorer:
 
             # 第三步：日课五行与事主喜用神匹配评分（正五行择日法核心）
             xishen_score, owner_matches = self._calculate_xishen_match(sizhu, owners)
+
+            # 计算相主得分（日课日支与事主生肖/日支的关系）
+            xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(sizhu, owners)
 
             # 第四步：大小黄道审核（加分/减分项）
             self.huangdao_info = calculate_huangdao(sizhu)
@@ -603,14 +615,11 @@ class Scorer:
             sun_moon_score = sun_moon_info.get('score', 0)
 
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
-            # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分 + 相主得分
-            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 黄道得分 + 太阳太阴得分
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + huangdao_score + sun_moon_score
+            # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
+            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score
 
-            # 总分上限控制：防止加分项过度累积，普通吉课最高150分，大吉最高180分
-            max_score = 180
-            if self.final_score > max_score:
-                self.final_score = max_score
+            # 不设置分数上限，显示实际计算的总分
 
             # 第五步：综合评定
             self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info)
@@ -622,6 +631,7 @@ class Scorer:
                 '五行评分': wu_xing_result['score'],
                 '月令得分': yueling_score,
                 '喜用神得分': xishen_score,
+                '相主得分': xiangzhu_score,
                 '黄道得分': huangdao_score,
                 '太阳太阴得分': sun_moon_score,
                 '总分': self.final_score
@@ -631,6 +641,10 @@ class Scorer:
             if owner_matches:
                 score_details['事主匹配'] = owner_matches
 
+            # 添加相主详情
+            if xiangzhu_details:
+                score_details['相主详情'] = xiangzhu_details
+
             # 添加月令详细得分
             wangxiang_score = self._calculate_wangxiang(sizhu)
             zhizhi_score = self._calculate_zhizhi_relation(sizhu)
@@ -639,6 +653,25 @@ class Scorer:
                 '支支关系得分': zhizhi_score
             }
 
+            # 获取三煞信息
+            sansha_info = self._get_sansha_info(sizhu, shan_xiang)
+            
+            # 检查月三煞是否犯山向
+            month_sansha_penalty = 0
+            if sansha_info.get('month_sansha_fan'):
+                month_sansha_penalty = -20
+                self.final_score += month_sansha_penalty
+                if '月三煞' not in self.ji_list:
+                    self.ji_list.append('月三煞')
+            
+            # 检查日三煞是否犯山向
+            day_sansha_penalty = 0
+            if sansha_info.get('day_sansha_fan'):
+                day_sansha_penalty = -20
+                self.final_score += day_sansha_penalty
+                if '日三煞' not in self.ji_list:
+                    self.ji_list.append('日三煞')
+            
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -650,7 +683,9 @@ class Scorer:
                 'wu_xing_result': wu_xing_result,
                 'score_details': score_details,
                 'sun_moon_info': sun_moon_info,
-                'sizhu': sizhu  # 添加sizhu信息，用于二十四山等后续处理
+                'sizhu': sizhu,
+                'sansha_info': sansha_info,  # 添加三煞信息
+                'shan_xiang': shan_xiang  # 添加山向信息
             }
 
         except Exception as e:
@@ -669,7 +704,9 @@ class Scorer:
                 'wu_xing_result': {'he_ge': False, 'ji_yu': f"计算错误: {str(e)}", 'score': 0},
                 'score_details': {},
                 'sun_moon_info': {},
-                'error': error_msg
+                'error': error_msg,
+                'sansha_info': {},
+                'shan_xiang': shan_xiang
             }
 
     def analyze_year(self, year, event_type, owners=None, shan_xiang=None, jian_xiang=None, direction=None):
@@ -690,8 +727,9 @@ class Scorer:
         from datetime import date
         import calendar
         
-        # 构建年份的代表性日期（使用该年的1月1日）
-        test_date = date(year, 1, 1)
+        # 构建年份的代表性日期（使用该年的3月1日，确保在立春之后）
+        # 中国传统干支纪年以立春为分界点，立春通常在2月4日左右
+        test_date = date(year, 3, 1)
         
         # 计算该年的干支
         try:
@@ -771,7 +809,7 @@ class Scorer:
                             analysis['reasons'].append("新娘小利年")
         
         # 对于修造类事项，分析年煞和二十四山方位吉凶（仅提供信息，不扣分）
-        if event_type in ['修造', '动土', '装修', '入宅']:
+        if event_type in ['修造', '动土', '拆舍', '装修', '入宅']:
             # 年三煞分析
             # 年三煞方位映射
             year_sansha_map = {
@@ -918,16 +956,12 @@ class Scorer:
                 analysis['reasons'].append("未提供事主信息，无法判断")
         
         # 确定等级
-        if analysis['score'] >= 120:
-            analysis['level'] = '大吉'
-        elif analysis['score'] >= 100:
+        # 基础分为70分，月破扣25分后为45分（凶），无煞加20分后为90分（吉）
+        if analysis['score'] >= 90:
             analysis['level'] = '吉'
-        elif analysis['score'] >= 80:
+        elif analysis['score'] >= 70:
             analysis['level'] = '平'
-        elif analysis['score'] >= 60:
-            analysis['level'] = '小凶'
-        elif analysis['score'] >= 40:
-            # 分数在40-60之间仍视为小凶，可用但不推荐
+        elif analysis['score'] >= 50:
             analysis['level'] = '小凶'
         else:
             analysis['level'] = '大凶'
@@ -935,13 +969,12 @@ class Scorer:
         
         return analysis
     
-    def analyze_month(self, year, month, event_type, owners=None, shan_xiang=None, direction=None):
+    def analyze_month(self, test_date, event_type, owners=None, shan_xiang=None, direction=None):
         """
         分析月份吉凶
 
         Args:
-            year: 年份（如2026）
-            month: 月份（1-12）
+            test_date: 日期对象（datetime.date），表示该农历月份的代表性日期
             event_type: 事项类型
             owners: 事主信息
             shan_xiang: 山向信息
@@ -950,43 +983,65 @@ class Scorer:
         Returns:
             dict: 月份分析结果
         """
-        from datetime import date, timedelta
+        # 先导入 calculate_sizhu
+        try:
+            from .四柱计算器 import calculate_sizhu
+        except ImportError:
+            from 四柱计算器 import calculate_sizhu
+        
+        # 计算该月的干支（使用传入的日期）
+        sizhu = calculate_sizhu(test_date, 12, 0)
+        month_gan = sizhu.get('month_gan', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        year_zhi = sizhu.get('year_zhi', '')
+        year_gz = sizhu.get('year', '')
+        
+        # 从四柱中提取农历年份（干支纪年）
+        # 注意：不能使用 test_date.year，因为农历腊月可能对应公历下一年
+        # 需要从年柱干支反推年份
+        TIANGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+        DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        
+        # 从年柱干支计算农历年份（year_gz 可能是字符串如"丙午"，也可能是其他类型）
+        year_gz_str = str(year_gz) if year_gz else ''
+        if year_gz_str and len(year_gz_str) >= 2:
+            gan_idx = TIANGAN.index(year_gz_str[0]) if year_gz_str[0] in TIANGAN else 0
+            zhi_idx = DIZHI.index(year_gz_str[1]) if year_gz_str[1] in DIZHI else 0
+            # 干支纪年每 60 年一循环，找到最近的匹配年份
+            base_year = test_date.year
+            for offset in range(60):
+                check_year = base_year - offset
+                if (check_year - 4) % 10 == gan_idx and (check_year - 4) % 12 == zhi_idx:
+                    year = check_year
+                    break
+            else:
+                year = base_year  #  fallback
+        else:
+            year = test_date.year  # fallback
         
         # 首先检查年份是否适合，如果年份不适合，则月份也不适合
         year_analysis = self.analyze_year(year, event_type, owners, shan_xiang, direction)
         if not year_analysis['suitable']:
             # 如果年份不适合，直接返回年份分析结果（作为月份分析结果）
             analysis = year_analysis.copy()
-            analysis['month'] = month
+            analysis['month'] = test_date.month
             analysis['month_gz'] = ''
             analysis['month_gan'] = ''
             analysis['month_zhi'] = ''
             analysis['reasons'] = [f"年份{year}不适合{event_type}，该年所有月份均不宜"] + year_analysis['reasons']
             return analysis
         
-        # 构建月份的代表性日期（使用该月的1日）
-        test_date = date(year, month, 1)
-        
-        # 计算该月的干支
-        try:
-            from .四柱计算器 import calculate_sizhu
-        except ImportError:
-            from 四柱计算器 import calculate_sizhu
-        sizhu = calculate_sizhu(test_date, 12, 0)
-        month_gan = sizhu.get('month_gan', '')
-        month_zhi = sizhu.get('month_zhi', '')
-        year_zhi = sizhu.get('year_zhi', '')
-        
         # 分析结果
+        # 基础分 70 分，这样月破扣 25 分后为 45 分，判为凶
         analysis = {
             'year': year,
-            'month': month,
+            'month': test_date.month,  # 使用日期的月份
             'month_gz': f"{month_gan}{month_zhi}",
             'month_gan': month_gan,
             'month_zhi': month_zhi,
             'suitable': True,
-            'score': 100,
-            'level': '吉',
+            'score': 70,
+            'level': '凶',
             'reasons': [],
             'details': {}
         }
@@ -995,17 +1050,22 @@ class Scorer:
         # 这里使用该月1日的日支作为参考
         day_zhi = sizhu.get('day_zhi', '')
         if self.check_liuchong(month_zhi, day_zhi):
-            analysis['score'] -= 25
+            analysis['score'] -= 15
             analysis['reasons'].append('月破')
+            # 月破后调整为凶
+            if analysis['score'] < 50:
+                analysis['level'] = '大凶'
+            elif analysis['score'] < 70:
+                analysis['level'] = '小凶'
         
         # 检查月刑
         if self.check_xing(month_zhi, year_zhi):
-            analysis['score'] -= 20
+            analysis['score'] -= 8
             analysis['reasons'].append('月刑')
         
         # 检查月害
         if self.check_hai(month_zhi, year_zhi):
-            analysis['score'] -= 15
+            analysis['score'] -= 5
             analysis['reasons'].append('月害')
         
         # 检查月份与事主生肖的关系
@@ -1039,7 +1099,7 @@ class Scorer:
                         analysis['reasons'].append(f"月支与{owner['name']}生肖三合")
         
         # 对于修造类事项，分析月煞和二十四山方位吉凶（仅提供信息，不扣分）
-        if event_type in ['修造', '动土', '装修', '入宅']:
+        if event_type in ['修造', '动土', '拆舍', '装修', '入宅']:
             # 阴府检测：月干若为正/傍阴府，则直接判定为不可用
             if shan_xiang:
                 # 使用新的阴府配置表
@@ -1081,20 +1141,21 @@ class Scorer:
                 return analysis
             
             # 月三煞分析
-            # 月三煞方位映射
+            # 月三煞方位映射（按传统择日规则）
+            # 寅午戌月煞北（亥子丑），亥卯未月煞西（申酉戌），申子辰月煞南（巳午未），巳酉丑月煞东（寅卯辰）
             month_sansha_map = {
-                '申': ['巳', '丙', '午', '丁', '未'],  # 申子辰月煞南
-                '子': ['巳', '丙', '午', '丁', '未'],
-                '辰': ['巳', '丙', '午', '丁', '未'],
                 '寅': ['亥', '壬', '子', '癸', '丑'],  # 寅午戌月煞北
                 '午': ['亥', '壬', '子', '癸', '丑'],
                 '戌': ['亥', '壬', '子', '癸', '丑'],
-                '巳': ['寅', '甲', '卯', '乙', '辰'],  # 巳酉丑月煞东
-                '酉': ['寅', '甲', '卯', '乙', '辰'],
-                '丑': ['寅', '甲', '卯', '乙', '辰'],
-                '亥': ['申', '庚', '酉', '辛', '戌'],  # 亥卯未月煞西
+                '亥': ['申', '庚', '酉', '辛', '戌'],  # 亥卯未月煞西（申酉戌三方，戌为正煞）
                 '卯': ['申', '庚', '酉', '辛', '戌'],
-                '未': ['申', '庚', '酉', '辛', '戌']
+                '未': ['申', '庚', '酉', '辛', '戌'],
+                '申': ['巳', '丙', '午', '丁', '未'],  # 申子辰月煞南（巳午未三方）
+                '子': ['巳', '丙', '午', '丁', '未'],
+                '辰': ['巳', '丙', '午', '丁', '未'],
+                '巳': ['寅', '甲', '卯', '乙', '辰'],  # 巳酉丑月煞东（寅卯辰三方）
+                '酉': ['寅', '甲', '卯', '乙', '辰'],
+                '丑': ['寅', '甲', '卯', '乙', '辰']
             }
             
             sansha_fang = month_sansha_map.get(month_zhi, [])
@@ -1116,53 +1177,92 @@ class Scorer:
                     if zuoshan in ['壬', '子', '癸']:
                         zuoshan_zhis = ['子']
                     elif zuoshan in ['丑', '艮', '寅']:
-                        # 兼向时只取主地支
-                        zuoshan_zhis = ['丑'] if has_jianxiang else ['丑', '寅']
+                        # 艮宫：丑艮寅三山
+                        # 艮山兼丑：坐山在丑方
+                        # 艮山兼寅：坐山在寅方
+                        if zuoshan == '艮':
+                            if has_jianxiang and '兼丑' in shan_xiang:
+                                zuoshan_zhis = ['丑']
+                            elif has_jianxiang and '兼寅' in shan_xiang:
+                                zuoshan_zhis = ['寅']
+                            else:
+                                zuoshan_zhis = ['丑', '寅']
+                        else:
+                            zuoshan_zhis = [zuoshan] if has_jianxiang else [zuoshan]
                     elif zuoshan in ['甲', '卯', '乙']:
                         zuoshan_zhis = ['卯']
                     elif zuoshan in ['辰', '巽', '巳']:
-                        # 兼向时只取主地支
-                        zuoshan_zhis = ['辰'] if has_jianxiang else ['辰', '巳']
+                        # 巽宫：辰巽巳三山
+                        # 巽山兼辰：坐山在辰方
+                        # 巽山兼巳：坐山在巳方
+                        if zuoshan == '巽':
+                            if has_jianxiang and '兼辰' in shan_xiang:
+                                zuoshan_zhis = ['辰']
+                            elif has_jianxiang and '兼巳' in shan_xiang:
+                                zuoshan_zhis = ['巳']
+                            else:
+                                zuoshan_zhis = ['辰', '巳']
+                        else:
+                            zuoshan_zhis = [zuoshan] if has_jianxiang else [zuoshan]
                     elif zuoshan in ['丙', '午', '丁']:
                         zuoshan_zhis = ['午']
                     elif zuoshan in ['未', '坤', '申']:
-                        # 兼向时只取主地支
-                        zuoshan_zhis = ['未'] if has_jianxiang else ['未', '申']
+                        # 坤宫：未坤申三山
+                        # 未山：未土
+                        # 坤山：坤为西南，兼未时坐山在未方，兼申时坐山在申方
+                        # 申山：申金
+                        if zuoshan == '坤':
+                            # 坤山兼未：坐山在未方（不包含申）
+                            # 坤山兼申：坐山在申方
+                            if has_jianxiang and '兼未' in shan_xiang:
+                                zuoshan_zhis = ['未']
+                            elif has_jianxiang and '兼申' in shan_xiang:
+                                zuoshan_zhis = ['申']
+                            else:
+                                # 纯坤山，考虑整个坤宫
+                                zuoshan_zhis = ['未', '申']
+                        else:
+                            zuoshan_zhis = [zuoshan] if has_jianxiang else [zuoshan]
                     elif zuoshan in ['庚', '酉', '辛']:
                         zuoshan_zhis = ['酉']
                     elif zuoshan in ['戌', '乾', '亥']:
-                        # 兼向时只取主地支（乾卦以戌为主）
-                        zuoshan_zhis = ['戌'] if has_jianxiang else ['戌', '亥']
+                        # 乾宫：戌乾亥三山
+                        # 乾山兼戌：坐山在戌方
+                        # 乾山兼亥：坐山在亥方
+                        if zuoshan == '乾':
+                            if has_jianxiang and '兼戌' in shan_xiang:
+                                zuoshan_zhis = ['戌']
+                            elif has_jianxiang and '兼亥' in shan_xiang:
+                                zuoshan_zhis = ['亥']
+                            else:
+                                zuoshan_zhis = ['戌', '亥']
+                        else:
+                            zuoshan_zhis = [zuoshan] if has_jianxiang else [zuoshan]
                     
-                    # 检查坐山是否在月三煞方（仅检查主坐山，兼向不单独判定三煞）
-                    # 使用更精确的方位判定：只有当坐山地支是煞方的核心地支时才判定为犯煞
-                    # 核心地支：煞南(午)、煞北(子)、煞东(卯)、煞西(酉)
-                    core_sansha = {
-                        '巳': '午', '丙': '午', '午': '午', '丁': '午', '未': '午',  # 南
-                        '亥': '子', '壬': '子', '子': '子', '癸': '子', '丑': '子',  # 北
-                        '寅': '卯', '甲': '卯', '卯': '卯', '乙': '卯', '辰': '卯',  # 东
-                        '申': '酉', '庚': '酉', '酉': '酉', '辛': '酉', '戌': '酉',  # 西
-                    }
-                    
+                    # 检查坐山是否在月三煞方
+                    # 所有煞方都算犯煞，不仅是核心煞方
                     zuoshan_fan_sansha = False
                     for zuoshan_zhi in zuoshan_zhis:
-                        # 获取煞方的核心方向
-                        sansha_core = core_sansha.get(zuoshan_zhi, '')
-                        if sansha_core:
-                            # 检查煞方中是否包含该核心方向
-                            if sansha_core in sansha_fang:
-                                zuoshan_fan_sansha = True
-                                break
+                        # 检查坐山地支是否在煞方列表中
+                        if zuoshan_zhi in sansha_fang:
+                            zuoshan_fan_sansha = True
+                            break
+                        # 也检查坐山映射后的地支
+                        zuoshan_to_zhi = {
+                            '未': '未',  # 未/坤山 -> 未
+                            '申': '申',  # 申山 -> 申
+                        }
+                        mapped_zhi = zuoshan_to_zhi.get(zuoshan_zhi, zuoshan_zhi)
+                        if mapped_zhi != zuoshan_zhi and mapped_zhi in sansha_fang:
+                            zuoshan_fan_sansha = True
+                            break
                     
                     if zuoshan_fan_sansha:
                         analysis['reasons'].append(f"所选山向{shan_xiang}坐山犯月三煞，不利修造")
                         analysis['details']['山向犯月煞'] = True
-                        # 月三煞不再一票否决，改为扣分
-                        analysis['score'] -= 25
-                        # 只有主坐山犯煞才设为凶，兼向犯煞不额外扣分
-                        if zuoshan_zhi == zuoshan_zhis[0]:  # 主坐山
-                            analysis['level'] = '凶'
-                        # 不设置suitable为False
+                        # 月三煞（犯坐山）扣 20 分，判为"凶"
+                        analysis['score'] -= 20
+                        # 不设置 suitable 为 False，因为只是月份不利，不是完全不可用
             
             # 月破方位
             chong_zhi = {
@@ -1185,6 +1285,85 @@ class Scorer:
                     if shan_xiang_dir == yuepo_fang:
                         analysis['reasons'].append(f"所选山向{shan_xiang}犯月破，不利修造")
                         analysis['details']['山向犯月破'] = True
+                    
+                    # 检查月支与坐山地支是否相冲（真正的月破）
+                    zuoshan = shan_xiang[0]
+                    has_jianxiang = '兼' in shan_xiang
+                    
+                    # 确定坐山地支（与月三煞判定逻辑一致）
+                    zuoshan_zhis = []
+                    if zuoshan in ['壬', '子', '癸']:
+                        zuoshan_zhis = ['子']
+                    elif zuoshan in ['丑', '艮', '寅']:
+                        if zuoshan == '艮':
+                            if has_jianxiang and '兼丑' in shan_xiang:
+                                zuoshan_zhis = ['丑']
+                            elif has_jianxiang and '兼寅' in shan_xiang:
+                                zuoshan_zhis = ['寅']
+                            else:
+                                zuoshan_zhis = ['丑', '寅']
+                        else:
+                            zuoshan_zhis = [zuoshan]
+                    elif zuoshan in ['甲', '卯', '乙']:
+                        zuoshan_zhis = ['卯']
+                    elif zuoshan in ['辰', '巽', '巳']:
+                        if zuoshan == '巽':
+                            if has_jianxiang and '兼辰' in shan_xiang:
+                                zuoshan_zhis = ['辰']
+                            elif has_jianxiang and '兼巳' in shan_xiang:
+                                zuoshan_zhis = ['巳']
+                            else:
+                                zuoshan_zhis = ['辰', '巳']
+                        else:
+                            zuoshan_zhis = [zuoshan]
+                    elif zuoshan in ['丙', '午', '丁']:
+                        zuoshan_zhis = ['午']
+                    elif zuoshan in ['未', '坤', '申']:
+                        if zuoshan == '坤':
+                            if has_jianxiang and '兼未' in shan_xiang:
+                                zuoshan_zhis = ['未']
+                            elif has_jianxiang and '兼申' in shan_xiang:
+                                zuoshan_zhis = ['申']
+                            else:
+                                zuoshan_zhis = ['未', '申']
+                        else:
+                            zuoshan_zhis = [zuoshan]
+                    elif zuoshan in ['庚', '酉', '辛']:
+                        zuoshan_zhis = ['酉']
+                    elif zuoshan in ['戌', '乾', '亥']:
+                        if zuoshan == '乾':
+                            if has_jianxiang and '兼戌' in shan_xiang:
+                                zuoshan_zhis = ['戌']
+                            elif has_jianxiang and '兼亥' in shan_xiang:
+                                zuoshan_zhis = ['亥']
+                            else:
+                                zuoshan_zhis = ['戌', '亥']
+                        else:
+                            zuoshan_zhis = [zuoshan]
+                    
+                    # 检查月支是否与坐山地支相冲（使用六冲字典）
+                    chong_zhi_check = {
+                        '子': '午', '午': '子',
+                        '丑': '未', '未': '丑',
+                        '寅': '申', '申': '寅',
+                        '卯': '酉', '酉': '卯',
+                        '辰': '戌', '戌': '辰',
+                        '巳': '亥', '亥': '巳'
+                    }
+                    
+                    zuoshan_fan_yuepo = False
+                    for zuoshan_zhi in zuoshan_zhis:
+                        # 检查月支的冲支是否是坐山地支
+                        if chong_zhi_check.get(month_zhi) == zuoshan_zhi:
+                            zuoshan_fan_yuepo = True
+                            break
+                    
+                    if zuoshan_fan_yuepo:
+                        analysis['reasons'].append(f"月支{month_zhi}冲坐山{zuoshan}，犯月破，大凶")
+                        analysis['details']['山向犯月破（地支冲）'] = True
+                        # 月破（犯坐山）扣 25 分，判为凶
+                        analysis['score'] -= 25
+                        # 不设置 suitable 为 False，因为只是月份不利，不是完全不可用
             
             # 暗建煞分析（修正规则）
             # 标准暗建煞规则：寅午戌月暗建在亥，亥卯未月暗建在申，申子辰月暗建在巳，巳酉丑月暗建在寅
@@ -1232,95 +1411,17 @@ class Scorer:
                     else:
                         analysis['reasons'].append(f"{wuxing_result['wuxing']}山非优选月份")
             
-            # 增强山向分析：考虑所有山向的相关方位（仅在未犯月三煞时执行）
-            if shan_xiang and event_type in ['修造', '动土', '装修', '入宅'] and analysis['suitable']:
-                # 定义各山向的相关方位（二十四山）
-                mountain_related = {
-                    '乾': ['乾', '戌', '亥'],
-                    '坤': ['坤', '未', '申'],
-                    '艮': ['艮', '寅', '丑'],
-                    '巽': ['巽', '辰', '巳'],
-                    '甲': ['甲', '寅', '卯'],
-                    '乙': ['乙', '卯', '辰'],
-                    '丙': ['丙', '巳', '午'],
-                    '丁': ['丁', '午', '未'],
-                    '庚': ['庚', '申', '酉'],
-                    '辛': ['辛', '酉', '戌'],
-                    '壬': ['壬', '亥', '子'],
-                    '癸': ['癸', '子', '丑'],
-                    '子': ['子', '壬', '癸'],
-                    '丑': ['丑', '癸', '艮'],
-                    '寅': ['寅', '艮', '甲'],
-                    '卯': ['卯', '甲', '乙'],
-                    '辰': ['辰', '乙', '巽'],
-                    '巳': ['巳', '巽', '丙'],
-                    '午': ['午', '丙', '丁'],
-                    '未': ['未', '丁', '坤'],
-                    '申': ['申', '坤', '庚'],
-                    '酉': ['酉', '庚', '辛'],
-                    '戌': ['戌', '辛', '乾'],
-                    '亥': ['亥', '乾', '壬']
-                }
-                
-                # 标记是否已经因为月三煞扣分
-                sansha_deducted = analysis['details'].get('山向犯月煞', False)
-                
-                # 处理特殊情况：山向组合（如坤山艮向）
-                if '山' in shan_xiang:
-                    parts = shan_xiang.split('山')
-                    if len(parts) > 1:
-                        # 提取坐山和朝向
-                        zuo_shan = parts[0]
-                        if '兼' in parts[1]:
-                            xiang = parts[1].split('兼')[0]
-                        elif '向' in parts[1]:
-                            xiang = parts[1].split('向')[0]
-                        else:
-                            xiang = parts[1].strip()
-                        
-                        # 检查坐山
-                        if zuo_shan in mountain_related:
-                            related_dirs = mountain_related[zuo_shan]
-                            # 检查月三煞是否影响坐山相关方位（仅在未扣过分时执行）
-                            if sansha_fang and not sansha_deducted:
-                                for fang in related_dirs:
-                                    if fang in sansha_fang:
-                                        analysis['reasons'].append(f"月三煞在{fang}方，冲克{zuo_shan}山")
-                                        analysis['details'][f'{zuo_shan}山犯月三煞'] = True
-                                        analysis['score'] -= 25
-                                        analysis['level'] = '凶'
-                                        sansha_deducted = True
-                                        break
-                            # 检查月破是否影响坐山相关方位
-                            if yuepo_fang:
-                                if yuepo_fang in related_dirs:
-                                    analysis['reasons'].append(f"月破在{yuepo_fang}方，冲克{zuo_shan}山")
-                                    analysis['details'][f'{zuo_shan}山犯月破'] = True
-                                    analysis['score'] -= 20
-                                    analysis['level'] = '凶'
-                                    # 不设置suitable为False
-                        
-                        # 检查朝向（仅在未扣过分时执行）
-                        if xiang and xiang in mountain_related and not sansha_deducted:
-                            related_dirs = mountain_related[xiang]
-                            # 检查月三煞是否影响朝向相关方位
-                            if sansha_fang:
-                                for fang in related_dirs:
-                                    if fang in sansha_fang:
-                                        analysis['reasons'].append(f"月三煞在{fang}方，冲克{xiang}向")
-                                        analysis['details'][f'{xiang}向犯月三煞'] = True
-                                        analysis['score'] -= 25
-                                        analysis['level'] = '凶'
-                                        # 不设置suitable为False
-                                        break
-                            # 检查月破是否影响朝向相关方位
-                            if yuepo_fang:
-                                if yuepo_fang in related_dirs:
-                                    analysis['reasons'].append(f"月破在{yuepo_fang}方，冲克{xiang}向")
-                                    analysis['details'][f'{xiang}向犯月破'] = True
-                                    analysis['score'] -= 20
-                                    analysis['level'] = '凶'
-                                    # 不设置suitable为False
+            # 增加月份基本加分：没有月三煞和月破的月份得"吉"
+            # 只有真正没有大煞的月份才给加分
+            # 如果有月破或月三煞（犯坐山），不应该加分
+            has_po = '山向犯月破' in analysis['details'] or '山向犯月破（地支冲）' in analysis['details']
+            has_sansha = analysis['details'].get('山向犯月煞', False)
+            has_yinfu = analysis['details'].get('月干犯阴府', False)
+            
+            if not has_po and not has_sansha and not has_yinfu:
+                # 无月破、无月三煞（犯坐山）、无阴府：加分20分，得"吉"
+                analysis['score'] += 20
+                analysis['reasons'].append('月份平和，无大煞')
 
         # 对于嫁娶，检查大利月、小利月
         if event_type == "嫁娶" and owners:
@@ -1363,16 +1464,12 @@ class Scorer:
                 analysis['reasons'].append("未提供事主信息，无法判断")
         
         # 确定等级
-        if analysis['score'] >= 120:
-            analysis['level'] = '大吉'
-        elif analysis['score'] >= 100:
+        # 基础分为70分，月破扣25分后为45分（凶），无煞加20分后为90分（吉）
+        if analysis['score'] >= 90:
             analysis['level'] = '吉'
-        elif analysis['score'] >= 80:
+        elif analysis['score'] >= 70:
             analysis['level'] = '平'
-        elif analysis['score'] >= 60:
-            analysis['level'] = '小凶'
-        elif analysis['score'] >= 40:
-            # 分数在40-60之间仍视为小凶，可用但不推荐
+        elif analysis['score'] >= 50:
             analysis['level'] = '小凶'
         else:
             analysis['level'] = '大凶'
@@ -1598,15 +1695,28 @@ class Scorer:
         if not shan_xiang:
             return {'has_shan_xiang': False}
         
+        year_zhi = sizhu.get('year_zhi', '')
         month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         analysis = {
             'has_shan_xiang': True,
             'shan_xiang': shan_xiang,
+            'year_sansha': [],
             'month_sansha': [],
+            'day_sansha': [],
             'yuepo': '',
             'matches': []
         }
+        
+        # 年三煞
+        year_sansha_map = {
+            '申': ['巳', '丙', '午'], '子': ['巳', '丙', '午'], '辰': ['巳', '丙', '午'],
+            '寅': ['亥', '壬', '子'], '午': ['亥', '壬', '子'], '戌': ['亥', '壬', '子'],
+            '巳': ['寅', '甲', '卯'], '酉': ['寅', '甲', '卯'], '丑': ['寅', '甲', '卯'],
+            '亥': ['申', '庚', '酉'], '卯': ['申', '庚', '酉'], '未': ['申', '庚', '酉']
+        }
+        analysis['year_sansha'] = year_sansha_map.get(year_zhi, [])
         
         # 月三煞
         month_sansha_map = {
@@ -1616,6 +1726,15 @@ class Scorer:
             '亥': ['申', '庚', '酉'], '卯': ['申', '庚', '酉'], '未': ['申', '庚', '酉']
         }
         analysis['month_sansha'] = month_sansha_map.get(month_zhi, [])
+        
+        # 日三煞（基于日支判断煞方）
+        day_sansha_map = {
+            '申': ['巳', '丙', '午'], '子': ['巳', '丙', '午'], '辰': ['巳', '丙', '午'],
+            '寅': ['亥', '壬', '子'], '午': ['亥', '壬', '子'], '戌': ['亥', '壬', '子'],
+            '巳': ['寅', '甲', '卯'], '酉': ['寅', '甲', '卯'], '丑': ['寅', '甲', '卯'],
+            '亥': ['申', '庚', '酉'], '卯': ['申', '庚', '酉'], '未': ['申', '庚', '酉']
+        }
+        analysis['day_sansha'] = day_sansha_map.get(day_zhi, [])
         
         # 月破
         chong_zhi = {'子': '午', '午': '子', '丑': '未', '未': '丑',
@@ -1662,6 +1781,106 @@ class Scorer:
                         pass
         
         return suggestions if suggestions else ['此日课整体吉利，可放心使用']
+    
+    def _get_sansha_info(self, sizhu, shan_xiang=None):
+        """
+        获取年月日三煞信息
+        
+        Args:
+            sizhu: 四柱信息
+            shan_xiang: 山向信息
+            
+        Returns:
+            dict: 三煞信息
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        # 三煞方位映射表（完整版）
+        sansha_map = {
+            '申': ['巳', '丙', '午', '丁', '未'], '子': ['巳', '丙', '午', '丁', '未'], '辰': ['巳', '丙', '午', '丁', '未'],
+            '寅': ['亥', '壬', '子', '癸', '丑'], '午': ['亥', '壬', '子', '癸', '丑'], '戌': ['亥', '壬', '子', '癸', '丑'],
+            '巳': ['寅', '甲', '卯', '乙', '辰'], '酉': ['寅', '甲', '卯', '乙', '辰'], '丑': ['寅', '甲', '卯', '乙', '辰'],
+            '亥': ['申', '庚', '酉', '辛', '戌'], '卯': ['申', '庚', '酉', '辛', '戌'], '未': ['申', '庚', '酉', '辛', '戌']
+        }
+        
+        info = {
+            'year_sansha': sansha_map.get(year_zhi, []),
+            'month_sansha': sansha_map.get(month_zhi, []),
+            'day_sansha': sansha_map.get(day_zhi, []),
+            'year_sansha_fan': False,
+            'month_sansha_fan': False,
+            'day_sansha_fan': False
+        }
+        
+        # 检查山向是否犯三煞
+        if shan_xiang:
+            zuoshan = shan_xiang[0] if shan_xiang else ''
+            has_jianxiang = '兼' in shan_xiang
+            
+            # 二十四山到地支的基础映射
+            shan_to_zhi = {
+                '壬': '子', '子': '子', '癸': '子',
+                '丑': '丑', '艮': '丑', '寅': '寅',
+                '甲': '卯', '卯': '卯', '乙': '卯',
+                '辰': '辰', '巽': '辰', '巳': '巳',
+                '丙': '午', '午': '午', '丁': '午',
+                '未': '未', '坤': '未', '申': '申',
+                '庚': '酉', '酉': '酉', '辛': '酉',
+                '戌': '戌', '乾': '戌', '亥': '亥'
+            }
+            
+            # 检查坐山是否在煞方
+            # 对于天干山（艮、巽、坤、乾），需要根据兼向来确定坐山
+            zuoshan_zhis = []
+            if zuoshan in ['艮']:
+                # 艮宫：丑艮寅三山
+                if has_jianxiang and '兼丑' in shan_xiang:
+                    zuoshan_zhis = ['丑']
+                elif has_jianxiang and '兼寅' in shan_xiang:
+                    zuoshan_zhis = ['寅']
+                else:
+                    zuoshan_zhis = ['丑', '寅']
+            elif zuoshan in ['巽']:
+                # 巽宫：辰巽巳三山
+                if has_jianxiang and '兼辰' in shan_xiang:
+                    zuoshan_zhis = ['辰']
+                elif has_jianxiang and '兼巳' in shan_xiang:
+                    zuoshan_zhis = ['巳']
+                else:
+                    zuoshan_zhis = ['辰', '巳']
+            elif zuoshan in ['坤']:
+                # 坤宫：未坤申三山
+                if has_jianxiang and '兼未' in shan_xiang:
+                    zuoshan_zhis = ['未']
+                elif has_jianxiang and '兼申' in shan_xiang:
+                    zuoshan_zhis = ['申']
+                else:
+                    zuoshan_zhis = ['未', '申']
+            elif zuoshan in ['乾']:
+                # 乾宫：戌乾亥三山
+                if has_jianxiang and '兼戌' in shan_xiang:
+                    zuoshan_zhis = ['戌']
+                elif has_jianxiang and '兼亥' in shan_xiang:
+                    zuoshan_zhis = ['亥']
+                else:
+                    zuoshan_zhis = ['戌', '亥']
+            else:
+                # 其他山直接使用基础映射
+                zuoshan_zhis = [shan_to_zhi.get(zuoshan, '')]
+            
+            # 检查年月日三煞
+            for zhi in zuoshan_zhis:
+                if zhi:
+                    if zhi in info['year_sansha']:
+                        info['year_sansha_fan'] = True
+                    if zhi in info['month_sansha']:
+                        info['month_sansha_fan'] = True
+                    if zhi in info['day_sansha']:
+                        info['day_sansha_fan'] = True
+        
+        return info
     
     def _get_lunar_month_from_zhi(self, month_zhi):
         """
@@ -2031,6 +2250,7 @@ class Scorer:
         正五行择日法强调"相主"，必须检查日课日支与事主日支的关系：
         - 日课日支冲事主日支：大凶，-20分
         - 日课日支刑事主日支：凶，-10分
+        - 日课日支破事主日支：凶，-15分（相破为破坏、捣乱之象）
         - 日课日支害事主日支：小凶，-5分
         - 日课日支合事主日支：吉，+8分
         - 日课日支与事主日支相同（伏吟）：小吉，+3分
@@ -2056,6 +2276,15 @@ class Scorer:
         for idx, owner in enumerate(owners):
             owner_name = owner.get('name', f'事主{idx+1}')
             
+            # 获取事主生肖（年支）
+            owner_year_zhi = ''
+            if 'sizhu' in owner:
+                sizhu_parts = owner['sizhu'].split()
+                if len(sizhu_parts) >= 1:
+                    owner_year_zhi = sizhu_parts[0][1]  # 年柱地支
+            elif '生肖' in owner:
+                owner_year_zhi = owner['生肖']
+            
             # 获取事主日柱（从sizhu字段或birth_date计算）
             owner_day_zhi = ''
             if 'sizhu' in owner:
@@ -2072,39 +2301,78 @@ class Scorer:
                         owner.get('birth_minute', 0)
                     )
                     owner_day_zhi = owner_sizhu.get('day_zhi', '')
+                    if not owner_year_zhi:
+                        owner_year_zhi = owner_sizhu.get('year_zhi', '')
                 except Exception as e:
-                    logger.error(f"计算事主{owner_name}日柱失败: {str(e)}")
+                    logger.error(f"计算事主{owner_name}四柱失败: {str(e)}")
                     pass
             
-            if not owner_day_zhi:
-                continue
-            
             try:
-                # 六冲检查
-                if check_liuchong(day_zhi, owner_day_zhi):
-                    score = -20
-                    total_score += score
-                    details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相冲，{score}分")
-                # 三刑检查
-                elif check_xing(day_zhi, owner_day_zhi):
-                    score = -10
-                    total_score += score
-                    details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相刑，{score}分")
-                # 六害检查
-                elif check_liuhai(day_zhi, owner_day_zhi):
-                    score = -5
-                    total_score += score
-                    details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相害，{score}分")
-                # 六合检查
-                elif check_liuhe(day_zhi, owner_day_zhi):
-                    score = 8
-                    total_score += score
-                    details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相合，+{score}分")
-                # 伏吟（相同地支）
-                elif day_zhi == owner_day_zhi:
-                    score = 3
-                    total_score += score
-                    details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
+                # 首先检查日课日支与事主生肖（年支）的关系（生肖相主，更重要）
+                if owner_year_zhi:
+                    # 六冲检查
+                    if check_liuchong(day_zhi, owner_year_zhi):
+                        score = -30  # 生肖相冲更严重
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}相冲（年支冲），{score}分")
+                    # 三刑检查（包括自刑）
+                    elif check_xing(day_zhi, owner_year_zhi):
+                        score = -25  # 生肖相刑严重
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}相刑（年支刑），{score}分")
+                    # 相破检查
+                    elif check_po(day_zhi, owner_year_zhi):
+                        score = -20  # 生肖相破严重，破坏之象
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}相破（年支破），{score}分")
+                    # 六害检查
+                    elif check_liuhai(day_zhi, owner_year_zhi):
+                        score = -10
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}相害（年支害），{score}分")
+                    # 六合检查
+                    elif check_liuhe(day_zhi, owner_year_zhi):
+                        score = 15
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}相合（年支合），+{score}分")
+                    # 三合检查
+                    elif check_sanhe([day_zhi, owner_year_zhi]):
+                        score = 10
+                        total_score += score
+                        details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}三合（年支合），+{score}分")
+                
+                # 然后检查日课日支与事主日柱地支的关系
+                if owner_day_zhi and owner_day_zhi != owner_year_zhi:  # 避免重复检查
+                    # 六冲检查
+                    if check_liuchong(day_zhi, owner_day_zhi):
+                        score = -20
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相冲，{score}分")
+                    # 三刑检查
+                    elif check_xing(day_zhi, owner_day_zhi):
+                        score = -15
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相刑，{score}分")
+                    # 相破检查
+                    elif check_po(day_zhi, owner_day_zhi):
+                        score = -15  # 相破为破坏之象
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相破，{score}分")
+                    # 六害检查
+                    elif check_liuhai(day_zhi, owner_day_zhi):
+                        score = -5
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相害，{score}分")
+                    # 六合检查
+                    elif check_liuhe(day_zhi, owner_day_zhi):
+                        score = 8
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相合，+{score}分")
+                    # 伏吟（相同地支）
+                    elif day_zhi == owner_day_zhi:
+                        score = 3
+                        total_score += score
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
             except Exception as e:
                 logger.error(f"相主检查失败({owner_name}日支{owner_day_zhi}与日课日支{day_zhi}): {str(e)}")
                 pass
@@ -2130,7 +2398,7 @@ class Scorer:
             dict: 五行审核结果
         """
         # 检查神煞
-        construction_events = ['修造', '动土', '装修']
+        construction_events = ['修造', '装修']
         
         # 对于修造类事项，尝试使用扩展的检查器
         if event_type in construction_events:
@@ -2258,7 +2526,27 @@ class Scorer:
                     }
                 
                 # 分析月份吉凶（传递山向和动土方位用于分析）
-                month_analysis = self.analyze_month(year, month, event_type, owners, shan_xiang, direction)
+                # 使用四柱中的月支来确定农历月份，而不是公历月份
+                from datetime import date, timedelta
+                try:
+                    from .节气计算器 import get_solar_term_date
+                    lichun = get_solar_term_date(year, '立春')
+                except:
+                    lichun = date(year, 2, 4)
+                
+                month_zhi = sizhu.get('month_zhi', '')
+                if month_zhi:
+                    # 从月支获取农历月份
+                    DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                    lunar_month = DIZHI.index(month_zhi) + 1
+                    
+                    # 计算该农历月对应的代表性日期
+                    month_date = lichun + timedelta(days=(lunar_month - 1) * 30 + 15)
+                else:
+                    # 如果没有月支信息，使用公历月份作为近似
+                    month_date = lichun + timedelta(days=(month - 1) * 30 + 15)
+                
+                month_analysis = self.analyze_month(month_date, event_type, owners, shan_xiang, direction)
                 if not month_analysis['suitable']:
                     return {
                         'he_ge': False,
@@ -2582,8 +2870,9 @@ class Scorer:
             details['吉神'].append(f"天德贵人: 月支{month_zhi}见日干{day_gan}")
         
         # 月德贵人查法（以月支查日干）
+        # 三合局规则：寅午戌月丙，申子辰月壬，亥卯未月甲，巳酉丑月庚
         yuede_map = {
-            '寅': '丙', '卯': '丙', '辰': '壬', '巳': '庚',
+            '寅': '丙', '卯': '甲', '辰': '壬', '巳': '庚',
             '午': '丙', '未': '甲', '申': '壬', '酉': '庚',
             '戌': '丙', '亥': '甲', '子': '壬', '丑': '庚'
         }
@@ -3213,21 +3502,28 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
             'score': 0
         }
     
-    # 提取山向方向
     shan_dir = shan_xiang[0]
     
-    # 简单的太阳太阴到山到向计算（基于月份）
-    # 实际应用中需要更复杂的天文计算
+    shan_zhi_map = {
+        '壬': '亥', '子': '子', '癸': '丑',
+        '丑': '丑', '艮': '丑', '寅': '寅',
+        '甲': '寅', '卯': '卯', '乙': '辰',
+        '辰': '辰', '巽': '辰', '巳': '巳',
+        '丙': '巳', '午': '午', '丁': '未',
+        '未': '未', '坤': '未', '申': '申',
+        '庚': '申', '酉': '酉', '辛': '戌',
+        '戌': '戌', '乾': '亥', '亥': '亥'
+    }
+    shan_zhi = shan_zhi_map.get(shan_dir, shan_dir)
+    
     month = sizhu['month']
     
-    # 太阳到山到向映射（简化版）
     sun_mapping = {
         1: '子', 2: '丑', 3: '寅', 4: '卯',
         5: '辰', 6: '巳', 7: '午', 8: '未',
         9: '申', 10: '酉', 11: '戌', 12: '亥'
     }
     
-    # 太阴到山到向映射（简化版）
     moon_mapping = {
         1: '亥', 2: '子', 3: '丑', 4: '寅',
         5: '卯', 6: '辰', 7: '巳', 8: '午',
@@ -3237,14 +3533,15 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
     sun_position = sun_mapping.get(month, '未知')
     moon_position = moon_mapping.get(month, '未知')
     
-    # 计算得分
     score = 0
-    if sun_position == shan_dir:
-        score += 10  # 太阳到山
-    if moon_position == shan_dir:
-        score += 10  # 太阴到山
+    sun_to_mountain = sun_position == shan_zhi
+    moon_to_mountain = moon_position == shan_zhi
     
-    # 计算向（与山对冲）
+    if sun_to_mountain:
+        score += 10
+    if moon_to_mountain:
+        score += 10
+    
     chong_zhi = {
         '子': '午', '午': '子',
         '丑': '未', '未': '丑',
@@ -3253,20 +3550,25 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
         '辰': '戌', '戌': '辰',
         '巳': '亥', '亥': '巳'
     }
-    xiang_dir = chong_zhi.get(shan_dir, '')
+    xiang_dir = chong_zhi.get(shan_zhi, '')
+    sun_to_direction = False
+    moon_to_direction = False
+    
     if xiang_dir:
-        if sun_position == xiang_dir:
-            score += 8  # 太阳到向
-        if moon_position == xiang_dir:
-            score += 8  # 太阴到向
+        sun_to_direction = sun_position == xiang_dir
+        moon_to_direction = moon_position == xiang_dir
+        if sun_to_direction:
+            score += 8
+        if moon_to_direction:
+            score += 8
     
     return {
         'sun_position': sun_position,
         'moon_position': moon_position,
-        'sun_to_mountain': sun_position == shan_dir,
-        'sun_to_direction': sun_position == xiang_dir if xiang_dir else False,
-        'moon_to_mountain': moon_position == shan_dir,
-        'moon_to_direction': moon_position == xiang_dir if xiang_dir else False,
+        'sun_to_mountain': sun_to_mountain,
+        'sun_to_direction': sun_to_direction,
+        'moon_to_mountain': moon_to_mountain,
+        'moon_to_direction': moon_to_direction,
         'score': score,
         'details': f"太阳在{sun_position}方，太阴在{moon_position}方"
     }

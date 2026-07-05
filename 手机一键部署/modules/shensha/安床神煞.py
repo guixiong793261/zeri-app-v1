@@ -58,27 +58,56 @@ class BedShenShaChecker(ShenShaChecker):
     def _check_day_shensha(self, sizhu):
         """检查日神煞"""
         super()._check_day_shensha(sizhu)
-
+        
+        # ===== 吉神 =====
+        
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 15, '天德吉星，安床大吉')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 12, '月德吉星，安床大吉')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，安床吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，安床吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，安床上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，安床吉')
+        
+        # ===== 安床专用 =====
+        
         # 安床吉日
         if self._is_anchuang_jiri(sizhu):
             self._add_shensha('安床吉日', 15, '适合安床的吉日')
-
+        
         # 床公床母日
         if self._is_chuanggong_chuangmu(sizhu):
             self._add_shensha('床公床母日', 12, '床公床母日利于安床')
-
+        
         # 胎神日
         if self._is_taishen(sizhu):
             self._add_shensha('胎神日', -15, '胎神日不宜安床')
-
+        
         # 冲床日
         if self._is_chongchuang(sizhu):
             self._add_shensha('冲床日', -12, '冲床日不宜安床')
-
+        
         # 杨公忌日
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌日', -20, '杨公忌日不宜安床')
-
+        
         # 红砂日
         if self._is_hongsha(sizhu):
             self._add_shensha('红砂日', -15, '红砂日不宜安床')

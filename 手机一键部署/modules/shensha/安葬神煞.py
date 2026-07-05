@@ -121,6 +121,31 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # ===== 吉日 =====
         
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 15, '天德吉星，安葬大吉')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 12, '月德吉星，安葬大吉')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 10, '天德合，安葬吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 8, '月德合，安葬吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，安葬上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，安葬吉')
+        
         # 鸣吠日（正确的天干地支组合）
         if self._is_mingfei(sizhu):
             self._add_shensha('鸣吠日', 15, '鸣吠日利于安葬，大吉')

@@ -139,13 +139,13 @@ class ConstructionShenShaChecker(ShenShaChecker):
 
         # ===== 吉神 =====
         
-        # 天德
+        # 天德日
         if self._is_tiande(sizhu):
-            self._add_shensha('天德', 15, '动土修造大吉，百事皆宜')
+            self._add_shensha('天德日', 15, '天德日，动土修造大吉')
         
-        # 月德
+        # 月德日
         if self._is_yuede(sizhu):
-            self._add_shensha('月德', 15, '动土修造大吉，百事皆宜')
+            self._add_shensha('月德日', 15, '月德日，动土修造大吉')
         
         # 天德合
         if self._is_tiandehe(sizhu):
@@ -154,6 +154,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 月德合
         if self._is_yuedehe(sizhu):
             self._add_shensha('月德合', 15, '动土修造吉利')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，修造上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 10, '将星到座，修造吉')
         
         # 驿马
         if self._is_yima(sizhu):
@@ -410,6 +419,25 @@ class ConstructionShenShaChecker(ShenShaChecker):
         戌月：午日，亥月：未日，子月：申日，丑月：酉日
         """
         return self._is_tufu(sizhu)  # 地囊与土符相同
+    
+    def _is_tuwang_yongshi(self, sizhu):
+        """是否土王用事
+        土王用事：四季最后十八天，土王当权，忌动土
+        春辰月、夏未月、秋戌月、冬丑月的最后18天
+        """
+        month_zhi = sizhu['month_zhi']
+        day = sizhu.get('day', 0)
+        
+        tuwang_months = {'辰': 3, '未': 6, '戌': 9, '丑': 12}
+        tuwang_month = tuwang_months.get(month_zhi)
+        
+        if tuwang_month:
+            year = sizhu.get('year', 2026)
+            import calendar
+            _, last_day = calendar.monthrange(year, tuwang_month)
+            if day > last_day - 18:
+                return True
+        return False
     
     def _is_tianzei(self, sizhu):
         """是否天贼
@@ -767,3 +795,49 @@ class ConstructionShenShaChecker(ShenShaChecker):
         如需使用不将日，请在调用前通过日期对象调用婚嫁模块的 is_bujiang_day。
         """
         return False
+    
+    def _is_tianshe(self, sizhu):
+        """天赦日：春戊寅，夏甲午，秋戊申，冬甲子"""
+        day_gan = sizhu['day_gan']
+        day_zhi = sizhu['day_zhi']
+        month_zhi = sizhu['month_zhi']
+        if month_zhi in ['寅', '卯', '辰'] and day_gan == '戊' and day_zhi == '寅':
+            return True
+        if month_zhi in ['巳', '午', '未'] and day_gan == '甲' and day_zhi == '午':
+            return True
+        if month_zhi in ['申', '酉', '戌'] and day_gan == '戊' and day_zhi == '申':
+            return True
+        if month_zhi in ['亥', '子', '丑'] and day_gan == '甲' and day_zhi == '子':
+            return True
+        return False
+    
+    def _is_qinglong(self, sizhu):
+        """青龙日：十二建星中的青龙"""
+        day_zhi = sizhu['day_zhi']
+        jianxing_order = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
+        qinglong_map = {
+            '子': '寅', '丑': '卯', '寅': '辰', '卯': '巳',
+            '辰': '午', '巳': '未', '午': '申', '未': '酉',
+            '申': '戌', '酉': '亥', '戌': '子', '亥': '丑'
+        }
+        return day_zhi == qinglong_map.get(sizhu.get('month_zhi', ''))
+    
+    def _is_mingtang(self, sizhu):
+        """明堂日：十二建星中的明堂"""
+        day_zhi = sizhu['day_zhi']
+        mingtang_map = {
+            '子': '巳', '丑': '午', '寅': '未', '卯': '申',
+            '辰': '酉', '巳': '戌', '午': '亥', '未': '子',
+            '申': '丑', '酉': '寅', '戌': '卯', '亥': '辰'
+        }
+        return day_zhi == mingtang_map.get(sizhu.get('month_zhi', ''))
+    
+    def _is_jinkui(self, sizhu):
+        """金匮日：十二建星中的金匮"""
+        day_zhi = sizhu['day_zhi']
+        jinkui_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == jinkui_map.get(sizhu.get('month_zhi', ''))

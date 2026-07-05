@@ -42,7 +42,7 @@ def get_rule_checker(event_type):
         EventRuleChecker: 规则检查器实例
     """
     marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '动土', '入宅', '装修']
+    construction_events = ['修造', '动土', '拆舍', '入宅', '装修']
     stove_events = ['作灶']
     opening_events = ['开业']
     travel_events = ['出行']

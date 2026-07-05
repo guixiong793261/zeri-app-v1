@@ -1,0 +1,132 @@
+{
+  "入宅__罗平进宅": {
+    "event_type": "入宅",
+    "plan_name": "罗平进宅",
+    "owners": [
+      {
+        "name": "贵雄",
+        "role": "事主1",
+        "year": "1972",
+        "month": "1",
+        "day": "8",
+        "hour": "8",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "辛亥 辛丑 戊戌 丙辰",
+        "xishen": "水、木",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "美园",
+        "role": "事主2",
+        "year": "1971",
+        "month": "5",
+        "day": "11",
+        "hour": "8",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "辛亥 癸巳 丙申 壬辰",
+        "xishen": "土、火",
+        "yongshen": "土",
+        "fuzi": ""
+      },
+      {
+        "name": "文辉",
+        "role": "事主3",
+        "year": "1994",
+        "month": "10",
+        "day": "28",
+        "hour": "3",
+        "minute": "30",
+        "gender": "男",
+        "sizhu": "甲戌 甲戌 丁亥 壬寅",
+        "xishen": "木、火",
+        "yongshen": "火",
+        "fuzi": ""
+      },
+      {
+        "name": "文旺",
+        "role": "事主4",
+        "year": "1998",
+        "month": "10",
+        "day": "13",
+        "hour": "23",
+        "minute": "30",
+        "gender": "男",
+        "sizhu": "戊寅 壬戌 癸巳 癸亥",
+        "xishen": "金、水",
+        "yongshen": "金",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__妹妹结婚": {
+    "event_type": "嫁娶",
+    "plan_name": "妹妹结婚",
+    "owners": [
+      {
+        "name": "新娘",
+        "role": "新娘",
+        "year": "1997",
+        "month": "5",
+        "day": "11",
+        "hour": "22",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "丁丑 乙巳 癸丑 癸亥",
+        "xishen": "金、水",
+        "yongshen": "金",
+        "fuzi": ""
+      },
+      {
+        "name": "新郎",
+        "role": "新郎",
+        "year": "2001",
+        "month": "1",
+        "day": "1",
+        "hour": "12",
+        "minute": "0",
+        "gender": "男",
+        "sizhu": "未计算",
+        "xishen": "",
+        "yongshen": "",
+        "fuzi": ""
+      }
+    ]
+  },
+  "嫁娶__文旺结婚": {
+    "event_type": "嫁娶",
+    "plan_name": "文旺结婚",
+    "owners": [
+      {
+        "name": "新娘",
+        "role": "新娘",
+        "year": "1999",
+        "month": "4",
+        "day": "5",
+        "hour": "6",
+        "minute": "0",
+        "gender": "女",
+        "sizhu": "己卯 丁卯 丁亥 癸卯",
+        "xishen": "水、金",
+        "yongshen": "水",
+        "fuzi": ""
+      },
+      {
+        "name": "新郎",
+        "role": "新郎",
+        "year": "1998",
+        "month": "10",
+        "day": "13",
+        "hour": "23",
+        "minute": "30",
+        "gender": "男",
+        "sizhu": "戊寅 壬戌 癸巳 癸亥",
+        "xishen": "金、水",
+        "yongshen": "金",
+        "fuzi": ""
+      }
+    ]
+  }
+}

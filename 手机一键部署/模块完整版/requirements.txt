@@ -1,0 +1,9 @@
+# 专业级正五行择日软件 - 依赖列表
+# 请使用 pip install -r requirements.txt 安装依赖
+
+# 农历转换库（核心依赖，用于四柱八字计算）
+sxtwl>=1.0.0
+
+# 注意：tkinter 通常随 Python 一起安装
+# 如果手机上的 Python 没有 tkinter，请安装支持 tkinter 的版本
+# 如 Pydroid 3、QPython3 等

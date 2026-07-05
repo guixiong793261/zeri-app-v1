@@ -1193,18 +1193,24 @@ class ZeriApp:
             owners = []
             for owner_info in self.owners_info:
                 try:
-                    # 添加防御性检查
-                    year_str = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
-                    month_str = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
-                    day_str = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                    # 使用更安全的方式获取字段值
+                    year_var = owner_info.get('year')
+                    month_var = owner_info.get('month')
+                    day_var = owner_info.get('day')
+                    year_str = year_var.get() if year_var and hasattr(year_var, 'get') else ''
+                    month_str = month_var.get() if month_var and hasattr(month_var, 'get') else ''
+                    day_str = day_var.get() if day_var and hasattr(day_var, 'get') else ''
                     
                     # 检查是否填写了日期（年、月、日都必须填写）
                     if not (year_str and month_str and day_str):
                         continue
                     
-                    hour_str = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
-                    minute_str = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
-                    gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                    hour_var = owner_info.get('hour')
+                    minute_var = owner_info.get('minute')
+                    gender_var = owner_info.get('gender')
+                    hour_str = hour_var.get() if hour_var and hasattr(hour_var, 'get') else '12'
+                    minute_str = minute_var.get() if minute_var and hasattr(minute_var, 'get') else '0'
+                    gender = gender_var.get() if gender_var and hasattr(gender_var, 'get') else ''
                     
                     year = int(year_str)
                     month = int(month_str)
@@ -1212,8 +1218,9 @@ class ZeriApp:
                     hour = int(hour_str)
                     minute = int(minute_str)
                     
-                    name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
-                    role = owner_info.get('role', '')
+                    name_var = owner_info.get('name')
+                    name = name_var.get() if name_var and hasattr(name_var, 'get') else str(name_var) if name_var else ''
+                    role = str(owner_info.get('role', ''))
                     
                     # 检查日期有效性
                     try:
@@ -1360,18 +1367,24 @@ class ZeriApp:
             owners = []
             for owner_info in self.owners_info:
                 try:
-                    # 添加防御性检查
-                    year_str = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
-                    month_str = owner_info['month'].get() if hasattr(owner_info['month'], 'get') else owner_info.get('month', '')
-                    day_str = owner_info['day'].get() if hasattr(owner_info['day'], 'get') else owner_info.get('day', '')
+                    # 使用更安全的方式获取字段值
+                    year_var = owner_info.get('year')
+                    month_var = owner_info.get('month')
+                    day_var = owner_info.get('day')
+                    year_str = year_var.get() if year_var and hasattr(year_var, 'get') else ''
+                    month_str = month_var.get() if month_var and hasattr(month_var, 'get') else ''
+                    day_str = day_var.get() if day_var and hasattr(day_var, 'get') else ''
                     
                     # 检查是否填写了日期（年、月、日都必须填写）
                     if not (year_str and month_str and day_str):
                         continue
                     
-                    hour_str = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '12')
-                    minute_str = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '0')
-                    gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+                    hour_var = owner_info.get('hour')
+                    minute_var = owner_info.get('minute')
+                    gender_var = owner_info.get('gender')
+                    hour_str = hour_var.get() if hour_var and hasattr(hour_var, 'get') else '12'
+                    minute_str = minute_var.get() if minute_var and hasattr(minute_var, 'get') else '0'
+                    gender = gender_var.get() if gender_var and hasattr(gender_var, 'get') else ''
                     
                     year = int(year_str)
                     month = int(month_str)
@@ -1379,8 +1392,9 @@ class ZeriApp:
                     hour = int(hour_str)
                     minute = int(minute_str)
                     
-                    name = owner_info['name'].get() if hasattr(owner_info['name'], 'get') else owner_info.get('name', '')
-                    role = owner_info.get('role', '')
+                    name_var = owner_info.get('name')
+                    name = name_var.get() if name_var and hasattr(name_var, 'get') else str(name_var) if name_var else ''
+                    role = str(owner_info.get('role', ''))
                     
                     # 检查日期有效性
                     try:
@@ -1416,13 +1430,53 @@ class ZeriApp:
             shan_xiang = getattr(self, 'shan_xiang', None)
             shan_xiang_value = shan_xiang.get() if shan_xiang else None
             
+            # 获取兼向信息并合并到山向中
+            jian_xiang = getattr(self, 'jian_xiang', None)
+            jian_xiang_value = jian_xiang.get() if jian_xiang else None
+            # 只有当山向不包含兼向信息时才添加
+            if shan_xiang_value and jian_xiang_value and jian_xiang_value != "正中" and '兼' not in shan_xiang_value:
+                shan_xiang_value = shan_xiang_value + jian_xiang_value
+            
             # 创建评分器
             scorer = Scorer()
             
-            # 分析月份
+            # 分析农历年的月份（从立春开始）
             results = []
-            for month in range(1, 13):
-                analysis = scorer.analyze_month(year, month, event_type, owners, shan_xiang_value)
+            
+            # 获取该年立春日期（使用sxtwl库）
+            try:
+                import sxtwl
+                jq_list = sxtwl.getJieQiByYear(year)
+                lichun_jd = jq_list[0].jd  # 立春是第一个节气（索引0）
+                lichun_dd = sxtwl.JD2DD(lichun_jd)
+                lichun = date(int(lichun_dd.Y), int(lichun_dd.M), int(lichun_dd.D))
+                
+                # 如果当前日期在立春之前，使用上一年的立春
+                if date.today() < lichun:
+                    jq_list_prev = sxtwl.getJieQiByYear(year - 1)
+                    lichun_jd = jq_list_prev[0].jd
+                    lichun_dd = sxtwl.JD2DD(lichun_jd)
+                    lichun = date(int(lichun_dd.Y), int(lichun_dd.M), int(lichun_dd.D))
+            except (ImportError, AttributeError):
+                # 如果sxtwl库不可用，使用节气计算器
+                try:
+                    from modules.节气计算器 import get_solar_term_date
+                    lichun = get_solar_term_date(year, '立春')
+                except:
+                    lichun = date(year, 2, 4)
+            
+            # 分析从立春开始的 12 个月份
+            from datetime import timedelta
+            for i in range(12):
+                # 计算每个农历月份的代表性日期（每月中旬）
+                # 每个农历月大约 29.5 天，取每月 15 日左右
+                days_offset = i * 30 + 15
+                month_date = lichun + timedelta(days=days_offset)
+                
+                # 直接传入完整的日期对象，而不是 year 和 month
+                analysis = scorer.analyze_month(month_date, event_type, owners, shan_xiang_value)
+                # 更新月份显示为农历月份（正月到十二月）
+                analysis['month'] = i + 1
                 results.append(analysis)
             
             # 显示月份分析结果
@@ -1491,13 +1545,41 @@ class ZeriApp:
             selected = tree.selection()
             if selected:
                 item = tree.item(selected[0])
-                month = int(item['values'][0])
-                # 更新主界面的日期范围
-                # 设置日期为该月的1日到最后一日
-                import calendar
-                last_day = calendar.monthrange(year, month)[1]
-                self.start_date.set(f"{year}-{month:02d}-01")
-                self.end_date.set(f"{year}-{month:02d}-{last_day:02d}")
+                lunar_month = int(item['values'][0])  # 农历月份（1-12）
+                
+                # 计算该农历月份对应的公历日期范围
+                # 使用节气来精确划分农历月份
+                SOLAR_TERMS = ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑', 
+                              '立秋', '白露', '寒露', '立冬', '大雪', '小寒']
+                
+                try:
+                    from modules.节气计算器 import get_solar_term_date
+                    
+                    # 获取该农历月开始的节气
+                    if lunar_month == 1:
+                        term_start = get_solar_term_date(year, '立春')
+                    else:
+                        term_start = get_solar_term_date(year, SOLAR_TERMS[lunar_month - 1])
+                    
+                    # 获取下一个月的节气作为结束
+                    if lunar_month == 12:
+                        term_end = get_solar_term_date(year + 1, '立春')
+                    else:
+                        term_end = get_solar_term_date(year, SOLAR_TERMS[lunar_month])
+                    
+                    # 设置日期范围（包含开始节气，不包含结束节气）
+                    self.start_date.set(term_start.strftime("%Y-%m-%d"))
+                    self.end_date.set((term_end - timedelta(days=1)).strftime("%Y-%m-%d"))
+                    
+                except Exception as e:
+                    # 如果节气计算失败，使用原来的近似方法
+                    print(f"节气计算失败: {e}")
+                    lichun = date(year, 2, 4)
+                    month_start = lichun + timedelta(days=(lunar_month - 1) * 30)
+                    month_end = lichun + timedelta(days=lunar_month * 30 - 1)
+                    self.start_date.set(month_start.strftime("%Y-%m-%d"))
+                    self.end_date.set(month_end.strftime("%Y-%m-%d"))
+                
                 window.destroy()
                 # 自动开始择日计算
                 self.start_calculation()
@@ -1809,56 +1891,77 @@ class ZeriApp:
                               fu_xing_var=None, zi_xing_var=None):
         """计算事主四柱"""
         try:
-            year = int(year_var.get())
-            month = int(month_var.get())
-            day = int(day_var.get())
-            hour = int(hour_var.get())
-            minute = int(minute_var.get())
-            gender = gender_var.get()
+            # 获取输入值，添加防御性检查
+            year_str = year_var.get() if hasattr(year_var, 'get') else str(year_var)
+            month_str = month_var.get() if hasattr(month_var, 'get') else str(month_var)
+            day_str = day_var.get() if hasattr(day_var, 'get') else str(day_var)
+            hour_str = hour_var.get() if hasattr(hour_var, 'get') else str(hour_var)
+            minute_str = minute_var.get() if hasattr(minute_var, 'get') else str(minute_var)
+            gender = gender_var.get() if hasattr(gender_var, 'get') else str(gender_var)
             
-            # 判断是公历还是农历 - 添加防御性检查
+            # 验证输入值
+            if not year_str or not month_str or not day_str:
+                messagebox.showwarning("提示", "请填写完整的年月日信息")
+                return
+            
+            year = int(year_str)
+            month = int(month_str)
+            day = int(day_str)
+            hour = int(hour_str) if hour_str else 12
+            minute = int(minute_str) if minute_str else 0
+            
+            # 判断是公历还是农历
             calendar_type = 'solar'
             if calendar_type_var and hasattr(calendar_type_var, 'get'):
                 calendar_type = calendar_type_var.get()
             
             if calendar_type == 'lunar':
                 # 农历转公历
-                from modules.高精度农历转换 import get_lunar_converter
-                converter = get_lunar_converter()
-                solar_date = converter.lunar_to_solar(year, month, day, hour, minute, 0)
-                year = solar_date['year']
-                month = solar_date['month']
-                day = solar_date['day']
+                try:
+                    from modules.高精度农历转换 import get_lunar_converter
+                    converter = get_lunar_converter()
+                    solar_date = converter.lunar_to_solar(year, month, day, hour, minute, 0)
+                    year = solar_date['year']
+                    month = solar_date['month']
+                    day = solar_date['day']
+                except Exception as e:
+                    messagebox.showwarning("提示", f"农历转换失败: {e}")
+                    return
             
             # 使用八字排盘模块获取详细信息
             panpan = BaZiPanPan(year, month, day, hour, minute, gender)
             panpan_result = panpan.get_panpan_result()
             
+            # 检查四柱是否有效
+            sizhu_info = panpan_result.get('四柱', {})
+            if not sizhu_info or not sizhu_info.get('年柱'):
+                messagebox.showwarning("提示", "四柱计算失败，请检查输入日期是否正确")
+                return
+            
             # 显示四柱
-            sizhu_text = f"{panpan_result['四柱']['年柱']} {panpan_result['四柱']['月柱']} {panpan_result['四柱']['日柱']} {panpan_result['四柱']['时柱']}"
+            sizhu_text = f"{sizhu_info['年柱']} {sizhu_info['月柱']} {sizhu_info['日柱']} {sizhu_info['时柱']}"
             sizhu_var.set(sizhu_text)
             
-            # 显示生肖 - 添加防御性检查
+            # 显示生肖
             if zodiac_var and hasattr(zodiac_var, 'set'):
-                year_zhi = panpan_result['四柱']['年柱'][1] if len(panpan_result['四柱']['年柱']) > 1 else ''
+                year_zhi = sizhu_info['年柱'][1] if len(sizhu_info['年柱']) > 1 else ''
                 zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
                              '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
                 zodiac = zodiac_map.get(year_zhi, '')
                 zodiac_var.set(zodiac)
             
-            # 显示喜用神 - 使用统一的喜用神计算器
-            # 从sizhu中获取天干地支信息
-            sizhu_info = {
-                'year_gan': panpan_result['四柱']['年柱'][0] if panpan_result['四柱']['年柱'] else '',
-                'year_zhi': panpan_result['四柱']['年柱'][1] if len(panpan_result['四柱']['年柱']) > 1 else '',
-                'month_gan': panpan_result['四柱']['月柱'][0] if panpan_result['四柱']['月柱'] else '',
-                'month_zhi': panpan_result['四柱']['月柱'][1] if len(panpan_result['四柱']['月柱']) > 1 else '',
-                'day_gan': panpan_result['四柱']['日柱'][0] if panpan_result['四柱']['日柱'] else '',
-                'day_zhi': panpan_result['四柱']['日柱'][1] if len(panpan_result['四柱']['日柱']) > 1 else '',
-                'hour_gan': panpan_result['四柱']['时柱'][0] if panpan_result['四柱']['时柱'] else '',
-                'hour_zhi': panpan_result['四柱']['时柱'][1] if len(panpan_result['四柱']['时柱']) > 1 else ''
+            # 显示喜用神
+            sizhu_info_detailed = {
+                'year_gan': sizhu_info['年柱'][0] if sizhu_info['年柱'] else '',
+                'year_zhi': sizhu_info['年柱'][1] if len(sizhu_info['年柱']) > 1 else '',
+                'month_gan': sizhu_info['月柱'][0] if sizhu_info['月柱'] else '',
+                'month_zhi': sizhu_info['月柱'][1] if len(sizhu_info['月柱']) > 1 else '',
+                'day_gan': sizhu_info['日柱'][0] if sizhu_info['日柱'] else '',
+                'day_zhi': sizhu_info['日柱'][1] if len(sizhu_info['日柱']) > 1 else '',
+                'hour_gan': sizhu_info['时柱'][0] if sizhu_info['时柱'] else '',
+                'hour_zhi': sizhu_info['时柱'][1] if len(sizhu_info['时柱']) > 1 else ''
             }
-            xishen, yongshen = calculate_xishen_yongshen(sizhu_info)
+            xishen, yongshen = calculate_xishen_yongshen(sizhu_info_detailed)
             xishen_var.set(xishen)
             yongshen_var.set(yongshen)
             
@@ -1866,10 +1969,11 @@ class ZeriApp:
             if self.event_var.get() == "嫁娶" and owner == "新娘":
                 # 从八字分析中获取夫星子星信息
                 from modules.工具函数 import get_fuzi, get_yintai, get_yangqi
-                year_gan = sizhu_info['year_gan']
-                year_zhi = sizhu_info['year_zhi']
-                month_gan = sizhu_info.get('month_gan', '甲')
-                month_zhi = sizhu_info.get('month_zhi', '子')
+                # 修正：从sizhu_info_detailed中获取天干地支，而不是sizhu_info
+                year_gan = sizhu_info_detailed['year_gan']
+                year_zhi = sizhu_info_detailed['year_zhi']
+                month_gan = sizhu_info_detailed.get('month_gan', '甲')
+                month_zhi = sizhu_info_detailed.get('month_zhi', '子')
                 if year_gan and year_zhi:
                     # 计算夫星子星（基于年干年支）
                     fuzi_info = get_fuzi(year_gan, year_zhi)
@@ -2092,9 +2196,16 @@ class ZeriApp:
             event_type = self.event_var.get()
             house_type = getattr(self, 'house_type', None)
             shan_xiang = getattr(self, 'shan_xiang', None)
+            jian_xiang = getattr(self, 'jian_xiang', None)
             zao_xiang = getattr(self, 'zao_xiang', None)
             zao_wei = getattr(self, 'zao_wei', None)
             chuang_wei = getattr(self, 'chuang_wei', None)
+            
+            # 合并兼向信息到山向中
+            shan_xiang_value = shan_xiang.get() if shan_xiang else None
+            jian_xiang_value = jian_xiang.get() if jian_xiang else None
+            if shan_xiang_value and jian_xiang_value:
+                shan_xiang_value = shan_xiang_value + jian_xiang_value
             
             # 计算每日吉凶
             current = start
@@ -2121,7 +2232,7 @@ class ZeriApp:
                     event_type, 
                     owners_data,
                     house_type.get() if house_type else None,
-                    shan_xiang.get() if shan_xiang else None,
+                    shan_xiang_value,
                     zao_xiang.get() if zao_xiang else None,
                     zao_wei.get() if zao_wei else None,
                     chuang_wei.get() if chuang_wei else None
@@ -2310,13 +2421,16 @@ class ZeriApp:
                         huangdao_score = score_details.get('黄道得分', 0)
                         xishen_score = score_details.get('喜用神得分', 0)
                         
-                        # 检查是否有扣分（任何得分项为负都视为有扣分）
-                        if has_deduction or yueling_score < 0 or huangdao_score < 0 or xishen_score < 0:
-                            # 有扣分项，跳过
+                        # 放宽筛选条件：只过滤掉严重扣分的日课
+                        # 严重扣分：黄道得分 < -20 或 喜用神得分 < -20
+                        if huangdao_score < -20 or xishen_score < -20:
+                            # 有严重扣分项，跳过
                             current += timedelta(days=1)
                             continue
                     
                     self.results.append(result)
+                else:
+                    pass
                 
                 current += timedelta(days=1)
             
