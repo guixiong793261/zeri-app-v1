@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业级正五行择日报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-card.excellent { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stat-card.good { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-card.bad { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .results-section {
+            margin-bottom: 25px;
+        }
+        
+        .results-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .result-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .result-card:hover {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .result-card.excellent {
+            border-color: #11998e;
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+        }
+        
+        .result-card.good {
+            border-color: #f093fb;
+        }
+        
+        .result-card.bad {
+            border-color: #eb3349;
+            opacity: 0.7;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .result-rank {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .result-card.excellent .result-rank { background: #11998e; }
+        
+        .result-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .result-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .result-card.excellent .result-score { color: #11998e; }
+        
+        .result-level {
+            font-size: 14px;
+            color: #666;
+            margin-left: 10px;
+        }
+        
+        .result-sizhu {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .result-sizhu-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .result-sizhu-value {
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 16px;
+            color: #333;
+            letter-spacing: 2px;
+        }
+        
+        .result-sizhu-detail {
+            color: #666;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        
+        .result-yi-ji {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .yi-box, .ji-box {
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .yi-box {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .ji-box {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .yi-box h4, .ji-box h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .yi-list, .ji-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .yi-list li, .ji-list li {
+            font-size: 13px;
+            padding: 3px 0;
+        }
+        
+        .shensha-section {
+            margin-top: 15px;
+        }
+        
+        .shensha-title {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .shensha-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        
+        .shensha-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .shensha-item.good {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .shensha-item.bad {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .shensha-name {
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .shensha-score {
+            font-weight: bold;
+        }
+        
+        .sansha-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .advice-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+        
+        .advice-section h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .advice-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .advice-list li {
+            padding: 10px 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .advice-list li::before {
+            content: "💡 ";
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>专业级正五行择日报告</h1>
+            <p class="subtitle">生成时间：2026-08-18 21:40:07</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-section">
+                <h3>📋 择日信息</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">事项类型：</span>
+                        <span class="info-value">入宅</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">日期范围：</span>
+                        <span class="info-value">2026-10-01 至 2026-10-31</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">山向：</span>
+                        <span class="info-value">坤山艮向兼未</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>👥 事主信息</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-value">张先生（男，鼠）</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">总天数</div>
+                </div>
+                <div class="stat-card excellent">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">上吉天数 (≥130分)</div>
+                </div>
+                <div class="stat-card good">
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">吉天数 (≥100分)</div>
+                </div>
+                <div class="stat-card bad">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">凶天数 (<60分)</div>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h3>📅 详细择日结果（按评分排序）</h3>
+                <div class="result-card good">
+                    <div class="result-header">
+                        <span class="result-rank">第1名</span>
+                        <span class="result-date">2026-10-23</span>
+                        <span>
+                            <span class="result-score">125</span>
+                            <span style="font-size:14px;color:#666;">分</span>
+                            <span class="result-level">★★★ 吉</span>
+                        </span>
+                    </div>
+                    <div class="result-sizhu">
+                        <div class="result-sizhu-label">四柱排盘</div>
+                        <div class="result-sizhu-value">丙午 戊戌 庚午 辛巳</div>
+                        <div class="result-sizhu-detail">年：丙(午) | 月：戊(戌) | 日：庚(午) | 时：辛(巳)</div>
+                    </div>
+                    <div class="result-yi-ji">                        <div class="yi-box">
+                            <h4>✅ 宜</h4>
+                            <ul class="yi-list">
+                                <li>建除成日宜入宅、不将日宜修造、坤山得午生扶</li>
+                            </ul>
+                        </div>
+                        <div class="ji-box">
+                            <h4>❌ 忌</h4>
+                            <ul class="ji-list">
+                                <li>与张先生年命相冲，忌入宅</li>
+                            </ul>
+                        </div>
+                    </div>                    <div class="shensha-section">
+                        <div class="shensha-title">神煞详情</div>
+                        <div class="shensha-grid">
+                            <div class="shensha-item good"><span class="shensha-name">三奇月</span><span class="shensha-score">+15分</span></div>
+                            <div class="shensha-item good"><span class="shensha-name">将星</span><span class="shensha-score">+10分</span></div>
+                            <div class="shensha-item good"><span class="shensha-name">三合</span><span class="shensha-score">+10分</span></div>
+                            <div class="shensha-item bad"><span class="shensha-name">冲宅主</span><span class="shensha-score">-25分</span></div>
+                        </div>
+                    </div>
+                </div>            </div>
+            
+            <div class="advice-section">
+                <h3>💡 使用建议</h3>
+                <ul class="advice-list">
+                    <li>优先选择评分130分以上的上吉日</li>
+                    <li>避开犯三煞、冲事主生肖的日期</li>
+                    <li>结合个人八字五行喜忌选择最合适的日子</li>
+                    <li>查看宜忌详情，确认与事项匹配</li>
+                    <li>重要事项建议咨询专业择日师</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>专业级正五行择日系统 v1.0 | 报告仅供参考</p>
+            <p>生成时间：2026-08-18 21:40:07</p>
+        </div>
+    </div>
+</body>
+</html>

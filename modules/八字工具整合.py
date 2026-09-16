@@ -138,9 +138,9 @@ LIUHAI_PAIRS = [('子', '未'), ('丑', '午'), ('寅', '巳'), ('卯', '辰'), 
 
 # 相破关系（十二地支相破）
 # 相破是一种破坏、捣乱、相互损耗的关系
-# 传统相破：子破酉、丑破辰、寅破亥、卯破午、巳破申、未破戌
-# 补充：戌亥相破（部分命理流派认为）
-PO_PAIRS = [('子', '酉'), ('丑', '辰'), ('寅', '亥'), ('卯', '午'), ('巳', '申'), ('未', '戌'), ('戌', '亥')]
+# 传统六破（正统一六相破，仅此六对）：子破酉、丑破辰、寅破亥、卯破午、巳破申、未破戌
+# 2026-09 修正：删去旧版擅自补充的"戌亥相破"（非六破正统，戌亥间无刑冲合害破关系）
+PO_PAIRS = [('子', '酉'), ('丑', '辰'), ('寅', '亥'), ('卯', '午'), ('巳', '申'), ('未', '戌')]
 
 # 三刑关系
 SANXING_GROUPS = [
@@ -239,6 +239,23 @@ def get_nayin(pillar):
     return NAYIN_MAP.get(pillar, '未知')
 
 
+def get_canggan(zhi, weighted=True):
+    """
+    获取地支藏干
+    
+    Args:
+        zhi: 地支
+        weighted: True 返回(天干, 权重)元组列表（加权版）；False 仅返回天干列表（简化版）
+        
+    Returns:
+        List[Tuple[str, float]] 或 List[str]：藏干列表
+    """
+    cg = ZHIGAN_WEIGHTED.get(zhi, [])
+    if weighted:
+        return list(cg)
+    return [g for g, _w in cg]
+
+
 def check_liuhe(zhi1, zhi2):
     """
     检查六合
@@ -302,7 +319,7 @@ def check_po(zhi1, zhi2):
 
 def check_sanxing(zhi1, zhi2):
     """
-    检查三刑
+    检查三刑（两支相刑）
     
     Args:
         zhi1: 地支1
@@ -313,8 +330,50 @@ def check_sanxing(zhi1, zhi2):
     """
     for group, name in SANXING_GROUPS:
         if zhi1 in group and zhi2 in group:
+            # 自刑仅同支相见（辰辰/午午/酉酉/亥亥）；辰午、午酉等交叉支不属自刑
+            if name == '自刑' and zhi1 != zhi2:
+                continue
             return name
     return None
+
+
+# 两支相刑对照表（与 modules/八字分析工具.py check_xing 同一口径）：
+#   无礼之刑=子卯；无恩之刑=寅巳申三支两两（寅刑巳、巳刑申、申刑寅）；恃势之刑=丑戌未三支两两；
+#   自刑=辰午酉亥同支相见（辰辰/午午/酉酉/亥亥）
+XING_PAIRS = {
+    ('子', '卯'): '无礼之刑',
+    ('寅', '巳'): '无恩之刑', ('巳', '申'): '无恩之刑', ('申', '寅'): '无恩之刑',
+    ('丑', '戌'): '恃势之刑', ('戌', '未'): '恃势之刑', ('未', '丑'): '恃势之刑',
+    ('辰', '辰'): '自刑', ('午', '午'): '自刑', ('酉', '酉'): '自刑', ('亥', '亥'): '自刑',
+}
+
+
+def check_xing(zhi1, zhi2):
+    """
+    检查两支相刑
+    
+    Args:
+        zhi1: 地支1
+        zhi2: 地支2
+        
+    Returns:
+        str: 刑名（无礼之刑/恃势之刑/无恩之刑/自刑），不刑返回None
+    """
+    return XING_PAIRS.get((zhi1, zhi2)) or XING_PAIRS.get((zhi2, zhi1))
+
+
+def check_hai(zhi1, zhi2):
+    """
+    检查六害（穿心害），与 check_liuhai 同口径，供评分器相主检查调用
+    
+    Args:
+        zhi1: 地支1
+        zhi2: 地支2
+        
+    Returns:
+        bool: 是否相害
+    """
+    return check_liuhai(zhi1, zhi2)
 
 
 def check_sanhe(zhis):

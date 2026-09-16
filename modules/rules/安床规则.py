@@ -146,11 +146,15 @@ class BedRuleChecker(EventRuleChecker):
         if chuangwei:
             self._check_chuangwei(sizhu, chuangwei, yi_list, ji_list)
         
-        # 7. 综合判断
-        if yi_list and not ji_list:
-            yi_list.append('安床')
-        elif ji_list:
+        # 7. 综合判断（通书式：在宜/忌栏落事项名"安床"）
+        # 床位朝向项是"仅供参考"的辅助提示（某一朝向不利 ≠ 整日忌安床），
+        # 不得据此把"安床"整体列入忌栏，否则与"建除X日宜安床"自相矛盾（2026-09 修正）。
+        _ADVISORY_MARK = '（朝向克制日支）'
+        hard_ji = [x for x in ji_list if not x.endswith(_ADVISORY_MARK)]
+        if hard_ji:
             ji_list.append('安床')
+        elif yi_list and not ji_list:
+            yi_list.append('安床')
         
         return yi_list, ji_list
     

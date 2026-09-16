@@ -160,11 +160,31 @@ class StoveRuleChecker(EventRuleChecker):
         return None
     
     def _get_owner_year_zhi(self, owner):
-        """获取事主年支"""
-        # 尝试从不同字段获取
-        if '生肖' in owner:
-            return owner['生肖']
+        """获取事主年支（地支）"""
+        # 生肖转地支
+        zodiac_to_zhi = {
+            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
+        }
         
+        _ZHIS = set('子丑寅卯辰巳午未申酉戌亥')
+
+        def _zhi_or_zodiac(v):
+            # 2026-09：主程序打包的"生肖"键存的是地支字（如"寅"），旧调用可能传生肖动物名
+            if not v:
+                return ''
+            v = str(v).strip()
+            if v in _ZHIS:
+                return v
+            return zodiac_to_zhi.get(v, '')
+
+        # 尝试从不同字段获取（年支键直取；生肖键兼容地支字/动物名）
+        if owner.get('年支') in _ZHIS:
+            return owner['年支']
+        if '生肖' in owner:
+            return _zhi_or_zodiac(owner['生肖'])
+
         if 'sizhu' in owner:
             sizhu_parts = owner['sizhu'].split()
             if len(sizhu_parts) >= 1:
@@ -208,7 +228,7 @@ class StoveRuleChecker(EventRuleChecker):
         # 获取日期对象
         date_obj = self._sizhu_to_date(sizhu)
         if not date_obj:
-            return yi_list, ji_list
+            return yi_list, ji_list, False, ""
         
         zaoxiang = kwargs.get('zaoxiang')
         zaowei = kwargs.get('zaowei')
@@ -229,7 +249,7 @@ class StoveRuleChecker(EventRuleChecker):
         self._check_stove_special(sizhu, yi_list, ji_list)
         
         # 6. 忌与事主生肖相冲
-        self._check_shengxiao_chong(sizhu, owners, ji_list)
+        self._check_shengxiao_chong(sizhu, owners, ji_list, **kwargs)
         
         # 7. 灶向/灶位五行辅助规则（仅供参考，不影响判定）
         if zaoxiang:
@@ -237,7 +257,47 @@ class StoveRuleChecker(EventRuleChecker):
         if zaowei:
             self._check_zaowei(sizhu, zaowei, yi_list, ji_list)
         
-        return yi_list, ji_list
+        # 8. 检查一票否决项
+        veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
+        if veto:
+            return yi_list, ji_list, True, veto_reason
+        
+        return yi_list, ji_list, False, ""
+    
+    def _check_veto_items(self, sizhu, owners, ji_list):
+        """
+        检查一票否决项
+        
+        作灶一票否决项：
+        1. 月破日 - 诸事不宜
+        2. 岁破日 - 诸事不宜
+        3. 四离四绝日 - 大事不宜
+        4. 天火日 - 作灶大忌
+        5. 地火日 - 作灶大忌
+        6. 灶君忌日 - 作灶大忌
+        7. 土府日 - 忌动土作灶
+        8. 冲主妇日柱 - 大忌
+        """
+        veto_reasons = []
+        
+        # 从ji_list中检查是否有否决级别的禁忌
+        veto_keywords = [
+            '月破日', '岁破日', '四离四绝日',
+            '天火日', '地火日', '灶君忌日',
+            '土府日', '冲主妇', '冲宅主',
+            '灶君朝天', '逐月作灶忌日',  # _zjct0914
+        ]
+        
+        for ji in ji_list:
+            for keyword in veto_keywords:
+                if keyword in ji:
+                    veto_reasons.append(ji)
+                    break
+        
+        if veto_reasons:
+            return True, "、".join(veto_reasons)
+        
+        return False, ""
     
     def _check_jianchu(self, date_obj, yi_list, ji_list):
         """检查建除十二神"""
@@ -311,6 +371,20 @@ class StoveRuleChecker(EventRuleChecker):
         # 丙丁日火旺宜作灶
         if day_gan in ['丙', '丁']:
             yi_list.append('丙丁日火旺宜作灶')
+
+        # 灶君朝天（太微宫五日）+ 逐月作灶忌日（2026-09-14 订正，_zjct0914）
+        if (day_gan + day_zhi) in ('戊戌', '己亥', '庚子', '辛丑', '壬寅'):
+            ji_list.append('灶君朝天日忌作灶')
+        _zao_yueji_map = {
+            '寅': ('寅', '申', '酉'), '卯': ('寅', '申', '酉'),
+            '辰': ('辰', '戌', '亥'), '巳': ('辰', '戌', '亥'),
+            '午': ('午', '子', '丑'), '未': ('午', '子', '丑'),
+            '申': ('申', '寅', '卯'), '酉': ('申', '寅', '卯'),
+            '戌': ('戌', '辰', '巳'), '亥': ('戌', '辰', '巳'),
+            '子': ('子', '午', '未'), '丑': ('子', '午', '未'),
+        }
+        if day_zhi in _zao_yueji_map.get(month_zhi, ()):
+            ji_list.append('逐月作灶忌日忌作灶')
         
         # 灶君忌日
         zaojun_jiri = {
@@ -348,15 +422,29 @@ class StoveRuleChecker(EventRuleChecker):
         if month_zhi and tufu_days.get(month_zhi) == day_zhi:
             ji_list.append('土府日忌动土作灶')
     
-    def _check_shengxiao_chong(self, sizhu, owners, ji_list):
-        """检查与事主生肖相冲"""
+    def _check_shengxiao_chong(self, sizhu, owners, ji_list, **kwargs):
+        """
+        检查四柱与事主生肖相冲（作灶专用）
+        传统择日：日为主；主妇为主（灶为妇人主事）
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
         if not owners:
             return
         
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
         if not day_zhi:
             return
         
+        # 地支六冲表（键值都是地支）
         chong_map = {
             '子': '午', '午': '子',
             '丑': '未', '未': '丑',
@@ -366,25 +454,77 @@ class StoveRuleChecker(EventRuleChecker):
             '巳': '亥', '亥': '巳'
         }
         
+        # 检查每个事主
         for owner in owners:
-            name = owner.get('name', '宅主')
-            shengxiao = owner.get('生肖', '')
+            name = owner.get('name', '事主')
+            role = owner.get('role', '').lower()
+            gender = owner.get('性别', '')
             
-            if not shengxiao:
-                shengxiao = self._get_owner_year_zhi(owner)
+            # 获取事主年支（地支）
+            owner_zhi = self._get_owner_year_zhi(owner)
             
-            if shengxiao and chong_map.get(shengxiao) == day_zhi:
-                ji_list.append(f'与{name}生肖相冲')
+            if not owner_zhi:
+                continue
+            
+            # 判断女性事主（主妇口径，兼容旧调用）
+            is_housewife = role in ('主妇', '女主人', '夫人', '妻') or name in ('主妇', '女主人') or gender == '女'
+            # 2026-09 作灶主事人模式（三态）：
+            #  1.打标 _zaozhu_primary：主程序选定主事(True)/辅助(False)
+            #  2.仅有 zaozhu_mode：按性别回退（双主皆主事）
+            #  3.无打标无 mode：旧口径（女性日冲走"冲主妇"否决；男性走普通忌项）
+            # 主事判定以主程序打标为准（_zaozhu_primary）；无打标的直调一律走旧口径
+            _zz_tag = owner.get('_zaozhu_primary', None)  # _zz_tagonly
+            _zz_legacy = False
+            if _zz_tag is not None:
+                _is_primary = bool(_zz_tag)
+            else:
+                _is_primary = is_housewife
+                _zz_legacy = True
+            target_chong_zhi = chong_map.get(owner_zhi, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查日柱（最重要）：冲主事人→大忌否决（双主时任一被冲即否决）；
+            # 冲辅助者→普通忌项（半权重扣分，不否决）
+            if day_zhi == target_chong_zhi:
+                if _is_primary:
+                    if is_housewife:
+                        ji_list.append(f'日柱{day_zhi}冲主妇{name}')
+                    else:
+                        ji_list.append(f'日柱{day_zhi}冲宅主{name}')
+                elif _zz_legacy:
+                    # 旧口径（无主事模式）：男性日冲仅列普通忌项（评分器相主硬门槛仍否决）
+                    ji_list.append(f'日柱{day_zhi}冲{name}')
+                else:
+                    ji_list.append(f'日柱{day_zhi}与{name}生肖相冲（辅助，半权重不否决）')
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                ji_list.append(f'年柱{year_zhi}冲{name}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                ji_list.append(f'月柱{month_zhi}冲{name}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                ji_list.append(f'时柱{hour_zhi}冲{name}')
     
     def _check_zaoxiang(self, sizhu, zaoxiang, yi_list, ji_list):
-        """灶向五行辅助规则（仅供参考）"""
+        """灶向五行辅助规则（仅供参考）。灶向以灶门朝向为向、灶座为坐；
+        相生为参考宜项，不计分不否决。"""
         zx_wuxing = self._get_wuxing(zaoxiang)
-        dz_wuxing = self.ZHI_WUXING.get(sizhu.get('day_zhi'))
+        day_zhi = sizhu.get('day_zhi', '')
+        dz_wuxing = self.ZHI_WUXING.get(day_zhi)
         
         if zx_wuxing and dz_wuxing:
             # 相生则宜
             if self.SHENG.get(zx_wuxing) == dz_wuxing:
-                yi_list.append(f'{zaoxiang}向作灶（参考）')
+                # 2026-09-14：宜项补判定依据（灶向五行生日支五行）
+                yi_list.append(
+                    f'{zaoxiang}向作灶（参考：灶向{zx_wuxing}生日支{day_zhi}{dz_wuxing}；灶门为向、灶座为坐）'
+                )
     
     def _check_zaowei(self, sizhu, zaowei, yi_list, ji_list):
         """灶位五行辅助规则（仅供参考）"""
@@ -420,3 +560,5 @@ if __name__ == '__main__':
     
     print("宜：", yi_list)
     print("忌：", ji_list)
+
+# 2026-09-14 补丁指纹 nayin-jishen-zaoxiang：纳音齐备明细/吉神口径/灶向依据

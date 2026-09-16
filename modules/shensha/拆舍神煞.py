@@ -18,13 +18,37 @@ except ImportError:
 class DemolitionShenShaChecker(ConstructionShenShaChecker):
     """拆舍神煞检查器"""
     
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
+        
+        # 太岁（拆舍大忌）
+        if self._is_taisui(sizhu):
+            self._add_shensha('太岁', -20, '太岁当头，忌拆舍')
+        
+        # 岁破（拆舍大忌）
+        if self._is_suipo(sizhu):
+            self._add_shensha('岁破', -30, '岁破日忌拆舍，犯之主凶')
+        
+        # 岁煞
+        if self._is_suisha(sizhu):
+            self._add_shensha('岁煞', -20, '岁煞日忌拆舍')
+        
+        # 黄幡
+        if self._is_huangfan(sizhu):
+            self._add_shensha('黄幡', -15, '黄幡日忌拆舍')
+        
+        # 豹尾
+        if self._is_baowei(sizhu):
+            self._add_shensha('豹尾', -12, '豹尾日忌拆舍')
+        
+        # 大煞
+        if self._is_dasha(sizhu):
+            self._add_shensha('大煞', -12, '大煞日忌拆舍')
 
-    def _check_month_shensha(self, sizhu):
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
         
         # 土符（拆舍大忌）
         if self._is_tufu(sizhu):
@@ -32,15 +56,31 @@ class DemolitionShenShaChecker(ConstructionShenShaChecker):
         
         # 土王用事（拆舍大忌）
         if self._is_tuwang_yongshi(sizhu):
-            self._add_shensha('土王用事', -35, '土王当权，忌拆舍')
+            self._add_shensha('土王用事', -40, '土王当权，忌拆舍')
+        
+        # 月刑
+        if self._is_yuexing(sizhu):
+            self._add_shensha('月刑', -15, '月刑日忌拆舍')
+        
+        # 月害
+        if self._is_yuehai(sizhu):
+            self._add_shensha('月害', -15, '月害日忌拆舍')
 
-    def _check_day_shensha(self, sizhu):
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
         
         # 天赦（拆舍大吉）
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦', 25, '天赦吉日，拆舍百无禁忌')
+        
+        # 受死日
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日忌拆舍，犯之主凶')
+        
+        # 往亡日
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡日', -20, '往亡日忌拆舍')
 
 
 if __name__ == '__main__':

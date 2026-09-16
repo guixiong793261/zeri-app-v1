@@ -29,41 +29,24 @@ from .出行规则 import TravelRuleChecker
 from .安葬规则 import BurialRuleChecker
 from .高级安葬规则 import AdvancedBurialRuleChecker
 from .安床规则 import BedRuleChecker
+from .入宅规则 import RuZhaiRuleChecker
+from .动土规则 import DongTuRuleChecker
+from .拆舍规则 import ChaiSheRuleChecker
+from .通用规则 import GenericRuleChecker
 
 
 def get_rule_checker(event_type):
     """
     根据事项类型获取规则检查器
-    
+
+    2026-09-16 口径统一：事项别名、检查器派发全部以 modules/事项标准.py
+    为唯一注册表，本函数仅做转发，禁止再在此维护事项列表。
+
     Args:
-        event_type: 事项类型
-        
+        event_type: 事项类型（规范名或别名，如 嫁娶/订婚/纳采）
+
     Returns:
         EventRuleChecker: 规则检查器实例
     """
-    marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '动土', '入宅', '装修']
-    stove_events = ['作灶']
-    opening_events = ['开业']
-    travel_events = ['出行']
-    burial_events = ['安葬']
-    bed_events = ['安床']
-    
-    if event_type in marriage_events:
-        return MarriageRuleChecker()
-    elif event_type in construction_events:
-        return ConstructionRuleChecker()
-    elif event_type in stove_events:
-        return StoveRuleChecker()
-    elif event_type in opening_events:
-        return OpeningRuleChecker()
-    elif event_type in travel_events:
-        return TravelRuleChecker()
-    elif event_type in burial_events:
-        return AdvancedBurialRuleChecker()
-    elif event_type in bed_events:
-        return BedRuleChecker()
-    else:
-        # 通用规则检查器
-        from .规则基类 import EventRuleChecker
-        return EventRuleChecker()
+    from ..事项标准 import get_rule_checker as _std_get_rule_checker
+    return _std_get_rule_checker(event_type)

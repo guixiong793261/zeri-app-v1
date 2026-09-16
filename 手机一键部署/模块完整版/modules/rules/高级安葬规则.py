@@ -337,6 +337,19 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             if self._is_chong(day_zhi, zuoshan):
                 ji_list.append(f'{zuoshan}山被日支冲克')
         
+        # 11. 三煞检查（年/月/日三煞）
+        if zuoshan:
+            if year_zhi and self._is_san_sha(year_zhi, zuoshan):
+                ji_list.append(f'{zuoshan}山犯年三煞')
+            if month_zhi and self._is_san_sha(month_zhi, zuoshan):
+                ji_list.append(f'{zuoshan}山犯月三煞')
+            if day_zhi and self._is_san_sha(day_zhi, zuoshan):
+                ji_list.append(f'{zuoshan}山犯日三煞')
+        
+        # 12. 岁破检查（方位）
+        if year_zhi and zuoshan and self._is_sui_po_direction(year_zhi, zuoshan):
+            ji_list.append(f'{zuoshan}山犯岁破')
+        
         # 如果有一票否决项，直接返回
         if ji_list:
             ji_list.append('安葬')
@@ -366,14 +379,6 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             
             # 三合局检查
             self._check_sanhe(sizhu, zuoshan, yi_list)
-            
-            # 三煞检查
-            if year_zhi and self._is_san_sha(year_zhi, zuoshan):
-                ji_list.append(f'{zuoshan}山犯年三煞')
-            
-            # 岁破检查（方位）
-            if year_zhi and self._is_sui_po_direction(year_zhi, zuoshan):
-                ji_list.append(f'{zuoshan}山犯岁破')
         
         # ===== 相主检查（与孝子年命关系）=====
         self._check_owner_match(sizhu, owners, yi_list, ji_list)
@@ -405,16 +410,17 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
     def _is_sansang(self, month_zhi, day_zhi):
         """
         是否三丧日（按季节查日支）
-        口诀：春辰夏未秋戌冬丑
+        口诀：春戌夏丑秋辰冬未
+        《协纪辨方书》: 三丧日为四季墓库对应的地支
         """
         if month_zhi in ['寅', '卯', '辰']:  # 春季
-            return day_zhi == '辰'
-        elif month_zhi in ['巳', '午', '未']:  # 夏季
-            return day_zhi == '未'
-        elif month_zhi in ['申', '酉', '戌']:  # 秋季
             return day_zhi == '戌'
-        elif month_zhi in ['亥', '子', '丑']:  # 冬季
+        elif month_zhi in ['巳', '午', '未']:  # 夏季
             return day_zhi == '丑'
+        elif month_zhi in ['申', '酉', '戌']:  # 秋季
+            return day_zhi == '辰'
+        elif month_zhi in ['亥', '子', '丑']:  # 冬季
+            return day_zhi == '未'
         return False
     
     def _is_furi(self, month_zhi, day_gan):
@@ -697,12 +703,12 @@ if __name__ == '__main__':
     print(f"申月甲日是否重丧: {checker._is_zhongsang('申', '甲')}")
     print(f"申月乙日是否重丧: {checker._is_zhongsang('申', '乙')}")
     
-    # 测试三丧日
-    print("\n=== 三丧日测试 ===")
-    print(f"春季辰日是否三丧: {checker._is_sansang('寅', '辰')}")
-    print(f"夏季未日是否三丧: {checker._is_sansang('巳', '未')}")
-    print(f"秋季戌日是否三丧: {checker._is_sansang('申', '戌')}")
-    print(f"冬季丑日是否三丧: {checker._is_sansang('亥', '丑')}")
+    # 测试三丧日（修正后的口诀：春戌夏丑秋辰冬未）
+    print("\n=== 三丧日测试（修正口诀：春戌夏丑秋辰冬未） ===")
+    print(f"春季戌日是否三丧: {checker._is_sansang('寅', '戌')}")
+    print(f"夏季丑日是否三丧: {checker._is_sansang('巳', '丑')}")
+    print(f"秋季辰日是否三丧: {checker._is_sansang('申', '辰')}")
+    print(f"冬季未日是否三丧: {checker._is_sansang('亥', '未')}")
     
     # 测试岁破日
     print("\n=== 岁破日测试 ===")

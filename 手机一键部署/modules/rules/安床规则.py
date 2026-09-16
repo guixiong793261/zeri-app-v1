@@ -146,11 +146,15 @@ class BedRuleChecker(EventRuleChecker):
         if chuangwei:
             self._check_chuangwei(sizhu, chuangwei, yi_list, ji_list)
         
-        # 7. 综合判断
-        if yi_list and not ji_list:
-            yi_list.append('安床')
-        elif ji_list:
+        # 7. 综合判断（通书式：在宜/忌栏落事项名"安床"）
+        # 床位朝向项是"仅供参考"的辅助提示（某一朝向不利 ≠ 整日忌安床），
+        # 不得据此把"安床"整体列入忌栏，否则与"建除X日宜安床"自相矛盾（2026-09 修正）。
+        _ADVISORY_MARK = '（朝向克制日支）'
+        hard_ji = [x for x in ji_list if not x.endswith(_ADVISORY_MARK)]
+        if hard_ji:
             ji_list.append('安床')
+        elif yi_list and not ji_list:
+            yi_list.append('安床')
         
         return yi_list, ji_list
     
@@ -215,15 +219,28 @@ class BedRuleChecker(EventRuleChecker):
             pass
     
     def _check_shengxiao_chong(self, sizhu, owners, ji_list):
-        """检查与事主生肖相冲"""
+        """
+        检查四柱与事主生肖相冲（安床专用）
+        传统择日：日为主；安床人（新婚夫妇/病人）为主
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
         if not owners:
             return
         
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
         if not day_zhi:
             return
         
-        # 地支相冲关系
+        # 地支六冲表（键值都是地支）
         chong_map = {
             '子': '午', '午': '子',
             '丑': '未', '未': '丑',
@@ -233,32 +250,67 @@ class BedRuleChecker(EventRuleChecker):
             '巳': '亥', '亥': '巳'
         }
         
+        # 生肖转地支
+        zodiac_to_zhi = {
+            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
+        }
+        
+        # 检查每个事主
         for owner in owners:
             name = owner.get('name', '事主')
-            # 尝试从不同字段获取生肖
-            shengxiao = owner.get('生肖', '')
-            if not shengxiao:
-                # 从年柱地支获取
-                if 'sizhu' in owner:
-                    sizhu_parts = owner['sizhu'].split()
-                    if len(sizhu_parts) >= 1:
-                        shengxiao = sizhu_parts[0][1]
-            if not shengxiao:
-                # 从birth_date计算
-                if 'birth_date' in owner:
-                    try:
-                        from ..四柱计算器 import calculate_sizhu
-                        birth_sizhu = calculate_sizhu(
-                            owner['birth_date'],
-                            owner.get('birth_hour', 12),
-                            owner.get('birth_minute', 0)
-                        )
-                        shengxiao = birth_sizhu['年柱'][1]
-                    except Exception:
-                        continue
             
-            if shengxiao and chong_map.get(shengxiao) == day_zhi:
-                ji_list.append(f'与{name}生肖相冲')
+            # 获取事主年支（地支）
+            owner_zhi = ''
+            
+            # 先从生肖获取
+            zodiac = owner.get('生肖', '')
+            if zodiac:
+                owner_zhi = zodiac_to_zhi.get(zodiac, '')
+            
+            # 如果没有，从sizhu获取
+            if not owner_zhi and 'sizhu' in owner:
+                sizhu_parts = owner['sizhu'].split()
+                if len(sizhu_parts) >= 1:
+                    owner_zhi = sizhu_parts[0][1]
+            
+            # 如果没有，从birth_date计算
+            if not owner_zhi and 'birth_date' in owner:
+                try:
+                    from ..四柱计算器 import calculate_sizhu
+                    birth_sizhu = calculate_sizhu(
+                        owner['birth_date'],
+                        owner.get('birth_hour', 12),
+                        owner.get('birth_minute', 0)
+                    )
+                    owner_zhi = birth_sizhu['年柱'][1]
+                except Exception:
+                    continue
+            
+            if not owner_zhi:
+                continue
+            
+            target_chong_zhi = chong_map.get(owner_zhi, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查日柱（最重要）
+            if day_zhi == target_chong_zhi:
+                ji_list.append(f'日柱{day_zhi}冲{name}')
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                ji_list.append(f'年柱{year_zhi}冲{name}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                ji_list.append(f'月柱{month_zhi}冲{name}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                ji_list.append(f'时柱{hour_zhi}冲{name}')
     
     def _check_chuangwei(self, sizhu, chuangwei, yi_list, ji_list):
         """床位朝向辅助规则（仅供参考）"""

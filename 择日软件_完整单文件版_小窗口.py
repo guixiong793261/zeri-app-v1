@@ -2260,15 +2260,15 @@ class ZeriApp:
             # 显示结果
             for result in self.results:
                 # 确定星级标签
-                if result['level'] == "上吉":
+                if result.get('level', '未知') == "上吉":
                     tags = ('5star',)
-                elif result['level'] == "大吉":
+                elif result.get('level', '未知') == "大吉":
                     tags = ('4star',)
-                elif result['level'] == "吉":
+                elif result.get('level', '未知') == "吉":
                     tags = ('3star',)
-                elif result['level'] == "中吉" or result['level'] == "次吉":
+                elif result.get('level', '未知') == "中吉" or result.get('level', '未知') == "次吉":
                     tags = ('2star',)
-                elif result['level'] == "平":
+                elif result.get('level', '未知') == "平":
                     tags = ('1star',)
                 else:
                     tags = ()
@@ -2292,10 +2292,10 @@ class ZeriApp:
                 
                 # 插入结果
                 self.result_tree.insert("", tk.END, values=(
-                    result['date'],
-                    result['score'],
-                    result['level'],
-                    result['sizhu'],
+                    result.get('date', ''),
+                    result.get('score', 0),
+                    result.get('level', '未知'),
+                    result.get('sizhu', ''),
                     wu_xing_score,  # 五行评分（含大利月加分）
                     month_score,
                     xishen_score,
@@ -2335,7 +2335,7 @@ class ZeriApp:
                 
                 # 创建详情窗口
                 detail_window = tk.Toplevel(self.root)
-                detail_window.title(f"日课详情 - {result['date']}")
+                detail_window.title(f"日课详情 - {result.get('date', '')}")
                 # 设置初始窗口尺寸
                 detail_window.geometry("600x400")
                 # 允许窗口调整大小
@@ -2348,11 +2348,11 @@ class ZeriApp:
                 text.pack(fill=tk.BOTH, expand=True)
                 
                 # 构建详情内容
-                content = f"日期：{result['date']}\n"
-                content += f"农历：{result['lunar']}\n"
-                content += f"四柱：{result['sizhu']}\n"
-                content += f"评分：{result['score']} 分\n"
-                content += f"等级：{result['level']}\n"
+                content = f"日期：{result.get('date', '')}\n"
+                content += f"农历：{result.get('lunar', '')}\n"
+                content += f"四柱：{result.get('sizhu', '')}\n"
+                content += f"评分：{result.get('score', 0)} 分\n"
+                content += f"等级：{result.get('level', '未知')}\n"
                 
                 # 如果是婚嫁择日，显示大利月/小利月信息
                 event_type = self.event_var.get()
@@ -2379,7 +2379,7 @@ class ZeriApp:
                     content += f"  喜用神得分：{score_details.get('喜用神得分', 0):+d} 分\n"
                     content += f"  黄道得分：{score_details.get('黄道得分', 0):+d} 分\n"
                     content += f"  ─────────────────────────────────\n"
-                    content += f"  总分：{score_details.get('总分', result['score'])} 分\n"
+                    content += f"  总分：{score_details.get('总分', result.get('score', 0))} 分\n"
                 else:
                     content += "  暂无详细得分数据\n"
                 content += "\n"
@@ -2476,7 +2476,7 @@ class ZeriApp:
                         # 使用二十四山选择器分析
                         selector = ZhengTiWuXingSelectorDB()
                         shan_name = shan_xiang_to_shan(self.shan_xiang.get())
-                        sizhu = result['sizhu'].split()
+                        sizhu = result.get('sizhu', '').split()
                         if len(sizhu) >= 4:
                             year_gz = sizhu[0]
                             month_gz = sizhu[1]
@@ -2571,11 +2571,11 @@ class ZeriApp:
                         # 保存为JSON文件
                         elif file_path.endswith('.json'):
                             json_data = {
-                                'date': result['date'],
-                                'lunar': result['lunar'],
-                                'sizhu': result['sizhu'],
-                                'score': result['score'],
-                                'level': result['level'],
+                                'date': result.get('date', ''),
+                                'lunar': result.get('lunar', ''),
+                                'sizhu': result.get('sizhu', ''),
+                                'score': result.get('score', 0),
+                                'level': result.get('level', '未知'),
                                 'yi_list': detail.get('yi_list', []),
                                 'ji_list': detail.get('ji_list', []),
                                 'shensha_list': detail.get('shensha_list', []),
@@ -2632,11 +2632,11 @@ class ZeriApp:
                     sorted_results = sorted(self.results, key=lambda x: x['score'], reverse=True)
                     
                     for result in sorted_results:
-                        f.write(f"日期：{result['date']}\n")
-                        f.write(f"农历：{result['lunar']}\n")
-                        f.write(f"四柱：{result['sizhu']}\n")
-                        f.write(f"评分：{result['score']} 分\n")
-                        f.write(f"等级：{result['level']}\n")
+                        f.write(f"日期：{result.get('date', '')}\n")
+                        f.write(f"农历：{result.get('lunar', '')}\n")
+                        f.write(f"四柱：{result.get('sizhu', '')}\n")
+                        f.write(f"评分：{result.get('score', 0)} 分\n")
+                        f.write(f"等级：{result.get('level', '未知')}\n")
                         # 从 detail 中获取宜忌信息
                         detail = result.get('detail', {})
                         yi_list = detail.get('yi_list', [])
@@ -2681,10 +2681,10 @@ class ZeriApp:
                         
                         for result in self.results:
                             self.result_tree.insert("", tk.END, values=(
-                                result['date'],
+                                result.get('date', ''),
                                 result.get('score', '-'),
                                 result.get('level', '-'),
-                                result['sizhu'],
+                                result.get('sizhu', ''),
                                 result.get('detail', {}).get('month_score', 0),
                                 result.get('detail', {}).get('xishen_score', 0),
                                 result.get('detail', {}).get('huangdao_score', 0)
@@ -2715,10 +2715,10 @@ class ZeriApp:
                         
                         for result in self.results:
                             self.result_tree.insert("", tk.END, values=(
-                                result['date'],
+                                result.get('date', ''),
                                 result.get('score', '-'),
                                 result.get('level', '-'),
-                                result['sizhu'],
+                                result.get('sizhu', ''),
                                 result.get('detail', {}).get('month_score', 0),
                                 result.get('detail', {}).get('xishen_score', 0),
                                 result.get('detail', {}).get('huangdao_score', 0)
@@ -2760,10 +2760,10 @@ class ZeriApp:
                     
                     for result in self.results:
                         self.result_tree.insert("", tk.END, values=(
-                            result['date'],
+                            result.get('date', ''),
                             result.get('score', '-'),
                             result.get('level', '-'),
-                            result['sizhu'],
+                            result.get('sizhu', ''),
                             result.get('detail', {}).get('month_score', 0),
                             result.get('detail', {}).get('xishen_score', 0),
                             result.get('detail', {}).get('huangdao_score', 0)

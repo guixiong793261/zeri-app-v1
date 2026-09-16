@@ -229,106 +229,111 @@ def get_shishen(day_gan: str, target_gan: str) -> str:
         
         return '未知'
 
-def get_fuzi(year_gan, year_zhi):
-    """获取夫星子星（基于年干年支计算）
-    
-    根据用户提供的规则：
-    1. 夫星天干：克年干的五行，阳年干取正官（阴阳相反），阴年干取七杀（阴阳相同）
-    2. 夫星地支：根据年支映射
-    3. 子星天干：年干所生的五行
-    4. 子星地支：根据年支映射
-    
+# 【通书嫁娶·五虎遁真夫星/真天嗣起例】（2026-09 修正，替换旧"按年支硬查表"）
+# 年上起月：甲己丙寅、乙庚戊寅、丙辛庚寅、丁壬壬寅、戊癸甲寅
+_WUHU_START_GAN = {'甲': '丙', '己': '丙', '乙': '戊', '庚': '戊',
+                   '丙': '庚', '辛': '庚', '丁': '壬', '壬': '壬',
+                   '戊': '甲', '癸': '甲'}
+# 女命以年干为"我"：正官（克我、阴阳异）= 真夫星；食神（我生、同阴阳）= 真天嗣（子星）
+_FUZHUANG_GAN = {'甲': '辛', '乙': '庚', '丙': '癸', '丁': '壬', '戊': '乙',
+                 '己': '甲', '庚': '丁', '辛': '丙', '壬': '己', '癸': '戊'}
+_TIANSI_GAN = {'甲': '丙', '乙': '丁', '丙': '戊', '丁': '己', '戊': '庚',
+               '己': '辛', '庚': '壬', '辛': '癸', '壬': '甲', '癸': '乙'}
+
+
+def _wuhu_dun_zhi(year_gan, target_gan):
+    """五虎遁：从寅月起遁，返回 target_gan 首次临宫的地支。
+
+    如甲年（丙寅起）遁到辛临未、遁到丙临寅，故真夫星辛未、真天嗣丙寅。
+    """
+    if year_gan not in _WUHU_START_GAN or target_gan not in TIAN_GAN:
+        return ''
+    start = TIAN_GAN.index(_WUHU_START_GAN[year_gan])
+    yin = DI_ZHI.index('寅')
+    for i in range(12):
+        if TIAN_GAN[(start + i) % 10] == target_gan:
+            return DI_ZHI[(yin + i) % 12]
+    return ''
+
+
+def get_fuzi(year_gan, year_zhi=None):
+    """获取女命真夫星、真天嗣（子星）——通书嫁娶五虎遁起例，只取决于年干。
+
+    【典籍口径】以女命年干为"我"：克我且阴阳异者为正官（真夫星），
+    我生且同阴阳者为食神（真天嗣/子星）；地支一律以五虎遁从寅月起遁，
+    遁到该星天干首次临宫之支（《选择求真》卷五嫁娶总集）。
+    定局：夫星 甲辛未/乙庚辰/丙癸巳/丁壬寅/戊乙卯/己甲戌/庚丁亥/辛丙申/
+          壬己酉/癸戊午；
+          天嗣 甲丙寅/乙丁亥/丙戊戌/丁己酉/戊庚申/己辛未/庚壬午/辛癸巳/
+          壬甲辰/癸乙卯。
+
     Args:
         year_gan: 年柱天干
-        year_zhi: 年柱地支
-        
+        year_zhi: 年柱地支（仅为兼容旧调用保留，真夫星/真天嗣不随年支变）
+
     Returns:
-        dict: {'fu':夫星干支, 'zi':子星干支}
+        dict: {'fu': 真夫星干支, 'zi': 真天嗣干支}；年干非法时两值为 None
     """
-    # 夫星天干映射（克年干的五行）
-    fuxing_gan_map = {
-        '甲': '辛', '乙': '庚', '丙': '癸', '丁': '壬',
-        '戊': '乙', '己': '甲', '庚': '丁', '辛': '丙',
-        '壬': '己', '癸': '戊'
+    if year_gan not in TIAN_GAN:
+        return {'fu': None, 'zi': None}
+    fu_gan = _FUZHUANG_GAN[year_gan]
+    zi_gan = _TIANSI_GAN[year_gan]
+    fu_zhi = _wuhu_dun_zhi(year_gan, fu_gan)
+    zi_zhi = _wuhu_dun_zhi(year_gan, zi_gan)
+    return {
+        'fu': fu_gan + fu_zhi if fu_zhi else None,
+        'zi': zi_gan + zi_zhi if zi_zhi else None,
     }
-    
-    # 子星天干映射（年干所生的五行）
-    zixing_gan_map = {
-        '甲': '丙', '乙': '丁', '丙': '戊', '丁': '己',
-        '戊': '庚', '己': '辛', '庚': '壬', '辛': '癸',
-        '壬': '甲', '癸': '乙'
-    }
-    
-    # 夫星地支映射（根据用户提供的例子校准）
-    fu_zhi_map = {
-        '子': '巳', '丑': '申', '寅': '亥', '卯': '戌', '辰': '申', '巳': '申',
-        '午': '亥', '未': '申', '申': '寅', '酉': '巳', '戌': '寅', '亥': '寅'
-    }
-    
-    # 子星地支映射（根据用户提供的例子校准）
-    zi_zhi_map = {
-        '子': '戌', '丑': '巳', '寅': '申', '卯': '未', '辰': '亥', '巳': '寅',
-        '午': '巳', '未': '巳', '申': '亥', '酉': '寅', '戌': '亥', '亥': '卯'
-    }
-    
-    fu_gan = fuxing_gan_map.get(year_gan, '')
-    fu_zhi = fu_zhi_map.get(year_zhi, '')
-    fu = fu_gan + fu_zhi if fu_gan and fu_zhi else None
-    
-    zi_gan = zixing_gan_map.get(year_gan, '')
-    zi_zhi = zi_zhi_map.get(year_zhi, '')
-    zi = zi_gan + zi_zhi if zi_gan and zi_zhi else None
-    
-    return {'fu': fu, 'zi': zi}
+
 
 def get_yintai(month_gan, month_zhi):
-    """获取阴胎（以女命月柱为基准）
-    
-    计算方法：月柱天干顺进一位，地支顺进三位。
-    
+    """获取阴胎（以女命月柱为基准，= 胎元）
+
+    【单一权威公式】（《渊海子平》胎元法，阴阳二气对称）：
+    计算方法：月柱天干顺进一位，地支顺进三位（= 干+1，支+3）。
+
     Args:
         month_gan: 月柱天干
         month_zhi: 月柱地支
-    
+
     Returns:
-        阴胎干支（如"戊午"）
+        阴胎干支（如"戊午"），若输入非法返回 None
     """
     if month_gan not in TIAN_GAN or month_zhi not in DI_ZHI:
         return None
-    
-    # 月干顺进一位
+
     gan_index = TIAN_GAN.index(month_gan)
     next_gan = TIAN_GAN[(gan_index + 1) % 10]
-    
-    # 月支顺进三位
+
     zhi_index = DI_ZHI.index(month_zhi)
     next_zhi = DI_ZHI[(zhi_index + 3) % 12]
-    
+
     return next_gan + next_zhi
 
 def get_yangqi(month_gan, month_zhi):
-    """获取阳气（以女命月柱为基准）
-    
-    计算方法：月柱天干顺进一位，地支顺进三位。
-    
+    """获取阳气（男命/新郎，以生月月柱为基准）
+
+    【典籍口径】（《选择求真·卷五》胎元起例 + 通书口诀“天进一兮地三和”）：
+    阳气与阴胎同法：月柱天干顺进一位，地支顺进三位（= 干+1，支+3，即胎元）。
+    男命所得称阳气、女命所得称阴胎；嫁娶日时忌冲犯。
+    注：旧版误作“干+3支+1”对称公式，无典籍依据，2026-09 按典籍修正。
+
     Args:
         month_gan: 月柱天干
         month_zhi: 月柱地支
-    
+
     Returns:
-        阳气干支（如"戊午"）
+        阳气干支（如"乙卯"），若输入非法返回 None
     """
     if month_gan not in TIAN_GAN or month_zhi not in DI_ZHI:
         return None
-    
-    # 月干顺进一位
+
     gan_index = TIAN_GAN.index(month_gan)
     next_gan = TIAN_GAN[(gan_index + 1) % 10]
-    
-    # 月支顺进三位
+
     zhi_index = DI_ZHI.index(month_zhi)
     next_zhi = DI_ZHI[(zhi_index + 3) % 12]
-    
+
     return next_gan + next_zhi
 
 def format_date(dt):

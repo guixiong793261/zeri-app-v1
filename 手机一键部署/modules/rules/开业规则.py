@@ -151,7 +151,10 @@ class OpeningRuleChecker(EventRuleChecker):
         # 5. 与事主年命相合
         self._check_owner_match(sizhu, owners, yi_list)
         
-        # 6. 综合判断开业、开市、纳财
+        # 6. 事主相冲检查（新增）
+        self._check_shengxiao_chong(sizhu, owners, ji_list)
+        
+        # 7. 综合判断开业、开市、纳财
         self._check_opening_types(sizhu, yi_list, ji_list)
         
         return yi_list, ji_list
@@ -247,6 +250,75 @@ class OpeningRuleChecker(EventRuleChecker):
             yi_list.append('开业')
             yi_list.append('开市')
             yi_list.append('纳财')
+    
+    def _check_shengxiao_chong(self, sizhu, owners, ji_list):
+        """
+        检查四柱与事主生肖相冲（开业专用）
+        传统择日：日 > 时；店主/负责人为主
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
+        if not owners:
+            return
+        
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
+        if not day_zhi:
+            return
+        
+        # 地支六冲表（键值都是地支）
+        chong_map = {
+            '子': '午', '午': '子',
+            '丑': '未', '未': '丑',
+            '寅': '申', '申': '寅',
+            '卯': '酉', '酉': '卯',
+            '辰': '戌', '戌': '辰',
+            '巳': '亥', '亥': '巳'
+        }
+        
+        # 检查每个事主
+        for owner in owners:
+            name = owner.get('name', '事主')
+            role = owner.get('role', '').lower()
+            
+            # 获取事主年支（地支）
+            owner_zhi = self._get_owner_year_zhi(owner)
+            
+            if not owner_zhi:
+                continue
+            
+            # 判断是否为店主/负责人
+            is_owner = role in ('店主', '老板', '负责人', '法人') or name in ('店主', '老板', '负责人')
+            target_chong_zhi = chong_map.get(owner_zhi, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查日柱（最重要）
+            if day_zhi == target_chong_zhi:
+                if is_owner:
+                    ji_list.append(f'日柱{day_zhi}冲店主{name}')
+                else:
+                    ji_list.append(f'日柱{day_zhi}冲{name}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                ji_list.append(f'时柱{hour_zhi}冲{name}')
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                ji_list.append(f'年柱{year_zhi}冲{name}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                ji_list.append(f'月柱{month_zhi}冲{name}')
 
 # 测试
 if __name__ == '__main__':

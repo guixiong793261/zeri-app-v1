@@ -33,30 +33,127 @@ except ImportError:
 class OpeningShenShaChecker(ShenShaChecker):
     """开业神煞检查器"""
     
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
         
-        # 财神方位
-        year_gan = sizhu['year_gan']
-        if self._is_caishen_fangwei(sizhu):
-            self._add_shensha('财神方位吉', 15, '财神方位吉利')
+        # 2026-09-16修复：原此处为 '财神方位吉' +15 —— _is_caishen_fangwei 内部
+        # 按年干算出财神方位字典后并未使用、直接 return True，导致任何一天开业
+        # 都恒定 +15。财神方位是“方位”概念（日干定方位），判定吉凶须与店门/神位
+        # 坐向比对，而本检查器拿不到坐向参数，无法判断，故该项不计分、予以删除。
+        # （每日财神方位本身已在【今日黄历】模块按通书口径展示。）
+        
+        # 岁德
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
+        
+        # 岁德合
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 15, '岁德合，大吉')
+        
+        # 岁合
+        if self._is_suihe(sizhu):
+            self._add_shensha('岁合', 12, '岁合主和合')
+        
+        # 岁禄
+        if self._is_sui_lu(sizhu):
+            self._add_shensha('岁禄', 15, '岁禄主财禄')
+        
+        # 劫煞
+        if self._is_jiesha(sizhu):
+            self._add_shensha('劫煞', -25, '劫煞日不宜开业')
+        
+        # 灾煞
+        if self._is_zaijiesha(sizhu):
+            self._add_shensha('灾煞', -25, '灾煞日不宜开业')
+        
+        # 亡神
+        if self._is_fubing(sizhu):
+            self._add_shensha('亡神', -12, '亡神主凶亡')
+        
+        # 大煞
+        if self._is_dasha(sizhu):
+            self._add_shensha('大煞', -12, '大煞主破败')
+        
+        # 五鬼
+        if self._is_wugui(sizhu):
+            self._add_shensha('五鬼', -15, '五鬼主耗散')
+        
+        # 金神
+        if self._is_jinshen(sizhu):
+            self._add_shensha('金神', -12, '金神主破败')
+        
+        # 破败
+        if self._is_pobai(sizhu):
+            self._add_shensha('破败', -10, '破败主耗散')
     
-    def _check_month_shensha(self, sizhu):
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
         
         # 月破
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -15, '月破日不宜开业')
+            self._add_shensha('月破', -30, '月破日不宜开业')
         
         # 月刑
         if self._is_yuexing(sizhu):
-            self._add_shensha('月刑', -10, '月刑日不宜开业')
+            self._add_shensha('月刑', -18, '月刑日不宜开业')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德日百事吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合，吉')
+        
+        # 月恩
+        if self._is_yueen(sizhu):
+            self._add_shensha('月恩', 10, '月恩日主恩泽')
+        
+        # 五富
+        if self._is_wufu(sizhu):
+            self._add_shensha('五富', 12, '五富主财富')
+        
+        # 吉期
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 10, '吉期主吉庆')
+        
+        # 王日
+        if self._is_wangri(sizhu):
+            self._add_shensha('王日', 10, '王日主旺相')
+        
+        # 官日
+        if self._is_guanri(sizhu):
+            self._add_shensha('官日', 8, '官日主官禄')
+        
+        # 福生
+        if self._is_fusheng(sizhu):
+            self._add_shensha('福生', 10, '福生主福生')
+        
+        # 吉庆
+        if self._is_jiqing(sizhu):
+            self._add_shensha('吉庆', 10, '吉庆主吉庆')
+        
+        # 月厌
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -15, '月厌主厌恶')
+        
+        # 月虚
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -10, '月虚主虚耗')
+        
+        # 大时
+        if self._is_dashi(sizhu):
+            self._add_shensha('大时', -12, '大时主凶')
+        
+        # 天吏
+        if self._is_tianli(sizhu):
+            self._add_shensha('天吏', -15, '天吏主凶')
     
-    def _check_day_shensha(self, sizhu):
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
         
         # 开业吉日
         if self._is_kaiye_jiri(sizhu):
@@ -78,15 +175,68 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_biari(sizhu):
             self._add_shensha('闭日', -15, '闭日不宜开业')
         
-        # 劫煞
-        if self._is_jiesha(sizhu):
-            self._add_shensha('劫煞', -12, '劫煞日不宜开业')
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 20, '天德日百事吉')
         
-        # 灾煞
-        if self._is_zaisha(sizhu):
-            self._add_shensha('灾煞', -12, '灾煞日不宜开业')
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 15, '天德合，大吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'{sanqi_result}三奇', 15, f'{sanqi_result}三奇照临，百事皆宜')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 12, '将星到座，吉')
+        
+        # 六合
+        if self._is_liuhe(sizhu):
+            self._add_shensha('六合', 12, '六合日吉')
+        
+        # 三合
+        if self._is_sanhe(sizhu):
+            self._add_shensha('三合', 10, '三合日吉')
+        
+        # 驿马
+        if self._is_yima(sizhu):
+            self._add_shensha('驿马', 10, '驿马主行动')
+        
+        # 天马
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 8, '天马主行动')
+        
+        # 天赦
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦', 25, '天赦日百事吉')
+        
+        # 母仓
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓', 10, '母仓日吉')
+        
+        # 受死日
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日不宜开业')
+        
+        # 往亡日
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡日', -20, '往亡日不宜开业')
+        
+        # 四离日
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -35, '四离日大忌')
+        
+        # 四绝日
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -35, '四绝日大忌')
+        
+        # 十恶大败
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -30, '十恶大败日大忌')
     
-    def _check_special_shensha(self, sizhu, owners):
+    def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（店主）生肖与日课的冲合"""
         if not owners:
             return
@@ -123,92 +273,10 @@ class OpeningShenShaChecker(ShenShaChecker):
             elif hour_zhi and self._is_he(hour_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
     
-    def _shengxiao_to_zhi(self, shengxiao):
-        """生肖转换为地支"""
-        shengxiao_map = {
-            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
-            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
-            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
-        }
-        return shengxiao_map.get(shengxiao)
-    
-    def _is_chong(self, zhi1, zhi2):
-        """检查两个地支是否相冲"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return zhi1 == chong_map.get(zhi2)
-    
-    def _is_he(self, zhi1, zhi2):
-        """检查两个地支是否相合（六合或三合）"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        # 六合
-        liuhe_map = {
-            '子': '丑', '丑': '子',
-            '寅': '亥', '亥': '寅',
-            '卯': '戌', '戌': '卯',
-            '辰': '酉', '酉': '辰',
-            '巳': '申', '申': '巳',
-            '午': '未', '未': '午'
-        }
-        if liuhe_map.get(zhi1) == zhi2:
-            return True
-        
-        # 三合
-        sanhe_sets = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-        for s in sanhe_sets:
-            if zhi1 in s and zhi2 in s and zhi1 != zhi2:
-                return True
-        
-        return False
-    
-    def _is_caishen_fangwei(self, sizhu):
-        """是否财神方位吉利"""
-        # 财神方位根据年干确定
-        caishen_fangwei = {
-            '甲': '艮', '乙': '坤', '丙': '兑', '丁': '乾',
-            '戊': '艮', '己': '坤', '庚': '兑', '辛': '乾',
-            '壬': '艮', '癸': '坤'
-        }
-        year_gan = sizhu['year_gan']
-        # 简化判断
-        return True
-    
-    def _is_yuepo(self, sizhu):
-        """是否月破"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        chong = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong.get(month_zhi)
-    
     def _is_yuexing(self, sizhu):
         """是否月刑"""
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        # 地支相刑
         xing = {
             '子': '卯', '丑': '戌', '寅': '巳', '卯': '子',
             '辰': '辰', '巳': '申', '午': '午', '未': '丑',
@@ -224,22 +292,18 @@ class OpeningShenShaChecker(ShenShaChecker):
     
     def _is_manri(self, sizhu):
         """是否满日"""
-        # 建除十二神之满日
         day_zhi = sizhu['day_zhi']
-        # 简化判断，实际应根据月建推算
         manri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in manri
     
     def _is_chengri(self, sizhu):
         """是否成日"""
-        # 建除十二神之成日
         day_zhi = sizhu['day_zhi']
         chengri = ['丑', '辰', '未', '戌']
         return day_zhi in chengri
     
     def _is_pori(self, sizhu):
         """是否破日"""
-        # 建除十二神之破日
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
         chong = {
@@ -251,36 +315,10 @@ class OpeningShenShaChecker(ShenShaChecker):
     
     def _is_biari(self, sizhu):
         """是否闭日"""
-        # 建除十二神之闭日
         day_zhi = sizhu['day_zhi']
         biari = ['亥', '子', '丑']
         return day_zhi in biari
     
-    def _is_jiesha(self, sizhu):
-        """是否劫煞"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        jiesha = {
-            '申': '巳', '子': '巳', '辰': '巳',
-            '寅': '亥', '午': '亥', '戌': '亥',
-            '巳': '寅', '酉': '寅', '丑': '寅',
-            '亥': '申', '卯': '申', '未': '申'
-        }
-        return day_zhi == jiesha.get(year_zhi)
-    
-    def _is_zaisha(self, sizhu):
-        """是否灾煞"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        zaisha = {
-            '申': '午', '子': '午', '辰': '午',
-            '寅': '子', '午': '子', '戌': '子',
-            '巳': '卯', '酉': '卯', '丑': '卯',
-            '亥': '酉', '卯': '酉', '未': '酉'
-        }
-        return day_zhi == zaisha.get(year_zhi)
-    
     def _check_owner_kaiye_match(self, sizhu, owner):
         """检查事主与开业日是否相合"""
-        # 简化判断
         return True

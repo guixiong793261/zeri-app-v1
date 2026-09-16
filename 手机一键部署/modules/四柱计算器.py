@@ -30,6 +30,8 @@ if __name__ == '__main__' and __package__ is None:
 
 from datetime import date, datetime, timedelta
 import logging
+import calendar
+import re
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -57,6 +59,61 @@ try:
 except ImportError:
     HAS_SXTWL = False
     logger.warning("sxtwl 库未安装，使用备用计算方法")
+
+
+def _parse_chinese_date_string(s):
+    """
+    尝试把多种常见中文/字符串日期格式解析成 (date, hour, minute)。
+
+    支持格式：
+      1. "YYYY年MM月DD日"
+      2. "YYYY年MM月DD日 HH时MM分"
+      3. "YYYY-MM-DD"
+      4. "YYYY-MM-DD HH:MM:SS"
+      5. "YYYY-MM-DD HH:MM"
+
+    Returns:
+        tuple: (date对象, hour_int, minute_int)，失败返回 None
+    """
+    if not isinstance(s, str):
+        return None
+    text = s.strip()
+    if not text:
+        return None
+
+    # ---- 中文格式 ----
+    m = re.match(
+        r'^(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日'
+        r'(?:\s*(\d{1,2})\s*[时点\:：])?'
+        r'(?:\s*(\d{1,2})\s*分)?'
+        r'\s*$',
+        text
+    )
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        h = int(m.group(4)) if m.group(4) else 12
+        mi = int(m.group(5)) if m.group(5) else 0
+        try:
+            return date(y, mo, d), h, mi
+        except ValueError:
+            return None
+
+    # ---- ISO 格式 ----
+    iso = re.match(
+        r'^(\d{4})-(\d{1,2})-(\d{1,2})'
+        r'(?:[\sT]+(\d{1,2})\:(\d{1,2})(?:\:(\d{1,2}))?)?'
+        r'\s*$',
+        text
+    )
+    if iso:
+        y, mo, d = int(iso.group(1)), int(iso.group(2)), int(iso.group(3))
+        h = int(iso.group(4)) if iso.group(4) else 12
+        mi = int(iso.group(5)) if iso.group(5) else 0
+        try:
+            return date(y, mo, d), h, mi
+        except ValueError:
+            return None
+    return None
 
 
 class SiZhuCalculator:
@@ -514,7 +571,8 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
     这是计算四柱的唯一入口函数，使用精确的农历计算方法
     
     Args:
-        target_date: datetime.date对象、datetime对象，或(year, month, day)元组
+        target_date: datetime.date对象、datetime对象，或(year, month, day)元组，
+                     或常见日期字符串（支持 "YYYY年MM月DD日 HH时MM分" / "YYYY-MM-DD HH:MM:SS" 等）
         hour: 小时(0-23)
         minute: 分钟(0-59)
         second: 秒(0-59)
@@ -526,6 +584,21 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
     year = None
     month = None
     day = None
+    
+    # ==========================================================
+    #  兼容：字符串日期（事主birth_date常为"1972年1月8日 8时0分"这类中文格式）
+    #  如果字符串能解析，就转成 date 对象，并把字符串里的时分覆盖外部默认的 12/0
+    # ==========================================================
+    if isinstance(target_date, str):
+        parsed = _parse_chinese_date_string(target_date)
+        if parsed:
+            target_date, h_parsed, m_parsed = parsed
+            # 只有在外部没显式传 hour/minute（仍是默认值）时，才用字符串里解析出的时分
+            if hour == 12 and minute == 0:
+                hour, minute = h_parsed, m_parsed
+        else:
+            # 字符串解析失败 → 抛一个带说明的 ValueError，让上层except能识别
+            raise ValueError(f"无法解析日期字符串: {repr(target_date)}")
     
     # 处理不同类型的target_date
     if isinstance(target_date, tuple) and len(target_date) == 3:
@@ -565,13 +638,38 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
     if day is not None:
         result['day'] = day
     
+    # 添加date字段（供神煞检查使用）
+    if isinstance(target_date, date):
+        result['date'] = target_date
+    elif year and month and day:
+        try:
+            result['date'] = date(year, month, day)
+        except ValueError:
+            pass
+    
     return result
 
 
 def get_lunar_date(target_date, hour=12, minute=0, second=0):
     """
-    获取农历日期
+    获取农历日期（支持 date/datetime/tuple/字符串日期格式，同 calculate_sizhu）
     """
+    # 兼容字符串日期
+    if isinstance(target_date, str):
+        parsed = _parse_chinese_date_string(target_date)
+        if parsed:
+            target_date, h_parsed, m_parsed = parsed
+            if hour == 12 and minute == 0:
+                hour, minute = h_parsed, m_parsed
+        else:
+            raise ValueError(f"无法解析日期字符串: {repr(target_date)}")
+    # 兼容元组
+    if isinstance(target_date, tuple) and len(target_date) == 3:
+        try:
+            target_date = date(*target_date)
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"无效日期元组 {target_date}: {e}")
+
     if isinstance(target_date, datetime):
         hour = target_date.hour
         minute = target_date.minute

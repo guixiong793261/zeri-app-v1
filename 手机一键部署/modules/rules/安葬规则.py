@@ -396,14 +396,28 @@ class BurialRuleChecker(EventRuleChecker):
                 return
     
     def _check_shengxiao_chong(self, sizhu, owners, ji_list):
-        """检查与事主生肖相冲"""
+        """
+        检查四柱与事主生肖相冲
+        传统择日：年=日 > 月 > 时；长子（承重孙）一票否决
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
         if not owners:
             return
         
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
         if not day_zhi:
             return
         
+        # 地支六冲表
         chong_map = {
             '子': '午', '午': '子',
             '丑': '未', '未': '丑',
@@ -413,12 +427,54 @@ class BurialRuleChecker(EventRuleChecker):
             '巳': '亥', '亥': '巳'
         }
         
+        # 检查每个事主
         for owner in owners:
             name = owner.get('name', '事主')
-            owner_zhi = self._get_owner_year_zhi(owner)
+            role = owner.get('role', '').lower()
+            shengxiao = owner.get('生肖', '')
             
-            if owner_zhi and chong_map.get(owner_zhi) == day_zhi:
-                ji_list.append(f'与{name}生肖相冲')
+            if not shengxiao:
+                shengxiao = self._get_owner_year_zhi(owner)
+            
+            if not shengxiao:
+                continue
+            
+            # 判断是否为长子/承重孙（一票否决对象）
+            is_eldest = role in ('长子', '承重孙', '孝子', '主祭') or name in ('长子', '孝子', '主祭')
+            target_chong_zhi = chong_map.get(shengxiao, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                if is_eldest:
+                    ji_list.append(f'长子{name}年命被年柱{year_zhi}冲，一票否决')
+                    return  # 直接返回，一票否决
+                else:
+                    ji_list.append(f'年柱{year_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                if is_eldest:
+                    ji_list.append(f'长子{name}年命被月柱{month_zhi}冲')
+                else:
+                    ji_list.append(f'月柱{month_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查日柱
+            if day_zhi == target_chong_zhi:
+                if is_eldest:
+                    ji_list.append(f'长子{name}年命被日柱{day_zhi}冲，一票否决')
+                    return  # 直接返回，一票否决
+                else:
+                    ji_list.append(f'日柱{day_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                if is_eldest:
+                    ji_list.append(f'长子{name}年命被时柱{hour_zhi}冲')
+                else:
+                    ji_list.append(f'时柱{hour_zhi}冲{name}生肖{shengxiao}')
     
     def _check_mountain_yearly_luck(self, shan_xiang, sizhu, yi_list, ji_list):
         """检查流年吉凶
@@ -561,8 +617,6 @@ class BurialRuleChecker(EventRuleChecker):
                         yinfu_gans.append(gan)
                 
                 for gan in yinfu_gans:
-                    if year_gan == gan:
-                        ji_list.append(f'{shan_xiang}阴府：忌{gan}年干')
                     if sizhu.get('month_gan') == gan:
                         ji_list.append(f'{shan_xiang}阴府：忌{gan}月干')
                     if sizhu.get('day_gan') == gan:
@@ -624,9 +678,14 @@ class BurialRuleChecker(EventRuleChecker):
             
             month = sizhu.get('month', 0)
             day = sizhu.get('day', 0)
+            year = sizhu.get('year', 0)
             
-            dongzhi_month = 12
-            is_after_dongzhi = month == dongzhi_month and day >= 22
+            # 使用精确节气判断冬至
+            try:
+                from ..二十四山择吉天机 import is_after_dongzhi
+                is_after_dongzhi = is_after_dongzhi(year, month, day)
+            except ImportError:
+                is_after_dongzhi = month == 12 and day >= 22
             
             if is_after_dongzhi:
                 key = 'dongzhi_hou'

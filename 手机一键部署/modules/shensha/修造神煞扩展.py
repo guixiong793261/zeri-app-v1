@@ -157,9 +157,8 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             12: [19]    # 十二月十九
         }
         
-        # 三娘煞日
-        self.sanniangsha = [3, 7, 13, 18, 22, 27]
-        
+        # 真三娘煞日：农历日+干支日双条件见 _is_sanniangsha
+
         # 红纱日
         self.hongsha = {
             1: ['巳'], 4: ['巳'], 7: ['巳'], 10: ['巳'],
@@ -201,6 +200,9 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         if direction:
             self.direction = direction
         
+        # 标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
+        
         # 调用基类检查
         super().check(sizhu, owners)
         
@@ -236,21 +238,21 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌', -20, '百事忌，修建大凶')
         
-        # 三娘煞
+        # 真三娘煞
         if self._is_sanniangsha(sizhu):
-            self._add_shensha('三娘煞', -15, '忌婚嫁、修建')
+            self._add_shensha('真三娘煞', -15, '真三娘煞日忌婚嫁、修建')
         
         # 红纱日
         if self._is_hongsha(sizhu):
             self._add_shensha('红纱日', -15, '百事忌，犯之主血光')
         
-        # 重丧日
+        # 重丧日 - 修造需参看，非首要禁忌
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', -20, '安葬大忌，修建亦凶')
+            self._add_shensha('重丧日', -10, '重丧日，修造需参看，非首要禁忌')
         
-        # 重复日
+        # 重复日 - 忌凶事，利吉事
         if self._is_chongfu(sizhu):
-            self._add_shensha('重复日', -15, '忌动土、安葬')
+            self._add_shensha('重复日', -10, '重复日，忌凶事，利吉事')
     
     def _is_yanggongji(self, sizhu):
         """是否杨公忌日"""
@@ -271,17 +273,24 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         return False
     
     def _is_sanniangsha(self, sizhu):
-        """是否三娘煞日"""
+        """是否真三娘煞日：农历日与日干支同时满足（全年仅6天）
+
+        初三逢庚午、初七逢辛未、十三逢戊申、十八逢己酉、廿二逢丙午、廿七逢丁未；
+        仅农历日相符的"假三娘煞"不再作为禁忌。
+        """
         try:
             from ..四柱计算器 import get_lunar_date
         except ImportError:
             from 四柱计算器 import get_lunar_date
-        
+
+        zhen_map = {3: '庚午', 7: '辛未', 13: '戊申', 18: '己酉', 22: '丙午', 27: '丁未'}
         try:
             if 'date' in sizhu:
                 lunar = get_lunar_date(sizhu['date'])
                 day = lunar.get('day_num', 0)
-                return day in self.sanniangsha
+                if day in zhen_map:
+                    ganzhi = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
+                    return ganzhi == zhen_map[day]
         except:
             pass
         return False
@@ -404,50 +413,54 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             self._add_shensha('暗建煞到方', -15, '动土方位犯暗建煞，忌')
     
     def _is_direction_in_year_sansha(self, sizhu):
-        """年三煞到方：根据年支的三合局对冲方"""
-        year_zhi = sizhu['year_zhi']
-        # 年三煞方位映射（简化版）
+        """年三煞到方：根据年支的三合局对冲方
+        年三煞仅包含地支（巳午未、亥子丑、寅卯辰、申酉戌），不含天干
+        """
+        year_zhi = sizhu.get('year_zhi', '')
         sansha_map = {
-            '申': ['巳', '丙', '午'],  # 申子辰年煞南
-            '子': ['巳', '丙', '午'],
-            '辰': ['巳', '丙', '午'],
-            '寅': ['亥', '壬', '子'],  # 寅午戌年煞北
-            '午': ['亥', '壬', '子'],
-            '戌': ['亥', '壬', '子'],
-            '巳': ['寅', '甲', '卯'],  # 巳酉丑年煞东
-            '酉': ['寅', '甲', '卯'],
-            '丑': ['寅', '甲', '卯'],
-            '亥': ['申', '庚', '酉'],  # 亥卯未年煞西
-            '卯': ['申', '庚', '酉'],
-            '未': ['申', '庚', '酉']
+            '申': ['巳', '午', '未'],  # 申子辰年煞南
+            '子': ['巳', '午', '未'],
+            '辰': ['巳', '午', '未'],
+            '寅': ['亥', '子', '丑'],  # 寅午戌年煞北
+            '午': ['亥', '子', '丑'],
+            '戌': ['亥', '子', '丑'],
+            '巳': ['寅', '卯', '辰'],  # 巳酉丑年煞东
+            '酉': ['寅', '卯', '辰'],
+            '丑': ['寅', '卯', '辰'],
+            '亥': ['申', '酉', '戌'],  # 亥卯未年煞西
+            '卯': ['申', '酉', '戌'],
+            '未': ['申', '酉', '戌']
         }
         sansha_fang = sansha_map.get(year_zhi, [])
         return self.direction in sansha_fang
     
     def _is_direction_in_month_sansha(self, sizhu):
-        """月三煞到方：根据月支的三合局对冲方"""
-        month_zhi = sizhu['month_zhi']
-        # 月三煞方位映射
+        """月三煞到方：根据月支的三合局对冲方
+        月三煞仅包含地支（亥子丑、巳午未、寅卯辰、申酉戌），不含天干
+        传统风水理论：寅午戌月煞北（亥子丑）、巳酉丑月煞东（寅卯辰）
+        申子辰月煞南（巳午未）、亥卯未月煞西（申酉戌）
+        """
+        month_zhi = sizhu.get('month_zhi', '')
         sansha_map = {
-            '申': ['巳', '丙', '午'],  # 申子辰月煞南
-            '子': ['巳', '丙', '午'],
-            '辰': ['巳', '丙', '午'],
-            '寅': ['亥', '壬', '子'],  # 寅午戌月煞北
-            '午': ['亥', '壬', '子'],
-            '戌': ['亥', '壬', '子'],
-            '巳': ['寅', '甲', '卯'],  # 巳酉丑月煞东
-            '酉': ['寅', '甲', '卯'],
-            '丑': ['寅', '甲', '卯'],
-            '亥': ['申', '庚', '酉'],  # 亥卯未月煞西
-            '卯': ['申', '庚', '酉'],
-            '未': ['申', '庚', '酉']
+            '申': ['巳', '午', '未'],  # 申子辰月煞南
+            '子': ['巳', '午', '未'],
+            '辰': ['巳', '午', '未'],
+            '寅': ['亥', '子', '丑'],  # 寅午戌月煞北
+            '午': ['亥', '子', '丑'],
+            '戌': ['亥', '子', '丑'],
+            '巳': ['寅', '卯', '辰'],  # 巳酉丑月煞东
+            '酉': ['寅', '卯', '辰'],
+            '丑': ['寅', '卯', '辰'],
+            '亥': ['申', '酉', '戌'],  # 亥卯未月煞西
+            '卯': ['申', '酉', '戌'],
+            '未': ['申', '酉', '戌']
         }
         sansha_fang = sansha_map.get(month_zhi, [])
         return self.direction in sansha_fang
     
     def _is_direction_taisui(self, sizhu):
         """太岁到方：年支对应方位"""
-        year_zhi = sizhu['year_zhi']
+        year_zhi = sizhu.get('year_zhi', '')
         # 地支对应方位
         zhi_fang = {
             '子': '子', '丑': '丑', '寅': '寅', '卯': '卯',
@@ -459,7 +472,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_suipo(self, sizhu):
         """岁破到方：太岁对冲方位"""
-        year_zhi = sizhu['year_zhi']
+        year_zhi = sizhu.get('year_zhi', '')
         # 地支对冲
         chong_zhi = {
             '子': '午', '午': '子',
@@ -474,7 +487,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _is_direction_yuepo(self, sizhu):
         """月破到方：月支对冲方位"""
-        month_zhi = sizhu['month_zhi']
+        month_zhi = sizhu.get('month_zhi', '')
         # 地支对冲
         chong_zhi = {
             '子': '午', '午': '子',
@@ -642,6 +655,14 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         if self._is_gui_ren_shen(day_gan, day_zhi, shan_zhi):
             self._add_shensha('山家贵人', 10, f'{self.zuoshan}山得贵人，主吉祥')
         
+        # 岁禄到山（年干禄神到山）
+        if self._is_sui_lu_daoshan(sizhu.get('year_gan', ''), shan_zhi):
+            self._add_shensha('岁禄到山', 15, f'{self.zuoshan}山得岁禄，主富贵')
+        
+        # 岁马到山（年支驿马到山）
+        if self._is_sui_ma_daoshan(sizhu.get('year_zhi', ''), shan_zhi):
+            self._add_shensha('岁马到山', 15, f'{self.zuoshan}山得岁马，主升迁')
+        
         # 冲山
         if self._is_chong_shan(day_zhi, shan_zhi):
             self._add_shensha('冲山', -30, f'日冲{self.zuoshan}山，修建大凶')
@@ -699,6 +720,26 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         if day_gan in self.gui_ren:
             return shan_zhi in [self.gui_ren[day_gan]['阳'], self.gui_ren[day_gan]['阴']]
         return False
+    
+    def _is_sui_lu_daoshan(self, year_gan, shan_zhi):
+        """是否岁禄到山（年干禄神到山）"""
+        # 年干禄位
+        sui_lu = {
+            '甲': '寅', '乙': '卯', '丙': '巳', '丁': '午',
+            '戊': '巳', '己': '午', '庚': '申', '辛': '酉',
+            '壬': '亥', '癸': '子'
+        }
+        return sui_lu.get(year_gan) == shan_zhi
+    
+    def _is_sui_ma_daoshan(self, year_zhi, shan_zhi):
+        """是否岁马到山（年支驿马到山）"""
+        # 年支驿马
+        sui_ma = {
+            '子': '寅', '丑': '亥', '寅': '申', '卯': '巳',
+            '辰': '寅', '巳': '亥', '午': '申', '未': '巳',
+            '申': '寅', '酉': '亥', '戌': '申', '亥': '巳'
+        }
+        return sui_ma.get(year_zhi) == shan_zhi
     
     def _is_chong_shan(self, day_zhi, shan_zhi):
         """是否冲山"""
@@ -1071,6 +1112,43 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
 
         return min(score, 15)
     
+    def _parse_sizhu(self, sizhu_input):
+        """
+        解析sizhu输入，支持字符串格式和字典格式
+        
+        Args:
+            sizhu_input: 字符串格式("甲子 乙丑 丙寅 丁卯")或字典格式
+            
+        Returns:
+            dict: 包含year_gan, year_zhi, month_gan, month_zhi, day_gan, day_zhi, hour_gan, hour_zhi的字典
+        """
+        if isinstance(sizhu_input, dict):
+            # 已经是字典格式，直接返回
+            return sizhu_input
+        
+        if isinstance(sizhu_input, str):
+            # 字符串格式，解析为字典
+            parts = sizhu_input.split()
+            if len(parts) >= 3:
+                year_zhu = parts[0] if len(parts) > 0 else ''
+                month_zhu = parts[1] if len(parts) > 1 else ''
+                day_zhu = parts[2] if len(parts) > 2 else ''
+                hour_zhu = parts[3] if len(parts) > 3 else ''
+                
+                return {
+                    'year_gan': year_zhu[0] if len(year_zhu) >= 1 else '',
+                    'year_zhi': year_zhu[1] if len(year_zhu) >= 2 else '',
+                    'month_gan': month_zhu[0] if len(month_zhu) >= 1 else '',
+                    'month_zhi': month_zhu[1] if len(month_zhu) >= 2 else '',
+                    'day_gan': day_zhu[0] if len(day_zhu) >= 1 else '',
+                    'day_zhi': day_zhu[1] if len(day_zhu) >= 2 else '',
+                    'hour_gan': hour_zhu[0] if len(hour_zhu) >= 1 else '',
+                    'hour_zhi': hour_zhu[1] if len(hour_zhu) >= 2 else '',
+                }
+        
+        # 返回空字典作为默认
+        return {}
+    
     def get_lucky_directions(self, sizhu):
         """
         计算当日吉利的动土方位
@@ -1079,11 +1157,15 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         返回安全（不犯煞）的方位列表，按吉凶排序。
         
         Args:
-            sizhu: 四柱信息
+            sizhu: 四柱信息（字符串或字典格式）
             
         Returns:
             list: [{'方位': '子', '分值': 0, '说明': [...]}, ...]
         """
+        # 先解析sizhu为字典格式
+        sizhu = self._parse_sizhu(sizhu)
+        # 再标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
         results = []
         old_direction = self.direction
         
@@ -1132,14 +1214,18 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         返回按时辰排序的吉凶列表。
         
         Args:
-            sizhu: 四柱信息
+            sizhu: 四柱信息（字符串或字典格式）
             
         Returns:
             list: [{'时辰': '子时', '地支': '子', '分值': 0, '说明': [...]}, ...]
         """
+        # 先解析sizhu为字典格式
+        sizhu = self._parse_sizhu(sizhu)
+        # 再标准化sizhu格式（支持中文键名和英文键名两种格式）
+        sizhu = self._normalize_sizhu(sizhu)
         results = []
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
         
         hour_names = {
             '子': '子时(23-1)', '丑': '丑时(1-3)', '寅': '寅时(3-5)',
@@ -1161,54 +1247,66 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             hour_score = 0
             reasons = []
             
-            # 日破时
+            # 日破时（2026-09-16 口径统一：分值走 SHENSHA_SCORES 单一表）
             if self._is_chong_zhi(day_zhi, zhi):
-                hour_score -= 20
+                hour_score += self._hour_delta('日破时', -20)
                 reasons.append('日破时')
             
-            # 贵人时
+            # 时辰刑害扣分（年/月/日支全量检查；刑-15/害-10，不同支扣分叠加；冲已由日破时处理）
+            xh_pen, xh_reasons = self._get_xinghai_penalty_all(sizhu, zhi)
+            if xh_pen:
+                hour_score += xh_pen
+                reasons.extend(xh_reasons)
+
+            # 时支与日课年/月/日支构成三合局加分
+            sanhe_bonus = self._get_sanhe_daycourse_bonus(sizhu, zhi)
+            if sanhe_bonus:
+                hour_score += sanhe_bonus['score']
+                reasons.append(sanhe_bonus['reason'])
+            
+            # 贵人时（时辰专属项，未登记统一表时沿用默认15分）
             gui_ren = self._get_gui_ren_shichen(day_gan)
             if zhi in gui_ren:
-                hour_score += 15
+                hour_score += self._hour_delta('贵人时', 15)
                 reasons.append('贵人时')
-            
+
             # 禄神时
             lu = self._get_lu_shichen(day_gan)
             if zhi == lu:
-                hour_score += 10
+                hour_score += self._hour_delta('禄神时', 10)
                 reasons.append('禄神时')
-            
+
             # 五不遇时
             if self._is_wubuyu(hour_gan, day_gan):
-                hour_score -= 15
+                hour_score += self._hour_delta('五不遇时', -15)
                 reasons.append('五不遇时')
-            
+
             # 与坐山关系
             if self.zuoshan:
                 mountain_zhi = self._get_shan_zhi(self.zuoshan)
                 if mountain_zhi:
                     if self._is_chong_zhi(mountain_zhi, zhi):
-                        hour_score -= 30
+                        hour_score += self._hour_delta('冲坐山', -30)
                         reasons.append('冲坐山')
                     if self._is_liuhe(mountain_zhi, zhi):
-                        hour_score += 10
+                        hour_score += self._hour_delta('合坐山', 10)
                         reasons.append('合坐山')
                     if self._is_sanhe_with_mountain(zhi, mountain_zhi):
-                        hour_score += 15
+                        hour_score += self._hour_delta('三合坐山', 15)
                         reasons.append('三合坐山')
-            
+
             # 与主命关系
             if self.zhuming:
                 zhuming_zhi = self.zhuming[1] if len(self.zhuming) >= 2 else ''
                 if zhuming_zhi:
                     if self._is_chong_zhi(zhuming_zhi, zhi):
-                        hour_score -= 30
+                        hour_score += self._hour_delta('冲主命', -30)
                         reasons.append('冲主命')
                     if self._is_liuhe(zhuming_zhi, zhi):
-                        hour_score += 10
+                        hour_score += self._hour_delta('合主命', 10)
                         reasons.append('合主命')
                     if self._is_sanhe_with_mountain(zhi, zhuming_zhi):
-                        hour_score += 12
+                        hour_score += self._hour_delta('三合主命', 12)
                         reasons.append('三合主命')
             
             if not reasons:

@@ -32,7 +32,7 @@ import os
 
 # 检查是否是直接运行
 if __name__ == '__main__' and __package__ is None:
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = (getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(sys.executable))) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
@@ -50,25 +50,25 @@ YINFU_CONFIG = {
     # 正阴府山（8山）
     '正阴府': {
         '乾山': {'忌干': ['乙', '庚'], '说明': '乙庚合化金克木，乾山纳甲壬属木，受克'},
-        '坤山': {'忌干': ['甲', '己'], '说明': '甲己合化土克火，坤山纳癸属火'},
-        '艮山': {'忌干': ['甲', '己'], '说明': '甲己合化土克水，艮山纳丙属水'},
-        '巽山': {'忌干': ['甲', '己'], '说明': '甲己合化土克水，巽山纳辛属水'},
-        '子山': {'忌干': ['丙', '辛'], '说明': '丙辛合化水克火'},
-        '午山': {'忌干': ['丁', '壬'], '说明': '丁壬合化木克土'},
-        '卯山': {'忌干': ['戊', '癸'], '说明': '戊癸合化火克金'},
-        '酉山': {'忌干': ['乙', '庚'], '说明': '乙庚合化金克木'},
+        '坤山': {'忌干': ['丙', '辛'], '说明': '丙辛合化水克火，坤山纳癸属火，受克'},
+        '艮山': {'忌干': ['甲', '己'], '说明': '甲己合化土克水，艮山纳丙属水，受克'},
+        '巽山': {'忌干': ['甲', '己'], '说明': '甲己合化土克水，巽山纳辛属水，受克'},
+        '子山': {'忌干': ['丙', '辛'], '说明': '丙辛合化水，子山属水，比和为忌'},
+        '午山': {'忌干': ['丁', '壬'], '说明': '丁壬合化木克土，午山纳己属土，受克'},
+        '卯山': {'忌干': ['戊', '癸'], '说明': '戊癸合化火克金，卯山纳丁属金，受克'},
+        '酉山': {'忌干': ['乙', '庚'], '说明': '乙庚合化金克木，酉山纳辛属木，受克'},
     },
     # 傍阴府山（16山）- 双干全忌，单干有制权用
     '傍阴府': {
         # 坎卦三山
-        '壬山': {'忌干': ['丁', '壬', '乙', '庚'], '说明': '夏至后丁壬，冬至后乙庚，双干全忌'},
+        '壬山': {'忌干': ['丁', '壬', '乙', '庚'], '冬至后忌干': ['乙', '庚'], '夏至后忌干': ['丁', '壬'], '说明': '夏至后丁壬，冬至后乙庚，双干全忌'},
         '癸山': {'忌干': ['丙', '辛'], '说明': '双干全忌，单干有制权用'},
         # 艮卦三山
         '丑山': {'忌干': ['乙', '庚'], '说明': '双干全忌，单干有制权用'},
         '寅山': {'忌干': ['丙', '辛'], '说明': '双干全忌，单干有制权用'},
         # 震卦三山
-        '甲山': {'忌干': ['乙', '庚', '丁', '壬'], '说明': '冬至后乙庚，夏至后丁壬，双干全忌'},
-        '乙山': {'忌干': ['丙', '辛', '戊', '癸'], '说明': '冬至后丙辛，夏至后戊癸，双干全忌'},
+        '甲山': {'忌干': ['乙', '庚', '丁', '壬'], '冬至后忌干': ['乙', '庚'], '夏至后忌干': ['丁', '壬'], '说明': '冬至后乙庚，夏至后丁壬，双干全忌'},
+        '乙山': {'忌干': ['丙', '辛', '戊', '癸'], '冬至后忌干': ['丙', '辛'], '夏至后忌干': ['戊', '癸'], '说明': '冬至后丙辛，夏至后戊癸，双干全忌'},
         # 巽卦三山
         '辰山': {'忌干': ['丙', '辛'], '说明': '双干全忌，单干有制权用'},
         '巳山': {'忌干': ['乙', '庚'], '说明': '双干全忌，单干有制权用'},
@@ -87,11 +87,13 @@ YINFU_CONFIG = {
     }
 }
 
-def get_yinfu_config(mountain_name):
+def get_yinfu_config(mountain_name, is_after_dongzhi=None):
     """获取指定山向的阴府配置
 
     Args:
         mountain_name: 山向名称，如"乾山"、"壬山丙向"、"乾山巽向兼亥巳"等
+        is_after_dongzhi: 是否已过冬至（None=自动判断, True=冬至后, False=冬至前）
+                          用于傍阴府山中需要区分冬至/夏至前后的规则
 
     Returns:
         dict: 阴府配置，包含 type(正阴府/傍阴府), 忌干, 说明
@@ -133,6 +135,14 @@ def get_yinfu_config(mountain_name):
     if shan in YINFU_CONFIG['傍阴府']:
         config = YINFU_CONFIG['傍阴府'][shan].copy()
         config['type'] = '傍阴府'
+        
+        # 根据冬至/夏至前后选择对应的忌干
+        if is_after_dongzhi is not None:
+            if is_after_dongzhi and '冬至后忌干' in config:
+                config['忌干'] = config['冬至后忌干']
+            elif not is_after_dongzhi and '夏至后忌干' in config:
+                config['忌干'] = config['夏至后忌干']
+        
         return config
 
     return None
@@ -518,12 +528,22 @@ def get_mountain_data(mountain_name: str) -> dict:
     获取指定山向的择吉数据
     
     Args:
-        mountain_name: 山向名称，如"壬山丙向"、"子山午向"
+        mountain_name: 山向名称，如"壬山丙向"、"子山午向"、"巽山乾向兼辰戌"
         
     Returns:
         山向择吉数据字典，如果不存在返回空字典
     """
-    return MOUNTAIN_DATA.get(mountain_name, {})
+    # 首先尝试精确匹配
+    if mountain_name in MOUNTAIN_DATA:
+        return MOUNTAIN_DATA[mountain_name]
+    
+    # 如果找不到，尝试提取基础山向（去掉"兼"字及后面的部分）
+    if '兼' in mountain_name:
+        base_name = mountain_name.split('兼')[0]
+        if base_name in MOUNTAIN_DATA:
+            return MOUNTAIN_DATA[base_name]
+    
+    return {}
 
 
 def get_yang_gong_jishi(gan_combination: str) -> list:
@@ -566,24 +586,108 @@ def check_year_luck(mountain_name: str, year: str) -> str:
     return '未知'
 
 
+def _get_monthly_luck_key(mountain_name: str, bury: bool = False) -> str:
+    """根据山向名称获取正确的monthly_luck字段名（匹配实际数据键名）
+
+    Args:
+        mountain_name: 山向名称，如"巽山乾向兼辰戌"、"艮山坤向兼寅"
+        bury: 是否为安葬
+
+    Returns:
+        monthly_luck字段名
+    """
+    import re
+
+    default_key = 'bury_monthly_luck' if bury else 'monthly_luck'
+
+    if '兼' not in mountain_name:
+        return default_key
+
+    match = re.search(r'兼(\w+)', mountain_name)
+    if not match:
+        return default_key
+
+    jianxiang = match.group(1)
+
+    # 天干地支拼音映射
+    ganzhi_pinyin = {
+        '甲': 'jia', '乙': 'yi', '丙': 'bing', '丁': 'ding', '戊': 'wu',
+        '己': 'ji', '庚': 'geng', '辛': 'xin', '壬': 'ren', '癸': 'gui',
+        '子': 'zi', '丑': 'chou', '寅': 'yin', '卯': 'mao', '辰': 'chen',
+        '巳': 'si', '午': 'wu', '未': 'wei', '申': 'shen', '酉': 'you',
+        '戌': 'xu', '亥': 'hai',
+    }
+
+    # 构造兼向键名：jian{方向拼音}_monthly_luck
+    # 实际数据示例：jianyin_monthly_luck, jianyin_bury_monthly_luck
+    # jianyin = 兼寅
+    # 如果兼向是两个字（如"辰戌"），取第一个字的拼音
+    if len(jianxiang) >= 2:
+        jian_char = jianxiang[0]
+    else:
+        jian_char = jianxiang
+
+    jian_pinyin = ganzhi_pinyin.get(jian_char, jian_char)
+    jian_key = f'jian{jian_pinyin}'
+
+    return f'{jian_key}_{"bury_" if bury else ""}monthly_luck'
+
+
 def check_month_luck(mountain_name: str, month: str, bury: bool = False) -> dict:
     """
     检查指定山向在指定月份的吉凶
-    
+
     Args:
         mountain_name: 山向名称
         month: 月份，如"正月"、"二月"等
         bury: 是否为安葬（True为安葬，False为建造）
-        
+
     Returns:
         月份吉凶数据
     """
     data = get_mountain_data(mountain_name)
-    if data:
-        if bury:
-            return data['bury_monthly_luck'].get(month, {})
-        return data['monthly_luck'].get(month, {})
+    if not data:
+        return {}
+
+    default_key = 'bury_monthly_luck' if bury else 'monthly_luck'
+    if default_key in data:
+        month_data = data[default_key].get(month, {})
+        return _normalize_month_data(month_data)
+
+    actual_key = _get_monthly_luck_key(mountain_name, bury)
+    if actual_key != default_key and actual_key in data:
+        month_data = data[actual_key].get(month, {})
+        return _normalize_month_data(month_data)
+
+    for key in data.keys():
+        if key.startswith(default_key):
+            month_data = data[key].get(month, {})
+            return _normalize_month_data(month_data)
+
     return {}
+
+
+def _normalize_month_data(month_data: dict) -> dict:
+    """
+    标准化流月数据，兼容 'days' 和 'jiri' 两种格式
+
+    Args:
+        month_data: 原始月度数据
+
+    Returns:
+        标准化后的数据，'days' 字段统一为吉日列表
+    """
+    if not month_data:
+        return {}
+
+    result = month_data.copy()
+
+    if 'jiri' in result and 'days' not in result:
+        result['days'] = result['jiri']
+    elif 'days' in result and 'jiri' not in result:
+        result['jiri'] = result['days']
+
+    return result
 
 
 def check_keshan(mountain_name: str, year_gan: str) -> dict:
@@ -605,46 +709,7 @@ def check_keshan(mountain_name: str, year_gan: str) -> dict:
     return {}
 
 
-# 测试代码
-if __name__ == '__main__':
-    print("=== 二十四山择吉天机测试 ===")
-    
-    # 测试壬山丙向
-    print("\n1. 壬山丙向数据:")
-    data = get_mountain_data('壬山丙向')
-    if data:
-        print(f"  五行属性: {data['basic_info']['wuxing']}")
-        print(f"  三合局: {data['basic_info']['sanhe']}")
-        print(f"  山家三煞: {data['avoid_info']['shanjia_sansha']}")
-    
-    # 测试子山午向
-    print("\n2. 子山午向数据:")
-    data = get_mountain_data('子山午向')
-    if data:
-        print(f"  五行属性: {data['basic_info']['wuxing']}")
-        print(f"  三合局: {data['basic_info']['sanhe']}")
-        print(f"  正阴府: {data['avoid_info']['yinfu']}")
-    
-    # 测试杨公大吉时
-    print("\n3. 杨公风水大吉时:")
-    print(f"  甲己日吉时: {get_yang_gong_jishi('甲己')}")
-    print(f"  乙庚日吉时: {get_yang_gong_jishi('乙庚')}")
-    
-    # 测试流年吉凶
-    print("\n4. 流年吉凶查询:")
-    print(f"  壬山丙向甲子年: {check_year_luck('壬山丙向', '甲子')}")
-    print(f"  子山午向乙丑年: {check_year_luck('子山午向', '乙丑')}")
-    
-    # 测试流月吉凶
-    print("\n5. 流月吉凶查询:")
-    month_data = check_month_luck('壬山丙向', '二月')
-    print(f"  壬山丙向二月建造: {month_data.get('luck', '未知')}")
-    print(f"  吉日: {month_data.get('days', [])}")
-    
-    # 测试克山运
-    print("\n6. 克山运查询:")
-    keshan = check_keshan('壬山丙向', '甲己')
-    print(f"  壬山丙向甲己年: {keshan}")
+# 测试代码（移至文件末尾以确保所有函数已定义）
 
 
 # ================================================================================
@@ -4613,11 +4678,11 @@ TIAN_GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'
 
 MOUNTAIN_WUXING = {
     '壬': '水', '子': '水', '癸': '水',
-    '丑': '土', '艮': '土', '寅': '土',
+    '丑': '土', '艮': '土', '寅': '木',
     '甲': '木', '卯': '木', '乙': '木',
-    '辰': '土', '巽': '木', '巳': '木',
+    '辰': '土', '巽': '木', '巳': '火',
     '丙': '火', '午': '火', '丁': '火',
-    '未': '土', '坤': '土', '申': '土',
+    '未': '土', '坤': '土', '申': '金',
     '庚': '金', '酉': '金', '辛': '金',
     '戌': '土', '乾': '金', '亥': '水'
 }
@@ -4645,6 +4710,126 @@ YINFU_MAP = {
     '丁壬': '巽辛', '戊癸': '坤乙'
 }
 
+# ============================================================================
+# 吉神制化相关常量
+# ============================================================================
+
+TIAN_DE = {'甲': '寅', '乙': '申', '丙': '巳', '丁': '亥', '戊': '巳', '己': '亥', '庚': '申', '辛': '寅', '壬': '亥', '癸': '巳'}
+
+YUE_DE = {
+    '寅午戌': '丙',
+    '申子辰': '壬',
+    '亥卯未': '甲',
+    '巳酉丑': '庚',
+}
+
+SUI_DE = {
+    '甲': '甲', '己': '甲',
+    '乙': '庚', '庚': '庚',
+    '丙': '丙', '辛': '丙',
+    '丁': '壬', '壬': '壬',
+    '戊': '戊', '癸': '戊',
+}
+
+SUI_DE_HE = {
+    '甲': '己', '己': '甲',
+    '乙': '庚', '庚': '乙',
+    '丙': '辛', '辛': '丙',
+    '丁': '壬', '壬': '丁',
+    '戊': '癸', '癸': '戊',
+}
+
+TIAN_YI_GUIREN = {
+    '甲': ['丑', '未'],
+    '戊': ['丑', '未'],
+    '庚': ['丑', '未'],
+    '乙': ['子', '申'],
+    '己': ['子', '申'],
+    '丙': ['亥', '酉'],
+    '丁': ['亥', '酉'],
+    '辛': ['午', '寅'],
+    '壬': ['卯', '巳'],
+    '癸': ['卯', '巳'],
+}
+
+TWELVE_STAGES = {
+    '甲': {'长生': '亥', '沐浴': '子', '冠带': '丑', '临官': '寅', '帝旺': '卯', '衰': '辰', '病': '巳', '死': '午', '墓': '未', '绝': '申', '胎': '酉', '养': '戌'},
+    '丙': {'长生': '寅', '沐浴': '卯', '冠带': '辰', '临官': '巳', '帝旺': '午', '衰': '未', '病': '申', '死': '酉', '墓': '戌', '绝': '亥', '胎': '子', '养': '丑'},
+    '戊': {'长生': '寅', '沐浴': '卯', '冠带': '辰', '临官': '巳', '帝旺': '午', '衰': '未', '病': '申', '死': '酉', '墓': '戌', '绝': '亥', '胎': '子', '养': '丑'},
+    '庚': {'长生': '巳', '沐浴': '午', '冠带': '未', '临官': '申', '帝旺': '酉', '衰': '戌', '病': '亥', '死': '子', '墓': '丑', '绝': '寅', '胎': '卯', '养': '辰'},
+    '壬': {'长生': '申', '沐浴': '酉', '冠带': '戌', '临官': '亥', '帝旺': '子', '衰': '丑', '病': '寅', '死': '卯', '墓': '辰', '绝': '巳', '胎': '午', '养': '未'},
+    '乙': {'长生': '午', '沐浴': '巳', '冠带': '辰', '临官': '卯', '帝旺': '寅', '衰': '丑', '病': '子', '死': '亥', '墓': '戌', '绝': '酉', '胎': '申', '养': '未'},
+    '丁': {'长生': '酉', '沐浴': '申', '冠带': '未', '临官': '午', '帝旺': '巳', '衰': '辰', '病': '卯', '死': '寅', '墓': '丑', '绝': '子', '胎': '亥', '养': '戌'},
+    '己': {'长生': '酉', '沐浴': '申', '冠带': '未', '临官': '午', '帝旺': '巳', '衰': '辰', '病': '卯', '死': '寅', '墓': '丑', '绝': '子', '胎': '亥', '养': '戌'},
+    '辛': {'长生': '子', '沐浴': '亥', '冠带': '戌', '临官': '酉', '帝旺': '申', '衰': '未', '病': '午', '死': '巳', '墓': '辰', '绝': '卯', '胎': '寅', '养': '丑'},
+    '癸': {'长生': '卯', '沐浴': '寅', '冠带': '丑', '临官': '子', '帝旺': '亥', '衰': '戌', '病': '酉', '死': '申', '墓': '未', '绝': '午', '胎': '巳', '养': '辰'},
+}
+
+ZHI_WUXING = {
+    '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火',
+    '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水',
+}
+
+ZHI_CHONG = {
+    '子': '午', '丑': '未', '寅': '申', '卯': '酉', '辰': '戌', '巳': '亥',
+    '午': '子', '未': '丑', '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳',
+}
+
+SANSHA_TYPE_MAP = {
+    '申子辰': {'灾煞': '寅', '劫煞': '戌'},
+    '寅午戌': {'灾煞': '申', '劫煞': '辰'},
+    '亥卯未': {'灾煞': '巳', '劫煞': '丑'},
+    '巳酉丑': {'灾煞': '亥', '劫煞': '未'},
+}
+
+YEAR_SUI_SHA = {
+    '申子辰': '寅',
+    '寅午戌': '申',
+    '亥卯未': '巳',
+    '巳酉丑': '亥',
+}
+
+ZHI_GROUP = {
+    '子': '申子辰', '丑': '巳酉丑', '寅': '寅午戌', '卯': '亥卯未',
+    '辰': '申子辰', '巳': '巳酉丑', '午': '寅午戌', '未': '亥卯未',
+    '申': '申子辰', '酉': '巳酉丑', '戌': '寅午戌', '亥': '亥卯未',
+}
+
+
+def _parse_sansha_string(data_str: str) -> list:
+    """
+    解析三煞字符串，支持多种格式：
+    - "忌寅午戌年、月、日、时" → ['寅', '午', '戌']
+    - "忌寅午戌" → ['寅', '午', '戌']
+    - "忌寅、午、戌" → ['寅', '午', '戌']
+    - "忌寅" → ['寅']
+    
+    Args:
+        data_str: 三煞数据字符串
+        
+    Returns:
+        list: 地支列表
+    """
+    import re
+    valid_zhi = set('子丑寅卯辰巳午未申酉戌亥')
+    sansha_list = []
+    
+    # 先尝试用正则匹配连续地支（最常见格式）
+    match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥]+)', data_str)
+    if match:
+        matched = match.group(1)
+        # 如果匹配到的是纯地支（无其他分隔符），直接拆分
+        if all(c in valid_zhi for c in matched):
+            sansha_list = list(matched)
+            return sansha_list
+    
+    # 如果正则未匹配或匹配到的不全是地支，逐字符扫描
+    for ch in data_str:
+        if ch in valid_zhi:
+            sansha_list.append(ch)
+    
+    return sansha_list
+
 
 def get_mountain_wuxing(mountain_name: str) -> str:
     """
@@ -4662,9 +4847,12 @@ def get_mountain_wuxing(mountain_name: str) -> str:
 
 def check_chong_shan(mountain_name: str, zhi: str) -> bool:
     """
-    检查是否冲山
+    检查是否冲山（优先使用静态数据中的兼向规则，回退到MOUNTAIN_CHONG映射）
 
     冲山规则：日/时地支与山家地支相冲
+    部分兼向山有专用冲山规则（如壬山丙向兼子午忌午）
+
+    注：冲丁煞非《协纪辨方书》独立条目，类同天克地冲，在此一并处理。
 
     Args:
         mountain_name: 山向名称
@@ -4673,140 +4861,636 @@ def check_chong_shan(mountain_name: str, zhi: str) -> bool:
     Returns:
         True表示冲山，False表示不冲
     """
+    # 优先从静态数据获取兼向专用冲山规则
+    data = get_mountain_data(mountain_name)
+    if data and 'avoid_info' in data and 'chongshan' in data['avoid_info']:
+        chongshan_data = data['avoid_info']['chongshan']
+        if isinstance(chongshan_data, str):
+            import re
+            match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', chongshan_data)
+            if match and match.group(1) == zhi:
+                return True
+        elif isinstance(chongshan_data, dict):
+            if mountain_name in chongshan_data:
+                value = chongshan_data[mountain_name]
+                if isinstance(value, str):
+                    import re
+                    match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', value)
+                    if match and match.group(1) == zhi:
+                        return True
+
+    # 回退到MOUNTAIN_CHONG映射
     mountain_zhi = mountain_name[0]
     chong_zhi = MOUNTAIN_CHONG.get(mountain_zhi)
     return zhi == chong_zhi
 
 
-def check_sansha(mountain_name: str, zhi: str) -> bool:
+# ========================================================================
+# 年家紫白飞星·五黄煞
+# 依据：三元紫白，1864甲子年一白入中，逐年递减（每9年一循环）
+# 飞行路径：中宫→乾→兑→艮→离→坎→坤→震→巽（洛书轨迹）
+# 五黄宜静不宜动：五黄到山/到兼向，忌动土、修造、安葬
+# ========================================================================
+_WUHUANG_FLY_PATH = ['中', '乾', '兑', '艮', '离', '坎', '坤', '震', '巽']
+_WUHUANG_PALACE_MOUNTAINS = {
+    '乾': ['戌', '乾', '亥'],
+    '兑': ['庚', '酉', '辛'],
+    '艮': ['丑', '艮', '寅'],
+    '离': ['丙', '午', '丁'],
+    '坎': ['壬', '子', '癸'],
+    '坤': ['未', '坤', '申'],
+    '震': ['甲', '卯', '乙'],
+    '巽': ['辰', '巽', '巳'],
+}
+_WUHUANG_GANZHI60 = [TIAN_GAN[i % 10] + DI_ZHI[i % 12] for i in range(60)]
+
+
+def get_nian_jia_zibai_zhongxing(year_num: int) -> int:
     """
-    检查是否犯山家三煞
+    年家紫白飞星入中星（1-9）
+
+    1864甲子年一白入中，逐年递减，9年一循环。
+    验证：2024甲辰三碧入中、2025乙巳二黑入中、2026丙午一白入中。
+
+    Args:
+        year_num: 公历年份
+
+    Returns:
+        入中星数字（1-9，1=一白 ... 9=九紫）
+    """
+    m = (year_num - 1864) % 9
+    s = (1 - m) % 9
+    if s == 0:
+        s = 9
+    return s
+
+
+def get_wuhuang_palace(year_num: int) -> str:
+    """
+    年家五黄所在宫位
+
+    Args:
+        year_num: 公历年份
+
+    Returns:
+        宫位名（'中'表示五黄入中，无固定凶方）
+    """
+    s = get_nian_jia_zibai_zhongxing(year_num)
+    return _WUHUANG_FLY_PATH[(5 - s) % 9]
+
+
+def get_wuhuang_mountains(year_num: int) -> list:
+    """
+    年家五黄所在宫位对应的二十四山（三山）
+
+    Args:
+        year_num: 公历年份
+
+    Returns:
+        山名列表（如2026年返回['丙','午','丁']）；五黄入中年返回空列表
+    """
+    palace = get_wuhuang_palace(year_num)
+    return _WUHUANG_PALACE_MOUNTAINS.get(palace, [])
+
+
+def _resolve_year_num_from_ganzhi(year_gan: str, year_zhi: str):
+    """
+    从年干支推公历年（仅在下元1984-2043范围内可唯一确定）
+
+    Args:
+        year_gan: 年干
+        year_zhi: 年支
+
+    Returns:
+        公历年份，超出范围返回None
+    """
+    if not year_gan or not year_zhi:
+        return None
+    target = year_gan + year_zhi
+    for y in range(1984, 2044):
+        if _WUHUANG_GANZHI60[(y - 1984) % 60] == target:
+            return y
+    return None
+
+
+def check_wuhuang(date_info: dict, mountain_name: str) -> dict:
+    """
+    年家五黄煞检查
+
+    五黄（廉贞）为至凶之神，所到之山宜静不宜动。
+    五黄到坐山：凶煞，不可制化，一票否决；
+    五黄到兼向：警告，可制化（需吉星制化）。
+    五黄入中之年（如乙巳前后逢二黑八白等入中无五黄落宫年份），无固定凶方。
+
+    Args:
+        date_info: 日课信息（含year_gan/year_zhi，可含公历year）
+        mountain_name: 山向名称（如'子山丙向'、'子兼壬'）
+
+    Returns:
+        {'犯五黄': bool, '级别': '凶煞'|'警告'|'', '说明': str,
+         '年份': int|'', '宫位': str, '三山': str, '入中': bool}
+        （年份/宫位/三山/入中供日课详情展示；无法定年时为空）
+    """
+    result = {'犯五黄': False, '级别': '', '说明': '',
+              '年份': '', '宫位': '', '三山': '', '入中': False}
+
+    # 年份确定优先级：
+    # 1) 年柱干支精确回退（1984-2043内唯一确定）——兼容手动输入日期/四柱干支两种模式；
+    #    四柱手输模式下 sizhu['year'] 是按年支猜测的近似值，不可作为定年依据
+    # 2) 公历年份字段兜底（干支缺失时）
+    year_num = _resolve_year_num_from_ganzhi(
+        date_info.get('year_gan', ''), date_info.get('year_zhi', ''))
+    if not year_num:
+        year_num = date_info.get('year')
+        if not isinstance(year_num, int):
+            try:
+                year_num = int(year_num) if year_num else None
+            except (TypeError, ValueError):
+                year_num = None
+    if not year_num:
+        # 无法确定年份时跳过五黄检查
+        return result
+
+    result['年份'] = year_num
+    palace = get_wuhuang_palace(year_num)
+    wu_mountains = get_wuhuang_mountains(year_num)
+    result['宫位'] = palace
+    result['三山'] = ''.join(wu_mountains)
+
+    if not wu_mountains:
+        # 五黄入中，无固定凶方
+        result['入中'] = True
+        result['说明'] = f'{year_num}年五黄入中，无固定凶方'
+        return result
+
+    if not mountain_name:
+        return result
+
+    base_shan = mountain_name[0]
+    jian_shan = ''
+    if '兼' in mountain_name:
+        idx = mountain_name.index('兼')
+        if idx + 1 < len(mountain_name):
+            jian_shan = mountain_name[idx + 1]
+
+    if base_shan in wu_mountains:
+        result['犯五黄'] = True
+        result['级别'] = '凶煞'
+        result['说明'] = (f'年家五黄在{palace}宫（{"".join(wu_mountains)}），'
+                          f'{base_shan}山犯五黄，宜静不宜动，不可动土修造安葬')
+    elif jian_shan and jian_shan in wu_mountains:
+        result['犯五黄'] = True
+        result['级别'] = '警告'
+        result['说明'] = (f'年家五黄在{palace}宫（{"".join(wu_mountains)}），'
+                          f'{base_shan}山兼{jian_shan}，兼向犯五黄，宜慎')
+    return result
+
+
+# ========================================================================
+# 年家紫白飞星·二黑煞（病符星）
+# 同用三元紫白：1864甲子年一白入中，逐年递减；二黑落宫 = (2 - 入中星) % 9
+# 二黑（巨门，坤土）为病符，所到之山主疾病、脾胃、老妇/主妇不安，
+# 失运时为凶煞，力度次于五黄，但动土修造仍需避。
+# 二黑到山：凶煞-40分；二黑到兼向：警告-15分；二黑入中：无固定凶方
+# ========================================================================
+
+def get_erhei_palace(year_num: int) -> str:
+    """
+    年家二黑（病符星）所在宫位
+
+    Args:
+        year_num: 公历年份
+
+    Returns:
+        宫位名（'中'表示二黑入中，无固定凶方）
+    """
+    s = get_nian_jia_zibai_zhongxing(year_num)
+    return _WUHUANG_FLY_PATH[(2 - s) % 9]
+
+
+def get_erhei_mountains(year_num: int) -> list:
+    """
+    年家二黑所在宫位对应的二十四山（三山）
+
+    Args:
+        year_num: 公历年份
+
+    Returns:
+        山名列表（如2026年二黑在坤宫→['未','坤','申']）；二黑入中年返回空列表
+    """
+    palace = get_erhei_palace(year_num)
+    return _WUHUANG_PALACE_MOUNTAINS.get(palace, [])
+
+
+def check_erhei(date_info: dict, mountain_name: str) -> dict:
+    """
+    年家二黑煞（病符星）检查
+
+    二黑巨门属坤土，失运时为病符之神，所到之宫主疾病、脾胃、妇人/主妇不安；
+    虽凶性次于五黄（正关大煞），但动土、修造、安葬犯之，常主疾病缠绵。
+    二黑到坐山：凶煞，扣40分，列为禁用警告；
+    二黑到兼向：警告，扣15分，需谨慎；
+    二黑入中之年：无固定凶方。
+
+    Args:
+        date_info: 日课信息（含year_gan/year_zhi，可含公历year）
+        mountain_name: 山向名称（如'子山丙向'、'子兼壬'）
+
+    Returns:
+        {'犯二黑': bool, '级别': '凶煞'|'警告'|'', '说明': str,
+         '年份': int|'', '宫位': str, '三山': str, '入中': bool}
+    """
+    result = {'犯二黑': False, '级别': '', '说明': '',
+              '年份': '', '宫位': '', '三山': '', '入中': False}
+
+    year_num = _resolve_year_num_from_ganzhi(
+        date_info.get('year_gan', ''), date_info.get('year_zhi', ''))
+    if not year_num:
+        year_num = date_info.get('year')
+        if not isinstance(year_num, int):
+            try:
+                year_num = int(year_num) if year_num else None
+            except (TypeError, ValueError):
+                year_num = None
+    if not year_num:
+        return result
+
+    result['年份'] = year_num
+    palace = get_erhei_palace(year_num)
+    eh_mountains = get_erhei_mountains(year_num)
+    result['宫位'] = palace
+    result['三山'] = ''.join(eh_mountains)
+
+    if not eh_mountains:
+        result['入中'] = True
+        result['说明'] = f'{year_num}年二黑入中，无固定凶方'
+        return result
+
+    if not mountain_name:
+        return result
+
+    base_shan = mountain_name[0]
+    jian_shan = ''
+    if '兼' in mountain_name:
+        idx = mountain_name.index('兼')
+        if idx + 1 < len(mountain_name):
+            jian_shan = mountain_name[idx + 1]
+
+    if base_shan in eh_mountains:
+        result['犯二黑'] = True
+        result['级别'] = '凶煞'
+        result['说明'] = (f'年家二黑（病符）在{palace}宫（{"".join(eh_mountains)}），'
+                          f'{base_shan}山犯二黑，主疾病脾胃、妇人不安，动土修造忌之')
+    elif jian_shan and jian_shan in eh_mountains:
+        result['犯二黑'] = True
+        result['级别'] = '警告'
+        result['说明'] = (f'年家二黑（病符）在{palace}宫（{"".join(eh_mountains)}），'
+                          f'{base_shan}山兼{jian_shan}，兼向犯二黑，宜慎')
+    return result
+
+
+def check_sansha(mountain_name: str, zhi: str, year_zhi: str = '') -> dict:
+    """
+    检查是否犯山家三煞（优先从静态数据解析，回退到硬编码映射）
 
     山家三煞规则：
-    - 申子辰水局，煞在寅午戌
-    - 寅午戌火局，煞在申子辰
-    - 亥卯未木局，煞在巳酉丑
-    - 巳酉丑金局，煞在亥卯未
+    - 水局(申子辰): 壬、子、癸、丑、亥 → 煞在寅午戌
+    - 木局(亥卯未): 甲、卯、乙、辰、寅 → 煞在巳酉丑
+    - 火局(寅午戌): 丙、午、丁、未、巳 → 煞在申子辰
+    - 金局(巳酉丑): 庚、酉、辛、戌、申 → 煞在亥卯未
 
-    二十四山三合局归属：
-    - 水局：壬、子、癸
-    - 木局：甲、卯、乙、乾（亥宫）
-    - 火局：丙、午、丁
-    - 金局：庚、酉、辛
+    煞类型区分：
+    - 岁煞：年支冲的方位对应地支，绝对禁用，不可制化
+    - 灾煞：三煞第一位，条件禁用，可被吉神制化
+    - 劫煞：三煞第三位，条件禁用，可被吉神制化
 
     Args:
         mountain_name: 山向名称
         zhi: 地支
+        year_zhi: 年支（用于判断岁煞），可选
 
     Returns:
-        True表示犯三煞，False表示不犯
+        {'犯煞': bool, '煞类型': str, '位置': str}
     """
-    mountain_zhi = mountain_name[0]
+    import re
 
-    sansha_by_mountain = {
-        '壬': ['寅', '午', '戌'],
-        '子': ['寅', '午', '戌'],
-        '癸': ['寅', '午', '戌'],
-        '甲': ['巳', '酉', '丑'],
-        '卯': ['巳', '酉', '丑'],
-        '乙': ['巳', '酉', '丑'],
-        '丙': ['申', '子', '辰'],
-        '午': ['申', '子', '辰'],
-        '丁': ['申', '子', '辰'],
-        '庚': ['亥', '卯', '未'],
-        '酉': ['亥', '卯', '未'],
-        '辛': ['亥', '卯', '未'],
-        '乾': ['巳', '酉', '丑'],
-        '亥': ['巳', '酉', '丑'],
-        '艮': ['申', '子', '辰'],
-        '寅': ['申', '子', '辰'],
-        '巽': ['亥', '卯', '未'],
-        '巳': ['亥', '卯', '未'],
-        '坤': ['寅', '午', '戌'],
-        '申': ['寅', '午', '戌'],
-        '丑': ['寅', '午', '戌'],
-        '辰': ['寅', '午', '戌'],
-        '未': ['申', '子', '辰'],
-        '戌': ['申', '子', '辰']
-    }
+    result = {'犯煞': False, '煞类型': '', '位置': ''}
 
-    sansha_list = sansha_by_mountain.get(mountain_zhi, [])
-    return zhi in sansha_list
+    if not zhi:
+        return result
+
+    sansha_list = []
+
+    data = get_mountain_data(mountain_name)
+    if data and 'avoid_info' in data and 'shanjia_sansha' in data['avoid_info']:
+        sansha_data = data['avoid_info']['shanjia_sansha']
+
+        if isinstance(sansha_data, str):
+            # 解析格式支持多种变体：
+            # "忌寅午戌年、月、日、时" → 提取地支
+            # "忌寅午戌" → 提取地支
+            # "忌寅、午、戌" → 逐个提取
+            sansha_list = _parse_sansha_string(sansha_data)
+
+        elif isinstance(sansha_data, dict):
+            # 构建所有可能的匹配 key
+            candidate_keys = []
+            
+            # 1. mountain_name 本身
+            candidate_keys.append(mountain_name)
+            
+            # 2. 基础山向（不含兼向）
+            if '兼' in mountain_name:
+                base = mountain_name.split('兼')[0].strip()
+                candidate_keys.append(base)
+            
+            # 3. 兼向相关 key
+            if '兼' in mountain_name:
+                match = re.search(r'兼(\w+)', mountain_name)
+                if match:
+                    jianxiang = match.group(1)
+                    candidate_keys.extend([jianxiang, f'兼{jianxiang}'])
+                    if len(jianxiang) >= 2:
+                        candidate_keys.append(jianxiang[:2])
+            
+            # 4. 默认 key
+            candidate_keys.extend(['默认', 'default'])
+            
+            # 依次尝试匹配
+            for key in candidate_keys:
+                if key in sansha_data:
+                    value = sansha_data[key]
+                    if isinstance(value, str):
+                        sansha_list = _parse_sansha_string(value)
+                    elif isinstance(value, list):
+                        sansha_list = value
+                    if sansha_list:
+                        break
+
+    if not sansha_list:
+        mountain_zhi = mountain_name[0]
+
+        sansha_by_mountain = {
+            '壬': ['寅', '午', '戌'], '子': ['寅', '午', '戌'],
+            '癸': ['寅', '午', '戌'], '丑': ['寅', '午', '戌'],
+            '亥': ['寅', '午', '戌'],
+            '甲': ['巳', '酉', '丑'], '卯': ['巳', '酉', '丑'],
+            '乙': ['巳', '酉', '丑'], '辰': ['巳', '酉', '丑'],
+            '寅': ['巳', '酉', '丑'],
+            '丙': ['申', '子', '辰'], '午': ['申', '子', '辰'],
+            '丁': ['申', '子', '辰'], '未': ['申', '子', '辰'],
+            '巳': ['申', '子', '辰'],
+            '庚': ['亥', '卯', '未'], '酉': ['亥', '卯', '未'],
+            '辛': ['亥', '卯', '未'], '戌': ['亥', '卯', '未'],
+            '申': ['亥', '卯', '未'],
+        }
+
+        if mountain_zhi in ['艮', '巽', '坤', '乾']:
+            if '兼' in mountain_name:
+                match = re.search(r'兼(\w+)', mountain_name)
+                if match:
+                    jianxiang = match.group(1)
+                    if mountain_zhi == '艮':
+                        sansha_list = ['寅', '午', '戌'] if jianxiang in ['丑未'] else ['巳', '酉', '丑']
+                    elif mountain_zhi == '巽':
+                        sansha_list = ['巳', '酉', '丑'] if jianxiang in ['辰戌'] else ['申', '子', '辰']
+                    elif mountain_zhi == '坤':
+                        sansha_list = ['申', '子', '辰'] if jianxiang in ['未丑'] else ['亥', '卯', '未']
+                    elif mountain_zhi == '乾':
+                        sansha_list = ['亥', '卯', '未'] if jianxiang in ['戌辰'] else ['寅', '午', '戌']
+                    else:
+                        sansha_list = sansha_by_mountain.get(mountain_zhi, [])
+            else:
+                default_sansha = {
+                    '艮': ['寅', '午', '戌'], '巽': ['巳', '酉', '丑'],
+                    '坤': ['申', '子', '辰'], '乾': ['亥', '卯', '未'],
+                }
+                sansha_list = default_sansha.get(mountain_zhi, [])
+        else:
+            sansha_list = sansha_by_mountain.get(mountain_zhi, [])
+
+    if zhi not in sansha_list:
+        return result
+
+    result['犯煞'] = True
+    result['位置'] = zhi
+
+    if year_zhi:
+        year_group = ZHI_GROUP.get(year_zhi, '')
+        if year_group and year_group in YEAR_SUI_SHA:
+            sui_sha_zhi = YEAR_SUI_SHA[year_group]
+            if zhi == sui_sha_zhi:
+                result['煞类型'] = '岁煞'
+                return result
+
+    for group, types in SANSHA_TYPE_MAP.items():
+        if zhi == types.get('灾煞', ''):
+            result['煞类型'] = '灾煞'
+            return result
+        if zhi == types.get('劫煞', ''):
+            result['煞类型'] = '劫煞'
+            return result
+
+    result['煞类型'] = '灾煞'
+    return result
 
 
-def check_yinfu(mountain_name: str, gan_list: list) -> dict:
+def check_yinfu(mountain_name: str, gan_list: list, event_type: str = '修造') -> dict:
     """
-    检查是否犯阴府
+    检查是否犯阴府（使用 YINFU_CONFIG 配置）
 
     阴府规则：
-    - 甲己年：艮丙为阴府
-    - 乙庚年：丁壬为阴府
-    - 丙辛年：乾甲为阴府
-    - 丁壬年：巽辛为阴府
-    - 戊癸年：坤乙为阴府
+    - 正阴府（8山）：
+      · 修造：双干禁用（大凶），单干警告（需制化）
+      · 修方：双干禁用（大凶），单干也禁用（更严格，因修方动土更直接影响方位）
+      · 安葬：双干不禁用仅警告，单干不禁用
+    - 傍阴府（16山）：所有事由均不禁用，仅记录警告
 
     Args:
         mountain_name: 山向名称
         gan_list: 天干列表（年/月/日/时干）
+        event_type: 事件类型，'修造'(默认)、'安葬'、'修方'
 
     Returns:
-        {'犯阴府': bool, '类型': str, '说明': str}
+        {'犯阴府': bool, '类型': str, '说明': str, '禁用': bool}
     """
-    mountain_zhi = mountain_name[0]
-    result = {'犯阴府': False, '类型': '无', '说明': ''}
+    result = {'犯阴府': False, '类型': '无', '说明': '', '禁用': False}
 
-    for gan_comb, yinfu in YINFU_MAP.items():
-        gan1, gan2 = gan_comb[0], gan_comb[1]
-        if gan1 in gan_list and gan2 in gan_list:
-            if mountain_zhi in yinfu:
+    config = get_yinfu_config(mountain_name)
+    if not config:
+        return result
+
+    ji_gans = config.get('忌干', [])
+    yinfu_type = config.get('type', '')
+
+    if not ji_gans:
+        return result
+
+    found_gans = [g for g in ji_gans if g in gan_list]
+
+    gan_wuhe_pairs = [('甲', '己'), ('乙', '庚'), ('丙', '辛'), ('丁', '壬'), ('戊', '癸')]
+
+    found_pair = None
+    for pair in gan_wuhe_pairs:
+        if pair[0] in found_gans and pair[1] in found_gans:
+            found_pair = pair
+            break
+
+    if found_pair:
+        if yinfu_type == '正阴府':
+            if event_type == '安葬':
                 result = {
                     '犯阴府': True,
                     '类型': '正阴府',
-                    '说明': f'{gan_comb}年月日时干全见，犯{yinfu}阴府，大凶'
+                    '说明': f'{"".join(found_pair)}年月日时干全见，犯正阴府（安葬不忌，但修造/修方忌）',
+                    '禁用': False
                 }
-                break
-        elif gan1 in gan_list or gan2 in gan_list:
-            if mountain_zhi in yinfu:
+            elif event_type == '修方':
                 result = {
                     '犯阴府': True,
-                    '类型': '傍阴府',
-                    '说明': f'{gan_comb}中单干见，犯傍阴府，有制权用'
+                    '类型': '正阴府',
+                    '说明': f'{"".join(found_pair)}年月日时干全见，犯正阴府修方大忌，绝对禁用',
+                    '禁用': True
                 }
+            else:
+                result = {
+                    '犯阴府': True,
+                    '类型': '正阴府',
+                    '说明': f'{"".join(found_pair)}年月日时干全见，犯{config.get("说明", "")}，大凶',
+                    '禁用': True
+                }
+        else:
+            result = {
+                '犯阴府': True,
+                '类型': '傍阴府',
+                '说明': f'{"".join(found_pair)}年月日时干全见，犯傍阴府（仅警告，不禁用）',
+                '禁用': False
+            }
+    elif len(found_gans) >= 1:
+        if yinfu_type == '正阴府':
+            if event_type == '安葬':
+                result = {
+                    '犯阴府': True,
+                    '类型': '正阴府',
+                    '说明': f'{found_gans[0]}干见，犯正阴府（安葬不忌，但修造/修方需制化）',
+                    '禁用': False
+                }
+            elif event_type == '修方':
+                result = {
+                    '犯阴府': True,
+                    '类型': '正阴府',
+                    '说明': f'{found_gans[0]}干见，犯正阴府（修方单干也禁用，需制化后可用）',
+                    '禁用': True
+                }
+            else:
+                result = {
+                    '犯阴府': True,
+                    '类型': '正阴府',
+                    '说明': f'{found_gans[0]}干见，犯正阴府，需制化（不禁用）',
+                    '禁用': False
+                }
+        else:
+            result = {
+                '犯阴府': True,
+                '类型': '傍阴府',
+                '说明': f'{found_gans[0]}干见，犯傍阴府（仅警告，不禁用）',
+                '禁用': False
+            }
 
     return result
 
 
-def calculate_shanfang_sha(day_gan: str, day_zhi: str) -> bool:
+def calculate_shanfang_sha(mountain_name: str, day_gan: str, day_zhi: str = '', is_shi: bool = False) -> bool:
     """
-    动态计算山方煞
+    动态计算山方煞（从静态数据读取各山具体忌日）
 
     山方煞规则：
-    日柱天干为戊或己，地支为辰或戌，即为山方煞日
+    各山都有特定的山方煞忌日和忌时
 
     Args:
-        day_gan: 日干
-        day_zhi: 日支
+        mountain_name: 山向名称
+        day_gan: 日干或时干
+        day_zhi: 日支或时支
+        is_shi: 是否检查时辰（True=检查时辰，False=检查日子）
 
     Returns:
         True表示犯山方煞，False表示不犯
     """
+    day_ganzhi = day_gan + day_zhi if day_zhi else day_gan
+
+    data = get_mountain_data(mountain_name)
+    if data and 'avoid_info' in data and 'shanfang_sha' in data['avoid_info']:
+        shanfang_data = data['avoid_info']['shanfang_sha']
+
+        if isinstance(shanfang_data, dict):
+            if is_shi:
+                ji_list = shanfang_data.get('ji_shi', [])
+            else:
+                ji_list = shanfang_data.get('ji_ri', [])
+            return day_ganzhi in ji_list
+
+        # 如果是字符串格式，解析忌日
+        if isinstance(shanfang_data, str):
+            import re
+            matches = re.findall(r'([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])', shanfang_data)
+            if matches:
+                return day_ganzhi in matches
+
+    # 默认规则（回退）
     return day_gan in ['戊', '己'] and day_zhi in ['辰', '戌']
 
 
-def calculate_keshan_yun(year_gan: str, mountain_wuxing: str) -> dict:
+def calculate_keshan_yun(year_gan: str, mountain_wuxing: str, mountain_name: str = '', is_dongzhi_after: bool = False) -> dict:
     """
-    动态计算克山运
+    动态计算克山运（优先使用静态数据，回退到动态计算）
 
     克山运规则：
     根据年干和山家五行，计算山运纳音及忌讳
+    部分山向需区分冬至前后
 
     Args:
         year_gan: 年干
         mountain_wuxing: 山家五行
+        mountain_name: 山向名称（可选，用于获取静态数据）
+        is_dongzhi_after: 是否在冬至后（用于区分冬夏）
 
     Returns:
         {'山运纳音': str, '忌纳音': str, '说明': str}
     """
+    if mountain_name:
+        data = get_mountain_data(mountain_name)
+        if data and 'avoid_info' in data and 'keshan' in data['avoid_info']:
+            keshan_data = data['avoid_info']['keshan']
+            gan_groups = {
+                '甲': '甲己年', '己': '甲己年',
+                '乙': '乙庚年', '庚': '乙庚年',
+                '丙': '丙辛年', '辛': '丙辛年',
+                '丁': '丁壬年', '壬': '丁壬年',
+                '戊': '戊癸年', '癸': '戊癸年',
+            }
+            year_key = gan_groups.get(year_gan, '')
+            if year_key and year_key in keshan_data:
+                info = keshan_data[year_key]
+                if isinstance(info, dict):
+                    # 冬至前后区分
+                    if 'dongzhi_qian' in info:
+                        if is_dongzhi_after:
+                            info_used = info.get('dongzhi_hou', info.get('dongzhi_qian', {}))
+                            period = '冬至后'
+                        else:
+                            info_used = info.get('dongzhi_qian', {})
+                            period = '冬至前'
+                        return {
+                            '山运纳音': info_used.get('yun', ''),
+                            '忌纳音': info_used.get('ji', ''),
+                            '说明': f"忌日课四柱纳音克山运（{period}）"
+                        }
+                    return {
+                        '山运纳音': info.get('yun', ''),
+                        '忌纳音': info.get('ji', ''),
+                        '说明': f"忌日课四柱纳音克山运"
+                    }
+
     keshan_table = {
         '甲': {'山运': '甲子金', '忌': '火'},
         '己': {'山运': '甲子金', '忌': '火'},
@@ -4817,7 +5501,7 @@ def calculate_keshan_yun(year_gan: str, mountain_wuxing: str) -> dict:
         '丁': {'山运': '庚子土', '忌': '木'},
         '壬': {'山运': '庚子土', '忌': '木'},
         '戊': {'山运': '壬子木', '忌': '金'},
-        '癸': {'山运': '壬子木', '忌': '金'}
+        '癸': {'山运': '壬子木', '忌': '金'},
     }
 
     if year_gan in keshan_table:
@@ -4831,27 +5515,37 @@ def calculate_keshan_yun(year_gan: str, mountain_wuxing: str) -> dict:
     return {'山运纳音': '未知', '忌纳音': '未知', '说明': '无法计算'}
 
 
-def calculate_xingyao_sha(mountain_wuxing: str, day_gan: str, day_zhi: str) -> bool:
+def calculate_xingyao_sha(mountain_wuxing: str, day_gan: str, day_zhi: str, mountain_name: str = '') -> bool:
     """
-    动态计算星曜煞
+    动态计算星曜煞（优先使用静态数据，回退到通用规则）
 
     星曜煞规则：
     日犯日宿，时犯时宿
-    根据山家五行判断：
-    - 水山：忌戊辰、戊戌、己丑、己未（土克水）
-    - 木山：忌庚申、辛酉（金克木）
-    - 火山：忌壬子、癸亥（水克火）
-    - 金山：忌丙午、丁巳（火克金）
-    - 土山：忌甲寅、乙卯（木克土）
+    根据山家五行判断
+
+    注：星曜煞非《协纪辨方书》原著术语，源自民间择日流派。
 
     Args:
         mountain_wuxing: 山家五行
         day_gan: 日干
         day_zhi: 日支
+        mountain_name: 山向名称（可选，用于获取特定忌日）
 
     Returns:
         True表示犯星曜煞，False表示不犯
     """
+    day_ganzhi = day_gan + day_zhi
+
+    if mountain_name:
+        data = get_mountain_data(mountain_name)
+        if data and 'avoid_info' in data and 'xingyao_sha' in data['avoid_info']:
+            xingyao_data = data['avoid_info']['xingyao_sha']
+            if isinstance(xingyao_data, str):
+                import re
+                matches = re.findall(r'([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])', xingyao_data)
+                if matches:
+                    return day_ganzhi in matches
+
     xingyao_rules = {
         '水': {'戊辰', '戊戌', '己丑', '己未'},
         '木': {'庚申', '辛酉', '甲申', '乙酉'},
@@ -4861,24 +5555,151 @@ def calculate_xingyao_sha(mountain_wuxing: str, day_gan: str, day_zhi: str) -> b
     }
 
     if mountain_wuxing in xingyao_rules:
-        day_ganzhi = day_gan + day_zhi
         return day_ganzhi in xingyao_rules[mountain_wuxing]
 
     return False
 
 
-def check_mountain_day(date_info: dict, mountain_name: str) -> dict:
+def calculate_ji_shanfu(date_info: dict, mountain_name: str) -> list:
     """
-    综合检查日课对山家的吉凶
+    计算日课对应的吉神（天德/月德/岁德/岁德合/禄马贵人/天乙贵人等）
+
+    吉神可制化凶煞，将条件禁忌降级为"警告（有制）"。
 
     Args:
         date_info: 日课信息，包含年月日时干支
         mountain_name: 山向名称
 
     Returns:
-        {'可用': bool, '凶煞': list, '说明': str}
+        吉神名称列表，如 ['天德', '月德', '岁德', '天乙贵人']
     """
-    result = {'可用': True, '凶煞': [], '说明': ''}
+    ji_list = []
+
+    year_gan = date_info.get('year_gan', '')
+    year_zhi = date_info.get('year_zhi', '')
+    month_gan = date_info.get('month_gan', '')
+    month_zhi = date_info.get('month_zhi', '')
+    day_gan = date_info.get('day_gan', '')
+    day_zhi = date_info.get('day_zhi', '')
+
+    # 2026-09-01 修复：原 all_gan 误含 day_zhi（地支混入天干列表，笔误）
+    all_gan = [year_gan, month_gan, day_gan]
+    all_zhi = [year_zhi, month_zhi, day_zhi]
+
+    mountain_zhi = mountain_name[0] if mountain_name else ''
+
+    if year_gan and year_gan in TIAN_DE:
+        tian_de_zhi = TIAN_DE[year_gan]
+        if tian_de_zhi in all_zhi or tian_de_zhi == mountain_zhi:
+            ji_list.append('天德')
+
+    if month_zhi and day_gan:
+        # 2026-09-01 修复：月德以日干判定（与评分器口径统一），
+        # 原"四柱含月德干即命中"导致本例（寅月月德丙，年干丙）误报月德
+        for group, de_gan in YUE_DE.items():
+            zhi_list = list(group)
+            if month_zhi in zhi_list and day_gan == de_gan:
+                ji_list.append('月德')
+                break
+
+    if year_gan and year_gan in SUI_DE:
+        sui_de_gan = SUI_DE[year_gan]
+        if sui_de_gan in all_gan:
+            ji_list.append('岁德')
+
+    if year_gan and year_gan in SUI_DE_HE:
+        sui_de_he_gan = SUI_DE_HE[year_gan]
+        if sui_de_he_gan in all_gan:
+            ji_list.append('岁德合')
+
+    if year_gan and year_gan in TIAN_YI_GUIREN:
+        tian_yi_zhi_list = TIAN_YI_GUIREN[year_gan]
+        for zhi in all_zhi:
+            if zhi in tian_yi_zhi_list:
+                ji_list.append('天乙贵人')
+                break
+
+    if day_gan and day_zhi:
+        if day_zhi in TWELVE_STAGES.get(day_gan, {}).get('临官', ''):
+            ji_list.append('禄贵人')
+        if day_zhi in TWELVE_STAGES.get(day_gan, {}).get('帝旺', ''):
+            ji_list.append('马贵人')
+
+    return ji_list
+
+
+# 干支同气日：六十甲子中日干与日支五行同气者仅四日（甲寅木、乙卯木、庚申金、辛酉金）
+GAN_ZHI_TONGQI = {'甲': '寅', '乙': '卯', '庚': '申', '辛': '酉'}
+
+
+def classify_day_type(day_gan: str, day_zhi: str, year_gan: str, year_zhi: str) -> str:
+    """
+     classify_day_type: 计算日课的宝日/义日/制日/专日/伐日分类
+
+    宝日 = 年干墓库之支，义日 = 年干长生之支，制日 = 年干帝旺之支，
+    专日 = 干支同气日（仅甲寅、乙卯、庚申、辛酉四日），伐日 = 年干死绝之支
+
+    依据《协纪辨方书》长生十二宫理论。
+
+    Args:
+        day_gan: 日干
+        day_zhi: 日支
+        year_gan: 年干
+        year_zhi: 年支
+
+    Returns:
+        '宝日'、'义日'、'制日'、'专日'、'伐日' 或 '普通日'
+    """
+    # 专日：仅限干支同气日（日干与日支同一五行，如甲寅、乙卯、庚申、辛酉）
+    if day_gan and day_zhi and GAN_ZHI_TONGQI.get(day_gan) == day_zhi:
+        return '专日'
+
+    if not year_gan or not day_zhi:
+        return '普通日'
+
+    stages = TWELVE_STAGES.get(year_gan, {})
+    if not stages:
+        return '普通日'
+
+    if day_zhi == stages.get('墓', ''):
+        return '宝日'
+    if day_zhi == stages.get('长生', ''):
+        return '义日'
+    if day_zhi == stages.get('帝旺', ''):
+        return '制日'
+    if day_zhi in (stages.get('死', ''), stages.get('绝', '')):
+        return '伐日'
+
+    return '普通日'
+
+
+def check_mountain_day(date_info: dict, mountain_name: str, event_type: str = '修造') -> dict:
+    """
+    综合检查日课对山家的吉凶（分层管线架构）
+
+    Args:
+        date_info: 日课信息，包含年月日时干支
+        mountain_name: 山向名称
+        event_type: 事件类型，'修造'(默认)、'安葬'、'修方'
+
+    Returns:
+        {
+            '可用': bool,
+            '凶煞': list,       # 硬性禁用项
+            '警告': list,       # 警告/可制化项
+            '吉神': list,       # 检测到的吉神
+            '日类': str,        # 宝日/义日/制日/专日/伐日/普通日
+            '说明': str
+        }
+    """
+    result = {
+        '可用': True,
+        '凶煞': [],
+        '警告': [],
+        '吉神': [],
+        '日类': '普通日',
+        '说明': ''
+    }
 
     mountain_wuxing = get_mountain_wuxing(mountain_name)
 
@@ -4891,62 +5712,258 @@ def check_mountain_day(date_info: dict, mountain_name: str) -> dict:
     hour_gan = date_info.get('hour_gan', '')
     hour_zhi = date_info.get('hour_zhi', '')
 
-    if check_chong_shan(mountain_name, year_zhi):
-        result['凶煞'].append('年冲山')
-        result['可用'] = False
+    # ========================================================================
+    # Layer 1: 绝对禁忌检查（不可制化）
+    # ========================================================================
 
-    if check_chong_shan(mountain_name, month_zhi):
-        result['凶煞'].append('月冲山')
-        result['可用'] = False
+    # 1.1 冲山检查（岁破）：所有事由均禁用
+    for pos, gan, zhi in [('年', year_gan, year_zhi), ('月', month_gan, month_zhi),
+                             ('日', day_gan, day_zhi), ('时', hour_gan, hour_zhi)]:
+        if zhi and check_chong_shan(mountain_name, zhi):
+            if pos == '日':
+                result['凶煞'].append(f'{pos}冲山（日破）')
+            else:
+                result['凶煞'].append(f'{pos}冲山')
+            result['可用'] = False
 
-    if check_chong_shan(mountain_name, day_zhi):
-        result['凶煞'].append('日冲山（日破）')
-        result['可用'] = False
+    # 1.2 岁煞检查：所有事由均禁用，不可制化
+    for pos, zhi in [('年', year_zhi), ('月', month_zhi), ('日', day_zhi), ('时', hour_zhi)]:
+        if zhi:
+            sansha_result = check_sansha(mountain_name, zhi, year_zhi)
+            if sansha_result['犯煞'] and sansha_result['煞类型'] == '岁煞':
+                result['凶煞'].append(f'{pos}岁煞')
+                result['可用'] = False
 
-    if check_chong_shan(mountain_name, hour_zhi):
-        result['凶煞'].append('时冲山')
-        result['可用'] = False
-
-    if check_sansha(mountain_name, year_zhi):
-        result['凶煞'].append('年三煞')
-        result['可用'] = False
-
-    if check_sansha(mountain_name, month_zhi):
-        result['凶煞'].append('月三煞')
-        result['可用'] = False
-
-    if check_sansha(mountain_name, day_zhi):
-        result['凶煞'].append('日三煞')
-        result['可用'] = False
-
-    if check_sansha(mountain_name, hour_zhi):
-        result['凶煞'].append('时三煞')
-        result['可用'] = False
-
-    gan_list = [year_gan, month_gan, day_gan, hour_gan]
-    yinfu_result = check_yinfu(mountain_name, gan_list)
-    if yinfu_result['犯阴府']:
-        if yinfu_result['类型'] == '正阴府':
+    # 1.3 正阴府双干（仅修造/修方禁用，安葬不禁用）
+    gan_list = [g for g in [year_gan, month_gan, day_gan, hour_gan] if g]
+    if gan_list:
+        yinfu_result = check_yinfu(mountain_name, gan_list, event_type)
+        if yinfu_result['犯阴府'] and yinfu_result.get('禁用', False):
             result['凶煞'].append(yinfu_result['说明'])
             result['可用'] = False
-        else:
-            result['凶煞'].append(yinfu_result['说明'])
 
-    if calculate_shanfang_sha(day_gan, day_zhi):
-        result['凶煞'].append('山方煞日')
+    # 1.4 年家五黄煞（宜静不宜动，不可制化）：五黄到坐山 → 一票否决
+    wuhuang_result = check_wuhuang(date_info, mountain_name)
+    if wuhuang_result['犯五黄'] and wuhuang_result['级别'] == '凶煞':
+        result['凶煞'].append(wuhuang_result['说明'])
         result['可用'] = False
 
-    if calculate_xingyao_sha(mountain_wuxing, day_gan, day_zhi):
-        result['凶煞'].append('星曜煞')
+    # 1.5 年家二黑煞（病符星，失运主疾病脾胃）：二黑到坐山 → 禁用级
+    erhei_result = check_erhei(date_info, mountain_name)
+    if erhei_result['犯二黑'] and erhei_result['级别'] == '凶煞':
+        result['凶煞'].append(erhei_result['说明'])
+        result['可用'] = False
 
-    keshan = calculate_keshan_yun(year_gan, mountain_wuxing)
-    if keshan['山运纳音'] != '未知':
-        result['凶煞'].append(f"克山运：{keshan['说明']}")
+    # ========================================================================
+    # Layer 2: 条件禁忌检查（可制化）
+    # ========================================================================
 
-    if result['凶煞']:
-        result['说明'] = '；'.join(result['凶煞'])
+    condition_shas = []
+
+    # 2.0 年家五黄（兼向）：警告级，可制化
+    if wuhuang_result['犯五黄'] and wuhuang_result['级别'] == '警告':
+        condition_shas.append({
+            '位置': '兼向',
+            '煞类型': '年家五黄',
+            '说明': wuhuang_result['说明']
+        })
+
+    # 2.1 年家二黑（兼向）：警告级，可制化
+    if erhei_result['犯二黑'] and erhei_result['级别'] == '警告':
+        condition_shas.append({
+            '位置': '兼向',
+            '煞类型': '年家二黑（病符）',
+            '说明': erhei_result['说明']
+        })
+
+    # 2.2 劫煞/灾煞检查（可被吉神制化）
+    for pos, zhi in [('年', year_zhi), ('月', month_zhi), ('日', day_zhi), ('时', hour_zhi)]:
+        if zhi:
+            sansha_result = check_sansha(mountain_name, zhi, year_zhi)
+            if sansha_result['犯煞'] and sansha_result['煞类型'] in ('劫煞', '灾煞'):
+                condition_shas.append({
+                    '位置': pos,
+                    '煞类型': sansha_result['煞类型'],
+                    '说明': f'{pos}{sansha_result["煞类型"]}'
+                })
+
+    # 2.2 阴府条件禁忌：不禁用，仅警告
+    if gan_list:
+        yinfu_result = check_yinfu(mountain_name, gan_list, event_type)
+        if yinfu_result['犯阴府'] and not yinfu_result.get('禁用', False):
+            if yinfu_result['类型'] == '傍阴府':
+                condition_shas.append({
+                    '位置': '全',
+                    '煞类型': '傍阴府',
+                    '说明': yinfu_result['说明']
+                })
+            elif yinfu_result['类型'] == '正阴府':
+                condition_shas.append({
+                    '位置': '全',
+                    '煞类型': f'正阴府({event_type})',
+                    '说明': yinfu_result['说明']
+                })
+
+    # 2.3 山方煞（可被吉神制化）
+    if day_gan and day_zhi:
+        if calculate_shanfang_sha(mountain_name, day_gan, day_zhi, is_shi=False):
+            condition_shas.append({'位置': '日', '煞类型': '山方煞', '说明': '山方煞日'})
+    if hour_gan and hour_zhi:
+        if calculate_shanfang_sha(mountain_name, hour_gan, hour_zhi, is_shi=True):
+            condition_shas.append({'位置': '时', '煞类型': '山方煞', '说明': '山方煞时'})
+
+    # 2.4 星曜煞（可被吉神制化）
+    if day_gan and day_zhi:
+        if calculate_xingyao_sha(mountain_wuxing, day_gan, day_zhi, mountain_name):
+            condition_shas.append({'位置': '日', '煞类型': '星曜煞', '说明': '星曜煞'})
+    if hour_gan and hour_zhi:
+        if calculate_xingyao_sha(mountain_wuxing, hour_gan, hour_zhi, mountain_name):
+            condition_shas.append({'位置': '时', '煞类型': '时曜煞', '说明': '时曜煞'})
+
+    # 2.5 冲丁煞（可被吉神制化）
+    data = get_mountain_data(mountain_name)
+    if data and 'avoid_info' in data and 'chongding_sha' in data['avoid_info']:
+        chongding_data = data['avoid_info']['chongding_sha']
+        chongding_zhi = None
+        if isinstance(chongding_data, str):
+            import re
+            match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', chongding_data)
+            if match:
+                chongding_zhi = match.group(1)
+        elif isinstance(chongding_data, dict):
+            jianxiang = ''
+            if '兼' in mountain_name:
+                import re
+                match = re.search(r'兼(\w+)', mountain_name)
+                if match:
+                    jianxiang = match.group(1)[:1]
+            if jianxiang and jianxiang in chongding_data:
+                value = chongding_data[jianxiang]
+                if isinstance(value, str):
+                    import re
+                    match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', value)
+                    if match:
+                        chongding_zhi = match.group(1)
+
+        if chongding_zhi:
+            for pos, zhi in [('年', year_zhi), ('月', month_zhi), ('日', day_zhi), ('时', hour_zhi)]:
+                if zhi == chongding_zhi:
+                    condition_shas.append({'位置': pos, '煞类型': '冲丁煞', '说明': f'{pos}冲丁煞'})
+
+    # 2.6 弓箭煞（可被吉神制化）
+    # 注：弓箭煞非《协纪辨方书》原著概念，源自民间流派
+    if data and 'avoid_info' in data and 'gongjian_sha' in data['avoid_info']:
+        gongjian_data = data['avoid_info']['gongjian_sha']
+        if isinstance(gongjian_data, str) and '无' not in gongjian_data:
+            import re
+            match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥]+)', gongjian_data)
+            if match:
+                gongjian_list = list(match.group(1))
+                for pos, zhi in [('年', year_zhi), ('月', month_zhi), ('日', day_zhi), ('时', hour_zhi)]:
+                    if zhi in gongjian_list:
+                        condition_shas.append({'位置': pos, '煞类型': '弓箭煞', '说明': f'{pos}弓箭煞'})
+
+    # 2.7 剑锋煞（可被吉神制化）
+    # 注：剑锋煞非《协纪辨方书》原著概念，源自民间流派
+    if data and 'avoid_info' in data and 'jianfeng_sha' in data['avoid_info']:
+        jianfeng_data = data['avoid_info']['jianfeng_sha']
+        if isinstance(jianfeng_data, str):
+            import re
+            match = re.search(r'忌(\w+)', jianfeng_data)
+            if match:
+                jianfeng_text = match.group(1)
+                if month_gan and month_zhi:
+                    month_gz = month_gan + month_zhi
+                    if jianfeng_text in month_gz or month_zhi in jianfeng_text:
+                        condition_shas.append({'位置': '月', '煞类型': '剑锋煞', '说明': '剑锋煞'})
+
+    # ========================================================================
+    # Layer 3: 吉神制化检查
+    # ========================================================================
+
+    ji_shanfu_list = calculate_ji_shanfu(date_info, mountain_name)
+    result['吉神'] = ji_shanfu_list
+
+    has_ji_shanfu = len(ji_shanfu_list) > 0
+
+    for sha in condition_shas:
+        if has_ji_shanfu:
+            sha['制化'] = True
+            result['警告'].append(f"{sha['说明']}（有制化：{'、'.join(ji_shanfu_list)}）")
+        else:
+            sha['制化'] = False
+            result['警告'].append(f"{sha['说明']}（无制化）")
+
+    # ========================================================================
+    # Layer 4: 克山运检查（实际犯才警告：日课四柱纳音克山运五行时才输出）
+    # ========================================================================
+
+    if year_gan:
+        is_dongzhi_after = date_info.get('is_dongzhi_after', False)
+        keshan = calculate_keshan_yun(year_gan, mountain_wuxing, mountain_name, is_dongzhi_after)
+        if keshan['山运纳音'] != '未知':
+            yun_str = keshan.get('山运纳音', '')
+            yun_wx = yun_str[-1:] if yun_str and yun_str[-1] in '木火土金水' else ''
+            # 克山运的五行（克山运五行者，如山运火→忌水）
+            ke_wx = ''
+            if yun_wx:
+                ke_map = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'}
+                for _wx, _sheng in ke_map.items():
+                    if _sheng == yun_wx:
+                        ke_wx = _wx
+                        break
+            # 四柱纳音实际犯检查
+            fan_pillars = []
+            if ke_wx:
+                try:
+                    from .八字工具整合 import get_nayin
+                except ImportError:
+                    try:
+                        from 八字工具整合 import get_nayin
+                    except ImportError:
+                        get_nayin = None
+                if get_nayin:
+                    for pos in ('year', 'month', 'day', 'hour'):
+                        gan = date_info.get(f'{pos}_gan', '')
+                        zhi = date_info.get(f'{pos}_zhi', '')
+                        if gan and zhi:
+                            nayin = get_nayin(gan + zhi)
+                            if nayin and nayin != '未知' and nayin[0] in '木火土金水' and nayin[0] == ke_wx:
+                                fan_pillars.append(f'{pos}{gan}{zhi}（{nayin}）')
+            if fan_pillars:
+                if has_ji_shanfu:
+                    result['警告'].append(
+                        f"克山运：山运{yun_str}，日课{'、'.join(fan_pillars)}克山运（有制化：{'、'.join(ji_shanfu_list)}）")
+                else:
+                    result['警告'].append(
+                        f"克山运：山运{yun_str}，日课{'、'.join(fan_pillars)}克山运（无制化）")
+            # 未犯克山运，不输出任何警告
+
+    # ========================================================================
+    # Layer 5: 日类分类
+    # ========================================================================
+
+    result['日类'] = classify_day_type(day_gan, day_zhi, year_gan, year_zhi)
+
+    # ========================================================================
+    # 最终汇总
+    # ========================================================================
+
+    all_issues = result['凶煞'] + result['警告']
+    if all_issues:
+        result['说明'] = '凶煞：' + '；'.join(result['凶煞']) if result['凶煞'] else ''
+        if result['警告']:
+            if result['说明']:
+                result['说明'] += '；'
+            result['说明'] += '警告：' + '；'.join(result['警告'])
+        if result['吉神']:
+            result['说明'] += f'；吉神：{"、".join(result["吉神"])}'
+        result['说明'] += f'；日类：{result["日类"]}'
     else:
         result['说明'] = '无重大凶煞'
+        if result['吉神']:
+            result['说明'] += f'；吉神：{"、".join(result["吉神"])}'
+        result['说明'] += f'；日类：{result["日类"]}'
 
     return result
 
@@ -5036,3 +6053,200 @@ def get_monthly_good_days(year_month: str, mountain_name: str, bury: bool = Fals
     """
     month_data = check_month_luck(mountain_name, year_month, bury)
     return month_data.get('days', month_data.get('jiri', []))
+
+
+# ============================================================================
+# 节气精确计算辅助函数
+# ============================================================================
+
+def is_after_dongzhi(year: int, month: int, day: int) -> bool:
+    """
+    使用精确节气判断指定日期是否在冬至后
+    
+    Args:
+        year: 公历年
+        month: 公历月
+        day: 公历日
+    
+    Returns:
+        是否在冬至后（精确计算，回退到12月22日近似值）
+    """
+    try:
+        import sxtwl
+        # sxtwl中24节气索引：冬至=0, 小寒=1, ...大雪=23
+        
+        # 3月-11月：肯定在冬至前（冬至在12月）
+        if 3 <= month <= 11:
+            return False
+        
+        # 1月或2月：肯定在冬至后（冬至在上一年12月）
+        if month <= 2:
+            return True
+        
+        # 12月：需要精确判断
+        if month == 12:
+            # 先检查当天是否是冬至节气日
+            day_obj = sxtwl.fromSolar(year, month, day)
+            if day_obj.hasJieQi():
+                jieqi_idx = day_obj.getJieQi()
+                if jieqi_idx == 0:  # 冬至索引为0
+                    return True
+            
+            # 获取12月的冬至日期并比较
+            dongzhi_day = _get_dongzhi_day(year)
+            if dongzhi_day and day >= dongzhi_day:
+                return True
+            return False
+        
+        # 其他情况（不应出现）
+        return False
+        
+    except ImportError:
+        # sxtwl不可用时，回退到近似值
+        if month <= 2:
+            return True
+        if month == 12:
+            return day >= 22
+        return False
+
+
+def _get_dongzhi_day(year: int) -> int:
+    """
+    获取指定年份冬至的精确日期
+    
+    Args:
+        year: 公历年
+    
+    Returns:
+        冬至日期（日），如获取失败返回22
+    """
+    try:
+        import sxtwl
+        # 搜索12月20-25日之间的节气
+        for d in range(20, 26):
+            try:
+                day_obj = sxtwl.fromSolar(year, 12, d)
+                if day_obj.hasJieQi():
+                    jieqi_idx = day_obj.getJieQi()
+                    # 冬至的索引是0
+                    if jieqi_idx == 0:
+                        return d
+            except:
+                continue
+        return 22  # 默认近似值
+    except:
+        return 22
+
+
+# ============================================================================
+# 测试代码
+# ============================================================================
+if __name__ == '__main__':
+    print("=== 二十四山择吉天机测试 ===")
+
+    # 测试壬山丙向
+    print("\n1. 壬山丙向数据:")
+    data = get_mountain_data('壬山丙向')
+    if data:
+        print(f"  五行属性: {data['basic_info']['wuxing']}")
+        print(f"  三合局: {data['basic_info']['sanhe']}")
+        print(f"  山家三煞: {data['avoid_info']['shanjia_sansha']}")
+
+    # 测试子山午向
+    print("\n2. 子山午向数据:")
+    data = get_mountain_data('子山午向')
+    if data:
+        print(f"  五行属性: {data['basic_info']['wuxing']}")
+        print(f"  三合局: {data['basic_info']['sanhe']}")
+        print(f"  正阴府: {data['avoid_info']['yinfu']}")
+
+    # 测试杨公大吉时
+    print("\n3. 杨公风水大吉时:")
+    print(f"  甲己日吉时: {get_yang_gong_jishi('甲己')}")
+    print(f"  乙庚日吉时: {get_yang_gong_jishi('乙庚')}")
+
+    # 测试流年吉凶
+    print("\n4. 流年吉凶查询:")
+    print(f"  壬山丙向甲子年: {check_year_luck('壬山丙向', '甲子')}")
+    print(f"  子山午向乙丑年: {check_year_luck('子山午向', '乙丑')}")
+
+    # 测试流月吉凶
+    print("\n5. 流月吉凶查询:")
+    month_data = check_month_luck('壬山丙向', '二月')
+    print(f"  壬山丙向二月建造: {month_data.get('luck', '未知')}")
+    print(f"  吉日: {month_data.get('days', [])}")
+
+    # 测试克山运
+    print("\n6. 克山运查询:")
+    keshan = check_keshan('壬山丙向', '甲己')
+    print(f"  壬山丙向甲己年: {keshan}")
+
+    # 测试新功能：check_mountain_day 分层管线
+    print("\n7. check_mountain_day 分层管线测试:")
+    test_date = {
+        'year_gan': '甲', 'year_zhi': '子',
+        'month_gan': '丙', 'month_zhi': '寅',
+        'day_gan': '甲', 'day_zhi': '子',
+        'hour_gan': '庚', 'hour_zhi': '午'
+    }
+    result = check_mountain_day(test_date, '壬山丙向')
+    print(f"  壬山丙向: 可用={result['可用']}")
+    print(f"  凶煞: {result['凶煞']}")
+    print(f"  警告: {result['警告']}")
+    print(f"  吉神: {result['吉神']}")
+    print(f"  日类: {result['日类']}")
+    print(f"  说明: {result['说明']}")
+
+    # 测试 event_type 参数
+    print("\n8. event_type 参数测试:")
+    result_xiuzao = check_mountain_day(test_date, '子山午向', event_type='修造')
+    result_anzang = check_mountain_day(test_date, '子山午向', event_type='安葬')
+    print(f"  修造可用: {result_xiuzao['可用']}, 安葬可用: {result_anzang['可用']}")
+    print(f"  修造凶煞: {result_xiuzao['凶煞']}")
+    print(f"  安葬凶煞: {result_anzang['凶煞']}")
+
+    # 测试 classify_day_type
+    print("\n9. classify_day_type 日类测试:")
+    print(f"  甲年乙日未: {classify_day_type('乙', '未', '甲', '')} (应为宝日)")
+    print(f"  甲年己日亥: {classify_day_type('己', '亥', '甲', '')} (应为义日)")
+    print(f"  甲年丙日卯: {classify_day_type('丙', '卯', '甲', '')} (应为制日)")
+    print(f"  甲寅日: {classify_day_type('甲', '寅', '乙', '')} (应为专日-干支同气)")
+    print(f"  乙卯日: {classify_day_type('乙', '卯', '丙', '')} (应为专日-干支同气)")
+    print(f"  庚申日: {classify_day_type('庚', '申', '丁', '')} (应为专日-干支同气)")
+    print(f"  辛酉日: {classify_day_type('辛', '酉', '戊', '')} (应为专日-干支同气)")
+    print(f"  辛年乙酉日: {classify_day_type('乙', '酉', '辛', '')} (应为普通日，旧版误标专日)")
+    print(f"  甲年戊日寅: {classify_day_type('戊', '寅', '甲', '')} (应为普通日，临官支不再标专日)")
+    print(f"  甲年庚日午: {classify_day_type('庚', '午', '甲', '')} (应为伐日)")
+
+    # 测试 check_sansha 返回 dict
+    print("\n10. check_sansha 三煞类型测试:")
+    sansha_result = check_sansha('壬山丙向', '寅', '子')
+    print(f"  壬山丙向 + 寅支 + 子年: {sansha_result}")
+    sansha_result2 = check_sansha('壬山丙向', '戌', '子')
+    print(f"  壬山丙向 + 戌支 + 子年: {sansha_result2}")
+    sansha_result3 = check_sansha('壬山丙向', '午', '子')
+    print(f"  壬山丙向 + 午支 + 子年: {sansha_result3}")
+
+    # 测试 calculate_ji_shanfu
+    print("\n11. calculate_ji_shanfu 吉神测试:")
+    ji_result = calculate_ji_shanfu(test_date, '壬山丙向')
+    print(f"  壬山丙向吉神: {ji_result}")
+
+    # 测试 check_yinfu event_type 支持
+    print("\n12. check_yinfu 阴府事件类型测试:")
+    yinfu_xiuzao = check_yinfu('子山午向', ['丙', '辛'], event_type='修造')
+    yinfu_anzang = check_yinfu('子山午向', ['丙', '辛'], event_type='安葬')
+    print(f"  修造: 禁用={yinfu_xiuzao.get('禁用')}, 说明={yinfu_xiuzao['说明']}")
+    print(f"  安葬: 禁用={yinfu_anzang.get('禁用')}, 说明={yinfu_anzang['说明']}")
+
+    # 向后兼容测试：旧签名调用
+    print("\n13. 向后兼容测试（旧签名 check_mountain_day(date_info, mountain_name)）:")
+    old_result = check_mountain_day(test_date, '壬山丙向')
+    print(f"  可用: {old_result['可用']}")
+    print(f"  凶煞字段存在: {'凶煞' in old_result}")
+    print(f"  说明字段存在: {'说明' in old_result}")
+    print(f"  新字段-警告存在: {'警告' in old_result}")
+    print(f"  新字段-吉神存在: {'吉神' in old_result}")
+    print(f"  新字段-日类存在: {'日类' in old_result}")
+
+    print("\n=== 测试完成 ===")

@@ -678,9 +678,14 @@ class BurialRuleChecker(EventRuleChecker):
             
             month = sizhu.get('month', 0)
             day = sizhu.get('day', 0)
+            year = sizhu.get('year', 0)
             
-            dongzhi_month = 12
-            is_after_dongzhi = month == dongzhi_month and day >= 22
+            # 使用精确节气判断冬至
+            try:
+                from ..二十四山择吉天机 import is_after_dongzhi
+                is_after_dongzhi = is_after_dongzhi(year, month, day)
+            except ImportError:
+                is_after_dongzhi = month == 12 and day >= 22
             
             if is_after_dongzhi:
                 key = 'dongzhi_hou'

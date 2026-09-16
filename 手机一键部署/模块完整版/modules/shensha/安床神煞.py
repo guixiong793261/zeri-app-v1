@@ -34,30 +34,189 @@ except ImportError:
 class BedShenShaChecker(ShenShaChecker):
     """安床神煞检查器"""
 
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
 
-        # 胎神方位
-        year_zhi = sizhu['year_zhi']
-        if self._is_taishen_fangwei(sizhu):
-            self._add_shensha('胎神方位吉', 10, '胎神方位吉利')
+        # ===== 年神类吉神 =====
 
-    def _check_month_shensha(self, sizhu):
+        # 岁德
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
+
+        # 岁德合
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 15, '岁德合，大吉')
+
+        # ===== 年神类凶煞 =====
+
+        # 丧门
+        if self._is_sangmen(sizhu):
+            self._add_shensha('丧门', -15, '主丧亡，不宜安床')
+
+        # 吊客
+        if self._is_diaoke(sizhu):
+            self._add_shensha('吊客', -12, '主吊唁，不宜安床')
+
+        # 病符
+        if self._is_bingfu(sizhu):
+            self._add_shensha('病符', -12, '主疾病，不宜安床')
+
+        # 官符
+        if self._is_guanfu(sizhu):
+            self._add_shensha('官符', -10, '主官讼，不宜安床')
+
+        # 五鬼
+        if self._is_wugui(sizhu):
+            self._add_shensha('五鬼', -15, '主耗散，不宜安床')
+
+        # 2026-09-16修复：原此处为 '胎神方位吉' +10 —— _is_taishen_fangwei 内部
+        # 按年支算出胎神所值（门/碓磨/厨灶…）后并未使用、直接 return True，
+        # 导致任何一天安床都恒定 +10。胎神判吉须以“床的方位不与胎神所值相犯”
+        # 为准，而本检查器拿不到床的方位，无法判断，故该项不计分、予以删除。
+
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
+
+        # ===== 月神类吉神 =====
+
+        # 月空
+        if self._is_yuekong(sizhu):
+            self._add_shensha('月空', 10, '月空日，主空亡，安床吉')
+
+        # 五富
+        if self._is_wufu(sizhu):
+            self._add_shensha('五富', 12, '五富日，主财富，安床吉')
+
+        # 吉期
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 10, '吉期日，主吉庆，安床吉')
+
+        # 阳德
+        if self._is_yangde(sizhu):
+            self._add_shensha('阳德', 10, '阳德日，主阳和，安床吉')
+
+        # 阴德
+        if self._is_yinde(sizhu):
+            self._add_shensha('阴德', 10, '阴德日，主阴德，安床吉')
+
+        # 益后
+        if self._is_yihou(sizhu):
+            self._add_shensha('益后', 12, '益后日，主益后代，安床吉')
+
+        # 续世
+        if self._is_xushi(sizhu):
+            self._add_shensha('续世', 10, '续世日，主续嗣，安床吉')
+
+        # 要安
+        if self._is_yaoan(sizhu):
+            self._add_shensha('要安', 8, '要安日，主安宁，安床吉')
+
+        # 不将日
+        if self._is_bujiang(sizhu):
+            self._add_shensha('不将日', 15, '不将日，阳将阴将之日，安床大吉')
+
+        # ===== 月神类凶煞 =====
 
         # 月破
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -15, '月破日不宜安床')
+            self._add_shensha('月破', -30, '月破日不宜安床')
 
-        # 土府
-        if self._is_tufu(sizhu):
-            self._add_shensha('土府', -10, '土府日不宜安床')
+        # 土瘟
+        if self._is_tuwen(sizhu):
+            self._add_shensha('土瘟', -20, '土瘟日不宜安床')
 
-    def _check_day_shensha(self, sizhu):
+        # 月厌
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -15, '月厌凶日，不宜安床')
+
+        # 月虚
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -10, '月虚日主虚耗，不宜安床')
+
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
+
+        # ===== 吉神 =====
+
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 20, '天德吉星，安床大吉')
+
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德吉星，安床大吉')
+
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 15, '天德合，安床吉')
+
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合，安床吉')
+
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，安床上吉')
+
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 12, '将星到座，安床吉')
+
+        # 六合
+        if self._is_liuhe(sizhu):
+            self._add_shensha('六合', 12, '地支六合，安床吉')
+
+        # 三合
+        if self._is_sanhe(sizhu):
+            self._add_shensha('三合', 10, '地支三合，安床吉')
+
+        # 驿马
+        if self._is_yima(sizhu):
+            self._add_shensha('驿马', 10, '驿马日利于安床')
+
+        # 天马
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 8, '天马日利于安床')
+
+        # 天赦
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦', 25, '天赦日百无禁忌，安床大吉')
+
+        # 母仓
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓', 10, '母仓日安床吉')
+
+        # 生气
+        if self._is_shengqi(sizhu):
+            self._add_shensha('生气', 10, '四季长生，安床吉')
+
+        # ===== 凶煞 =====
+
+        # 受死日
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日不宜安床')
+
+        # 往亡日
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡日', -20, '往亡日不宜安床')
+
+        # 四离日
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -35, '四离日大忌，不宜安床')
+
+        # 四绝日
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -35, '四绝日大忌，不宜安床')
+
+        # 十恶大败
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -30, '十恶大败日，不宜安床')
+
+        # ===== 安床专用 =====
 
         # 安床吉日
         if self._is_anchuang_jiri(sizhu):
@@ -76,141 +235,50 @@ class BedShenShaChecker(ShenShaChecker):
             self._add_shensha('冲床日', -12, '冲床日不宜安床')
 
         # 杨公忌日
+        # 注：安床对杨公忌敏感度较低，扣分降为-10（修造为-20、安葬为-20）
         if self._is_yanggongji(sizhu):
-            self._add_shensha('杨公忌日', -20, '杨公忌日不宜安床')
+            self._add_shensha('杨公忌日', -10, '杨公忌日不宜安床')
 
         # 红砂日
         if self._is_hongsha(sizhu):
             self._add_shensha('红砂日', -15, '红砂日不宜安床')
 
-    def _check_special_shensha(self, sizhu, owners):
+    def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（安床者）生肖与日课的冲合"""
         if not owners:
             return
-        
+
         for i, owner in enumerate(owners):
             owner_zodiac = owner.get('生肖', '')
             owner_year_zhi = owner.get('年支', '')
             owner_name = owner.get('姓名', f'事主{i+1}')
-            
+
             if not owner_zodiac and not owner_year_zhi:
                 continue
-            
+
             # 年支相冲
             year_zhi = sizhu['year_zhi']
             if self._is_chong(year_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'年冲{owner_name}', -20, f'年支与{owner_name}生肖相冲')
-            
+
             # 月支相冲
             month_zhi = sizhu['month_zhi']
             if self._is_chong(month_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'月冲{owner_name}', -15, f'月支与{owner_name}生肖相冲')
-            
+
             # 日支相冲
             day_zhi = sizhu['day_zhi']
             if self._is_chong(day_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'日冲{owner_name}', -25, f'日支与{owner_name}生肖相冲，大忌')
             elif self._is_he(day_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'日合{owner_name}', 10, f'日支与{owner_name}生肖相合')
-            
+
             # 时支相冲
             hour_zhi = sizhu.get('hour_zhi', '')
             if hour_zhi and self._is_chong(hour_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'时冲{owner_name}', -12, f'时支与{owner_name}生肖相冲')
             elif hour_zhi and self._is_he(hour_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
-    
-    def _shengxiao_to_zhi(self, shengxiao):
-        """生肖转换为地支"""
-        shengxiao_map = {
-            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
-            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
-            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
-        }
-        return shengxiao_map.get(shengxiao)
-    
-    def _is_chong(self, zhi1, zhi2):
-        """检查两个地支是否相冲"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return zhi1 == chong_map.get(zhi2)
-    
-    def _is_he(self, zhi1, zhi2):
-        """检查两个地支是否相合（六合或三合）"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        # 六合
-        liuhe_map = {
-            '子': '丑', '丑': '子',
-            '寅': '亥', '亥': '寅',
-            '卯': '戌', '戌': '卯',
-            '辰': '酉', '酉': '辰',
-            '巳': '申', '申': '巳',
-            '午': '未', '未': '午'
-        }
-        if liuhe_map.get(zhi1) == zhi2:
-            return True
-        
-        # 三合
-        sanhe_sets = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-        for s in sanhe_sets:
-            if zhi1 in s and zhi2 in s and zhi1 != zhi2:
-                return True
-        
-        return False
-    
-    def _is_taishen_fangwei(self, sizhu):
-        """是否胎神方位吉利"""
-        # 胎神方位根据年支确定
-        taishen_fangwei = {
-            '子': '门', '丑': '碓磨', '寅': '厨灶', '卯': '大门',
-            '辰': '门床', '巳': '碓磨', '午': '厨灶', '未': '灶炉',
-            '申': '门床', '酉': '碓磨', '戌': '厨灶', '亥': '床仓'
-        }
-        year_zhi = sizhu['year_zhi']
-        # 简化判断
-        return True
-
-    def _is_yuepo(self, sizhu):
-        """是否月破"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        chong = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong.get(month_zhi)
-
-    def _is_tufu(self, sizhu):
-        """是否土府日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        tufu_days = {
-            '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
-            '午': '巳', '未': '午', '申': '未', '酉': '申',
-            '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
-        }
-        return day_zhi == tufu_days.get(month_zhi)
 
     def _is_anchuang_jiri(self, sizhu):
         """是否安床吉日"""

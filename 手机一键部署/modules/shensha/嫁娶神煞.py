@@ -72,13 +72,14 @@ class MarriageShenShaChecker(ShenShaChecker):
         self.bride_zhi = None
         self.groom_zhi = None
     
-    def check(self, sizhu, owners=None):
+    def check(self, sizhu, owners=None, **kwargs):
         """
         检查神煞（重写以先提取新娘/新郎信息）
         
         Args:
             sizhu: 四柱信息
             owners: 事主信息
+            **kwargs: 与基类签名保持一致（嫁娶不使用 zaozhu_mode 等造灶参数）
             
         Returns:
             list: 神煞列表
@@ -109,27 +110,29 @@ class MarriageShenShaChecker(ShenShaChecker):
         self._check_special_shensha(sizhu, owners)
         return self.shensha_list
     
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
     
-    def _check_month_shensha(self, sizhu):
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
         
         month_zhi = sizhu['month_zhi']
         
         # 月破（婚嫁大忌）
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -25, '月破日诸事不宜，婚嫁大忌')
+            self._add_shensha('月破', -30, '月破日诸事不宜，婚嫁大忌')
         
         # 大利月（需女命年支）
+        # 【D3 分值统一】大利月分值从+20统一为+30，与婚嫁评分算法(score_marriage_day)
+        # 及评分器嫁娶路径中的大利月分值一致，避免【评分详情】(+30)与【神煞信息】(+20)矛盾。
         if self.bride_zhi and self._is_daliyue(sizhu):
-            self._add_shensha('大利月', 20, '女命大利之月，婚嫁首选')
+            self._add_shensha('大利月', 30, '女命大利之月，婚嫁首选')
         
         # 小利月（需女命年支）
         if self.bride_zhi and self._is_xiaoliyue(sizhu):
-            self._add_shensha('小利月', 10, '女命小利之月，婚嫁可用')
+            self._add_shensha('小利月', 15, '女命小利之月，婚嫁可用')
         
         # 妨翁姑月（不利公婆）
         if self.bride_gan and self._is_fang_wenggu(sizhu):
@@ -155,9 +158,9 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self.bride_gan and self._is_zhu_qi(sizhu):
             self._add_shensha('逐妇月', -12, '逐妇月不利新娘')
     
-    def _check_day_shensha(self, sizhu):
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
         
         day_gan = sizhu['day_gan']
         day_zhi = sizhu['day_zhi']
@@ -175,21 +178,20 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 受死日
         if self._is_shousi(sizhu):
-            self._add_shensha('受死日', -20, '受死日婚嫁大忌')
+            self._add_shensha('受死日', -22, '受死日婚嫁大忌')
         
         # 往亡日
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -18, '往亡日忌婚嫁')
         
-        # 重丧日
+        # 重丧日 - 嫁娶大忌
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', -20, '重丧日婚嫁大忌')
+            self._add_shensha('重丧日', -25, '重丧日婚嫁大忌')
         
-        # 三娘煞（仅在有实际日期时检查）
+        # 三娘煞（仅在有实际日期时检查）：按传统口径只有"真三娘煞"
+        # （农历日与日干支同时满足，全年仅6天）才需回避；
+        # 仅农历日相符的"假三娘煞"不再列为婚嫁禁忌
         if not sizhu.get('is_sizhu_input', False):
-            if self._is_sanniang(sizhu):
-                self._add_shensha('三娘煞', -15, '三娘煞日不宜婚嫁')
-            # 真三娘煞（特定干支）
             if self._is_zhen_sanniang(sizhu):
                 self._add_shensha('真三娘煞', -20, '真三娘煞日婚嫁大忌')
         
@@ -232,26 +234,27 @@ class MarriageShenShaChecker(ShenShaChecker):
             self._add_shensha('周堂吉日', 12, '周堂吉日婚嫁可用')
 
         # 天罡日/河魁日（妨翁姑日）
+        # 天罡妨翁、河魁妨姑为嫁娶大忌，扣分提高至-25
         if self._is_tiangang(sizhu):
-            self._add_shensha('天罡日', -15, '天罡日妨翁，不利新郎父亲')
+            self._add_shensha('天罡日', -25, '天罡日妨翁，不利新郎父亲')
         if self._is_hekui(sizhu):
-            self._add_shensha('河魁日', -15, '河魁日妨姑，不利新郎母亲')
+            self._add_shensha('河魁日', -25, '河魁日妨姑，不利新郎母亲')
 
-        # 天德日
-        if self._is_tiande(sizhu):
+        # 天德日（与天德同源吉神，二选一保留较高者，避免重复计分虚高）
+        if self._is_tiande(sizhu) and '天德' not in [s['name'] for s in self.shensha_list]:
             self._add_shensha('天德日', 12, '天德日百事吉')
         
-        # 月德日
-        if self._is_yuede(sizhu):
+        # 月德日（与月德同源吉神，二选一保留较高者，避免重复计分虚高）
+        if self._is_yuede(sizhu) and '月德' not in [s['name'] for s in self.shensha_list]:
             self._add_shensha('月德日', 10, '月德日百事吉')
         
         # 天德合
         if self._is_tiande_he(sizhu):
-            self._add_shensha('天德合', 10, '天德合，婚嫁吉')
+            self._add_shensha('天德合', 15, '天德合，婚嫁吉')
         
         # 月德合
         if self._is_yuede_he(sizhu):
-            self._add_shensha('月德合', 8, '月德合，婚嫁吉')
+            self._add_shensha('月德合', 12, '月德合，婚嫁吉')
         
         # 三奇
         sanqi_result = self._is_sanqi(sizhu)
@@ -260,7 +263,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 将星
         if self._is_jiangxing(sizhu):
-            self._add_shensha('将星', 10, '将星到座，婚嫁吉')
+            self._add_shensha('将星', 12, '将星到座，婚嫁吉')
         
         # 三合日
         if self._is_sanhe(sizhu):
@@ -276,13 +279,109 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 母仓日
         if self._is_mucang(sizhu):
-            self._add_shensha('母仓日', 6, '母仓日婚嫁吉')
+            self._add_shensha('母仓日', 10, '母仓日婚嫁吉')
         
         # 旺日
         if self._is_wangri(sizhu):
             self._add_shensha('旺日', 6, '旺日婚嫁吉')
+        
+        # ===== 补充缺失的吉神检查 =====
+        
+        # 益后（利于后代，嫁娶大吉）
+        if self._is_yihou(sizhu):
+            self._add_shensha('益后', 15, '益后日主益后代，婚嫁大吉')
+        
+        # 续世（利于续嗣，嫁娶大吉）
+        if self._is_xushi(sizhu):
+            self._add_shensha('续世', 12, '续世日主续嗣，婚嫁吉')
+        
+        # 阴德（阴德之神，利婚嫁）
+        if self._is_yinde(sizhu):
+            self._add_shensha('阴德', 10, '阴德吉日，婚嫁吉')
+        
+        # 阳德（阳德之神，利婚嫁）
+        if self._is_yangde(sizhu):
+            self._add_shensha('阳德', 10, '阳德吉日，婚嫁吉')
+        
+        # 吉期（吉庆之期，宜嫁娶）
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 12, '吉期宜嫁娶')
+        
+        # 要安（安宁之日，利婚嫁）
+        if self._is_yaoan(sizhu):
+            self._add_shensha('要安', 10, '要安日婚嫁吉')
+        
+        # 天赦日（赦宥之神，百事皆宜）
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦日', 18, '天赦日百事吉，婚嫁尤佳')
+        
+        # 鸣犬日（嫁娶吉日）
+        if self._is_mingquan(sizhu):
+            self._add_shensha('鸣犬日', 10, '鸣犬日宜嫁娶')
+        
+        # 鸣犬对日（嫁娶吉日）
+        if self._is_mingquandui(sizhu):
+            self._add_shensha('鸣犬对日', 8, '鸣犬对日宜嫁娶')
+        
+        # 岁德（岁之德神，主化凶为吉）
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 15, '岁德吉星，婚嫁大吉')
+        
+        # 岁德合（岁德合，大吉）
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 12, '岁德合，婚嫁吉')
+        
+        # 岁合（主和合）
+        if self._is_suihe(sizhu):
+            self._add_shensha('岁合', 10, '岁合主和合，婚嫁吉')
+        
+        # 福生（福生之日，利婚嫁）
+        if self._is_fusheng(sizhu):
+            self._add_shensha('福生', 10, '福生日婚嫁吉')
+        
+        # 吉庆（吉庆之日）
+        if self._is_jiqing(sizhu):
+            self._add_shensha('吉庆', 8, '吉庆日婚嫁吉')
+        
+        # ===== 补充缺失的凶煞检查 =====
+        
+        # 五离（典籍口径：申酉日，忌嫁娶）——2026-09-16 由"天干相离"改为与五合配对的"申酉日"
+        if self._is_wuli(sizhu):
+            self._add_shensha('五离', -20, '五离日主离别，婚嫁大忌')
+        
+        # 丧门（主丧亡，忌婚嫁）
+        if self._is_sangmen(sizhu):
+            self._add_shensha('丧门', -18, '丧门日忌婚嫁')
+        
+        # 吊客（主吊唁，忌婚嫁）
+        if self._is_diaoke(sizhu):
+            self._add_shensha('吊客', -15, '吊客日忌婚嫁')
+        
+        # 病符（主疾病，忌婚嫁）
+        if self._is_bingfu(sizhu):
+            self._add_shensha('病符', -15, '病符日忌婚嫁')
+        
+        # 官符（主官讼，忌婚嫁）
+        if self._is_guanfu(sizhu):
+            self._add_shensha('官符', -12, '官符日忌婚嫁')
+        
+        # 月虚（主虚耗，忌婚嫁）
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -12, '月虚日主虚耗，忌婚嫁')
+        
+        # 八专（主消耗，忌婚嫁）
+        if self._is_bazhuan(sizhu):
+            self._add_shensha('八专', -15, '八专日主消耗，忌婚嫁')
+        
+        # 四忌（月支前四位，忌婚嫁）
+        if self._is_siji(sizhu):
+            self._add_shensha('四忌', -12, '四忌日忌婚嫁')
+        
+        # 魁罡日（主聪明但婚姻不顺）
+        if self._is_kuigang(sizhu):
+            self._add_shensha('魁罡日', -8, '魁罡日聪明但婚姻不顺')
     
-    def _check_special_shensha(self, sizhu, owners):
+    def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞（与新人相关）"""
         if not owners:
             return
@@ -325,7 +424,24 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self.groom_gan and self._is_gan_he_groom(sizhu):
             self._add_shensha('新郎干合', 8, f'日干与新郎年干({self.groom_gan})相合，吉')
     
-    # ===== 大利月/小利月（按女命年干）=====
+    # ===== 大利月/小利月（按女命年支）=====
+    # 大利月口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
+    # 小利月口诀：鼠马二八月，牛羊四十当，虎猴正七月，兔鸡六腊月，龙狗三九月，蛇猪五十一
+    # 单一数据源（2026-09-16）：_is_daliyue/_is_xiaoliyue 共用 LI_YUE_TABLE，禁止各自内联副本
+    LI_YUE_TABLE = {
+        '子': {'大利月': [6, 12], '小利月': [2, 8]},
+        '午': {'大利月': [6, 12], '小利月': [2, 8]},
+        '丑': {'大利月': [5, 11], '小利月': [4, 10]},
+        '未': {'大利月': [5, 11], '小利月': [4, 10]},
+        '寅': {'大利月': [2, 8], '小利月': [1, 7]},
+        '申': {'大利月': [2, 8], '小利月': [1, 7]},
+        '卯': {'大利月': [1, 7], '小利月': [6, 12]},
+        '酉': {'大利月': [1, 7], '小利月': [6, 12]},
+        '辰': {'大利月': [4, 10], '小利月': [3, 9]},
+        '戌': {'大利月': [4, 10], '小利月': [3, 9]},
+        '巳': {'大利月': [3, 9], '小利月': [5, 11]},
+        '亥': {'大利月': [3, 9], '小利月': [5, 11]}
+    }
     
     def _is_daliyue(self, sizhu):
         """
@@ -335,32 +451,16 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_zhi:
             return False
         
-        # 从月地支获取农历月份（1-12）
-        month = self._get_lunar_month_from_zhi(sizhu['month_zhi'])
+        # 【F3 一致性修复】用真实农历月判定（sizhu 明确农历字段→高精度农历换算→
+        # 最后才回退节气月支法），与评分器 _resolve_lunar_month 及主程序【嫁娶择日分析】
+        # 的利月口径统一，避免"农历六月(节气午月)被 未 的大利月[5,11]中的5 误命中断言"，
+        # 导致普通月份仍被标成大利月（神煞/利月神煞与利月分析"普通月份"自相矛盾）。
+        month = self._get_true_lunar_month(sizhu)
         if month is None:
             return False
         
-        # 大利月表（基于女命年支）
-        # 口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
-        # 兔(卯)、鸡(酉)：正七月；虎(寅)、猴(申)：二八月；蛇(巳)、猪(亥)：三九月
-        # 龙(辰)、狗(戌)：四月、十月；牛(丑)、羊(未)：五月、十一月；鼠(子)、马(午)：六月、十二月
-        li_yue_table = {
-            '子': {'大利月': [6, 12], '小利月': [3, 9]},
-            '午': {'大利月': [6, 12], '小利月': [3, 9]},
-            '丑': {'大利月': [5, 11], '小利月': [1, 7]},
-            '未': {'大利月': [5, 11], '小利月': [1, 7]},
-            '寅': {'大利月': [2, 8], '小利月': [3, 9]},
-            '申': {'大利月': [2, 8], '小利月': [3, 9]},
-            '卯': {'大利月': [1, 7], '小利月': [6, 12]},
-            '酉': {'大利月': [1, 7], '小利月': [6, 12]},
-            '辰': {'大利月': [4, 10], '小利月': [5, 11]},
-            '戌': {'大利月': [4, 10], '小利月': [5, 11]},
-            '巳': {'大利月': [3, 9], '小利月': [2, 8]},
-            '亥': {'大利月': [3, 9], '小利月': [2, 8]}
-        }
-        
-        if self.bride_zhi in li_yue_table:
-            return month in li_yue_table[self.bride_zhi]['大利月']
+        if self.bride_zhi in self.LI_YUE_TABLE:
+            return month in self.LI_YUE_TABLE[self.bride_zhi]['大利月']
         return False
     
     def _is_xiaoliyue(self, sizhu):
@@ -371,32 +471,65 @@ class MarriageShenShaChecker(ShenShaChecker):
         if not self.bride_zhi:
             return False
         
-        # 从月地支获取农历月份（1-12）
-        month = self._get_lunar_month_from_zhi(sizhu['month_zhi'])
+        # 从真实农历月份判定（与 _is_daliyue 同一口径，见其注释）
+        month = self._get_true_lunar_month(sizhu)
         if month is None:
             return False
         
-        # 小利月表（基于女命年支）
-        # 口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
-        # 小利月通常是大利月的前一月或后一月
-        li_yue_table = {
-            '子': {'大利月': [6, 12], '小利月': [3, 9]},
-            '午': {'大利月': [6, 12], '小利月': [3, 9]},
-            '丑': {'大利月': [5, 11], '小利月': [1, 7]},
-            '未': {'大利月': [5, 11], '小利月': [1, 7]},
-            '寅': {'大利月': [2, 8], '小利月': [3, 9]},
-            '申': {'大利月': [2, 8], '小利月': [3, 9]},
-            '卯': {'大利月': [1, 7], '小利月': [6, 12]},
-            '酉': {'大利月': [1, 7], '小利月': [6, 12]},
-            '辰': {'大利月': [4, 10], '小利月': [5, 11]},
-            '戌': {'大利月': [4, 10], '小利月': [5, 11]},
-            '巳': {'大利月': [3, 9], '小利月': [2, 8]},
-            '亥': {'大利月': [3, 9], '小利月': [2, 8]}
-        }
-        
-        if self.bride_zhi in li_yue_table:
-            return month in li_yue_table[self.bride_zhi]['小利月']
+        if self.bride_zhi in self.LI_YUE_TABLE:
+            return month in self.LI_YUE_TABLE[self.bride_zhi]['小利月']
         return False
+    
+    def _get_true_lunar_month(self, sizhu):
+        """
+        获取真实农历月份（1-12），与评分器 _resolve_lunar_month 及主程序
+        【嫁娶择日分析】口径统一：
+          1) sizhu 内明确农历字段（lunar_month / lunar['month']）优先。
+          2) 否则用 sizhu.date 走高精度农历换算（腊月=12、正月=1），
+             解决"节气月支午=5 但实际农历六月"这类错位导致的利月误判。
+          3) 回退节气月支法 _get_lunar_month_from_zhi。
+        """
+        if not isinstance(sizhu, dict):
+            return self._get_lunar_month_from_zhi('')
+        lm = sizhu.get('lunar_month')
+        if isinstance(lm, (int, float)) and 1 <= int(lm) <= 12:
+            return int(lm)
+        try:
+            lunar_obj = sizhu.get('lunar')
+            if isinstance(lunar_obj, dict):
+                m = lunar_obj.get('month')
+                if isinstance(m, (int, float)) and 1 <= int(m) <= 12:
+                    return int(m)
+                mc = str(lunar_obj.get('month_chinese') or lunar_obj.get('month') or '')
+                _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
+                        '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                if mc in _map:
+                    return _map[mc]
+        except Exception:
+            pass
+        d = sizhu.get('date') or sizhu.get('datetime')
+        if d is not None and hasattr(d, 'year'):
+            try:
+                try:
+                    from .四柱计算器 import get_lunar_date as _gld
+                except Exception:
+                    try:
+                        from 四柱计算器 import get_lunar_date as _gld
+                    except Exception:
+                        from modules.四柱计算器 import get_lunar_date as _gld
+                lun = _gld(d)
+                if isinstance(lun, dict):
+                    m = lun.get('month')
+                    if isinstance(m, (int, float)) and 1 <= int(m) <= 12:
+                        return int(m)
+                    mc = str(lun.get('month_chinese') or lun.get('month') or '')
+                    _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
+                            '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                    if mc in _map:
+                        return _map[mc]
+            except Exception:
+                pass
+        return self._get_lunar_month_from_zhi(str(sizhu.get('month_zhi', '') or ''))
     
     def _get_lunar_month_from_zhi(self, month_zhi):
         """
@@ -441,60 +574,44 @@ class MarriageShenShaChecker(ShenShaChecker):
 
     def _is_tiangang(self, sizhu):
         """是否天罡日（妨翁日）
-        
-        根据《协纪辨方书》规则：
-        正月寅月→巳日、二月卯月→辰日、三月辰月→卯日、四月巳月→寅日
-        五月午月→丑日、六月未月→子日、七月申月→亥日、八月酉月→戌日
-        九月戌月→酉日、十月亥月→申日、十一月子月→未日、十二月丑月→午日
+
+        依《协纪辨方书·神煞对照表》：天罡日者，日支临月建也。
+        正月寅日、二月卯日、三月辰日…十二月丑日。
+        （旧实现误作六害日，已更正：日支与月支相同即为天罡妨翁日。）
         """
         day_zhi = sizhu['day_zhi']
         month_zhi = sizhu['month_zhi']
-        
-        # 天罡日规则（妨翁）
-        tiangang_map = {
-            '寅': '巳',  # 正月（寅月）的巳日是天罡日
-            '卯': '辰',  # 二月（卯月）的辰日是天罡日
-            '辰': '卯',  # 三月（辰月）的卯日是天罡日
-            '巳': '寅',  # 四月（巳月）的寅日是天罡日
-            '午': '丑',  # 五月（午月）的丑日是天罡日
-            '未': '子',  # 六月（未月）的子日是天罡日
-            '申': '亥',  # 七月（申月）的亥日是天罡日
-            '酉': '戌',  # 八月（酉月）的戌日是天罡日
-            '戌': '酉',  # 九月（戌月）的酉日是天罡日
-            '亥': '申',  # 十月（亥月）的申日是天罡日
-            '子': '未',  # 十一月（子月）的未日是天罡日
-            '丑': '午'   # 十二月（丑月）的午日是天罡日
-        }
-        
-        return tiangang_map.get(month_zhi) == day_zhi
+
+        # 天罡日规则（妨翁）：日支临月建
+        return bool(month_zhi) and day_zhi == month_zhi
 
     def _is_hekui(self, sizhu):
         """是否河魁日（妨姑日）
-        
-        根据《协纪辨方书》规则：
-        正月寅月→亥日、二月卯月→戌日、三月辰月→酉日、四月巳月→申日
-        五月午月→未日、六月未月→午日、七月申月→巳日、八月酉月→辰日
-        九月戌月→卯日、十月亥月→寅日、十一月子月→丑日、十二月丑月→子日
+
+        依《协纪辨方书·神煞对照表》：河魁日者，日支临月破也。
+        正月申日、二月酉日、三月戌日、四月亥日、五月子日、六月丑日、
+        七月寅日、八月卯日、九月辰日、十月巳日、十一月午日、十二月未日。
+        （旧实现误作六合日——六合本为嫁娶大吉，绝无"妨姑"之理，已更正为月破六冲。）
         """
         day_zhi = sizhu['day_zhi']
         month_zhi = sizhu['month_zhi']
-        
-        # 河魁日规则（妨姑）
+
+        # 河魁日规则（妨姑）：日支临月破（月支之六冲）
         hekui_map = {
-            '寅': '亥',  # 正月（寅月）的亥日是河魁日
-            '卯': '戌',  # 二月（卯月）的戌日是河魁日
-            '辰': '酉',  # 三月（辰月）的酉日是河魁日
-            '巳': '申',  # 四月（巳月）的申日是河魁日
-            '午': '未',  # 五月（午月）的未日是河魁日
-            '未': '午',  # 六月（未月）的午日是河魁日
-            '申': '巳',  # 七月（申月）的巳日是河魁日
-            '酉': '辰',  # 八月（酉月）的辰日是河魁日
-            '戌': '卯',  # 九月（戌月）的卯日是河魁日
-            '亥': '寅',  # 十月（亥月）的寅日是河魁日
-            '子': '丑',  # 十一月（子月）的丑日是河魁日
-            '丑': '子'   # 十二月（丑月）的子日是河魁日
+            '寅': '申',  # 正月（寅月）月破在申
+            '卯': '酉',  # 二月（卯月）月破在酉
+            '辰': '戌',  # 三月（辰月）月破在戌
+            '巳': '亥',  # 四月（巳月）月破在亥
+            '午': '子',  # 五月（午月）月破在子
+            '未': '丑',  # 六月（未月）月破在丑
+            '申': '寅',  # 七月（申月）月破在寅
+            '酉': '卯',  # 八月（酉月）月破在卯
+            '戌': '辰',  # 九月（戌月）月破在辰
+            '亥': '巳',  # 十月（亥月）月破在巳
+            '子': '午',  # 十一月（子月）月破在午
+            '丑': '未'   # 十二月（丑月）月破在未
         }
-        
+
         return hekui_map.get(month_zhi) == day_zhi
 
     def _is_fang_fumu(self, sizhu):
@@ -707,76 +824,63 @@ class MarriageShenShaChecker(ShenShaChecker):
         }
         return day_zhi == wangwang_map.get(month_zhi)
     
+    def _get_date_from_sizhu(self, sizhu):
+        """从sizhu中获取date对象"""
+        from datetime import date as date_type
+        
+        if 'date' in sizhu:
+            d = sizhu['date']
+            if isinstance(d, date_type):
+                return d
+        
+        year = sizhu.get('year')
+        month = sizhu.get('month')
+        day = sizhu.get('day')
+        if year and month and day:
+            try:
+                return date_type(int(year), int(month), int(day))
+            except (ValueError, TypeError):
+                pass
+        return None
+    
     def _is_zhongsang(self, sizhu):
-        """是否重丧日（按农历月份）
+        """是否重丧日（按农历月份，使用完整干支）
 
-        按规则：
-        - 正月：庚日
-        - 二月：辛日
-        - 三月：戊日
-        - 四月：丙日
-        - 五月：丁日
-        - 六月：己日
-        - 七月：甲日
-        - 八月：乙日
-        - 九月：戊日
-        - 十月：壬日
-        - 十一月：癸日
-        - 十二月：己日
+        按《协纪辨方书》规则：
+        - 正月：庚戌日
+        - 二月：辛酉日
+        - 三月：庚申日
+        - 四月：己未日
+        - 五月：戊午日
+        - 六月：丁巳日
+        - 七月：丙辰日
+        - 八月：乙卯日
+        - 九月：甲寅日
+        - 十月：癸丑日
+        - 十一月：壬子日
+        - 十二月：辛亥日
         """
         day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        day_gz = day_gan + day_zhi
 
         try:
-            if 'date' in sizhu:
+            date_obj = self._get_date_from_sizhu(sizhu)
+            if date_obj:
                 from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(sizhu['date'])
+                lunar_info = get_lunar_date(date_obj)
                 if lunar_info and 'month' in lunar_info:
                     lunar_month_name = lunar_info['month']
                     zhongsang_map = {
-                        '正月': ['庚'], '二月': ['辛'], '三月': ['戊'], '四月': ['丙'],
-                        '五月': ['丁'], '六月': ['己'], '七月': ['甲'], '八月': ['乙'],
-                        '九月': ['戊'], '十月': ['壬'], '十一月': ['癸'], '十二月': ['己'],
-                        '腊月': ['己']
+                        '正月': '庚戌', '二月': '辛酉', '三月': '庚申', '四月': '己未',
+                        '五月': '戊午', '六月': '丁巳', '七月': '丙辰', '八月': '乙卯',
+                        '九月': '甲寅', '十月': '癸丑', '十一月': '壬子', '十二月': '辛亥',
+                        '腊月': '辛亥'
                     }
-                    return day_gan in zhongsang_map.get(lunar_month_name, [])
+                    return day_gz == zhongsang_map.get(lunar_month_name, '')
         except:
             pass
 
-        return False
-    
-    def _is_sanniang(self, sizhu):
-        """
-        是否三娘煞
-        每月初三、初七、十三、十八、廿二、廿七
-        
-        三娘煞按农历日期判断：每月初三、初七、十三、十八、廿二、廿七
-        """
-        SANNIANGSHA_DAYS = [3, 7, 13, 18, 22, 27]
-        
-        try:
-            # 尝试从sizhu获取日期对象
-            if 'date' in sizhu:
-                from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(sizhu['date'])
-                if lunar_info:
-                    # 尝试获取day字段（中文日期）
-                    if 'day' in lunar_info:
-                        lunar_day_str = lunar_info['day']
-                        lunar_day = self._parse_chinese_day(lunar_day_str)
-                        if lunar_day in SANNIANGSHA_DAYS:
-                            return True
-            
-            # 尝试从sizhu直接获取农历日期数字
-            if 'lunar_day' in sizhu:
-                return sizhu['lunar_day'] in SANNIANGSHA_DAYS
-                
-            # 尝试从sizhu直接获取农历日期字符串
-            if 'lunar_day_str' in sizhu:
-                lunar_day = self._parse_chinese_day(sizhu['lunar_day_str'])
-                return lunar_day in SANNIANGSHA_DAYS
-        except:
-            pass
-        
         return False
     
     def _parse_chinese_day(self, day_str):
@@ -818,32 +922,34 @@ class MarriageShenShaChecker(ShenShaChecker):
         }
         
         lunar_day = 0
-        if 'date' in sizhu:
-            try:
+        try:
+            date_obj = self._get_date_from_sizhu(sizhu)
+            if date_obj:
                 from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(sizhu['date'])
+                lunar_info = get_lunar_date(date_obj)
                 if lunar_info and 'day' in lunar_info:
                     lunar_day = self._parse_chinese_day(lunar_info['day'])
-            except:
-                pass
-        elif 'lunar_day' in sizhu:
-            lunar_day = sizhu['lunar_day']
+            elif 'lunar_day' in sizhu:
+                lunar_day = sizhu['lunar_day']
+        except:
+            pass
         
         return lunar_day in zhen_sanniang_map and ganzhi in zhen_sanniang_map[lunar_day]
     
     def _is_huangsha(self, sizhu):
         """是否黄沙日"""
         lunar_month = 0
-        if 'date' in sizhu:
-            try:
+        try:
+            date_obj = self._get_date_from_sizhu(sizhu)
+            if date_obj:
                 from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(sizhu['date'])
+                lunar_info = get_lunar_date(date_obj)
                 if lunar_info and 'month' in lunar_info:
                     lunar_month = self._parse_chinese_month(lunar_info['month'])
-            except:
-                pass
-        elif 'lunar_month' in sizhu:
-            lunar_month = sizhu['lunar_month']
+            elif 'lunar_month' in sizhu:
+                lunar_month = sizhu['lunar_month']
+        except:
+            pass
         
         day_zhi = sizhu.get('day_zhi', '')
         
@@ -858,16 +964,17 @@ class MarriageShenShaChecker(ShenShaChecker):
     def _is_shenhao(self, sizhu):
         """是否神号日"""
         lunar_month = 0
-        if 'date' in sizhu:
-            try:
+        try:
+            date_obj = self._get_date_from_sizhu(sizhu)
+            if date_obj:
                 from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(sizhu['date'])
+                lunar_info = get_lunar_date(date_obj)
                 if lunar_info and 'month' in lunar_info:
                     lunar_month = self._parse_chinese_month(lunar_info['month'])
-            except:
-                pass
-        elif 'lunar_month' in sizhu:
-            lunar_month = sizhu['lunar_month']
+            elif 'lunar_month' in sizhu:
+                lunar_month = sizhu['lunar_month']
+        except:
+            pass
         
         day_zhi = sizhu.get('day_zhi', '')
         
@@ -896,7 +1003,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         day_zhi = sizhu.get('day_zhi', '')
         
         guiru_map = {
-            1: ['未'], 2: ['戌'], 3: ['辰'], 4: ['寅'],
+            1: ['午'], 2: ['戌'], 3: ['辰'], 4: ['寅'],
             5: ['午'], 6: ['子'], 7: ['酉'], 8: ['申'],
             9: ['巳'], 10: ['亥'], 11: ['丑'], 12: ['卯']
         }
@@ -928,16 +1035,24 @@ class MarriageShenShaChecker(ShenShaChecker):
         return day_zhi == zhuque_map.get(month_zhi)
     
     def _is_tiangou(self, sizhu):
-        """是否天狗日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        tiangou_map = {
-            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
-            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
-            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
-        }
-        return day_zhi == tiangou_map.get(month_zhi)
+        """是否天狗日 - 根据《钦定协纪辨方书》，天狗为建除十二神中的"满"日"""
+        try:
+            if 'date' in sizhu:
+                jianchu = get_jianchu(sizhu['date'])
+                return jianchu == '满'
+        except Exception as e:
+            # 回退方案：使用月支起建法计算满日
+            month_zhi = sizhu['month_zhi']
+            day_zhi = sizhu['day_zhi']
+            zhi_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+            if month_zhi in zhi_order and day_zhi in zhi_order:
+                month_idx = zhi_order.index(month_zhi)
+                day_idx = zhi_order.index(day_zhi)
+                # 建除十二神顺序：建、除、满、平、定、执、破、危、成、收、开、闭
+                # "满"是第2位(index=2)
+                offset = (day_idx - month_idx) % 12
+                return offset == 2
+        return False
     
     def _is_guchen(self, sizhu):
         """是否孤辰寡宿"""

@@ -33,30 +33,109 @@ except ImportError:
 class TravelShenShaChecker(ShenShaChecker):
     """出行神煞检查器"""
     
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
         
         # 太岁方位
-        year_zhi = sizhu['year_zhi']
         if self._is_taisui_fangwei(sizhu):
             self._add_shensha('太岁方位', -10, '太岁方位不宜出行')
+        
+        # 岁德
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 20, '岁德吉星，宜出行')
+        
+        # 岁德合
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 15, '岁德合吉星，宜出行')
+        
+        # 天马
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 10, '天马日利于远行')
+        
+        # 飞廉
+        if self._is_flyinglian(sizhu):
+            self._add_shensha('飞廉', -12, '飞廉主虚惊，不宜出行')
+        
+        # 亡神（伏兵）
+        if self._is_fubing(sizhu):
+            self._add_shensha('亡神', -12, '亡神主暗害，不宜出行')
+        
+        # 劫煞
+        if self._is_jiesha(sizhu):
+            self._add_shensha('劫煞', -25, '劫煞大吉，切忌出行')
+        
+        # 灾煞
+        if self._is_zaijiesha(sizhu):
+            self._add_shensha('灾煞', -25, '灾煞主灾祸，切忌出行')
     
-    def _check_month_shensha(self, sizhu):
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
         
         # 月破
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -15, '月破日不宜出行')
+            self._add_shensha('月破', -30, '月破日不宜出行')
         
         # 往亡
         if self._is_wangwang(sizhu):
-            self._add_shensha('往亡', -20, '往亡日不宜出行')
+            self._add_shensha('往亡', -22, '往亡日不宜出行')
+        
+        # 月空
+        if self._is_yuekong(sizhu):
+            self._add_shensha('月空', 10, '月空吉星，宜出行')
+        
+        # 月恩
+        if self._is_yueen(sizhu):
+            self._add_shensha('月恩', 10, '月恩吉星，宜出行')
+        
+        # 五富
+        if self._is_wufu(sizhu):
+            self._add_shensha('五富', 12, '五富吉星，宜出行')
+        
+        # 吉期
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 10, '吉期吉星，宜出行')
+        
+        # 阳德
+        if self._is_yangde(sizhu):
+            self._add_shensha('阳德', 10, '阳德吉星，宜出行')
+        
+        # 阴德
+        if self._is_yinde(sizhu):
+            self._add_shensha('阴德', 10, '阴德吉星，宜出行')
+        
+        # 不将日
+        if self._is_bujiang(sizhu):
+            self._add_shensha('不将日', 15, '不将日利于出行')
+        
+        # 月厌
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -15, '月厌日不宜出行')
+        
+        # 月刑
+        if self._is_yuexing(sizhu):
+            self._add_shensha('月刑', -15, '月刑日不宜出行')
+        
+        # 月害
+        if self._is_yuehai(sizhu):
+            self._add_shensha('月害', -15, '月害日不宜出行')
+        
+        # 大时（咸池）
+        if self._is_dashi(sizhu):
+            self._add_shensha('大时', -12, '大时（咸池）主凶，不宜出行')
+        
+        # 天吏（致死）
+        if self._is_tianli(sizhu):
+            self._add_shensha('天吏', -15, '天吏（致死）主凶，不宜出行')
+        
+        # 四废
+        if self._is_sifei(sizhu):
+            self._add_shensha('四废', -15, '四废日不宜出行')
     
-    def _check_day_shensha(self, sizhu):
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
         
         # 出行吉日
         if self._is_chuxing_jiri(sizhu):
@@ -74,23 +153,88 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_lukong(sizhu):
             self._add_shensha('路空日', -15, '路空日不宜出行')
         
-        # 朱雀日
-        if self._is_zhuque(sizhu):
-            self._add_shensha('朱雀日', -10, '朱雀日出行有口舌是非')
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 20, '天德吉星，宜出行')
         
-        # 白虎日
-        if self._is_baihu(sizhu):
-            self._add_shensha('白虎日', -12, '白虎日出行有凶险')
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德吉星，宜出行')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 15, '天德合吉星，宜出行')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合吉星，宜出行')
+        
+        # 三奇
+        sanqi_type = self._is_sanqi(sizhu)
+        if sanqi_type:
+            self._add_shensha('三奇', 15, f'{sanqi_type}三奇吉星，宜出行')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 12, '将星吉星，宜出行')
+        
+        # 六合
+        if self._is_liuhe(sizhu):
+            self._add_shensha('六合', 12, '六合日利于出行')
+        
+        # 三合
+        if self._is_sanhe(sizhu):
+            self._add_shensha('三合', 10, '三合日利于出行')
+        
+        # 天赦
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦', 25, '天赦大吉，宜出行')
+        
+        # 母仓
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓', 10, '母仓吉星，宜出行')
+        
+        # 生气
+        if self._is_shengqi(sizhu):
+            self._add_shensha('生气', 10, '生气吉星，宜出行')
+        
+        # 受死日
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日不宜出行')
+        
+        # 往亡日
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡日', -20, '往亡日不宜出行')
+        
+        # 四离日
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -35, '四离日大忌，不宜出行')
+        
+        # 四绝日
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -35, '四绝日大忌，不宜出行')
+        
+        # 十恶大败
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -30, '十恶大败日不宜出行')
+        
+        # 反支日
+        if self._is_fanzhi(sizhu):
+            self._add_shensha('反支日', -12, '反支日不宜出行')
+        
+        # 上朔日
+        if self._is_shangshuo(sizhu):
+            self._add_shensha('上朔日', -10, '上朔日不宜出行')
     
-    def _check_hour_shensha(self, sizhu):
+    def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""
-        super()._check_hour_shensha(sizhu)
+        super()._check_hour_shensha(sizhu, **kwargs)
         
         # 出行吉时
         if self._is_chuxing_jishi(sizhu):
             self._add_shensha('出行吉时', 8, '适合出行的时辰')
     
-    def _check_special_shensha(self, sizhu, owners):
+    def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（出行者）生肖与日课的冲合"""
         if not owners:
             return
@@ -127,64 +271,6 @@ class TravelShenShaChecker(ShenShaChecker):
             elif hour_zhi and self._is_he(hour_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
     
-    def _shengxiao_to_zhi(self, shengxiao):
-        """生肖转换为地支"""
-        shengxiao_map = {
-            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
-            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
-            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
-        }
-        return shengxiao_map.get(shengxiao)
-    
-    def _is_chong(self, zhi1, zhi2):
-        """检查两个地支是否相冲"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return zhi1 == chong_map.get(zhi2)
-    
-    def _is_he(self, zhi1, zhi2):
-        """检查两个地支是否相合（六合或三合）"""
-        if not zhi1 or not zhi2:
-            return False
-        
-        # 如果zhi2是生肖，转换为地支
-        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
-            zhi2 = self._shengxiao_to_zhi(zhi2)
-            if not zhi2:
-                return False
-        
-        # 六合
-        liuhe_map = {
-            '子': '丑', '丑': '子',
-            '寅': '亥', '亥': '寅',
-            '卯': '戌', '戌': '卯',
-            '辰': '酉', '酉': '辰',
-            '巳': '申', '申': '巳',
-            '午': '未', '未': '午'
-        }
-        if liuhe_map.get(zhi1) == zhi2:
-            return True
-        
-        # 三合
-        sanhe_sets = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-        for s in sanhe_sets:
-            if zhi1 in s and zhi2 in s and zhi1 != zhi2:
-                return True
-        
-        return False
-    
     def _is_taisui_fangwei(self, sizhu):
         """是否太岁方位"""
         year_zhi = sizhu['year_zhi']
@@ -197,16 +283,33 @@ class TravelShenShaChecker(ShenShaChecker):
         # 简化判断
         return False
     
-    def _is_yuepo(self, sizhu):
-        """是否月破"""
+    def _is_yuexing(self, sizhu):
+        """是否月刑"""
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        chong = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        
+        xing_map = {
+            '寅': '巳', '巳': '申', '申': '寅',
+            '丑': '戌', '戌': '未', '未': '丑',
+            '子': '卯', '卯': '子',
+            '辰': '辰', '午': '午', '酉': '酉', '亥': '亥'
         }
-        return day_zhi == chong.get(month_zhi)
+        return day_zhi == xing_map.get(month_zhi)
+    
+    def _is_yuehai(self, sizhu):
+        """是否月害"""
+        month_zhi = sizhu['month_zhi']
+        day_zhi = sizhu['day_zhi']
+        
+        hai_map = {
+            '子': '未', '未': '子',
+            '丑': '午', '午': '丑',
+            '寅': '巳', '巳': '寅',
+            '卯': '辰', '辰': '卯',
+            '申': '亥', '亥': '申',
+            '酉': '戌', '戌': '酉'
+        }
+        return day_zhi == hai_map.get(month_zhi)
     
     def _is_wangwang(self, sizhu):
         """是否往亡日"""
@@ -264,30 +367,6 @@ class TravelShenShaChecker(ShenShaChecker):
             '戊': ['子', '丑'], '癸': ['子', '丑']
         }
         return day_zhi in lukong.get(day_gan, [])
-    
-    def _is_zhuque(self, sizhu):
-        """是否朱雀日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 朱雀日
-        zhuque = {
-            '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
-            '午': '未', '未': '申', '申': '酉', '酉': '戌',
-            '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
-        }
-        return day_zhi == zhuque.get(month_zhi)
-    
-    def _is_baihu(self, sizhu):
-        """是否白虎日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 白虎日
-        baihu = {
-            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
-            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
-            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
-        }
-        return day_zhi == baihu.get(month_zhi)
     
     def _is_chuxing_jishi(self, sizhu):
         """是否出行吉时"""

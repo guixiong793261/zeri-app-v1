@@ -38,7 +38,7 @@ from enum import Enum
 
 # 检查是否是直接运行（不是作为模块导入）
 if __name__ == '__main__' and __package__ is None:
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = (getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(sys.executable))) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
@@ -533,8 +533,74 @@ class MountainShenshaChecker:
                 return rule['avoid_mountains']
         return []
     
+    # 年家紫白飞星五黄：1864甲子年一白入中，逐年递减（9年一循环）
+    # 飞行路径：中宫→乾→兑→艮→离→坎→坤→震→巽（洛书轨迹）
+    WUHUANG_FLY_PATH = ['中', '乾', '兑', '艮', '离', '坎', '坤', '震', '巽']
+    WUHUANG_PALACE_MOUNTAINS = {
+        '乾': ['戌', '乾', '亥'],
+        '兑': ['庚', '酉', '辛'],
+        '艮': ['丑', '艮', '寅'],
+        '离': ['丙', '午', '丁'],
+        '坎': ['壬', '子', '癸'],
+        '坤': ['未', '坤', '申'],
+        '震': ['甲', '卯', '乙'],
+        '巽': ['辰', '巽', '巳'],
+    }
+    
+    def check_wu_huang(self, year_num: int) -> List[str]:
+        """
+        检查年家五黄所在宫位的山（宜静不宜动，忌动土修造安葬）
+        
+        Args:
+            year_num: 公历年份
+            
+        Returns:
+            需要避开的山列表（五黄入中年返回空列表）
+        """
+        m = (year_num - 1864) % 9
+        s = (1 - m) % 9
+        if s == 0:
+            s = 9
+        palace = self.WUHUANG_FLY_PATH[(5 - s) % 9]
+        return self.WUHUANG_PALACE_MOUNTAINS.get(palace, [])
+    
+    def get_wuhuang_palace(self, year_num: int) -> str:
+        """
+        获取年家五黄所在宫位名（'中'表示五黄入中，无固定凶方）
+        """
+        m = (year_num - 1864) % 9
+        s = (1 - m) % 9
+        if s == 0:
+            s = 9
+        return self.WUHUANG_FLY_PATH[(5 - s) % 9]
+    
+    # ---------- 年家紫白飞星·二黑（病符星） ----------
+    def get_erhei_palace(self, year_num: int) -> str:
+        """
+        获取年家二黑（病符星）所在宫位名（'中'表示二黑入中，无固定凶方）
+        """
+        m = (year_num - 1864) % 9
+        s = (1 - m) % 9
+        if s == 0:
+            s = 9
+        return self.WUHUANG_FLY_PATH[(2 - s) % 9]
+
+    def check_er_hei(self, year_num: int) -> List[str]:
+        """
+        检查年家二黑（病符星）所在宫位的山（主疾病脾胃、妇人不安，失运忌动土修造）
+
+        Args:
+            year_num: 公历年份
+
+        Returns:
+            需要避开的山列表（二黑入中年返回空列表）
+        """
+        palace = self.get_erhei_palace(year_num)
+        return self.WUHUANG_PALACE_MOUNTAINS.get(palace, [])
+    
     def check_mountain_jixiong(self, mountain_name: str, year_zhi: str, 
-                               month_zhi: str = None, day_zhi: str = None) -> Dict:
+                               month_zhi: str = None, day_zhi: str = None,
+                               year_num: int = None) -> Dict:
         """
         综合检查山家吉凶
         
@@ -543,6 +609,7 @@ class MountainShenshaChecker:
             year_zhi: 年支
             month_zhi: 月支（可选）
             day_zhi: 日支（可选）
+            year_num: 公历年份（可选，用于年家五黄/二黑检查）
             
         Returns:
             吉凶判断结果
@@ -567,6 +634,25 @@ class MountainShenshaChecker:
             result['is_good'] = False
             result['shensha'].append('岁破')
             result['warnings'].append(f'{year_zhi}年岁破在{sui_po_mountains}，忌{mountain_name}山')
+        
+        # 检查年家五黄（需公历年份）
+        if year_num:
+            wu_huang_mountains = self.check_wu_huang(year_num)
+            if mountain_name in wu_huang_mountains:
+                palace = self.get_wuhuang_palace(year_num)
+                result['is_good'] = False
+                result['shensha'].append('五黄')
+                result['warnings'].append(
+                    f'{year_num}年五黄在{palace}宫（{"".join(wu_huang_mountains)}），忌{mountain_name}山')
+
+            # 检查年家二黑（病符星）
+            er_hei_mountains = self.check_er_hei(year_num)
+            if mountain_name in er_hei_mountains:
+                palace = self.get_erhei_palace(year_num)
+                result['is_good'] = False
+                result['shensha'].append('二黑')
+                result['warnings'].append(
+                    f'{year_num}年二黑（病符）在{palace}宫（{"".join(er_hei_mountains)}），忌{mountain_name}山（主疾病脾胃、妇人不安）')
         
         return result
 
@@ -1307,7 +1393,8 @@ class ZhengTiWuXingSelector:
         }
     
     def evaluate_with_shensha(self, mountain_name: str,
-                              year_gz: str, month_gz: str, day_gz: str, hour_gz: str) -> Dict:
+                              year_gz: str, month_gz: str, day_gz: str, hour_gz: str,
+                              year_num: int = None) -> Dict:
         """
         综合评价（包含神煞检查）
         
@@ -1317,6 +1404,7 @@ class ZhengTiWuXingSelector:
             month_gz: 月柱
             day_gz: 日柱
             hour_gz: 时柱
+            year_num: 公历年份（可选，用于年家五黄检查）
             
         Returns:
             评价结果字典
@@ -1347,6 +1435,25 @@ class ZhengTiWuXingSelector:
             shensha_list.append('岁破')
             shensha_warnings.append(f'{year_zhi}年岁破在{sui_po_mountains}，{mountain_name}山犯岁破')
             result['total_score'] -= 50
+        
+        # 检查年家五黄（需公历年份；五黄到山宜静不宜动，大凶一票否决）
+        if year_num:
+            wu_huang_mountains = self.shensha_checker.check_wu_huang(year_num)
+            if mountain_name in wu_huang_mountains:
+                palace = self.shensha_checker.get_wuhuang_palace(year_num)
+                shensha_list.append('五黄')
+                shensha_warnings.append(
+                    f'{year_num}年五黄在{palace}宫（{"".join(wu_huang_mountains)}），{mountain_name}山犯五黄')
+                result['total_score'] -= 100  # 大凶，一票否决
+
+            # 检查年家二黑（病符星）：到山扣40分，主疾病脾胃、妇人不安
+            er_hei_mountains = self.shensha_checker.check_er_hei(year_num)
+            if mountain_name in er_hei_mountains:
+                palace = self.shensha_checker.get_erhei_palace(year_num)
+                shensha_list.append('二黑')
+                shensha_warnings.append(
+                    f'{year_num}年二黑（病符）在{palace}宫（{"".join(er_hei_mountains)}），{mountain_name}山犯二黑')
+                result['total_score'] -= 40  # 病符煞，力度次于五黄
         
         # 更新吉凶等级
         total_score = result['total_score']
@@ -1516,7 +1623,8 @@ class ZhengTiWuXingSelectorDB:
         # 默认规则（当数据库不可用时）
         rows = [
             {'relation_type': '生', 'direction': '课生山', 'weight': 10},
-            {'relation_type': '生', 'direction': '山生课', 'weight': 5},
+            # 山生课/龙生课 = 泄山（龙）之气，应为负分（如分金木见日课火）
+            {'relation_type': '生', 'direction': '山生课', 'weight': -5},
             {'relation_type': '克', 'direction': '课克山', 'weight': -10},
             {'relation_type': '克', 'direction': '山克课', 'weight': -5},
             {'relation_type': '比和', 'direction': '比和', 'weight': 8},
@@ -1661,6 +1769,8 @@ class ZhengTiWuXingSelectorDB:
             22: 2, # 乙
             23: 4, # 丙
             24: 4, # 丁
+            25: 1, # 庚金
+            26: 1, # 辛金
         }
         return mountain_wuxing_map.get(mountain_id)
     
@@ -1980,6 +2090,7 @@ class ZhengTiWuXingSelectorDB:
             '辰': 7, '巳': 8, '午': 9, '未': 10, '申': 11, '酉': 12,
             '戌': 13, '亥': 14, '艮': 15, '乾': 16, '坤': 17, '巽': 18,
             '戊': 19, '己': 20, '甲': 21, '乙': 22, '丙': 23, '丁': 24,
+            '庚': 25, '辛': 26,
         }
         
         mountain_id = name_to_id.get(mountain_name)
@@ -2039,6 +2150,7 @@ class ZhengTiWuXingSelectorDB:
             '辰': 7, '巳': 8, '午': 9, '未': 10, '申': 11, '酉': 12,
             '戌': 13, '亥': 14, '艮': 15, '乾': 16, '坤': 17, '巽': 18,
             '戊': 19, '己': 20, '甲': 21, '乙': 22, '丙': 23, '丁': 24,
+            '庚': 25, '辛': 26,
         }
         
         mountain_id = name_to_id.get(mountain_name)
@@ -2103,9 +2215,11 @@ class ZhengTiWuXingSelectorDB:
                 'success': True,
                 'mountain': mountain_name,
                 'jianxiang': jianxiang,
+                'fengjin_index': fengjin_index + 1,  # 第几分金
                 'fengjin_ganzhi': fengjin_ganzhi,
                 'fengjin_wuxing': fengjin_wx_name,
                 'nayin_name': nayin_name,
+                'zhengti_wuxing': self.id_to_wuxing.get(mountain_wx, '未知'),
                 'wx_type': wx_type,
                 'level': "凶(犯大煞)",
                 'score': total_score + penalty,

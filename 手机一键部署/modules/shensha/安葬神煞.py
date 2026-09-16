@@ -35,9 +35,9 @@ except ImportError:
 class BurialShenShaChecker(ShenShaChecker):
     """安葬神煞检查器"""
     
-    def _check_year_shensha(self, sizhu):
+    def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
-        super()._check_year_shensha(sizhu)
+        super()._check_year_shensha(sizhu, **kwargs)
         
         year_zhi = sizhu.get('year_zhi', '')
         day_gan = sizhu.get('day_gan', '')
@@ -46,10 +46,54 @@ class BurialShenShaChecker(ShenShaChecker):
         # 年重丧（按年支和日干查）
         if year_zhi and day_gan and self._is_nian_zhongsang(sizhu):
             self._add_shensha('年重丧', -30, '年重丧大凶，绝对不可用')
+        
+        # 岁德
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 20, '岁之德神，大吉')
+        
+        # 岁德合
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 15, '岁德合，吉')
+        
+        # 黄幡
+        if self._is_huangfan(sizhu):
+            self._add_shensha('黄幡', -15, '黄幡主缠绕，凶')
+        
+        # 豹尾
+        if self._is_baowei(sizhu):
+            self._add_shensha('豹尾', -12, '豹尾主损伤，凶')
+        
+        # 丧门
+        if self._is_sangmen(sizhu):
+            self._add_shensha('丧门', -15, '丧门主丧事，凶')
+        
+        # 吊客
+        if self._is_diaoke(sizhu):
+            self._add_shensha('吊客', -12, '吊客主丧事，凶')
+        
+        # 病符
+        if self._is_bingfu(sizhu):
+            self._add_shensha('病符', -12, '病符主疾病，凶')
+        
+        # 官符
+        if self._is_guanfu(sizhu):
+            self._add_shensha('官符', -10, '官符主口舌是非，凶')
+        
+        # 五鬼
+        if self._is_wugui(sizhu):
+            self._add_shensha('五鬼', -15, '五鬼主灾祸，凶')
+        
+        # 大煞
+        if self._is_dasha(sizhu):
+            self._add_shensha('大煞', -12, '大煞主凶险，凶')
+        
+        # 力士
+        if self._is_lishi(sizhu):
+            self._add_shensha('力士', -10, '力士主阻碍，凶')
     
-    def _check_month_shensha(self, sizhu):
+    def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu)
+        super()._check_month_shensha(sizhu, **kwargs)
         
         month_zhi = sizhu.get('month_zhi', '')
         day_gan = sizhu.get('day_gan', '')
@@ -81,11 +125,71 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 月破（已在基类中检查，但安葬需特别强调）
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -25, '月破日诸事不宜，安葬大忌')
+            self._add_shensha('月破', -30, '月破日诸事不宜，安葬大忌')
+        
+        # 月空
+        if self._is_yuekong(sizhu):
+            self._add_shensha('月空', 10, '月空吉，利于安葬')
+        
+        # 五富
+        if self._is_wufu(sizhu):
+            self._add_shensha('五富', 12, '五富吉日，利于安葬')
+        
+        # 吉期
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 10, '吉期吉日，利于安葬')
+        
+        # 益后
+        if self._is_yihou(sizhu):
+            self._add_shensha('益后', 12, '益后吉日，利于安葬')
+        
+        # 续世
+        if self._is_xushi(sizhu):
+            self._add_shensha('续世', 10, '续世吉日，利于安葬')
+        
+        # 要安
+        if self._is_yaoan(sizhu):
+            self._add_shensha('要安', 8, '要安吉日，利于安葬')
+        
+        # 不将日
+        if self._is_bujiang(sizhu):
+            self._add_shensha('不将日', 15, '不将日安葬大吉')
+        
+        # 月厌
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -15, '月厌凶日，不宜安葬')
+        
+        # 月虚
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -10, '月虚凶日，不宜安葬')
+        
+        # 月刑
+        if self._is_yuexing(sizhu):
+            self._add_shensha('月刑', -15, '月刑凶日，不宜安葬')
+        
+        # 月害
+        if self._is_yuehai(sizhu):
+            self._add_shensha('月害', -15, '月害凶日，不宜安葬')
+        
+        # 大时
+        if self._is_dashi(sizhu):
+            self._add_shensha('大时', -12, '大时凶日，不宜安葬')
+        
+        # 四废
+        if self._is_sifei(sizhu):
+            self._add_shensha('四废', -15, '四废凶日，不宜安葬')
+        
+        # 五墓
+        if self._is_wumu(sizhu):
+            self._add_shensha('五墓', -12, '五墓凶日，不宜安葬')
+        
+        # 受死日
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日大凶，绝对不可安葬')
     
-    def _check_day_shensha(self, sizhu):
+    def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        super()._check_day_shensha(sizhu)
+        super()._check_day_shensha(sizhu, **kwargs)
         
         day_gan = sizhu['day_gan']
         day_zhi = sizhu['day_zhi']
@@ -95,11 +199,11 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 四离日
         if self._is_sili(sizhu):
-            self._add_shensha('四离日', -30, '春分、秋分、夏至、冬至前一日，安葬大忌')
+            self._add_shensha('四离日', -35, '春分、秋分、夏至、冬至前一日，安葬大忌')
         
         # 四绝日
         if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -30, '立春、立夏、立秋、立冬前一日，安葬大忌')
+            self._add_shensha('四绝日', -35, '立春、立夏、立秋、立冬前一日，安葬大忌')
         
         # 十恶大败日
         if self._is_shie_dabai(sizhu):
@@ -111,9 +215,9 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # ===== 凶煞 =====
         
-        # 土府
-        if self._is_tufu(sizhu):
-            self._add_shensha('土府', -15, '土府日不宜安葬')
+        # 土瘟
+        if self._is_tuwen(sizhu):
+            self._add_shensha('土瘟', -20, '土瘟日不宜安葬')
         
         # 八座日
         if self._is_bazuori(sizhu):
@@ -123,19 +227,19 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 天德
         if self._is_tiande(sizhu):
-            self._add_shensha('天德', 15, '天德吉星，安葬大吉')
+            self._add_shensha('天德', 20, '天德吉星，安葬大吉')
         
         # 月德
         if self._is_yuede(sizhu):
-            self._add_shensha('月德', 12, '月德吉星，安葬大吉')
+            self._add_shensha('月德', 18, '月德吉星，安葬大吉')
         
         # 天德合
         if self._is_tiande_he(sizhu):
-            self._add_shensha('天德合', 10, '天德合，安葬吉')
+            self._add_shensha('天德合', 15, '天德合，安葬吉')
         
         # 月德合
         if self._is_yuede_he(sizhu):
-            self._add_shensha('月德合', 8, '月德合，安葬吉')
+            self._add_shensha('月德合', 12, '月德合，安葬吉')
         
         # 三奇
         sanqi_result = self._is_sanqi(sizhu)
@@ -144,7 +248,7 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 将星
         if self._is_jiangxing(sizhu):
-            self._add_shensha('将星', 10, '将星到座，安葬吉')
+            self._add_shensha('将星', 12, '将星到座，安葬吉')
         
         # 鸣吠日（正确的天干地支组合）
         if self._is_mingfei(sizhu):
@@ -156,9 +260,45 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 不将日
         if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 8, '不将日安葬可用')
+            self._add_shensha('不将日', 15, '不将日安葬可用')
+        
+        # 六合
+        if self._is_liuhe(sizhu):
+            self._add_shensha('六合', 12, '六合吉日，利于安葬')
+        
+        # 三合
+        if self._is_sanhe(sizhu):
+            self._add_shensha('三合', 10, '三合吉日，利于安葬')
+        
+        # 驿马
+        if self._is_yima(sizhu):
+            self._add_shensha('驿马', 10, '驿马吉日，利于安葬')
+        
+        # 天马
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 8, '天马吉日，利于安葬')
+        
+        # 天赦
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦', 25, '天赦大德，安葬大吉')
+        
+        # 母仓
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓', 10, '母仓吉日，利于安葬')
+        
+        # 生气
+        if self._is_shengqi(sizhu):
+            self._add_shensha('生气', 10, '生气吉日，利于安葬')
+        
+        # 鸣犬日
+        if self._is_mingquan(sizhu):
+            self._add_shensha('鸣犬日', 12, '鸣犬日利于安葬')
+        
+        # 鸣犬对日
+        if self._is_mingquandui(sizhu):
+            self._add_shensha('鸣犬对日', 8, '鸣犬对日利于安葬')
     
-    def _check_special_shensha(self, sizhu, owners):
+    def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞（与亡者相关）"""
         if not owners:
             return
@@ -323,27 +463,31 @@ class BurialShenShaChecker(ShenShaChecker):
         }
         return day_zhi == zhisi_map.get(month_zhi)
     
-    def _is_yuepo(self, sizhu):
-        """是否月破（与月支相冲）"""
+    def _is_yuexing(self, sizhu):
+        """是否月刑（月支与日支相刑）"""
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        zh_list = DI_ZHI
-        if month_zhi in zh_list:
-            idx = zh_list.index(month_zhi)
-            yuepo = zh_list[(idx + 6) % 12]
-            return day_zhi == yuepo
-        return False
-    
-    def _is_tufu(self, sizhu):
-        """是否土府日"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        tufu_map = {
-            '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
-            '午': '巳', '未': '午', '申': '未', '酉': '申',
-            '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
+        xing_map = {
+            '寅': '巳', '巳': '申', '申': '寅',
+            '丑': '戌', '戌': '未', '未': '丑',
+            '子': '卯', '卯': '子',
+            '辰': '辰', '午': '午', '酉': '酉', '亥': '亥'
         }
-        return day_zhi == tufu_map.get(month_zhi)
+        return day_zhi == xing_map.get(month_zhi)
+    
+    def _is_yuehai(self, sizhu):
+        """是否月害（月支与日支相害）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hai_map = {
+            '子': '未', '未': '子',
+            '丑': '午', '午': '丑',
+            '寅': '巳', '巳': '寅',
+            '卯': '辰', '辰': '卯',
+            '申': '亥', '亥': '申',
+            '酉': '戌', '戌': '酉'
+        }
+        return day_zhi == hai_map.get(month_zhi)
     
     def _is_bazuori(self, sizhu):
         """是否八座日"""
@@ -357,24 +501,6 @@ class BurialShenShaChecker(ShenShaChecker):
         return day_zhi == bazuori_map.get(month_zhi)
     
     # ===== 极凶日 =====
-    
-    def _is_sili(self, sizhu):
-        """是否四离日"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        sili_map = {
-            '卯': '辰', '午': '未', '酉': '戌', '子': '丑'
-        }
-        return day_zhi == sili_map.get(month_zhi)
-    
-    def _is_sijue(self, sizhu):
-        """是否四绝日"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        sijue_map = {
-            '丑': '寅', '辰': '巳', '未': '申', '戌': '亥'
-        }
-        return day_zhi == sijue_map.get(month_zhi)
     
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败日"""
@@ -398,13 +524,22 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_mingfei(self, sizhu):
         """
-        是否鸣吠日（正确的天干地支组合）
-        鸣吠日：庚午、庚子、庚申、辛酉、辛卯、辛巳、壬寅、壬辰、壬午、壬申
+        是否鸣吠日（完整24日）
+        鸣吠日：丙寅、丁卯、戊辰、己巳、庚午、辛未、壬申、癸酉、甲戌、乙亥、
+                丙子、丁丑、戊寅、己卯、庚辰、辛巳、壬午、癸未、甲申、乙酉、
+                丙戌、丁亥、戊子、己丑
+        按六十甲子循环，每六十日中有二十四日为鸣吠日
         """
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         day_pillar = day_gan + day_zhi
-        mingfei = ['庚午', '庚子', '庚申', '辛酉', '辛卯', '辛巳', '壬寅', '壬辰', '壬午', '壬申']
+        # 完整24日鸣吠日列表
+        mingfei = [
+            '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未',
+            '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑',
+            '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
+            '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑'
+        ]
         return day_pillar in mingfei
     
     def _is_mingfeidui(self, sizhu):

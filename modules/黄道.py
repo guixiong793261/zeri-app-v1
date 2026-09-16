@@ -46,33 +46,44 @@ class 黄道计算器:
     # 小黄道十二建星
     XIAO_HUANG_DAO = {
         '建': {'type': '凶', 'score': -10, 'description': '建日，宜出行、上任，忌动土、安葬'},
-        '除': {'type': '吉', 'score': 5, 'description': '除日，宜扫除、清洁，忌安葬'},
+        '除': {'type': '吉', 'score': 5, 'description': '除日，宜扫除、清洁，忌嫁娶、安葬'},
         '满': {'type': '凶', 'score': -10, 'description': '满日，宜祭祀、祈福，忌动土'},
         '平': {'type': '凶', 'score': -10, 'description': '平日，诸事皆宜'},
         '定': {'type': '吉', 'score': 5, 'description': '定日，宜嫁娶、立约，忌出行'},
         '执': {'type': '吉', 'score': 5, 'description': '执日，宜修造、动土，忌嫁娶'},
         '破': {'type': '凶', 'score': -10, 'description': '破日，诸事不宜'},
-        '危': {'type': '吉', 'score': 5, 'description': '危日，宜祭祀、祈福，忌动土'},
+        '危': {'type': '吉', 'score': 5, 'description': '危日，宜祭祀、祈福，忌嫁娶、动土'},
         '成': {'type': '吉', 'score': 5, 'description': '成日，诸事皆宜'},
         '收': {'type': '凶', 'score': -10, 'description': '收日，宜收敛、积蓄，忌嫁娶'},
         '开': {'type': '吉', 'score': 5, 'description': '开日，诸事皆宜'},
         '闭': {'type': '凶', 'score': -10, 'description': '闭日，宜闭门、静养，忌出行'},
     }
     
-    # 大黄道计算表（根据日支和时辰）
+    # 大黄道计算表（根据日支和时辰）—— 时辰级黄道吉时判定
+    # 采用《协纪辨方书》正宗起青龙口诀：
+    #   子午青龙起在子，丑未青龙起在寅，
+    #   寅申青龙起在申，卯酉青龙起在寅，
+    #   辰戌青龙起在辰，巳亥青龙起在巳。
+    # 【单一规则源】：与 modules/婚嫁评分算法.py HUANGDAO_SHI_TABLE 严格一致
     DA_HUANG_DAO_TABLE = {
+        # 子午起于子：子时青龙
         '子': ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈'],
-        '丑': ['天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂'],
-        '寅': ['朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑'],
-        '卯': ['金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀'],
-        '辰': ['天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮'],
-        '巳': ['白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德'],
-        '午': ['玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎'],
-        '未': ['天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂'],
-        '申': ['玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢'],
+        '午': ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈'],
+        # 丑未起于寅：寅时青龙
+        '丑': ['司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武'],
+        '未': ['司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武'],
+        # 寅申起于申：申时青龙
+        '寅': ['天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂'],
+        '申': ['天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂'],
+        # 卯酉起于寅：寅时青龙
+        '卯': ['司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武'],
         '酉': ['司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武'],
-        '戌': ['勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命'],
-        '亥': ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈'],
+        # 辰戌起于辰：辰时青龙
+        '辰': ['天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂'],
+        '戌': ['天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂'],
+        # 巳亥起于巳：巳时青龙
+        '巳': ['玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎'],
+        '亥': ['玉堂', '天牢', '玄武', '司命', '勾陈', '青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎'],
     }
     
     # 小黄道计算表（根据月支和日支）
@@ -173,8 +184,12 @@ class 黄道计算器:
             'description': '除日宜清洁扫除，忌嫁娶安葬'
         },
         '满': {
+            # 2026-09-16修复：原 'ji' 含 '开业'，与 modules/rules/开业规则.py
+            # JIANCHU_YI=['成','开','定','满'] 冲突（报告会同现"建除满日宜开业"与
+            # "小黄道 满日 忌 开业"）。按用户 2026-09-16 裁决取"满日宜开市"通书口径，
+            # 从忌项中移除 '开业'（满日仍忌动土/修造/拆舍/安葬/上任）。
             'yi': ['祭祀', '祈福', '结亲', '会友'],
-            'ji': ['动土', '修造', '拆舍', '安葬', '上任', '开业'],
+            'ji': ['动土', '修造', '拆舍', '安葬', '上任'],
             'description': '满日宜祭祀祈福，忌动土安葬'
         },
         '平': {
@@ -239,54 +254,96 @@ class 黄道计算器:
             sizhu: 四柱信息，包含年柱、月柱、日柱、时柱
             
         Returns:
-            dict: 黄道信息，包含大黄道、小黄道、综合评分等
+            dict: 黄道信息，包含大黄道（值日级）、小黄道、时辰级黄道、综合评分等
         """
         day_zhi = sizhu['日柱'][1]  # 日支
         month_zhi = sizhu['月柱'][1]  # 月支
         hour_zhi = sizhu['时柱'][1]  # 时支
 
-        # 计算大黄道（使用汉程黄历算法）
-        da_huang_dao = self._calculate_da_huang_dao(day_zhi, month_zhi, hour_zhi)
+        # 计算值日级大黄道（整天一个值神，依据汉程黄历公式：(day_idx - 2*month_idx + 4) % 12）
+        # 用户提供参考：2026-02-22 寅月丁卯日 -> 朱雀（黑道凶）
+        da_huang_dao = self._calculate_da_huangdao_zhiri(day_zhi, month_zhi)
+        
+        # 计算时辰级大黄道（每个时辰不同，用于吉时筛选）
+        shichen_huang_dao = self._calculate_da_huangdao_shichen(day_zhi, hour_zhi)
         
         # 计算小黄道
         xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)
         
-        # 计算黄道综合评分
+        # 计算黄道综合评分（值日级决定当日整体吉凶）
         huang_dao_score = da_huang_dao['score'] + xiao_huang_dao['score']
         
-        # 判断黄道等级
+        # 判断黄道等级（以值日级为主）
         huang_dao_level = self._get_huang_dao_level(da_huang_dao, xiao_huang_dao)
         
         return {
             'da_huang_dao': da_huang_dao,
             'xiao_huang_dao': xiao_huang_dao,
+            'shichen_huang_dao': shichen_huang_dao,
             'huang_dao_score': huang_dao_score,
             'huang_dao_level': huang_dao_level,
-            'description': self._generate_description(da_huang_dao, xiao_huang_dao)
+            'description': self._generate_description(da_huang_dao, xiao_huang_dao, shichen_huang_dao)
         }
     
-    def _calculate_da_huang_dao(self, day_zhi, month_zhi, hour_zhi):
-        """计算大黄道（使用汉程黄历算法）
-
-        汉程黄历算法: result = (日支索引 - 2*月支索引 + 4) % 12
-        黄道十二神顺序: 青龙、明堂、天刑、朱雀、金匮、天德、白虎、玉堂、天牢、玄武、司命、勾陈
+    def _calculate_da_huangdao_zhiri(self, day_zhi, month_zhi):
+        """计算值日级大黄道（十二值日神，全天固定一个，与时辰无关）
+        
+        依据汉程黄历算法 / 通用神煞公式：
+            huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
+        
+        例：寅月丁卯日 -> day_idx=3(卯), month_idx=2(寅), idx=(3-4+4)%12=3 -> 朱雀(黑道凶)
+        
+        黄道十二神顺序：青龙、明堂、天刑、朱雀、金匮、天德、白虎、玉堂、天牢、玄武、司命、勾陈
+        吉神：青龙、明堂、金匮、天德、玉堂、司命
+        凶神：天刑、朱雀、白虎、天牢、玄武、勾陈
         """
-        day_idx = self.ZHI_INDEX.get(day_zhi, 0)
-        month_idx = self.ZHI_INDEX.get(month_zhi, 0)
-
-        da_huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
-                            '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
-
-        huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
-        name = da_huangdao_list[huangdao_idx]
+        zhi_list = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+        huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
+                         '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
+        try:
+            month_idx = zhi_list.index(month_zhi)
+            day_idx = zhi_list.index(day_zhi)
+            huangdao_idx = (day_idx - 2 * month_idx + 4) % 12
+            name = huangdao_list[huangdao_idx]
+        except:
+            name = '青龙'  # 默认兜底
+        
         info = self.DA_HUANG_DAO.get(name, {'type': '平', 'score': 0, 'description': ''})
-
         return {
             'name': name,
             'type': info['type'],
             'score': info['score'],
             'description': info['description']
         }
+    
+    def _calculate_da_huangdao_shichen(self, day_zhi, hour_zhi):
+        """计算时辰级大黄道（每个时辰值神不同，用于吉时筛选）
+        
+        依据《协纪辨方书》时辰级十二神表：以日支为行、时支为列查表。
+        例如：卯日午时 -> 查表卯日午时为司命（黄道吉时）
+        """
+        day_idx = self.ZHI_INDEX.get(day_zhi, 0)
+        hour_idx = self.ZHI_INDEX.get(hour_zhi, 0)
+        
+        table = self.DA_HUANG_DAO_TABLE.get(day_zhi)
+        if table:
+            name = table[hour_idx]
+        else:
+            da_huangdao_list = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德',
+                                '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
+            name = da_huangdao_list[day_idx % 12]
+        
+        info = self.DA_HUANG_DAO.get(name, {'type': '平', 'score': 0, 'description': ''})
+        return {
+            'name': name,
+            'type': info['type'],
+            'score': info['score'],
+            'description': info['description']
+        }
+
+    def _calculate_da_huang_dao(self, day_zhi, month_zhi, hour_zhi):
+        """旧接口兼容：内部调用新的值日级算法（主程序显示用）"""
+        return self._calculate_da_huangdao_zhiri(day_zhi, month_zhi)
 
     def _calculate_xiao_huang_dao(self, month_zhi, day_zhi):
         """计算小黄道"""
@@ -336,15 +393,21 @@ class 黄道计算器:
         else:
             return '次凶'
 
-    def _generate_description(self, da, xiao):
-        """生成描述文本"""
+    def _generate_description(self, da, xiao, shichen=None):
+        """生成描述文本
+
+        注意：shichen（示例午时的时辰黄道）不再写入说明。
+        「此时辰」针对的是示例时柱（中午12点），会误导用户把示例时辰当作
+        推荐用课时辰。十二时辰吉时/黄道等逐时辰信息统一在详情窗口的
+        【十二时辰吉凶】模块展示，那里数据完整且标注了禁用/吉时。
+        """
         desc = []
         if da['type'] == '吉':
-            desc.append(f"大黄道{da['name']}，{da['description']}")
+            desc.append(f"大黄道值日{da['name']}，{da['description']}")
         elif da['type'] == '凶':
-            desc.append(f"黑道{da['name']}，{da['description']}")
+            desc.append(f"黑道值日{da['name']}，{da['description']}")
         else:
-            desc.append(f"大黄道{da['name']}")
+            desc.append(f"大黄道值日{da['name']}")
 
         if xiao['type'] == '吉':
             desc.append(f"小黄道{xiao['name']}，{xiao['description']}")

@@ -103,46 +103,55 @@ except ImportError:
 def get_checker(event_type):
     """
     根据事项类型获取神煞检查器
-    
+
+    2026-09-16 口径统一：事项别名与检查器派发以 modules/事项标准.py
+    为唯一注册表，本函数仅做转发。修造类扩展检查器
+    （ConstructionShenShaCheckerExt，需坐山/主命参数）仍由评分器显式使用。
+
     Args:
         event_type: 事项类型
-        
+
     Returns:
         ShenShaChecker: 神煞检查器实例
     """
-    marriage_events = ['嫁娶', '订婚', '纳采']
-    construction_events = ['修造', '装修']
-    digging_events = ['动土', '破土']
-    demolition_events = ['拆舍', '拆除']
-    stove_events = ['作灶']
-    opening_events = ['开业']
-    travel_events = ['出行']
-    burial_events = ['安葬']
-    bed_events = ['安床']
-    ruzhai_events = ['入宅', '移徙', '搬家', '迁居']
-    
-    if event_type in marriage_events:
-        return MarriageShenShaChecker()
-    elif event_type in construction_events:
-        return ConstructionShenShaChecker()
-    elif event_type in digging_events:
-        return DiggingShenShaChecker()
-    elif event_type in demolition_events:
-        return DemolitionShenShaChecker()
-    elif event_type in stove_events:
-        return StoveShenShaChecker()
-    elif event_type in opening_events:
-        return OpeningShenShaChecker()
-    elif event_type in travel_events:
-        return TravelShenShaChecker()
-    elif event_type in burial_events:
-        return BurialShenShaChecker()
-    elif event_type in bed_events:
-        return BedShenShaChecker()
-    elif event_type in ruzhai_events:
-        return RuZhaiShenShaChecker()
-    else:
-        return CommonShenShaChecker()
+    try:
+        from ..事项标准 import get_shensha_checker as _std_get
+        return _std_get(event_type)
+    except Exception:
+        # 极端情况下（包路径异常）回退原始派发，保证神煞检查不中断
+        marriage_events = ['嫁娶', '订婚', '纳采']
+        construction_events = ['修造', '装修']
+        digging_events = ['动土', '破土']
+        demolition_events = ['拆舍', '拆除']
+        stove_events = ['作灶']
+        opening_events = ['开业']
+        travel_events = ['出行']
+        burial_events = ['安葬']
+        bed_events = ['安床']
+        ruzhai_events = ['入宅', '移徙', '搬家', '迁居']
+
+        if event_type in marriage_events:
+            return MarriageShenShaChecker()
+        elif event_type in construction_events:
+            return ConstructionShenShaChecker()
+        elif event_type in digging_events:
+            return DiggingShenShaChecker()
+        elif event_type in demolition_events:
+            return DemolitionShenShaChecker()
+        elif event_type in stove_events:
+            return StoveShenShaChecker()
+        elif event_type in opening_events:
+            return OpeningShenShaChecker()
+        elif event_type in travel_events:
+            return TravelShenShaChecker()
+        elif event_type in burial_events:
+            return BurialShenShaChecker()
+        elif event_type in bed_events:
+            return BedShenShaChecker()
+        elif event_type in ruzhai_events:
+            return RuZhaiShenShaChecker()
+        else:
+            return CommonShenShaChecker()
 
 
 if __name__ == '__main__':

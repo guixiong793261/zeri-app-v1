@@ -16,19 +16,20 @@ from tkinter import ttk, messagebox, scrolledtext, filedialog
 from datetime import datetime, date
 import json
 import os
+import re
 import sys
 
 # 处理导入
 # 添加项目根目录到路径
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = (getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(sys.executable))) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 # 添加 modules 目录到路径
-modules_dir = os.path.dirname(os.path.abspath(__file__))
+modules_dir = (getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(sys.executable))) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__)))
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
-# 定义备用函数
+# 定义备用函数（签名必须与真实模块函数完全兼容，允许任何位置/关键字参数）
 def _mock_calculate_sizhu(*args, **kwargs):
     return {'年柱': '甲子', '月柱': '甲子', '日柱': '甲子', '时柱': '甲子'}
 
@@ -37,9 +38,9 @@ def _mock_analyze_sizhu(*args, **kwargs):
 
 def _mock_calculate_score(*args, **kwargs):
     return {
-        'score': 0, 
-        'level': '平', 
-        'yi_list': [], 
+        'score': 0,
+        'level': '平',
+        'yi_list': [],
         'ji_list': [],
         'shensha_list': [],
         'score_details': {
@@ -77,14 +78,17 @@ def _mock_calculate_score(*args, **kwargs):
 def _mock_calculate_xishen_yongshen(*args, **kwargs):
     return ('', '')
 
-def _mock_get_shan_xiang_list():
+def _mock_get_shan_xiang_list(*args, **kwargs):
+    """备用：兼容真实签名 use_24_shan 等关键字参数"""
     return []
 
 def _mock_show_compass_dialog(*args, **kwargs):
     pass
 
-def _mock_shan_xiang_to_shan(shan_xiang):
-    """备用的山向转坐山函数"""
+def _mock_shan_xiang_to_shan(*args, **kwargs):
+    """备用的山向转坐山函数（兼容真实签名）"""
+    # 取第一个位置参数当作 shan_xiang，若没有则尝试关键字 shan_xiang
+    shan_xiang = args[0] if args else kwargs.get('shan_xiang', '')
     if shan_xiang:
         return shan_xiang.split('山')[0] if '山' in shan_xiang else shan_xiang
     return ''
@@ -102,49 +106,162 @@ shan_xiang_to_shan = _mock_shan_xiang_to_shan
 import logging
 logger = logging.getLogger(__name__)
 
-# 尝试多种导入方式
-try:
-    # 尝试相对导入（作为模块导入时）
-    from .四柱计算器 import calculate_sizhu, analyze_sizhu
-    from .评分器 import calculate_score
-    from .喜用神计算器 import calculate_xishen_yongshen
-    from .二十四山 import get_shan_xiang_list, shan_xiang_to_shan
-    from .电子罗盘 import show_compass_dialog
-    print("✓ 成功: 从相对路径导入模块")
-except ImportError:
+# 模块级变量，存储真实的函数（初始为None，表示未加载）
+_calculate_sizhu = None
+_analyze_sizhu = None
+_calculate_score = None
+_calculate_xishen_yongshen = None
+_get_shan_xiang_list = None
+_show_compass_dialog = None
+_shan_xiang_to_shan = None
+
+def _load_real_functions():
+    """尝试加载真实的模块函数，返回是否全部加载成功"""
+    global _calculate_sizhu, _analyze_sizhu, _calculate_score
+    global _calculate_xishen_yongshen, _get_shan_xiang_list
+    global _show_compass_dialog, _shan_xiang_to_shan
+    
+    # 尝试策略1: 相对导入（作为模块导入时）
     try:
-        # 尝试绝对导入（直接运行时）
+        from .四柱计算器 import calculate_sizhu, analyze_sizhu
+        from .评分器 import calculate_score
+        from .喜用神计算器 import calculate_xishen_yongshen
+        from .二十四山 import get_shan_xiang_list, shan_xiang_to_shan
+        from .电子罗盘 import show_compass_dialog
+        _calculate_sizhu = calculate_sizhu
+        _analyze_sizhu = analyze_sizhu
+        _calculate_score = calculate_score
+        _calculate_xishen_yongshen = calculate_xishen_yongshen
+        _get_shan_xiang_list = get_shan_xiang_list
+        _show_compass_dialog = show_compass_dialog
+        _shan_xiang_to_shan = shan_xiang_to_shan
+        return True
+    except ImportError:
+        pass
+    
+    # 尝试策略2: 绝对导入（运行时）
+    try:
         from modules.四柱计算器 import calculate_sizhu, analyze_sizhu
         from modules.评分器 import calculate_score
         from modules.喜用神计算器 import calculate_xishen_yongshen
         from modules.二十四山 import get_shan_xiang_list, shan_xiang_to_shan
         from modules.电子罗盘 import show_compass_dialog
-        print("✓ 成功: 从 modules 导入模块")
+        _calculate_sizhu = calculate_sizhu
+        _analyze_sizhu = analyze_sizhu
+        _calculate_score = calculate_score
+        _calculate_xishen_yongshen = calculate_xishen_yongshen
+        _get_shan_xiang_list = get_shan_xiang_list
+        _show_compass_dialog = show_compass_dialog
+        _shan_xiang_to_shan = shan_xiang_to_shan
+        return True
     except ImportError:
-        try:
-            # 最后尝试直接导入
-            from 四柱计算器 import calculate_sizhu, analyze_sizhu
-            from 评分器 import calculate_score
-            from 喜用神计算器 import calculate_xishen_yongshen
-            from 二十四山 import get_shan_xiang_list, shan_xiang_to_shan
-            from 电子罗盘 import show_compass_dialog
-            print("✓ 成功: 直接导入模块")
-        except ImportError as e:
-            print(f"✗ 警告: 导入模块失败，使用备用函数 - {e}")
-            # 使用预先定义的备用值
-            pass
+        pass
+    
+    # 尝试策略3: 直接导入
+    try:
+        from 四柱计算器 import calculate_sizhu, analyze_sizhu
+        from 评分器 import calculate_score
+        from 喜用神计算器 import calculate_xishen_yongshen
+        from 二十四山 import get_shan_xiang_list, shan_xiang_to_shan
+        from 电子罗盘 import show_compass_dialog
+        _calculate_sizhu = calculate_sizhu
+        _analyze_sizhu = analyze_sizhu
+        _calculate_score = calculate_score
+        _calculate_xishen_yongshen = calculate_xishen_yongshen
+        _get_shan_xiang_list = get_shan_xiang_list
+        _show_compass_dialog = show_compass_dialog
+        _shan_xiang_to_shan = shan_xiang_to_shan
+        return True
+    except ImportError as e:
+        logger.warning(f"所有导入策略均失败: {e}")
+        return False
+
+# 在模块加载时立即尝试导入真实函数
+_import_success = _load_real_functions()
+if _import_success:
+    logger.info("日课评分系统: 成功加载核心模块")
+else:
+    logger.warning("日课评分系统: 核心模块加载失败，将使用备用函数")
+
+def calculate_sizhu(*args, **kwargs):
+    """计算四柱"""
+    if _calculate_sizhu:
+        return _calculate_sizhu(*args, **kwargs)
+    return _mock_calculate_sizhu(*args, **kwargs)
+
+def analyze_sizhu(*args, **kwargs):
+    """分析四柱"""
+    if _analyze_sizhu:
+        return _analyze_sizhu(*args, **kwargs)
+    return _mock_analyze_sizhu(*args, **kwargs)
+
+def calculate_score(*args, **kwargs):
+    """计算评分"""
+    if _calculate_score:
+        return _calculate_score(*args, **kwargs)
+    return _mock_calculate_score(*args, **kwargs)
+
+def calculate_xishen_yongshen(*args, **kwargs):
+    """计算喜用神"""
+    if _calculate_xishen_yongshen:
+        return _calculate_xishen_yongshen(*args, **kwargs)
+    return _mock_calculate_xishen_yongshen(*args, **kwargs)
+
+def get_shan_xiang_list(*args, **kwargs):
+    """获取山向列表（与二十四山模块签名完全一致，允许 use_24_shan 等关键字）"""
+    if _get_shan_xiang_list:
+        return _get_shan_xiang_list(*args, **kwargs)
+    return _mock_get_shan_xiang_list(*args, **kwargs)
+
+def show_compass_dialog(*args, **kwargs):
+    """显示罗盘对话框"""
+    if _show_compass_dialog:
+        return _show_compass_dialog(*args, **kwargs)
+    return _mock_show_compass_dialog(*args, **kwargs)
+
+def shan_xiang_to_shan(*args, **kwargs):
+    """山向转坐山（与真实模块签名一致，允许位置参数 shan_xiang 或关键字参数）"""
+    if _shan_xiang_to_shan:
+        return _shan_xiang_to_shan(*args, **kwargs)
+    return _mock_shan_xiang_to_shan(*args, **kwargs)
 
 class DayScoreWindow:
     """日课评分系统主窗口"""
     
-    def __init__(self, master=None):
-        """初始化"""
+    def __init__(self, master=None, mode='full'):
+        """初始化
+
+        Args:
+            master: 父窗口，None 表示独立启动（Tk根窗口），否则作为 Toplevel 子窗口
+            mode: 显示模式
+                - 'full'     完整版：标题+事主信息+特殊选项+输入区+按钮+列表+结果（独立运行默认）
+                - 'embedded' 精简版（主程序导入择日结果用）：
+                             仅显示 日课输入区 + 按钮区 + 日课列表 + 评分结果，
+                             不显示 标题区、事主信息区、特殊选项区
+        """
+        # 检查核心模块是否加载成功
+        if not _import_success:
+            logger.warning("核心模块未加载，评分结果可能不准确")
+
+        # 显示模式校验
+        if mode not in ('full', 'embedded'):
+            mode = 'full'
+        self.mode = mode
+
+        self._is_standalone = (master is None)
+
         if master is None:
             self.window = tk.Tk()
-            self.window.title("专业级日课评分系统")
+            if self.mode == 'embedded':
+                self.window.title("日课评分（导入结果）")
+            else:
+                self.window.title("专业级日课评分系统")
         else:
             self.window = tk.Toplevel(master)
-            self.window.title("专业级日课评分系统")
+            if self.mode == 'embedded':
+                self.window.title("日课评分（导入结果）")
+            else:
+                self.window.title("专业级日课评分系统")
             # 强制设置Toplevel窗口的背景色和文本颜色
             self.window.configure(bg='white')
         
@@ -177,7 +294,7 @@ class DayScoreWindow:
     
     def import_results(self, results, event_type, owners_data):
         """从主程序导入择日结果
-        
+
         Args:
             results: 主程序的择日结果列表
             event_type: 事项类型
@@ -190,21 +307,36 @@ class DayScoreWindow:
             self.update_owners_frame()
             # 更新特殊选项
             self.update_special_options()
-            
+
             # 强制刷新界面（Toplevel窗口需要更强的刷新）
             self.window.update_idletasks()
             self.window.update()
-            
-            # 重新打包框架以确保布局更新
-            self.owners_frame.pack_forget()
-            self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
-            self.special_frame.pack_forget()
-            self.special_frame.pack(fill=tk.X, pady=3)
-            
+
+            # ——————————————————————————————————————
+            # embedded 精简模式：不显示 事主信息区 / 特殊选项区
+            # ——————————————————————————————————————
+            if self.mode != 'embedded':
+                # 重新打包框架以确保布局更新
+                self.owners_frame.pack_forget()
+                self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
+                self.special_frame.pack_forget()
+                self.special_frame.pack(fill=tk.X, pady=3)
+            else:
+                # embedded 下保持隐藏：强制 pack_forget，防止 update_owners_frame /
+                # update_special_options 的某些逻辑误把它们显示出来
+                try:
+                    self.owners_frame.pack_forget()
+                except Exception:
+                    pass
+                try:
+                    self.special_frame.pack_forget()
+                except Exception:
+                    pass
+
             # 再次强制刷新，确保Toplevel窗口完全更新
             self.window.update_idletasks()
             self.window.update()
-            
+
             # 如果是Toplevel窗口，确保窗口可见并置顶
             if isinstance(self.window, tk.Toplevel):
                 self.window.lift()
@@ -247,6 +379,51 @@ class DayScoreWindow:
                         self.owners_info[i].get('date_type_var'),
                         self.owners_info[i].get('gender_var')
                     )
+            
+            # 提取事主信息（从界面上已填充的数据中获取）
+            owners_detail = []
+            for info in self.owners_info:
+                try:
+                    # 修正：使用正确的字段名称
+                    year_val = info['solar_year'].get() if hasattr(info['solar_year'], 'get') else ''
+                    month_val = info['solar_month'].get() if hasattr(info['solar_month'], 'get') else ''
+                    day_val = info['solar_day'].get() if hasattr(info['solar_day'], 'get') else ''
+                    hour_val = info['hour'].get() if hasattr(info['hour'], 'get') else '12'
+                    minute_val = info['minute'].get() if hasattr(info['minute'], 'get') else '0'
+                    
+                    if not (year_val and month_val and day_val):
+                        continue
+                    
+                    year = int(year_val)
+                    month = int(month_val)
+                    day = int(day_val)
+                    hour = int(hour_val)
+                    minute = int(minute_val)
+                    
+                    name = info['name'].get() if hasattr(info['name'], 'get') else info.get('name', '')
+                    sizhu_str = info['sizhu_var'].get() if hasattr(info.get('sizhu_var'), 'get') else ''
+                    
+                    owner_detail = {
+                        'name': name,
+                        'birth_date': f"{year}年{month}月{day}日 {hour}时{minute}分",
+                        'sizhu': sizhu_str,
+                        'xishen': info['xishen_var'].get() if hasattr(info.get('xishen_var'), 'get') else '',
+                        'yongshen': info['yongshen_var'].get() if hasattr(info.get('yongshen_var'), 'get') else '',
+                        'fu_xing': '',
+                        'zi_xing': ''
+                    }
+                    
+                    if event_type == "嫁娶" and info.get('fuzi_var'):
+                        fuzi_str = info['fuzi_var'].get()
+                        if '夫星:' in fuzi_str:
+                            parts = fuzi_str.split(', ')
+                            owner_detail['fu_xing'] = parts[0].replace('夫星: ', '')
+                            if len(parts) > 1:
+                                owner_detail['zi_xing'] = parts[1].replace('子星: ', '')
+                    
+                    owners_detail.append(owner_detail)
+                except Exception as e:
+                    continue
             
             # 导入择日结果到列表
             for result in results:
@@ -553,177 +730,314 @@ class DayScoreWindow:
                        borderwidth=0)
     
     def create_widgets(self):
-        """创建界面组件"""
+        """创建界面组件（双版本：完整版 / 主程序导入精简版）"""
         # 配置样式
         self.configure_styles()
-        
+
         # 创建主滚动区域 - 添加水平和垂直滚动条
         main_frame_container = ttk.Frame(self.window)
         main_frame_container.pack(fill=tk.BOTH, expand=True)
-        
+
         main_canvas = tk.Canvas(main_frame_container, bg="#ffffff")
         v_scrollbar = ttk.Scrollbar(main_frame_container, orient="vertical", command=main_canvas.yview)
         h_scrollbar = ttk.Scrollbar(main_frame_container, orient="horizontal", command=main_canvas.xview)
-        
+
         self.main_frame = ttk.Frame(main_canvas, padding="20", style="MainFrame.TFrame")
-        
+
         self.main_frame.bind(
             "<Configure>",
             lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all"))
         )
-        
+
         main_canvas.create_window((0, 0), window=self.main_frame, anchor="nw", width=self.window.winfo_screenwidth()-50)
         main_canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-        
+
         # 使用网格布局
         main_canvas.grid(row=0, column=0, sticky="nsew")
         v_scrollbar.grid(row=0, column=1, sticky="ns")
         h_scrollbar.grid(row=1, column=0, sticky="ew")
-        
+
         # 配置网格权重
         main_frame_container.grid_rowconfigure(0, weight=1)
         main_frame_container.grid_columnconfigure(0, weight=1)
-        
+
         # 绑定鼠标滚轮（垂直滚动）
         main_canvas.bind_all("<MouseWheel>", lambda e: main_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
         # 绑定Shift+鼠标滚轮（水平滚动）
         main_canvas.bind_all("<Shift-MouseWheel>", lambda e: main_canvas.xview_scroll(int(-1*(e.delta/120)), "units"))
-        
-        # 标题区域
-        title_frame = ttk.Frame(self.main_frame, style="TitleFrame.TFrame")
-        title_frame.pack(fill=tk.X, pady=8, padx=20)
-        
-        title_label = ttk.Label(title_frame, text="专业级日课评分系统", 
-                               font=("微软雅黑", 18, "bold"), style="Title.TLabel")
-        title_label.pack(pady=4)
-        
-        subtitle_label = ttk.Label(title_frame, text="精准评分，详细分析", 
-                                  font=("微软雅黑", 9), style="Subtitle.TLabel")
-        subtitle_label.pack()
-        
+
         # 提前定义event_var变量
         self.event_var = tk.StringVar(value="嫁娶")
-        
-        # 事主信息区域（放在最上方）
+
+        # ——————————————————————————————————————————
+        # 无论哪个模式，都先创建 owners_frame / special_frame 作为占位容器
+        # （因为 import_results() / update_owners_frame() / update_special_options()
+        #    都假设它们存在，否则会 AttributeError）
+        # embedded 模式下这两个容器"只创建不显示"
+        # ——————————————————————————————————————————
         self.owners_frame = ttk.LabelFrame(self.main_frame, text="事主信息", padding="20", style="Card.TLabelframe")
-        self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
-        # 暂时不更新，等到import_results或用户选择事项类型时再更新
-        # self.update_owners_frame()
-        
-        # 创建左右分栏布局
-        content_frame = ttk.Frame(self.main_frame)
-        content_frame.pack(fill=tk.BOTH, expand=True, pady=5, padx=10)
-        
-        # 使用网格布局，设置左右分栏的宽度比例
-        content_frame.columnconfigure(0, weight=1, minsize=500)  # 左侧占1份
-        content_frame.columnconfigure(1, weight=1, minsize=500)  # 右侧占1份
-        content_frame.rowconfigure(0, weight=1)
-        
-        # 左侧内容（输入区域和按钮）
-        left_frame = ttk.Frame(content_frame)
-        left_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
-        
-        # 右侧内容（留空，用于平衡布局）
-        right_frame = ttk.Frame(content_frame)
-        right_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
-        
-        # 输入区域
-        input_frame = ttk.LabelFrame(left_frame, text="日课输入", padding="8", style="Card.TLabelframe")
-        input_frame.pack(fill=tk.X, pady=6)
-        
-        # 事项类型选择
-        event_frame = ttk.Frame(input_frame)
-        event_frame.pack(fill=tk.X, pady=5)
-        
-        ttk.Label(event_frame, text="事项类型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
-        events = ["嫁娶", "修造", "动土", "入宅", "开业", "出行", "安床", "作灶", "安葬"]
-        event_combo = ttk.Combobox(event_frame, textvariable=self.event_var, 
-                                   values=events, state="readonly", width=15, font=("微软雅黑", 10))
-        event_combo.pack(side=tk.LEFT, padx=5)
-        # 绑定事件，使用更可靠的方式
-        event_combo.bind("<<ComboboxSelected>>", self.on_event_type_changed)
-        
-        # 特殊选项框架（用于修造等需要额外选项的事项）
-        self.special_frame = ttk.Frame(input_frame)
-        self.special_frame.pack(fill=tk.X, pady=3)
-        
-        # 初始化特殊选项
-        self.update_special_options()
-        
-        # 输入方式选择
-        input_mode_frame = ttk.Frame(input_frame)
-        input_mode_frame.pack(fill=tk.X, pady=5)
-        
-        ttk.Label(input_mode_frame, text="输入方式:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
-        self.input_mode = tk.StringVar(value="date")
-        ttk.Radiobutton(input_mode_frame, text="按日期", variable=self.input_mode, 
-                       value="date", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(input_mode_frame, text="按四柱", variable=self.input_mode, 
-                       value="sizhu", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
-        
-        # 日期输入框
-        self.date_frame = ttk.Frame(input_frame)
-        self.date_frame.pack(fill=tk.X, pady=5)
-        
-        ttk.Label(self.date_frame, text="日期 (YYYY-MM-DD):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
-        self.date_entry = ttk.Entry(self.date_frame, width=12, font=("微软雅黑", 10))
-        self.date_entry.pack(side=tk.LEFT, padx=5)
-        self.date_entry.insert(0, date.today().strftime("%Y-%m-%d"))
-        
-        # 时间输入
-        ttk.Label(self.date_frame, text="时间 (HH:MM):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
-        self.time_entry = ttk.Entry(self.date_frame, width=6, font=("微软雅黑", 10))
-        self.time_entry.pack(side=tk.LEFT, padx=5)
-        self.time_entry.insert(0, "12:00")
-        
-        # 为日期和时间输入框绑定键盘导航
-        self._bind_entry_navigation([self.date_entry, self.time_entry])
-        
-        # 四柱输入框
-        self.sizhu_frame = ttk.Frame(input_frame)
-        # 默认隐藏
-        
-        ttk.Label(self.sizhu_frame, text="年柱:", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
-        self.sizhu_entries = []
-        for i, label in enumerate(["年柱", "月柱", "日柱", "时柱"]):
-            entry = ttk.Entry(self.sizhu_frame, width=10, font=("微软雅黑", 12))
-            entry.pack(side=tk.LEFT, padx=5)
-            self.sizhu_entries.append(entry)
-        
-        # 为四柱输入框绑定键盘导航
-        self._bind_entry_navigation(self.sizhu_entries)
-        
-        # 按钮区域 - 使用两行布局，统一颜色
-        button_frame = ttk.Frame(left_frame, style="ButtonFrame.TFrame")
-        button_frame.pack(fill=tk.X, pady=8, padx=20)
-        
-        # 第一行按钮
-        button_row1 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
-        button_row1.pack(fill=tk.X, pady=3)
-        
-        ttk.Button(button_row1, text="添加日课", command=self.add_date, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row1, text="添加四柱", command=self.add_sizhu, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row1, text="日课评分", command=self.start_scoring, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row1, text="对比分析", command=self.compare_analysis, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row1, text="清空列表", command=self.clear_dates, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
-        
-        # 第二行按钮
-        button_row2 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
-        button_row2.pack(fill=tk.X, pady=3)
-        
-        ttk.Button(button_row2, text="保存分析", command=self.save_single_analysis, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row2, text="导出报告", command=self.export_report, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row2, text="导入文件", command=self.import_file, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
-        ttk.Button(button_row2, text="帮助", command=self.show_help, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
-        
+        self.special_frame = ttk.Frame(self.main_frame)  # placeholder
+
+        # =====================================================
+        # 【完整版 full】：标题 + 事主信息 + 特殊选项 + 输入 + 按钮 + 列表 + 结果
+        # =====================================================
+        # 注意：字符串比较必须严格使用 ASCII 单引号，不允许任何不可见字符或全角引号
+        if self.mode == 'full':
+            # 标题区域
+            title_frame = ttk.Frame(self.main_frame, style="TitleFrame.TFrame")
+            title_frame.pack(fill=tk.X, pady=8, padx=20)
+
+            title_label = ttk.Label(title_frame, text="专业级日课评分系统",
+                                   font=("微软雅黑", 18, "bold"), style="Title.TLabel")
+            title_label.pack(pady=4)
+
+            subtitle_label = ttk.Label(title_frame, text="精准评分，详细分析",
+                                      font=("微软雅黑", 9), style="Subtitle.TLabel")
+            subtitle_label.pack()
+
+            # 事主信息区域（放在最上方）
+            self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
+
+            # 创建左右分栏布局
+            content_frame = ttk.Frame(self.main_frame)
+            content_frame.pack(fill=tk.BOTH, expand=True, pady=5, padx=10)
+
+            # 使用网格布局，设置左右分栏的宽度比例
+            content_frame.columnconfigure(0, weight=1, minsize=500)  # 左侧占1份
+            content_frame.columnconfigure(1, weight=1, minsize=500)  # 右侧占1份
+            content_frame.rowconfigure(0, weight=1)
+
+            # 左侧内容（输入区域和按钮）
+            left_frame = ttk.Frame(content_frame)
+            left_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+
+            # 右侧内容（留空，用于平衡布局）
+            right_frame = ttk.Frame(content_frame)
+            right_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
+
+            # 输入区域
+            input_frame = ttk.LabelFrame(left_frame, text="日课输入", padding="8", style="Card.TLabelframe")
+            input_frame.pack(fill=tk.X, pady=6)
+
+            # 事项类型选择
+            event_frame = ttk.Frame(input_frame)
+            event_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(event_frame, text="事项类型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            events = ["嫁娶", "修造", "动土", "入宅", "开业", "出行", "安床", "作灶", "安葬"]
+            event_combo = ttk.Combobox(event_frame, textvariable=self.event_var,
+                                       values=events, state="readonly", width=15, font=("微软雅黑", 10))
+            event_combo.pack(side=tk.LEFT, padx=5)
+            self.event_combo = event_combo  # 保存引用便于 embedded 模式控制状态
+            # 绑定事件，使用更可靠的方式
+            event_combo.bind("<<ComboboxSelected>>", self.on_event_type_changed)
+
+            # 特殊选项框架（用于修造等需要额外选项的事项）
+            # 完整版：special_frame 放到 input_frame 里
+            self.special_frame = ttk.Frame(input_frame)
+            # —— 显示契约：只有 修造/动土/入宅 事项才显示 special_frame（含山向/罗盘/宅型）
+            #    嫁娶/安葬/作灶等其他事项 → 隐藏，保持输入区紧凑
+            initial_event_type = self.event_var.get()
+            if initial_event_type in ("修造", "动土", "入宅"):
+                self.special_frame.pack(fill=tk.X, pady=3)
+
+            # 独立启动时主动创建事主输入框（master为None表示独立窗口）
+            # 作为主程序子窗口时，由import_results填充
+            if self._is_standalone:
+                self._is_standalone = True
+                self.update_owners_frame()
+                self.update_special_options()
+                # 独立启动第一次初始化后也刷新一次滚动区
+                self.window.update_idletasks()
+                self.window.update()
+                try:
+                    self.main_frame.event_generate("<Configure>")
+                except Exception:
+                    pass
+            else:
+                self._is_standalone = False
+
+            # 初始化特殊选项（独立启动时已在上面调用过，这里确保其他情况也有默认值）
+            if not self._is_standalone:
+                self.update_special_options()
+
+            # 输入方式选择
+            input_mode_frame = ttk.Frame(input_frame)
+            input_mode_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(input_mode_frame, text="输入方式:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.input_mode = tk.StringVar(value="date")
+            ttk.Radiobutton(input_mode_frame, text="按日期", variable=self.input_mode,
+                           value="date", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
+            ttk.Radiobutton(input_mode_frame, text="按四柱", variable=self.input_mode,
+                           value="sizhu", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
+
+            # 日期输入框
+            self.date_frame = ttk.Frame(input_frame)
+            self.date_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(self.date_frame, text="日期 (YYYY-MM-DD):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.date_entry = ttk.Entry(self.date_frame, width=12, font=("微软雅黑", 10))
+            self.date_entry.pack(side=tk.LEFT, padx=5)
+            self.date_entry.insert(0, date.today().strftime("%Y-%m-%d"))
+
+            # 时间输入
+            ttk.Label(self.date_frame, text="时间 (HH:MM):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.time_entry = ttk.Entry(self.date_frame, width=6, font=("微软雅黑", 10))
+            self.time_entry.pack(side=tk.LEFT, padx=5)
+            self.time_entry.insert(0, "12:00")
+
+            # 为日期和时间输入框绑定键盘导航
+            self._bind_entry_navigation([self.date_entry, self.time_entry])
+
+            # 四柱输入框
+            self.sizhu_frame = ttk.Frame(input_frame)
+            # 默认隐藏
+
+            ttk.Label(self.sizhu_frame, text="年柱:", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
+            self.sizhu_entries = []
+            for i, label in enumerate(["年柱", "月柱", "日柱", "时柱"]):
+                entry = ttk.Entry(self.sizhu_frame, width=10, font=("微软雅黑", 12))
+                entry.pack(side=tk.LEFT, padx=5)
+                self.sizhu_entries.append(entry)
+
+            # 为四柱输入框绑定键盘导航
+            self._bind_entry_navigation(self.sizhu_entries)
+
+            # 按钮区域 - 使用两行布局，统一颜色
+            button_frame = ttk.Frame(left_frame, style="ButtonFrame.TFrame")
+            button_frame.pack(fill=tk.X, pady=8, padx=20)
+
+            # 第一行按钮
+            button_row1 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
+            button_row1.pack(fill=tk.X, pady=3)
+
+            ttk.Button(button_row1, text="添加日课", command=self.add_date, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="添加四柱", command=self.add_sizhu, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="日课评分", command=self.start_scoring, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="对比分析", command=self.compare_analysis, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="清空列表", command=self.clear_dates, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+
+            # 第二行按钮
+            button_row2 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
+            button_row2.pack(fill=tk.X, pady=3)
+
+            ttk.Button(button_row2, text="保存分析", command=self.save_single_analysis, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="导出报告", command=self.export_report, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="导入文件", command=self.import_file, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="帮助", command=self.show_help, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+
+        # =====================================================
+        # 【精简版 embedded】：主程序导入择日结果场景
+        #   仅显示：日课输入区 + 按钮区 + 日课列表 + 评分结果
+        #   不显示：标题区、事主信息区、特殊选项区、左右分栏
+        # =====================================================
+        else:  # embedded
+            # 输入区域（直接堆叠在主框架上，紧凑排版，去掉左右分栏）
+            input_frame = ttk.LabelFrame(self.main_frame, text="日课输入", padding="8", style="Card.TLabelframe")
+            input_frame.pack(fill=tk.X, pady=6, padx=20)
+
+            # 事项类型选择（embedded 下锁定，不允许用户修改——主程序已传入）
+            event_frame = ttk.Frame(input_frame)
+            event_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(event_frame, text="事项类型:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            events = ["嫁娶", "修造", "动土", "入宅", "开业", "出行", "安床", "作灶", "安葬"]
+            event_combo = ttk.Combobox(event_frame, textvariable=self.event_var,
+                                       values=events, state="disabled", width=15, font=("微软雅黑", 10))
+            event_combo.pack(side=tk.LEFT, padx=5)
+            self.event_combo = event_combo
+            # 注意：embedded 下事项类型由主程序 event_var.set() 锁定，不需要 ComboboxSelected 回调
+
+            # 特殊选项（embedded 下不显示，但要保持 self.special_frame 对象存在）
+            # 这里重新绑定到 input_frame 内部（但不 pack），供后续 update_special_options 填充而不出错
+            self.special_frame = ttk.Frame(input_frame)
+            # （不pack = 不显示）
+
+            # 独立/子窗口标记：embedded 模式下始终不创建事主输入 UI
+            self._is_standalone = False
+            # 初始化事主数据结构的空壳（self.owners_info / self._owner_entries_list），
+            # 由 import_results 填充，不需要显示
+            self.owners_info = []
+            self._owner_entries_list = []
+
+            # 输入方式选择
+            input_mode_frame = ttk.Frame(input_frame)
+            input_mode_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(input_mode_frame, text="输入方式:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.input_mode = tk.StringVar(value="date")
+            ttk.Radiobutton(input_mode_frame, text="按日期", variable=self.input_mode,
+                           value="date", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
+            ttk.Radiobutton(input_mode_frame, text="按四柱", variable=self.input_mode,
+                           value="sizhu", command=self.toggle_input_mode).pack(side=tk.LEFT, padx=5)
+
+            # 日期输入框
+            self.date_frame = ttk.Frame(input_frame)
+            self.date_frame.pack(fill=tk.X, pady=5)
+
+            ttk.Label(self.date_frame, text="日期 (YYYY-MM-DD):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.date_entry = ttk.Entry(self.date_frame, width=12, font=("微软雅黑", 10))
+            self.date_entry.pack(side=tk.LEFT, padx=5)
+            self.date_entry.insert(0, date.today().strftime("%Y-%m-%d"))
+
+            # 时间输入
+            ttk.Label(self.date_frame, text="时间 (HH:MM):", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=5)
+            self.time_entry = ttk.Entry(self.date_frame, width=6, font=("微软雅黑", 10))
+            self.time_entry.pack(side=tk.LEFT, padx=5)
+            self.time_entry.insert(0, "12:00")
+
+            # 为日期和时间输入框绑定键盘导航
+            self._bind_entry_navigation([self.date_entry, self.time_entry])
+
+            # 四柱输入框
+            self.sizhu_frame = ttk.Frame(input_frame)
+            # 默认隐藏
+
+            ttk.Label(self.sizhu_frame, text="年柱:", font=("微软雅黑", 12)).pack(side=tk.LEFT, padx=5)
+            self.sizhu_entries = []
+            for i, label in enumerate(["年柱", "月柱", "日柱", "时柱"]):
+                entry = ttk.Entry(self.sizhu_frame, width=10, font=("微软雅黑", 12))
+                entry.pack(side=tk.LEFT, padx=5)
+                self.sizhu_entries.append(entry)
+
+            # 为四柱输入框绑定键盘导航
+            self._bind_entry_navigation(self.sizhu_entries)
+
+            # 按钮区域（两行保持不变，但去掉右侧留白——直接放在 input_frame 后面的独立框架）
+            button_frame = ttk.Frame(self.main_frame, style="ButtonFrame.TFrame")
+            button_frame.pack(fill=tk.X, pady=8, padx=20)
+
+            # 第一行按钮
+            button_row1 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
+            button_row1.pack(fill=tk.X, pady=3)
+
+            ttk.Button(button_row1, text="添加日课", command=self.add_date, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="添加四柱", command=self.add_sizhu, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="日课评分", command=self.start_scoring, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="对比分析", command=self.compare_analysis, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row1, text="清空列表", command=self.clear_dates, width=10, style="Primary.TButton").pack(side=tk.LEFT, padx=4)
+
+            # 第二行按钮
+            button_row2 = ttk.Frame(button_frame, style="ButtonFrame.TFrame")
+            button_row2.pack(fill=tk.X, pady=3)
+
+            ttk.Button(button_row2, text="保存分析", command=self.save_single_analysis, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="导出报告", command=self.export_report, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="导入文件", command=self.import_file, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+            ttk.Button(button_row2, text="帮助", command=self.show_help, width=10, style="Secondary.TButton").pack(side=tk.LEFT, padx=4)
+
+        # ——————————————————————————————————————————
+        # 【公共区】日课列表 + 评分结果：两个模式都完全一致
+        # ——————————————————————————————————————————
         # 日课列表
         list_frame = ttk.LabelFrame(self.main_frame, text="日课列表", padding="20", style="Card.TLabelframe")
         list_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=20)
-        
+
         # 创建Treeview控件替代Listbox，显示更多信息
         columns = ('date', 'score', 'level', 'sizhu', 'wuxing', 'yueling', 'xishen', 'huangdao', 'dizhi', 'jishen')
         self.date_treeview = ttk.Treeview(list_frame, columns=columns, show='headings')
-        
+
         # 设置列标题
         self.date_treeview.heading('date', text='日期/四柱')
         self.date_treeview.heading('score', text='评分')
@@ -735,7 +1049,7 @@ class DayScoreWindow:
         self.date_treeview.heading('huangdao', text='黄道得分')
         self.date_treeview.heading('dizhi', text='地支关系')
         self.date_treeview.heading('jishen', text='吉神信息')
-        
+
         # 设置列宽 - 缩小列宽以适应手机屏幕
         self.date_treeview.column('date', width=90)
         self.date_treeview.column('score', width=45, anchor='center')
@@ -747,34 +1061,34 @@ class DayScoreWindow:
         self.date_treeview.column('huangdao', width=50, anchor='center')
         self.date_treeview.column('dizhi', width=80)
         self.date_treeview.column('jishen', width=90)
-        
+
         # 添加滚动条 - 同时添加垂直和水平滚动条
-        tree_v_scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, 
+        tree_v_scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL,
                                          command=self.date_treeview.yview)
-        tree_h_scrollbar = ttk.Scrollbar(list_frame, orient=tk.HORIZONTAL, 
+        tree_h_scrollbar = ttk.Scrollbar(list_frame, orient=tk.HORIZONTAL,
                                          command=self.date_treeview.xview)
-        self.date_treeview.config(yscrollcommand=tree_v_scrollbar.set, 
+        self.date_treeview.config(yscrollcommand=tree_v_scrollbar.set,
                                   xscrollcommand=tree_h_scrollbar.set)
-        
+
         # 使用网格布局
         self.date_treeview.grid(row=0, column=0, sticky="nsew")
         tree_v_scrollbar.grid(row=0, column=1, sticky="ns")
         tree_h_scrollbar.grid(row=1, column=0, sticky="ew")
-        
+
         # 配置网格权重
         list_frame.grid_rowconfigure(0, weight=1)
         list_frame.grid_columnconfigure(0, weight=1)
-        
+
         # 绑定双击事件
         self.date_treeview.bind('<Double-1>', self.on_date_double_click)
-        
+
         # 结果显示区域
         result_frame = ttk.LabelFrame(self.main_frame, text="评分结果", padding="20", style="Card.TLabelframe")
         result_frame.pack(fill=tk.BOTH, expand=True, pady=10, padx=20)
-        
-        self.result_text = scrolledtext.ScrolledText(result_frame, height=15, font=("微软雅黑", 11))
+
+        self.result_text = scrolledtext.ScrolledText(result_frame, height=15, wrap=tk.CHAR, font=("微软雅黑", 11))
         self.result_text.pack(fill=tk.BOTH, expand=True)
-        
+
         # 配置金色tag用于显示星星
         self.result_text.tag_configure("gold", foreground="#FFD700", font=("微软雅黑", 11, "bold"))
         self.result_text.tag_configure("gold_star", foreground="#FFD700", font=("微软雅黑", 11, "bold"))
@@ -782,26 +1096,80 @@ class DayScoreWindow:
         self.result_text.tag_configure("usable", foreground="#228B22", font=("微软雅黑", 11, "bold"))  # 森林绿
         self.result_text.tag_configure("unusable", foreground="#DC143C", font=("微软雅黑", 11, "bold"))  # 猩红
         self.result_text.tag_configure("bold", font=("微软雅黑", 11, "bold"))
-        
+        # ⚠ 警告图标金色前景（仅图标着色，不充填底色）
+        self.result_text.tag_configure("warn_icon", foreground="#FFD700")
+
         # 保存按钮
         save_frame = ttk.Frame(result_frame)
         save_frame.pack(fill=tk.X, pady=5)
-        
+
         save_btn = ttk.Button(save_frame, text="保存评分结果", width=20, command=self.save_score_result)
         save_btn.pack(side=tk.RIGHT, padx=10)
     
     def on_event_type_changed(self, event=None):
-        """事项类型变化时的回调函数"""
-        # 更新特殊选项
-        self.update_special_options()
-        # 更新事主信息框架
-        self.update_owners_frame()
-        # 强制刷新界面
-        self.window.update_idletasks()
-        self.window.update()
-        # 重新打包框架以确保布局更新
-        self.owners_frame.pack_forget()
-        self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
+        """事项类型变化时的回调函数——严格按事项类型联动刷新：
+           特殊选项（宅型/山向/兼向/罗盘）+ 事主信息数量（嫁娶2人/修造类4人/安葬4人）
+        """
+        # ————————————————————————————————————————
+        # 完整版（full / 独立启动）：完整刷新 UI 并重排所有容器
+        # ————————————————————————————————————————
+        if self.mode != 'embedded':
+            # 1) 特殊选项（山向/宅型/罗盘）：按新事项类型重建
+            self.update_special_options()
+            # 2) 事主信息（人数/性别）：按新事项类型重建
+            self.update_owners_frame()
+
+            # 3) 强制刷新所有几何计算（Tk propagation）
+            self.window.update_idletasks()
+            self.window.update()
+
+            # 4) 重新打包事主信息区（确保 destroy 重建后正确显示在原位置）
+            try:
+                self.owners_frame.pack_forget()
+            except Exception:
+                pass
+            self.owners_frame.pack(fill=tk.X, pady=6, padx=20)
+
+            # 5) 重新打包特殊选项区（非修造/动土/入宅事项会清空子控件，
+            #    不 repack 会导致容器高度残留或尺寸为 0 后仍占据原高度）
+            try:
+                self.special_frame.pack_forget()
+            except Exception:
+                pass
+            current_event = self.event_var.get()
+            if current_event in ("修造", "动土", "入宅"):
+                # 仅在修造类事项显示特殊选项框架（其余事项：隐藏 → 输入区更紧凑）
+                self.special_frame.pack(fill=tk.X, pady=3)
+
+            # 6) 强制触发滚动区 Canvas 的 scrollregion 重算（因为事主区高度从2人→4人
+            #    或特殊选项从空→显示山向，main_frame 高度变大）
+            self.window.update_idletasks()
+            self.window.update()
+            try:
+                self.main_frame.event_generate("<Configure>")
+            except Exception:
+                pass
+
+        # ————————————————————————————————————————
+        # 精简版（embedded）：内部状态刷新，但绝不显示事主/特殊 UI
+        # ————————————————————————————————————————
+        else:
+            self.update_special_options()
+            self.update_owners_frame()
+            self.window.update_idletasks()
+            self.window.update()
+            try:
+                self.owners_frame.pack_forget()
+            except Exception:
+                pass
+            try:
+                self.special_frame.pack_forget()
+            except Exception:
+                pass
+            try:
+                self.main_frame.event_generate("<Configure>")
+            except Exception:
+                pass
     
     def update_special_options(self):
         """更新特殊选项（如阳宅/阴宅选择）"""
@@ -833,7 +1201,7 @@ class DayScoreWindow:
             ttk.Label(self.special_frame, text="兼向:", font=("微软雅黑", 10)).pack(side=tk.LEFT, padx=3)
             self.jian_xiang = tk.StringVar(value="正中")
             self.jian_xiang_combo = ttk.Combobox(self.special_frame, textvariable=self.jian_xiang,
-                                      values=["正中"], width=10, state="readonly", font=("微软雅黑", 10))
+                                      values=["正中", "兼左", "兼右"], width=10, state="readonly", font=("微软雅黑", 10))
             self.jian_xiang_combo.pack(side=tk.LEFT, padx=3)
             self.jian_xiang.set("正中")  # 默认正中
             # 绑定山向变化时更新兼向选项
@@ -1667,7 +2035,6 @@ class DayScoreWindow:
         owners_detail = []
         for info in self.owners_info:
             try:
-                # 添加防御性检查
                 # 修正：使用正确的字段名称
                 year_val = info['solar_year'].get() if hasattr(info['solar_year'], 'get') else ''
                 month_val = info['solar_month'].get() if hasattr(info['solar_month'], 'get') else ''
@@ -1716,6 +2083,7 @@ class DayScoreWindow:
         
         # 评分当前日课
         try:
+            _hour_is_demo = True  # 默认午时为示例柱；四柱直入/带时分日期改为False
             # 判断是日期还是四柱
             if len(current_rike.split()) == 4 and all(len(zhu) == 2 for zhu in current_rike.split()):
                 # 这是四柱格式（如：甲子 乙丑 丙寅 丁卯）
@@ -1751,6 +2119,8 @@ class DayScoreWindow:
                 # 从日柱地支推断日期（简化处理）
                 sizhu['day'] = 1
                 display_date = f"四柱: {current_rike}"
+                _hour_is_demo = False
+                _hour_is_demo = False
             else:
                 # 这是日期时间格式（如：2025-03-03 14:30）
                 parts = current_rike.split()
@@ -1761,6 +2131,8 @@ class DayScoreWindow:
                     score_date_obj = datetime.strptime(date_part, '%Y-%m-%d').date()
                     sizhu = calculate_sizhu(score_date_obj, hour, minute)
                     display_date = current_rike
+                    _hour_is_demo = False
+                    _hour_is_demo = False
                 else:
                     # 兼容旧格式（只有日期）
                     score_date_obj = datetime.strptime(current_rike, '%Y-%m-%d').date()
@@ -1800,9 +2172,39 @@ class DayScoreWindow:
                 'yi_list': score_result.get('yi_list', []),
                 'ji_list': score_result.get('ji_list', []),
                 'shensha_list': score_result.get('shensha_list', []),
-                'score_details': score_result.get('score_details', {})
+                'score_details': score_result.get('score_details', {}),
+                'sansha_info': score_result.get('sansha_info', {}),
+                'shan_xiang': shan_xiang or ''
             }
-            
+            # 用户显式指定时柱（四柱直入/带时分日期）：时柱关系实际计入五行评分·
+            # 地支关系得分，用 is_demo_hour=False 重算五行详情并加真实后缀，
+            # 避免“（示例时柱，不计分）”与“时柱关系得分+6”自相矛盾（2026-09-10勘正）
+            if not _hour_is_demo and isinstance(score_result.get('wu_xing_result'), dict):
+                try:
+                    try:
+                        from modules.评分器 import Scorer as _RScorer
+                    except Exception:
+                        try:
+                            from .评分器 import Scorer as _RScorer
+                        except Exception:
+                            from 评分器 import Scorer as _RScorer
+                    _h_suffix = ('（所选时柱，冲合刑害不计入日课总分，详见十二时辰吉凶）'
+                                 if event_type in ('嫁娶', '订婚', '纳采')
+                                 else '（所选时柱，已计入五行评分·地支关系得分）')
+                    _nd = _RScorer()._generate_wu_xing_details(sizhu, owners_detail, is_demo_hour=False)
+                    if isinstance(_nd, dict) and isinstance(_nd.get('地支关系'), list):
+                        _new_dz = []
+                        for _ln in _nd['地支关系']:
+                            if '示例时柱' in _ln:
+                                _ln = _ln.replace('（示例时柱，不计分）', _h_suffix)
+                            elif '时柱' in _ln and not _ln.endswith(_h_suffix):
+                                _ln = _ln + _h_suffix
+                            _new_dz.append(_ln)
+                        _nd['地支关系'] = _new_dz
+                        score_result['wu_xing_result']['details'] = _nd
+                except Exception:
+                    pass
+
             # 添加到列表
             self.date_list.append(current_rike)
             
@@ -1933,12 +2335,102 @@ class DayScoreWindow:
             self.show_single_result(result)
     
     def _insert_colored_text(self, text, tag=None):
-        """插入带颜色的文本"""
+        """插入带颜色的文本；⚠ 警告图标统一金色前景（不充填底色）"""
+        if '⚠' in text:
+            _segments = text.split('⚠')
+            for _k, _part in enumerate(_segments):
+                if _k:
+                    if _part.startswith('️'):
+                        _part = _part[1:]  # 去emoji变体符，确保前景色生效
+                    self.result_text.insert(tk.END, '⚠', "warn_icon")
+                if _part:
+                    if tag:
+                        self.result_text.insert(tk.END, _part, tag)
+                    else:
+                        self.result_text.insert(tk.END, _part)
+            return
         if tag:
             self.result_text.insert(tk.END, text, tag)
         else:
             self.result_text.insert(tk.END, text)
     
+    def _generate_yueling_analysis(self, result):
+        """【月令分析】兜底现算：reason无月令段时，用四柱旺相休囚死表生成分析文字。
+        措辞与主程序详情页【月令分析】保持一致（2026-02-26 校对新增）。"""
+        try:
+            parts4 = None
+            sz = result.get('sizhu')
+            if isinstance(sz, dict):
+                parts4 = [sz.get('年柱', '') or '', sz.get('月柱', '') or '',
+                          sz.get('日柱', '') or '', sz.get('时柱', '') or '']
+            elif isinstance(sz, str) and len(sz.split()) == 4:
+                parts4 = sz.split()
+            if not parts4:
+                det = result.get('detail') or result.get('original_result') or {}
+                if isinstance(det, dict):
+                    dsz = det.get('sizhu')
+                    if isinstance(dsz, dict):
+                        parts4 = [dsz.get('年柱', '') or '', dsz.get('月柱', '') or '',
+                                  dsz.get('日柱', '') or '', dsz.get('时柱', '') or '']
+                    elif isinstance(dsz, str) and len(dsz.split()) == 4:
+                        parts4 = dsz.split()
+            if not parts4:
+                return ''
+            day_gan = (parts4[2] or '')[:1]
+            month_zhi = (parts4[1] or '')[1:2]
+            if not day_gan or not month_zhi:
+                return ''
+            gan_wx = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土',
+                      '庚': '金', '辛': '金', '壬': '水', '癸': '水'}
+            zhi_wx = {'子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火',
+                      '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'}
+            wangxiang_table = {
+                '甲': {'旺': ['寅', '卯'], '相': ['亥', '子'], '休': ['巳', '午'], '囚': ['辰', '戌', '丑', '未'], '死': ['申', '酉']},
+                '乙': {'旺': ['寅', '卯'], '相': ['亥', '子'], '休': ['巳', '午'], '囚': ['辰', '戌', '丑', '未'], '死': ['申', '酉']},
+                '丙': {'旺': ['巳', '午'], '相': ['寅', '卯'], '休': ['辰', '戌', '丑', '未'], '囚': ['申', '酉'], '死': ['亥', '子']},
+                '丁': {'旺': ['巳', '午'], '相': ['寅', '卯'], '休': ['辰', '戌', '丑', '未'], '囚': ['申', '酉'], '死': ['亥', '子']},
+                '戊': {'旺': ['辰', '戌', '丑', '未'], '相': ['巳', '午'], '休': ['申', '酉'], '囚': ['亥', '子'], '死': ['寅', '卯']},
+                '己': {'旺': ['辰', '戌', '丑', '未'], '相': ['巳', '午'], '休': ['申', '酉'], '囚': ['亥', '子'], '死': ['寅', '卯']},
+                '庚': {'旺': ['申', '酉'], '相': ['辰', '戌', '丑', '未'], '休': ['亥', '子'], '囚': ['寅', '卯'], '死': ['巳', '午']},
+                '辛': {'旺': ['申', '酉'], '相': ['辰', '戌', '丑', '未'], '休': ['亥', '子'], '囚': ['寅', '卯'], '死': ['巳', '午']},
+                '壬': {'旺': ['亥', '子'], '相': ['申', '酉'], '休': ['寅', '卯'], '囚': ['巳', '午'], '死': ['辰', '戌', '丑', '未']},
+                '癸': {'旺': ['亥', '子'], '相': ['申', '酉'], '休': ['寅', '卯'], '囚': ['巳', '午'], '死': ['辰', '戌', '丑', '未']},
+            }
+            state = ''
+            for k, zlist in wangxiang_table.get(day_gan, {}).items():
+                if month_zhi in zlist:
+                    state = k
+                    break
+            if not state:
+                return ''
+            day_wx = gan_wx.get(day_gan, '')
+            month_wx = zhi_wx.get(month_zhi, '')
+            sheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'}
+            ke = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
+            parts = []
+            if state == '旺':
+                parts.append(f"{day_gan}日主属{day_wx}气，月支{month_zhi}为{day_wx}气得令之月，日主得令而旺")
+            elif state == '相':
+                parts.append(f"{day_gan}日主属{day_wx}气，月支{month_zhi}得生而相")
+            elif state == '休':
+                parts.append(f"{day_gan}日主属{day_wx}气，月支{month_zhi}休囚泄气")
+            elif state == '囚':
+                parts.append(f"{day_gan}日主属{day_wx}气，月支{month_zhi}非{day_wx}气得令之月，日主失令（{day_wx}克当令之气，反受令困，处囚地）")
+            elif state == '死':
+                parts.append(f"{day_gan}日主属{day_wx}气，月支{month_zhi}非{day_wx}气得令之月，日主失令，{day_wx}气衰微")
+            if month_wx:
+                if sheng.get(month_wx) == day_wx:
+                    parts.append(f"{month_wx}生{day_wx}")
+                elif ke.get(month_wx) == day_wx:
+                    parts.append(f"{month_wx}克{day_wx}")
+                elif month_wx == day_wx:
+                    parts.append("同气相求")
+                elif sheng.get(day_wx) == month_wx:
+                    parts.append(f"{day_wx}生{month_wx}")
+            return "，".join(parts)
+        except Exception:
+            return ''
+
     def show_single_result(self, result):
         """显示单个评分结果"""
         self.result_text.delete(1.0, tk.END)
@@ -1973,7 +2465,8 @@ class DayScoreWindow:
         # 提取大利月/小利月信息（婚嫁专用）
         daliyue_info = '-'
         event_type = result.get('event_type', '')
-        if result.get('shensha_list') and event_type in ['嫁娶', '订婚', '纳采']:
+        from modules.事项标准 import MARRIAGE_EVENTS
+        if result.get('shensha_list') and event_type in MARRIAGE_EVENTS:
             for shensha in result['shensha_list']:
                 if isinstance(shensha, dict):
                     shensha_name = shensha.get('name', '')
@@ -1985,7 +2478,7 @@ class DayScoreWindow:
                         break
         
         # 如果是婚嫁择日，显示大利月/小利月信息
-        if event_type in ['嫁娶', '订婚', '纳采'] and daliyue_info != '-':
+        if event_type in MARRIAGE_EVENTS and daliyue_info != '-':
             self._insert_colored_text(f"  利月：{daliyue_info}\n")
         
         self._insert_colored_text("\n")
@@ -1995,39 +2488,82 @@ class DayScoreWindow:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
         
+        # 优先从原始结果获取事主信息
         owners_detail = result.get('owners_detail', [])
+        original_result = result.get('original_result', {})
+        if not owners_detail and original_result:
+            # 尝试从原始结果获取事主信息
+            owners_detail = original_result.get('owners', [])
+        
         if owners_detail:
+            # 处理owners可能是字典列表或字符串列表
             for i, owner in enumerate(owners_detail[:4], 1):  # 只显示前4个事主
-                name = owner.get('name', f'事主{i}')
-                self._insert_colored_text(f"  【{name}】\n")
-                
-                if owner.get('birth_date'):
-                    self._insert_colored_text(f"    出生日期: {owner['birth_date']}\n")
-                
-                if owner.get('sizhu'):
-                    self._insert_colored_text(f"    四柱: {owner['sizhu']}\n")
-                
-                if owner.get('xishen'):
-                    self._insert_colored_text(f"    喜神: {owner['xishen']}\n")
-                
-                if owner.get('yongshen'):
-                    self._insert_colored_text(f"    用神: {owner['yongshen']}\n")
-                
-                # 如果是嫁娶，显示新娘的夫子星、阴胎、阳气
-                if event_type in ['嫁娶', '订婚', '纳采', '结婚'] and owner.get('gender') == '女':
-                    if owner.get('fu_xing'):
-                        self._insert_colored_text(f"    夫星: {owner['fu_xing']}\n")
-                    if owner.get('zi_xing'):
-                        self._insert_colored_text(f"    子星: {owner['zi_xing']}\n")
-                    if owner.get('yintai'):
-                        self._insert_colored_text(f"    阴胎: {owner['yintai']}\n")
-                    if owner.get('yangqi'):
-                        self._insert_colored_text(f"    阳气: {owner['yangqi']}\n")
-                
-                if owner.get('match_result'):
-                    self._insert_colored_text(f"    匹配结果: {owner['match_result']}\n")
-                
-                self._insert_colored_text("\n")
+                if isinstance(owner, dict):
+                    name = owner.get('name', owner.get('姓名', f'事主{i}'))
+                    self._insert_colored_text(f"  【{name}】\n")
+                    
+                    birth_date = owner.get('birth_date', owner.get('出生日期', ''))
+                    if birth_date:
+                        self._insert_colored_text(f"    出生日期: {birth_date}\n")
+                        # 2026-02-26 校对：23时（晚子时交界）排盘口径说明。本软件口径：
+                        # 子时自次日0点起算，23时仍按当日亥时取时柱（与主程序扫描、
+                        # 事主四柱计算同一口径），特此标注避免"23时却排亥时柱"被误读为错误
+                        _bhm = re.search(r'(\d{1,2})\s*[时:\uff1a]', str(birth_date))
+                        if _bhm and int(_bhm.group(1)) == 23:
+                            _p4 = []
+                            _szs = owner.get('sizhu', owner.get('四柱', ''))
+                            if isinstance(_szs, str):
+                                _p4 = _szs.split()
+                            if len(_p4) == 4:
+                                _dg = _p4[2][:1]
+                                _wushu = {'甲': '甲', '己': '甲', '乙': '丙', '庚': '丙',
+                                          '丙': '戊', '辛': '戊', '丁': '庚', '壬': '庚',
+                                          '戊': '壬', '癸': '壬'}
+                                _alt = (_wushu.get(_dg, '') + '子') if _dg in _wushu else ''
+                                _alt_txt = ('；若按传统晚子时派（23点起作子时），'
+                                            f'时柱应为{_alt}') if _alt else ''
+                                self._insert_colored_text(
+                                    f"    ⚠ 时辰说明：出生时间为23时，本软件按当日亥时取时柱"
+                                    f"（子时自次日0点起算），故时柱为{_p4[3]}{_alt_txt}\n")
+                            else:
+                                self._insert_colored_text(
+                                    "    ⚠ 时辰说明：出生时间为23时，本软件按当日亥时取时柱"
+                                    "（子时自次日0点起算）\n")
+                    
+                    sizhu = owner.get('sizhu', owner.get('四柱', ''))
+                    if sizhu:
+                        self._insert_colored_text(f"    四柱: {sizhu}\n")
+                    
+                    xishen = owner.get('xishen', owner.get('喜神', ''))
+                    if xishen:
+                        self._insert_colored_text(f"    喜神: {xishen}\n")
+                    
+                    yongshen = owner.get('yongshen', owner.get('用神', ''))
+                    if yongshen:
+                        self._insert_colored_text(f"    用神: {yongshen}\n")
+                    
+                    # 如果是嫁娶，女命显示夫星、子星、阴胎（阴胎属女命）
+                    from modules.事项标准 import MARRIAGE_UI_EVENTS
+                    if event_type in MARRIAGE_UI_EVENTS and owner.get('gender') == '女':
+                        if owner.get('fu_xing'):
+                            self._insert_colored_text(f"    夫星: {owner['fu_xing']}\n")
+                        if owner.get('zi_xing'):
+                            self._insert_colored_text(f"    子星: {owner['zi_xing']}\n")
+                        if owner.get('yintai'):
+                            self._insert_colored_text(f"    阴胎: {owner['yintai']}\n")
+                    # 阳气属男命（与阴胎同法：月干+1月支+3即胎元，男称阳气女称阴胎）
+                    if event_type in MARRIAGE_UI_EVENTS and owner.get('gender') == '男':
+                        if owner.get('yangqi'):
+                            self._insert_colored_text(f"    阳气: {owner['yangqi']}\n")
+                    
+                    match_result = owner.get('match_result', owner.get('匹配结果', ''))
+                    if match_result:
+                        self._insert_colored_text(f"    匹配结果: {match_result}\n")
+                    
+                    self._insert_colored_text("\n")
+                else:
+                    # 如果是字符串，直接显示
+                    self._insert_colored_text(f"  {owner}\n")
         else:
             self._insert_colored_text("  暂无事主信息\n\n")
         
@@ -2059,15 +2595,24 @@ class DayScoreWindow:
                 ji_score = score_breakdown.get('忌事得分', 0)
                 if ji_score != 0:
                     self._insert_colored_text(f"    ├─ 忌事得分：{ji_score} 分\n")
+                    ji_items_bd = score_breakdown.get('忌事明细') or []
+                    if ji_items_bd:
+                        self._insert_colored_text(f"    │  忌事构成：{'、'.join(str(x) for x in ji_items_bd)}（每项-15分）\n")
                 zhangsheng = score_breakdown.get('十二长生得分', 0)
                 if zhangsheng != 0:
                     self._insert_colored_text(f"    ├─ 十二长生得分：{zhangsheng:+d} 分\n")
+                    for _zl in (score_breakdown.get('十二长生明细') or []):
+                        self._insert_colored_text(f"    │    • {_zl}\n")
                 zhizhi = score_breakdown.get('地支关系得分', 0)
                 if zhizhi != 0:
                     self._insert_colored_text(f"    ├─ 地支关系得分：{zhizhi:+d} 分\n")
+                    for _zl in (score_breakdown.get('地支关系明细') or []):
+                        self._insert_colored_text(f"    │    • {_zl}\n")
                 nayin = score_breakdown.get('纳音匹配得分', 0)
                 if nayin != 0:
                     self._insert_colored_text(f"    └─ 纳音匹配得分：{nayin:+d} 分\n")
+                    for _nl in (score_breakdown.get('纳音匹配明细') or []):
+                        self._insert_colored_text(f"    │    • {_nl}\n")
             
             # 显示婚嫁评分详情（夫星受克等）
             marriage_details = result.get('marriage_details', [])
@@ -2085,12 +2630,109 @@ class DayScoreWindow:
                 self._insert_colored_text(f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分\n")
             
             self._insert_colored_text(f"  喜用神得分：{xishen_score:+d} 分\n")
-            self._insert_colored_text(f"  黄道得分：{huangdao_score:+d} 分\n")
+            
+            # 生肖相主得分
+            xiangzhu_score = score_details.get('相主得分', 0)
+            xiangzhu_details = score_details.get('相主详情', [])
+            if xiangzhu_score != 0 or xiangzhu_details:
+                self._insert_colored_text(f"  生肖相主得分：{xiangzhu_score:+d} 分\n")
+                for detail_item in xiangzhu_details:
+                    self._insert_colored_text(f"    • {detail_item}\n")
+            
+            # 事主匹配得分（喜用神匹配明细）
+            owner_matches = score_details.get('事主匹配', [])
+            if owner_matches:
+                self._insert_colored_text(f"  事主匹配（喜用神）：\n")
+                for m in owner_matches:
+                    if isinstance(m, dict):
+                        name = m.get('name') or m.get('owner') or m.get('姓名', '事主')
+                        rmk = m.get('remark') or m.get('说明') or m.get('match_detail', '')
+                        sc  = m.get('score', m.get('得分', 0))
+                        if sc or rmk:
+                            self._insert_colored_text(f"    • {name}：{rmk}（{sc:+d}分）\n")
+                    else:
+                        self._insert_colored_text(f"    • {m}\n")
+            
+            has_hd_key = '黄道得分' in score_details
+            if has_hd_key:
+                self._insert_colored_text(f"  黄道得分：{huangdao_score:+d} 分\n")
+            else:
+                # 2026-02-26 校对：嫁娶路径黄道得分已并入五行评分（无'黄道得分'键），
+                # 如实说明而非显示误导性的"+0 分"（口径同主程序详情页）
+                self._insert_colored_text("  黄道得分：已并入五行评分（大黄道/小黄道明细见五行评分项内）\n")
+            sun_moon_score = score_details.get('太阳太阴得分', 0) or 0
+            self._insert_colored_text(f"  太阳太阴得分：{sun_moon_score:+d} 分\n")
+            # 时柱地支关系得分：分数本已含于五行评分·地支关系得分（四柱六对全局分），
+            # 仅拆出时柱参与的三对供追溯，展示但不重复累加（2026-09-10勘正：
+            # 旧版加进 raw_total 致"公式114≠总分108"误显"总分调整"）
+            hour_rel_score = score_details.get('时柱关系得分', 0) or 0
+            hour_rel_details = score_details.get('时柱关系明细', []) or []
+            if hour_rel_score or hour_rel_details:
+                self._insert_colored_text(f"  时柱地支关系（仅展示，非独立分项，已含于上方地支关系得分，不单独计入公式）：{hour_rel_score:+d} 分\n")
+                for rl in hour_rel_details:
+                    self._insert_colored_text(f"    • {rl}\n")
+            sansha_penalty = score_details.get('三煞扣分', 0) or 0
+            wuxing_score = wuxing_score or 0
+            yueling_score = yueling_score or 0
+            xishen_score = xishen_score or 0
+            xiangzhu_score = xiangzhu_score or 0
+            huangdao_score = huangdao_score or 0
+            raw_total = (wuxing_score + yueling_score + xishen_score + xiangzhu_score
+                         + huangdao_score + sun_moon_score + sansha_penalty)
+            # 公式行仅列非零分项（与实际合计一致，避免零分项"+0"噪声），五行评分为基数列首
+            _f_terms = [str(wuxing_score)]
+            for _lbl, _val in (('月令', yueling_score), ('喜用神', xishen_score),
+                               ('相主', xiangzhu_score), ('黄道', huangdao_score),
+                               ('太阳太阴', sun_moon_score),
+                               ('三煞扣分', sansha_penalty)):
+                if _val:
+                    _f_terms.append(f"{_val:+d}({_lbl})")
+            formula_line = "  计算公式：" + " ".join(_f_terms) + f" = {raw_total} 分\n"
             self._insert_colored_text(f"  ─────────────────────────────────\n")
-            self._insert_colored_text(f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {huangdao_score:+d} = {total_score} 分\n")
+            if raw_total != total_score:
+                # 三分支文案：计算异常 / 一票否决 / 真满分截断
+                level_text = result.get('level', '')
+                is_calc_error = ('计算错误' in level_text) or ('❌' in level_text and '计算' in level_text)
+                wu_xing = result.get('wu_xing_result') if isinstance(result.get('wu_xing_result'), dict) else {}
+                is_hege_false = (not wu_xing.get('he_ge', True)) and ('计算错误' not in wu_xing.get('ji_yu','')) and ('计算异常' not in wu_xing.get('ji_yu',''))
+                has_exception_info = '异常信息' in score_details
+
+                self._insert_colored_text(formula_line)
+                result_veto_reasons = result.get('veto_reasons') or []
+                if is_calc_error or has_exception_info:
+                    self._insert_colored_text(f"  计算异常强制归零：{raw_total} → 0 分（详见下方一票否决横幅+综合评语堆栈）\n")
+                elif result_veto_reasons:
+                    self._insert_colored_text(f"  一票否决强制归零：{raw_total} → 0 分（{'；'.join(str(x) for x in result_veto_reasons)}）\n")
+                elif is_hege_false:
+                    self._insert_colored_text(f"  一票否决(正五行门槛未过)强制归零：{raw_total} → 0 分\n")
+                elif raw_total > 150 and total_score == 150:
+                    self._insert_colored_text(f"  满分上限限制：{raw_total} → {total_score} 分\n")
+                else:
+                    # 其他不一致（如上游返回值兜底），如实写
+                    self._insert_colored_text(f"  总分调整：{raw_total} → {total_score} 分\n")
+            else:
+                self._insert_colored_text(formula_line)
+            _ss_detail = score_details.get('三煞扣分明细') or (result.get('sansha_info') or {}).get('sansha_penalty_detail') or []
+            if _ss_detail:
+                self._insert_colored_text(f"    三煞扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n")
             self._insert_colored_text(f"  总分：{total_score} 分\n")
         else:
             self._insert_colored_text("  暂无详细得分数据\n")
+        
+        # 一票否决 / 凶煞门槛（婚嫁大忌/三煞/相主硬门槛/正五行不合格直接❌凶）
+        result_veto_reasons = result.get('veto_reasons') or []
+        wu_xing = result.get('wu_xing_result') if isinstance(result.get('wu_xing_result'), dict) else {}
+        wx_hege_false = bool(wu_xing) and (not wu_xing.get('he_ge', True)) \
+            and ('计算错误' not in wu_xing.get('ji_yu', '')) and ('计算异常' not in wu_xing.get('ji_yu', ''))
+        if result_veto_reasons or wx_hege_false:
+                self._insert_colored_text("""
+【⚠️ 一票否决】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")
+                for _vr in result_veto_reasons:
+                    self._insert_colored_text(f"  {_vr}\n")
+                if wx_hege_false:
+                    self._insert_colored_text(f"  正五行门槛未过：{wu_xing.get('ji_yu', wu_xing.get('reason', '不合格'))}\n")
         
         self._insert_colored_text("\n")
         
@@ -2100,17 +2742,21 @@ class DayScoreWindow:
 """)
         
         # 从reason中提取月令信息
-        reason = result.get('reason', '')
-        yueling_info = ""
-        for part in reason.split('；'):
-            if '月令：' in part:
-                yueling_info = part.replace('月令：', '')
-                break
+        reason = result.get('reason', '') or ''
+        yueling_info = ''
+        # 2026-02-26 校对：评分链reason实际写入"月令分析：…"段（原只认"月令："前缀，
+        # 提取失败误显"暂无数据"）；两种前缀都识别，提取文字与【综合评语】保持一致；
+        # 若reason无月令段，则用四柱旺相休囚死表现算兜底，确保板块不再出现"暂无数据"
+        _m_yl = re.search('月令(?:分析)?[：:]\s*([^；;\n]+)', reason)
+        if _m_yl:
+            yueling_info = _m_yl.group(1).strip()
+        if not yueling_info:
+            yueling_info = self._generate_yueling_analysis(result)
         
         if yueling_info:
             self._insert_colored_text(f"  {yueling_info}\n")
         else:
-            self._insert_colored_text("  月令分析：暂无数据\n")
+            self._insert_colored_text("  月令分析：详见【综合评语】\n")
         
         self._insert_colored_text("\n")
         
@@ -2157,9 +2803,14 @@ class DayScoreWindow:
                 
                 # 3. 十二长生
                 if details.get('十二长生'):
-                    self._insert_colored_text("\n  【十二长生】\n")
+                    self._insert_colored_text("\n  【十二长生】（日干在各柱地支的长生旺衰，分值计入五行评分）\n")
+                    _zs_map = {}
+                    for _zl in (score_breakdown.get('十二长生明细') or []):
+                        if '：' in str(_zl):
+                            _zs_map[str(_zl)[:2]] = str(_zl).split('：', 1)[1]
                     for pillar, state in details['十二长生'].items():
-                        self._insert_colored_text(f"    {pillar}: {state}\n")
+                        _zv = _zs_map.get(pillar, '')
+                        self._insert_colored_text(f"    {pillar}: {state}" + (f"（{_zv}）" if _zv else "") + "\n")
                 
                 # 4. 纳音五行
                 if details.get('纳音五行'):
@@ -2173,7 +2824,16 @@ class DayScoreWindow:
                     for jishen in details['吉神']:
                         self._insert_colored_text(f"    ✓ {jishen}\n")
                 else:
-                    self._insert_colored_text("\n  【吉神】\n    无天德月德等吉神\n")
+                    # 2026-09-08：贵人吉神为空时，若【神煞信息】有加分吉神，
+                    # 不再写"无天德月德等吉神"以免与神煞信息矛盾。
+                    _has_shensha_ji = any(
+                        (isinstance(_s, dict) and _s.get('score', 0) > 0)
+                        for _s in (result.get('shensha_list') or [])
+                    )
+                    if _has_shensha_ji:
+                        self._insert_colored_text("\n  【吉神】\n    有吉神（详见神煞信息）\n")
+                    else:
+                        self._insert_colored_text("\n  【吉神】\n    无天德月德等吉神\n")
                 
                 # 6. 日主旺衰
                 if details.get('日主旺衰'):
@@ -2198,15 +2858,31 @@ class DayScoreWindow:
 """)
             if huangdao.get('da_huang_dao'):
                 da_hd = huangdao['da_huang_dao']
-                self._insert_colored_text(f"  大黄道: {da_hd.get('name', 'N/A')} ({da_hd.get('type', 'N/A')})\n")
+                self._insert_colored_text(f"  大黄道: {da_hd.get('name', 'N/A')} ({da_hd.get('type', 'N/A')})")
+                if da_hd.get('score'): self._insert_colored_text(f"  {da_hd['score']:+d}分")
+                self._insert_colored_text("\n")
                 if da_hd.get('description'):
                     self._insert_colored_text(f"    说明: {da_hd['description']}\n")
             if huangdao.get('xiao_huang_dao'):
                 xiao_hd = huangdao['xiao_huang_dao']
-                self._insert_colored_text(f"  小黄道: {xiao_hd.get('name', 'N/A')} ({xiao_hd.get('type', 'N/A')})\n")
+                self._insert_colored_text(f"  小黄道: {xiao_hd.get('name', 'N/A')} ({xiao_hd.get('type', 'N/A')})")
+                if xiao_hd.get('score'): self._insert_colored_text(f"  {xiao_hd['score']:+d}分")
+                self._insert_colored_text("\n")
                 if xiao_hd.get('description'):
                     self._insert_colored_text(f"    说明: {xiao_hd['description']}\n")
-            self._insert_colored_text(f"  黄道等级: {huangdao.get('huang_dao_level', 'N/A')}\n\n")
+            if huangdao.get('shichen_huang_dao'):
+                sc_hd = huangdao['shichen_huang_dao']
+                if isinstance(sc_hd, dict):
+                    self._insert_colored_text(f"  时辰黄道: {sc_hd.get('name', 'N/A')} ({sc_hd.get('type', 'N/A')})")
+                    if sc_hd.get('score'): self._insert_colored_text(f"  {sc_hd['score']:+d}分")
+                    self._insert_colored_text("（仅参考，不计入日课总分，也不计入下方黄道综合分）\n")
+                else:
+                    self._insert_colored_text(f"  时辰黄道: {sc_hd}（仅参考，不计入日课总分，也不计入下方黄道综合分）\n")
+            self._insert_colored_text(f"  黄道等级: {huangdao.get('huang_dao_level', 'N/A')}\n")
+            self._insert_colored_text(f"  黄道综合分: {huangdao.get('huang_dao_score', 0):+d} 分（=大黄道+小黄道，不含时辰黄道）\n")
+            if huangdao.get('description'):
+                self._insert_colored_text(f"  综合说明: {huangdao['description']}\n")
+            self._insert_colored_text("\n")
         
         # 宜忌信息
         if result.get('yi_list') or result.get('ji_list'):
@@ -2226,51 +2902,165 @@ class DayScoreWindow:
             self._insert_colored_text("""【神煞信息】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
-            # 分离吉神和凶煞
+            # 按分值排序显示，并分别显示吉神与凶煞
+            raw = result['shensha_list']
+            sorted_shensha = sorted(raw, key=lambda x: x.get('score', 0) if isinstance(x, dict) else 0, reverse=True)
             ji_shen = []
             xiong_shen = []
-            for shensha in result['shensha_list']:
+            ping_shen = []
+            for shensha in sorted_shensha:
                 if isinstance(shensha, dict):
                     score = shensha.get('score', 0)
-                    if score > 0:
-                        ji_shen.append(shensha)
-                    elif score < 0:
-                        xiong_shen.append(shensha)
+                    if score > 0: ji_shen.append(shensha)
+                    elif score < 0: xiong_shen.append(shensha)
+                    else: ping_shen.append(shensha)
                 else:
-                    ji_shen.append(shensha)
+                    ping_shen.append(shensha)
             
-            # 显示吉神
             if ji_shen:
-                self._insert_colored_text("【吉神】\n")
+                self._insert_colored_text("【吉神(加分项)】\n")
                 for shensha in ji_shen:
                     if isinstance(shensha, dict):
                         name = shensha.get('name', '')
                         desc = shensha.get('description', '')
                         score = shensha.get('score', 0)
-                        if score > 0:
-                            self._insert_colored_text(f"  • {name} (+{score}分): {desc}\n")
-                        else:
-                            self._insert_colored_text(f"  • {name}: {desc}\n")
+                        self._insert_colored_text(f"  ✓ {name} (+{score}分): {desc}\n")
                     else:
-                        self._insert_colored_text(f"  • {shensha}\n")
+                        self._insert_colored_text(f"  ✓ {shensha}\n")
             
-            # 显示凶煞
             if xiong_shen:
-                self._insert_colored_text("\n【凶煞】\n")
+                self._insert_colored_text("\n【凶煞(减分项)】\n")
                 for shensha in xiong_shen:
                     if isinstance(shensha, dict):
                         name = shensha.get('name', '')
                         desc = shensha.get('description', '')
                         score = shensha.get('score', 0)
-                        self._insert_colored_text(f"  • {name} ({score}分): {desc}\n")
+                        self._insert_colored_text(f"  ✗ {name} ({score}分): {desc}\n")
                     else:
-                        self._insert_colored_text(f"  • {shensha}\n")
+                        self._insert_colored_text(f"  ✗ {shensha}\n")
+            
+            if ping_shen:
+                self._insert_colored_text("\n【其他神煞】\n")
+                for shensha in ping_shen:
+                    if isinstance(shensha, dict):
+                        name = shensha.get('name', '')
+                        desc = shensha.get('description', '')
+                        score = shensha.get('score', 0)
+                        self._insert_colored_text(f"  ○ {name}: {desc}\n")
+                    else:
+                        self._insert_colored_text(f"  ○ {shensha}\n")
+            self._insert_colored_text("\n")
+        
+        # 三煞检查（二十四山 / 山家封禁 / 吉神）
+        sansha_info = result.get('sansha_info', {})
+        shan_xiang = result.get('shan_xiang', '')
+        if shan_xiang or sansha_info:
+            self._insert_colored_text("""【二十四山方位吉凶】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")
+            if shan_xiang:
+                self._insert_colored_text(f"   坐山：{shan_xiang}\n")
+            
+            year_sansha = sansha_info.get('year_sansha', [])
+            month_sansha = sansha_info.get('month_sansha', [])
+            day_sansha = sansha_info.get('day_sansha', [])
+            if year_sansha:
+                self._insert_colored_text(f"   年三煞：{'、'.join(year_sansha)}\n")
+            if month_sansha:
+                self._insert_colored_text(f"   月三煞：{'、'.join(month_sansha)}\n")
+            if day_sansha:
+                self._insert_colored_text(f"   日三煞：{'、'.join(day_sansha)}\n")
+            self._insert_colored_text("\n   【四柱三煞检查】\n")
+            y_fan_month = sansha_info.get('year_sansha_month_fan', False)
+            y_fan_day = sansha_info.get('year_sansha_day_fan', False)
+            y_fan_hour = sansha_info.get('year_sansha_hour_fan', False)
+            y_fan_shan = sansha_info.get('year_sansha_fan', False)
+            if y_fan_month: self._insert_colored_text("     ❌ 年三煞犯月柱\n")
+            if y_fan_day:   self._insert_colored_text("     ❌ 年三煞犯日柱\n")
+            if y_fan_hour:  self._insert_colored_text("     ❌ 年三煞犯时柱\n")
+            if y_fan_shan:  self._insert_colored_text("     ❌ 年三煞犯山向\n")
+            if not (y_fan_month or y_fan_day or y_fan_hour or y_fan_shan):
+                self._insert_colored_text("     ✅ 年三煞不犯\n")
+            m_fan_day = sansha_info.get('month_sansha_day_fan', False)
+            m_fan_hour = sansha_info.get('month_sansha_hour_fan', False)
+            m_fan_shan = sansha_info.get('month_sansha_fan', False)
+            if m_fan_day:  self._insert_colored_text("     ❌ 月三煞犯日柱\n")
+            if m_fan_hour: self._insert_colored_text("     ❌ 月三煞犯时柱\n")
+            if m_fan_shan: self._insert_colored_text("     ❌ 月三煞犯山向\n")
+            if not (m_fan_day or m_fan_hour or m_fan_shan):
+                self._insert_colored_text("     ✅ 月三煞不犯\n")
+            d_fan_hour = sansha_info.get('day_sansha_hour_fan', False)
+            d_fan_shan = sansha_info.get('day_sansha_fan', False)
+            if d_fan_hour: self._insert_colored_text("     ❌ 日三煞犯时柱\n")
+            if d_fan_shan: self._insert_colored_text("     ❌ 日三煞犯山向\n")
+            if not (d_fan_hour or d_fan_shan):
+                self._insert_colored_text("     ✅ 日三煞不犯\n")
+            # 年家五黄检查（详情展示宫位与坐山结论）
+            wuhuang_info = sansha_info.get('wuhuang_info') or {}
+            if wuhuang_info.get('宫位'):
+                self._insert_colored_text("\n   【年家五黄】\n")
+                if wuhuang_info.get('入中'):
+                    self._insert_colored_text(f"     {wuhuang_info.get('年份', '')}年五黄入中宫，无固定凶方\n")
+                else:
+                    self._insert_colored_text(f"     {wuhuang_info.get('年份', '')}年五黄在{wuhuang_info['宫位']}宫（{wuhuang_info.get('三山', '')}）\n")
+                if shan_xiang:
+                    _wu_level = wuhuang_info.get('级别', '')
+                    if _wu_level == '凶煞':
+                        self._insert_colored_text("     ❌ 坐山犯五黄，宜静不宜动，不可动土修造安葬（详见山家封禁）\n")
+                    elif _wu_level == '警告':
+                        self._insert_colored_text("     ⚠ 兼向犯五黄，须谨慎制化（详见山家警告）\n")
+                    else:
+                        self._insert_colored_text("     ✅ 坐山不犯五黄\n")
+
+            # 年家二黑（病符星）检查
+            erhei_info = sansha_info.get('erhei_info') or {}
+            if erhei_info.get('宫位'):
+                self._insert_colored_text("\n   【年家二黑（病符）】\n")
+                if erhei_info.get('入中'):
+                    self._insert_colored_text(f"     {erhei_info.get('年份', '')}年二黑入中宫，无固定凶方\n")
+                else:
+                    self._insert_colored_text(f"     {erhei_info.get('年份', '')}年二黑在{erhei_info['宫位']}宫（{erhei_info.get('三山', '')}）\n")
+                if shan_xiang:
+                    _eh_level = erhei_info.get('级别', '')
+                    if _eh_level == '凶煞':
+                        self._insert_colored_text("     ❌ 坐山犯二黑（病符），主疾病脾胃、妇人不安，动土修造忌之（详见山家封禁）\n")
+                    elif _eh_level == '警告':
+                        self._insert_colored_text("     ⚠ 兼向犯二黑（病符），宜慎（详见山家警告）\n")
+                    else:
+                        self._insert_colored_text("     ✅ 坐山不犯二黑\n")
+
+            sansha_penalty = sansha_info.get('sansha_penalty', 0)
+            if sansha_penalty != 0:
+                self._insert_colored_text(f"\n     三煞总扣分：{sansha_penalty}\n")
+                for _sd in (sansha_info.get('sansha_penalty_detail') or []):
+                    self._insert_colored_text(f"       • {_sd}\n")
+            
+            blocked = sansha_info.get('mountain_blocked', False)
+            blocked_reasons = sansha_info.get('mountain_block_reasons', [])
+            mountain_warnings = sansha_info.get('mountain_warnings', [])
+            mountain_jishen = sansha_info.get('mountain_jishen', [])
+            mountain_day_type = sansha_info.get('mountain_day_type', sansha_info.get('day_type', ''))
+            if blocked or blocked_reasons:
+                self._insert_colored_text("\n   【⛔ 山家封禁 · 绝对不能用】\n")
+                for r in blocked_reasons:
+                    self._insert_colored_text(f"     ❌ {r}\n")
+            if mountain_warnings:
+                self._insert_colored_text("\n   【⚠️ 山家警告 · 须谨慎】\n")
+                for w in mountain_warnings:
+                    msg = w.get('说明') if isinstance(w, dict) else str(w)
+                    self._insert_colored_text(f"     ⚠ {msg}\n")
+            if mountain_jishen:
+                self._insert_colored_text("\n   【✅ 山家吉神 · 加分项】\n")
+                for js in mountain_jishen:
+                    self._insert_colored_text(f"     ✓ {js}\n")
+            if mountain_day_type and mountain_day_type not in ('', '普通日'):
+                self._insert_colored_text(f"\n   【日期类别】：{mountain_day_type}\n")
             self._insert_colored_text("\n")
         
         # 二十四山动土方位吉凶（仅限修造相关事件）
         event_type = result.get('event_type', '')
-        construction_events = ['修造', '动土', '装修', '入宅', '安床', '作灶']
-        
+        from modules.事项标准 import CONSTRUCTION_DETAIL_UI_EVENTS as construction_events
+
         if result.get('sizhu') and event_type in construction_events:
             from modules.shensha.修造神煞扩展 import ConstructionShenShaCheckerExt
             construction_shensha = ConstructionShenShaCheckerExt()
@@ -2471,28 +3261,44 @@ class DayScoreWindow:
             owners_detail = []
             for info in self.owners_info:
                 try:
-                    year = int(info['year'].get())
-                    month = int(info['month'].get())
-                    day = int(info['day'].get())
-                    hour = int(info['hour'].get())
-                    minute = int(info['minute'].get())
+                    # 注意：self.owners_info 的键名是 solar_year/solar_month/solar_day/hour/minute
+                    # （import_results 和 start_scoring 都是按这个命名结构写入的），不能用 info['year']，否则 AttributeError 被吞
+                    year_val = info['solar_year'].get() if hasattr(info.get('solar_year'), 'get') else info.get('solar_year', '')
+                    month_val = info['solar_month'].get() if hasattr(info.get('solar_month'), 'get') else info.get('solar_month', '')
+                    day_val = info['solar_day'].get() if hasattr(info.get('solar_day'), 'get') else info.get('solar_day', '')
+                    hour_val = info['hour'].get() if hasattr(info.get('hour'), 'get') else info.get('hour', '12')
+                    minute_val = info['minute'].get() if hasattr(info.get('minute'), 'get') else info.get('minute', '0')
+                    
+                    if not (year_val and month_val and day_val):
+                        continue
+                    
+                    year = int(year_val)
+                    month = int(month_val)
+                    day = int(day_val)
+                    hour = int(hour_val)
+                    minute = int(minute_val)
                     
                     target_date = date(year, month, day)
                     sizhu = calculate_sizhu(target_date, hour, minute)
                     analysis = analyze_sizhu(sizhu)
                     
+                    # 姓名（StringVar + 裸字符串双兼容）
+                    name = info['name']
+                    if hasattr(name, 'get'):
+                        name = name.get()
+                    
                     owner_detail = {
-                        'name': info['name'],
+                        'name': name,
                         'birth_date': f"{year}年{month}月{day}日 {hour}时{minute}分",
                         'sizhu': f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}",
-                        'xishen': info['xishen_var'].get(),
-                        'yongshen': info['yongshen_var'].get(),
+                        'xishen': info['xishen_var'].get() if hasattr(info.get('xishen_var'), 'get') else '',
+                        'yongshen': info['yongshen_var'].get() if hasattr(info.get('yongshen_var'), 'get') else '',
                         'fu_xing': '',
                         'zi_xing': ''
                     }
                     
                     if event_type == "嫁娶" and info.get('fuzi_var'):
-                        fuzi_str = info['fuzi_var'].get()
+                        fuzi_str = info['fuzi_var'].get() if hasattr(info.get('fuzi_var'), 'get') else ''
                         if '夫星:' in fuzi_str:
                             parts = fuzi_str.split(', ')
                             owner_detail['fu_xing'] = parts[0].replace('夫星: ', '')
@@ -2501,6 +3307,9 @@ class DayScoreWindow:
                     
                     owners_detail.append(owner_detail)
                 except Exception as e:
+                    import traceback
+                    # 对比分析时事主解析异常也打印到控制台，避免被默默吞掉后整行返回『❌ 计算错误』且看不到原因
+                    print(f"[对比分析事主解析异常] {str(e)}\n{traceback.format_exc()}")
                     continue
             
             # 对每个未评分的日课进行评分
@@ -2572,7 +3381,10 @@ class DayScoreWindow:
                         'wu_xing_result': score_result.get('wu_xing_result', {}),
                         'yi_list': score_result.get('yi_list', []),
                         'ji_list': score_result.get('ji_list', []),
-                        'shensha_list': score_result.get('shensha_list', [])
+                        'shensha_list': score_result.get('shensha_list', []),
+                        'score_details': score_result.get('score_details', {}),
+                        'sansha_info': score_result.get('sansha_info', {}),
+                        'shan_xiang': shan_xiang or ''
                     }
                     
                     # 添加到评分结果
@@ -2595,7 +3407,7 @@ class DayScoreWindow:
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # 结果显示
-        result_text = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, font=("微软雅黑", 10))
+        result_text = scrolledtext.ScrolledText(main_frame, wrap=tk.CHAR, font=("微软雅黑", 10))
         result_text.pack(fill=tk.BOTH, expand=True)
         
         # 配置金色tag用于显示星星
@@ -3141,3 +3953,5 @@ class DayScoreWindow:
 if __name__ == '__main__':
     app = DayScoreWindow()
     app.run()
+
+# 2026-09-14 补丁指纹 nayin-jishen-zaoxiang：纳音齐备明细/吉神口径/灶向依据

@@ -48,11 +48,12 @@ class MarriageRuleChecker(EventRuleChecker):
         '猴': [2, 8], '鸡': [1, 7], '狗': [4, 10], '猪': [3, 9]
     }
     
-    # 小利月表
+    # 小利月表（新娘生肖：农历月份）
+    # 口诀：鼠马二八月，牛羊四十当，虎猴正七月，兔鸡六腊月，龙狗三九月，蛇猪五十一
     XIAOLIYUE = {
-        '鼠': [3, 10], '牛': [2, 9], '虎': [5, 11], '兔': [4, 10],
-        '龙': [1, 7], '蛇': [6, 12], '马': [3, 9], '羊': [2, 8],
-        '猴': [5, 11], '鸡': [4, 10], '狗': [1, 7], '猪': [6, 12]
+        '鼠': [2, 8], '牛': [4, 10], '虎': [1, 7], '兔': [6, 12],
+        '龙': [3, 9], '蛇': [5, 11], '马': [2, 8], '羊': [4, 10],
+        '猴': [1, 7], '鸡': [6, 12], '狗': [3, 9], '猪': [5, 11]
     }
     
     # 破月表（妨翁姑月）
@@ -75,9 +76,6 @@ class MarriageRuleChecker(EventRuleChecker):
         '辰': '蛇', '巳': '龙', '午': '兔', '未': '虎',
         '申': '牛', '酉': '鼠', '戌': '猪', '亥': '狗'
     }
-    
-    # 三娘煞日（农历）
-    SANNIAGSHA = [3, 7, 13, 18, 22, 27]
     
     # 杨公忌日（农历）
     YANGGONGJI = {
@@ -156,11 +154,15 @@ class MarriageRuleChecker(EventRuleChecker):
         '丑': {'天德': '庚', '月德': '辛'}
     }
     
-    # 建除十二神吉凶
-    # 黄道：除、危、定、执、成、开（吉）
-    # 黑道：建、满、平、收、闭、破（凶）
-    JIANCHU_YI = ['除', '危', '定', '执', '成', '开']
-    JIANCHU_JI = ['建', '满', '平', '收', '闭', '破']
+    # 建除十二神吉凶（用于嫁娶）
+    # 黄道通用口径：除、危、定、执、成、开为吉（黄道.py 小黄道表）
+    # 嫁娶专属口径：除、危、执 虽属黄道吉日，但均忌嫁娶——
+    #   见 黄道.py XIAO_HUANG_DAO_YIJI['除'/'危']['ji'] 含'嫁娶'、
+    #   婚嫁评分算法.py L923 _jianchu_ji={'除','危','执'}（-5分）、
+    #   主程序.py 嫁娶黄道段对 除/危/执 覆盖显示为 凶。
+    # 本表须与之保持一致，否则报告会同时出现"宜：建除除日"与"除日忌嫁娶"。
+    JIANCHU_YI = ['定', '成', '开']
+    JIANCHU_JI = ['建', '满', '平', '收', '闭', '破', '执', '除', '危']
     
     # 阴阳差错日
     YINYANG_CHACUO = [
@@ -189,12 +191,15 @@ class MarriageRuleChecker(EventRuleChecker):
         try:
             from ..shensha.marriage_shensha import (
                 get_jianchu, is_tiande_day, is_yuede_day,
-                is_bujiang_day, is_month_break, is_year_break, is_sili_sijue
+                is_bujiang_day, is_month_break, is_year_break, is_sili_sijue,
+                get_yintai, get_yangqi
             )
             self.get_jianchu = get_jianchu
             self.is_tiande_day = is_tiande_day
             self.is_yuede_day = is_yuede_day
             self.is_bujiang_day = is_bujiang_day
+            self.get_yintai = get_yintai
+            self.get_yangqi = get_yangqi
             self.is_month_break = is_month_break
             self.is_year_break = is_year_break
             self.is_sili_sijue = is_sili_sijue
@@ -287,6 +292,123 @@ class MarriageRuleChecker(EventRuleChecker):
         
         return None
     
+    def _get_owner_year_zhi(self, owner):
+        """获取事主年支（地支）"""
+        # 地支对应生肖
+        zodiac_to_zhi = {
+            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
+        }
+        
+        # 先尝试从生肖获取
+        zodiac = owner.get('生肖', '')
+        if zodiac:
+            return zodiac_to_zhi.get(zodiac, '')
+        
+        # 从birth_date计算
+        if 'birth_date' in owner:
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_date'],
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                return birth_sizhu['年柱'][1]
+            except:
+                pass
+        
+        # 从birth_year计算
+        if 'birth_year' in owner:
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_year'],
+                    owner.get('birth_month', 1),
+                    owner.get('birth_day', 1),
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                return birth_sizhu['年柱'][1]
+            except:
+                pass
+        
+        return ''
+
+    def _get_owner_month_gz(self, owner):
+        """获取事主生月月柱（月干, 月支）：bazi字段 → 直接键 → birth_date反算"""
+        bazi = owner.get('bazi')
+        if isinstance(bazi, dict):
+            yue_gan = bazi.get('yue_gan', '') or bazi.get('month_gan', '')
+            yue_zhi = bazi.get('yue_zhi', '') or bazi.get('month_zhi', '')
+            if yue_gan and yue_zhi:
+                return yue_gan, yue_zhi
+            yue_zhu = bazi.get('月柱', '')
+            if len(yue_zhu) >= 2:
+                return yue_zhu[0], yue_zhu[1]
+        yue_gan = owner.get('yue_gan', '') or owner.get('month_gan', '') or owner.get('月干', '')
+        yue_zhi = owner.get('yue_zhi', '') or owner.get('month_zhi', '') or owner.get('月支', '')
+        if yue_gan and yue_zhi:
+            return yue_gan, yue_zhi
+        if owner.get('birth_date'):
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_date'],
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                yue_zhu = birth_sizhu.get('月柱', '')
+                if len(yue_zhu) >= 2:
+                    return yue_zhu[0], yue_zhu[1]
+            except Exception:
+                pass
+        return '', ''
+
+    def _get_owner_day_zhi(self, owner):
+        """获取事主日柱地支"""
+        # 先尝试从bazi字段获取
+        if 'bazi' in owner:
+            bazi = owner['bazi']
+            if isinstance(bazi, dict):
+                ri_zhi = bazi.get('ri_zhi', '') or bazi.get('day_zhi', '')
+                if ri_zhi:
+                    return ri_zhi
+                ri_zhu = bazi.get('日柱', '')
+                if ri_zhu and len(ri_zhu) >= 2:
+                    return ri_zhu[1]
+        
+        # 从birth_date计算日柱
+        if 'birth_date' in owner:
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_date'],
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                return birth_sizhu['日柱'][1]
+            except:
+                pass
+        
+        # 从birth_year等计算
+        if 'birth_year' in owner:
+            try:
+                from ..四柱计算器 import calculate_sizhu
+                birth_sizhu = calculate_sizhu(
+                    owner['birth_year'],
+                    owner.get('birth_month', 1),
+                    owner.get('birth_day', 1),
+                    owner.get('birth_hour', 12),
+                    owner.get('birth_minute', 0)
+                )
+                return birth_sizhu['日柱'][1]
+            except:
+                pass
+        
+        return ''
+    
     def _check_rules(self, sizhu, owners=None, **kwargs):
         """检查婚嫁规则"""
         yi_list = []
@@ -301,11 +423,11 @@ class MarriageRuleChecker(EventRuleChecker):
             # 基本的宜事项
             yi_list.append('嫁娶')
             
-            return yi_list, ji_list
+            return yi_list, ji_list, False, ""
         
         date_obj = self._sizhu_to_date(sizhu)
         if not date_obj:
-            return yi_list, ji_list
+            return yi_list, ji_list, False, ""
         
         lunar_info = self._get_lunar_info(date_obj)
         lunar_month = lunar_info.get('month_num', date_obj.month)
@@ -323,13 +445,60 @@ class MarriageRuleChecker(EventRuleChecker):
         # 4. 检查凶神
         self._check_bad_gods(lunar_month, lunar_day, sizhu, owners, yi_list, ji_list)
         
-        # 5. 综合判断
+        # 5. 检查事主相冲（新增）
+        self._check_shengxiao_chong(sizhu, owners, ji_list)
+        
+        # 6. 综合判断
+        # 2026-09-03 用户宜忌矛盾修复：当存在忌项时，不再向ji_list追加泛项"嫁娶"——
+        # 因为具体神煞（杨公忌/黄沙日/红纱日/三娘煞/四离四绝等）已在前述#1~#5
+        # 明确列出，追加"嫁娶"会造成"嫁娶同时出现在宜与忌"的矛盾展示。
+        # 当无任何忌项时，才主动标记宜"嫁娶"，保证双向清晰。
         if not ji_list:
             yi_list.append('嫁娶')
-        else:
-            ji_list.append('嫁娶')
         
-        return yi_list, ji_list
+        # 7. 检查一票否决项
+        veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
+        if veto:
+            return yi_list, ji_list, True, veto_reason
+        
+        return yi_list, ji_list, False, ""
+    
+    def _check_veto_items(self, sizhu, owners, ji_list):
+        """
+        检查一票否决项
+        
+        嫁娶一票否决项：
+        1. 禁婚年 - 命中禁婚年
+        2. 月破日 - 诸事不宜
+        3. 岁破日 - 诸事不宜
+        4. 四离四绝日 - 大事不宜
+        5. 红纱日 - 婚嫁大忌
+        6. 杨公忌日 - 百事不宜
+        7. 重丧日 - 婚嫁大忌
+        8. 真三娘煞 - 婚嫁大忌
+        9. 女命忌嫁日（当梁勾绞） - 婚嫁大忌
+        10. 阴阳差错日 - 婚嫁大忌
+        11. 冲新娘日柱 - 大忌
+        """
+        veto_reasons = []
+        
+        # 从ji_list中检查是否有否决级别的禁忌
+        veto_keywords = [
+            '禁婚年', '月破日', '岁破日', '四离四绝日',
+            '红纱日', '杨公忌', '重丧日', '真三娘煞',
+            '阴阳差错日', '女命忌嫁日', '冲新娘'
+        ]
+        
+        for ji in ji_list:
+            for keyword in veto_keywords:
+                if keyword in ji:
+                    veto_reasons.append(ji)
+                    break
+        
+        if veto_reasons:
+            return True, "、".join(veto_reasons)
+        
+        return False, ""
     
     def _check_year_gods(self, sizhu, owners, yi_list, ji_list):
         """检查年神"""
@@ -462,10 +631,9 @@ class MarriageRuleChecker(EventRuleChecker):
             except:
                 pass
         
-        # 三娘煞
-        if lunar_day in self.SANNIAGSHA:
-            ji_list.append(f'三娘煞（{lunar_day}日）')
-        
+        # 三娘煞：按传统口径只有"真三娘煞"（农历日与干支日同时满足）才为禁忌，
+        # 仅农历日相符的"假三娘煞"不再列入（见下方真三娘煞判定）
+
         # 杨公忌
         if lunar_month in self.YANGGONGJI:
             if lunar_day in self.YANGGONGJI[lunar_month]:
@@ -543,22 +711,115 @@ class MarriageRuleChecker(EventRuleChecker):
                     if zixing:
                         if (day_gan, zixing) in self.GAN_CHONG or (zixing, day_gan) in self.GAN_CHONG:
                             ji_list.append('冲子星')
-                    
-                    # 阴胎：日柱天干后两位，地支后三位
-                    gan_idx = self.TIANGAN.index(bride_ri_gan) if bride_ri_gan in self.TIANGAN else 0
-                    zhi_idx = self.DIZHI.index(sizhu.get('day_zhi', '子')) if sizhu.get('day_zhi', '子') in self.DIZHI else 0
-                    
-                    yintai_gan = self.TIANGAN[(gan_idx + 2) % 10]
-                    yintai_zhi = self.DIZHI[(zhi_idx + 3) % 12]
-                    
-                    # 阳气：日柱天干后一位，地支后一位
-                    yangqi_gan = self.TIANGAN[(gan_idx + 1) % 10]
-                    yangqi_zhi = self.DIZHI[(zhi_idx + 1) % 12]
-                    
-                    if day_gan == yintai_gan and day_zhi == yintai_zhi:
-                        ji_list.append('犯阴胎')
-                    if day_gan == yangqi_gan and day_zhi == yangqi_zhi:
-                        ji_list.append('犯阳气')
+
+        # 犯阴胎 / 犯阳气（只依赖双方生月月柱，独立于新娘日柱 ri_gan）
+        # 典籍（《协纪辨方书》嫁娶："日时勿冲犯阴胎阳气"）：日支与胎元地支六冲即列大忌；
+        # 时支冲不入日课总分，由【十二时辰婚嫁吉凶】表判该时辰禁用。
+        # 【之前错误】：①阳气曾误作"干+3支+1"对称公式；②曾误判"日柱干支==胎元干支"；
+        # ③旧代码置于"新娘bazi含ri_gan"守卫内且只认 owner['bazi']，birth_date 形态静默失效。
+        if owners and day_zhi:
+            _zhichong_map = {'子': '午', '午': '子', '丑': '未', '未': '丑',
+                             '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
+                             '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳'}
+            _done_yintai, _done_yangqi = False, False
+            for owner in owners:
+                try:
+                    if not _done_yintai and self._is_female(owner) \
+                            and hasattr(self, 'get_yintai') and self.get_yintai:
+                        _b_yg, _b_yz = self._get_owner_month_gz(owner)
+                        if _b_yg and _b_yz:
+                            yintai_tuple = self.get_yintai(_b_yg, _b_yz)
+                            if yintai_tuple and day_zhi == _zhichong_map.get(yintai_tuple[1]):
+                                ji_list.append('犯阴胎')
+                            _done_yintai = True
+                    elif not _done_yangqi and not self._is_female(owner) \
+                            and hasattr(self, 'get_yangqi') and self.get_yangqi:
+                        _g_yg, _g_yz = self._get_owner_month_gz(owner)
+                        if _g_yg and _g_yz:
+                            yangqi_tuple = self.get_yangqi(_g_yg, _g_yz)
+                            if yangqi_tuple and day_zhi == _zhichong_map.get(yangqi_tuple[1]):
+                                ji_list.append('犯阳气')
+                            _done_yangqi = True
+                except Exception:
+                    continue
+
+    def _check_shengxiao_chong(self, sizhu, owners, ji_list):
+        """
+        检查四柱与事主生肖相冲（嫁娶专用）
+        传统择日：日 > 年 > 月 > 时；女方被日柱冲为大忌
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表（男女双方）
+            ji_list: 忌项列表，会被修改
+        """
+        if not owners:
+            return
+        
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
+        if not day_zhi:
+            return
+        
+        # 地支六冲表（键值都是地支）
+        chong_map = {
+            '子': '午', '午': '子',
+            '丑': '未', '未': '丑',
+            '寅': '申', '申': '寅',
+            '卯': '酉', '酉': '卯',
+            '辰': '戌', '戌': '辰',
+            '巳': '亥', '亥': '巳'
+        }
+        
+        # 检查每个事主
+        for owner in owners:
+            name = owner.get('name', '事主')
+            
+            # 获取事主年支（地支）
+            owner_zhi = self._get_owner_year_zhi(owner)
+            
+            if not owner_zhi:
+                continue
+            
+            # 判断是否为女方（新娘）
+            is_bride = self._is_female(owner)
+            target_chong_zhi = chong_map.get(owner_zhi, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查日柱（对女方最重要）- 使用日柱地支而非生肖
+            owner_day_zhi = self._get_owner_day_zhi(owner)
+            if owner_day_zhi:
+                day_chong_zhi = chong_map.get(owner_day_zhi, '')
+                if day_zhi == day_chong_zhi:
+                    if is_bride:
+                        ji_list.append(f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}')
+                    else:
+                        ji_list.append(f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}')
+            else:
+                # 无日柱信息时回退到生肖检查
+                if day_zhi == target_chong_zhi:
+                    if is_bride:
+                        ji_list.append(f'日柱{day_zhi}冲新娘{name}')
+                    else:
+                        ji_list.append(f'日柱{day_zhi}冲{name}')
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                ji_list.append(f'年柱{year_zhi}冲{name}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                ji_list.append(f'月柱{month_zhi}冲{name}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                ji_list.append(f'时柱{hour_zhi}冲{name}')
 
 # 测试
 if __name__ == '__main__':

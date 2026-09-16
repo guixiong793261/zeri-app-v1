@@ -44,8 +44,8 @@ class ConstructionRuleChecker(EventRuleChecker):
     """
     
     # 建除十二神分类
-    JIANCHU_YI = ['成', '开', '定']
-    JIANCHU_JI = ['破', '闭', '平']
+    JIANCHU_YI = ['除', '危', '定', '执', '成', '开']
+    JIANCHU_JI = ['建', '满', '平', '收', '闭', '破']
     
     # 二十四山五行映射
     SHIERSHAN_WUXING = {
@@ -71,6 +71,13 @@ class ConstructionRuleChecker(EventRuleChecker):
     
     # 五行相克（日课克坐山为凶）
     KE = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
+
+    # 地支六冲表（扶山与岁破/冲主冲突检查用）
+    ZHI_CHONG = {
+        '子': '午', '午': '子', '丑': '未', '未': '丑',
+        '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
+        '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳'
+    }
     
     # 三合局
     SANHE_GROUPS = [
@@ -244,7 +251,7 @@ class ConstructionRuleChecker(EventRuleChecker):
         # 5. 山向相关规则（扶山）
         zuoshan = self._extract_zuoshan(shan_xiang)
         if zuoshan:
-            self._check_fushan(sizhu, zuoshan, yi_list, ji_list)
+            self._check_fushan(sizhu, zuoshan, owners, yi_list, ji_list)
             self._check_sanhe(sizhu, zuoshan, yi_list)
         
         # 6. 相主：忌与事主生肖相冲
@@ -261,7 +268,7 @@ class ConstructionRuleChecker(EventRuleChecker):
         self._add_general_yi_ji(yi_list, ji_list)
         
         # 9. 检查一票否决项
-        veto, veto_reason = self._check_veto_items(shan_xiang, sizhu, owners, ji_list)
+        veto, veto_reason = self._check_veto_items(shan_xiang, sizhu, owners, ji_list, yi_list)
         if veto:
             return yi_list, ji_list, True, veto_reason
         
@@ -334,10 +341,12 @@ class ConstructionRuleChecker(EventRuleChecker):
         except Exception:
             pass
     
-    def _check_fushan(self, sizhu, zuoshan, yi_list, ji_list):
+    def _check_fushan(self, sizhu, zuoshan, owners, yi_list, ji_list):
         """扶山：日课生扶坐山为吉，克制坐山为凶
         
         正确规则：日课五行生扶坐山为宜，日课克坐山为凶
+        冲突处理：生扶之支若冲太岁（岁破日）或冲事主年命，冲主大忌优先，
+        扶山虽得亦不单列为宜，转为忌项并标注矛盾点，避免宜忌自相矛盾
         """
         zuoshan_wuxing = self.SHIERSHAN_WUXING.get(zuoshan)
         if not zuoshan_wuxing:
@@ -358,8 +367,23 @@ class ConstructionRuleChecker(EventRuleChecker):
                 continue
             
             # 日课生坐山为吉（扶山）
+            # 冲突处理：生扶之支犯岁破/冲事主年命时，冲主大忌优先，扶山不救
             if self.SHENG.get(zhi_wuxing) == zuoshan_wuxing:
-                yi_list.append(f'{zuoshan}山得{zhi}生扶')
+                conflicts = []
+                if zhi == day_zhi and year_zhi and self.ZHI_CHONG.get(zhi) == year_zhi:
+                    conflicts.append(f'{zhi}冲太岁{year_zhi}（岁破日）')
+                if owners:
+                    clash_names = []
+                    for owner in owners:
+                        sx_zhi = self._get_owner_year_zhi(owner) or (owner.get('生肖', '') or '')
+                        if sx_zhi and self.ZHI_CHONG.get(zhi) == sx_zhi:
+                            clash_names.append(f"{owner.get('name', '事主')}生肖{sx_zhi}")
+                    if clash_names:
+                        conflicts.append(f'{zhi}冲{"、".join(clash_names)}')
+                if conflicts:
+                    ji_list.append(f'{zuoshan}山虽得{zhi}生扶，惟{"、".join(conflicts)}，冲主大忌优先，扶山不论')
+                else:
+                    yi_list.append(f'{zuoshan}山得{zhi}生扶')
                 return
             
             # 日课克坐山为凶
@@ -399,14 +423,28 @@ class ConstructionRuleChecker(EventRuleChecker):
         return '局'
     
     def _check_shengxiao_chong(self, sizhu, owners, ji_list):
-        """检查与事主生肖相冲"""
+        """
+        检查四柱与事主生肖相冲
+        传统择日：年=日 > 月 > 时；家长（宅主）一票否决
+        
+        参数:
+            sizhu: 四柱字典
+            owners: 事主列表
+            ji_list: 忌项列表，会被修改
+        """
         if not owners:
             return
         
+        # 获取四柱地支
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        
         if not day_zhi:
             return
         
+        # 地支六冲表
         chong_map = {
             '子': '午', '午': '子',
             '丑': '未', '未': '丑',
@@ -416,15 +454,54 @@ class ConstructionRuleChecker(EventRuleChecker):
             '巳': '亥', '亥': '巳'
         }
         
+        # 检查每个事主
         for owner in owners:
             name = owner.get('name', '事主')
+            role = owner.get('role', '').lower()
             shengxiao = owner.get('生肖', '')
             
             if not shengxiao:
                 shengxiao = self._get_owner_year_zhi(owner)
             
-            if shengxiao and chong_map.get(shengxiao) == day_zhi:
-                ji_list.append(f'与{name}生肖相冲')
+            if not shengxiao:
+                continue
+            
+            # 判断是否为家长/宅主（一票否决对象）
+            is_parent = role in ('家长', '宅主', '主人', '父', '母') or name in ('家长', '宅主', '父亲', '母亲')
+            target_chong_zhi = chong_map.get(shengxiao, '')
+            
+            if not target_chong_zhi:
+                continue
+            
+            # 检查年柱
+            if year_zhi == target_chong_zhi:
+                if is_parent:
+                    ji_list.append(f'家长{name}年命被年柱{year_zhi}冲，一票否决')
+                    return  # 直接返回，一票否决
+                else:
+                    ji_list.append(f'年柱{year_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查月柱
+            if month_zhi == target_chong_zhi:
+                if is_parent:
+                    ji_list.append(f'家长{name}年命被月柱{month_zhi}冲')
+                else:
+                    ji_list.append(f'月柱{month_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查日柱
+            if day_zhi == target_chong_zhi:
+                if is_parent:
+                    ji_list.append(f'家长{name}年命被日柱{day_zhi}冲，一票否决')
+                    return  # 直接返回，一票否决
+                else:
+                    ji_list.append(f'日柱{day_zhi}冲{name}生肖{shengxiao}')
+            
+            # 检查时柱
+            if hour_zhi == target_chong_zhi:
+                if is_parent:
+                    ji_list.append(f'家长{name}年命被时柱{hour_zhi}冲')
+                else:
+                    ji_list.append(f'时柱{hour_zhi}冲{name}生肖{shengxiao}')
     
     def _add_general_yi_ji(self, yi_list, ji_list):
         """添加通用修造动土宜忌"""
@@ -432,10 +509,8 @@ class ConstructionRuleChecker(EventRuleChecker):
         if yi_list and not ji_list:
             yi_list.append('修造')
             yi_list.append('动土')
-        # 如果有忌项但没有宜项，才添加通用忌
-        if ji_list and not yi_list:
-            ji_list.append('修造')
-            ji_list.append('动土')
+        # 注意：不再自动添加通用忌，避免被评分器一票否决
+        # 只有在明确有吉神宜修造时才添加宜项
     
     def _check_mountain_yearly_luck(self, shan_xiang, sizhu, yi_list, ji_list):
         """检查流年吉凶
@@ -455,14 +530,17 @@ class ConstructionRuleChecker(EventRuleChecker):
             luck = self.check_year_luck(shan_xiang, year_ganzhi)
             
             if luck:
-                if '大利' in luck:
-                    yi_list.append(f'{shan_xiang}{year_ganzhi}年{luck}')
-                elif '不利' in luck:
-                    ji_list.append(f'{shan_xiang}{year_ganzhi}年{luck}')
-                elif '权用' in luck:
-                    yi_list.append(f'{shan_xiang}{year_ganzhi}年{luck}')
-                elif '利' in luck and '不利' not in luck:
-                    yi_list.append(f'{shan_xiang}{year_ganzhi}年{luck}')
+                # 2026-09-01 修复：复合文本拆分，"大利。忌金神"不应整条进宜区
+                # 拆为 宜"{山}{年}大利" + 忌"{山}{年}忌金神"，宜忌分离
+                yi_note, ji_note = luck, ''
+                if '。忌' in luck:
+                    yi_note, ji_note = luck.split('。忌', 1)
+                if '不利' in yi_note:
+                    ji_list.append(f'{shan_xiang}{year_ganzhi}年{yi_note}')
+                elif yi_note:
+                    yi_list.append(f'{shan_xiang}{year_ganzhi}年{yi_note}')
+                if ji_note:
+                    ji_list.append(f'{shan_xiang}{year_ganzhi}年忌{ji_note}')
         except Exception:
             pass
     
@@ -477,11 +555,17 @@ class ConstructionRuleChecker(EventRuleChecker):
         try:
             month_names = ['正月', '二月', '三月', '四月', '五月', '六月',
                           '七月', '八月', '九月', '十月', '十一月', '十二月']
-            month_idx = date_obj.month - 1
-            if month_idx < 0 or month_idx >= 12:
-                return
-            
-            month_name = month_names[month_idx]
+            # 2026-09-01 修复：月利按节气月（命理月）判断，非公历月
+            # 原用 date_obj.month（公历）把 2026-02-17（寅月/正月）误查为"二月"
+            month_num = None
+            try:
+                from ..shensha.marriage_shensha import _get_lunar_month
+                month_num = _get_lunar_month(date_obj)  # 1=正月(寅月)...12=腊月(丑月)
+            except Exception:
+                month_num = None
+            if not month_num or month_num < 1 or month_num > 12:
+                month_num = date_obj.month  # 兜底：公历月近似
+            month_name = month_names[month_num - 1]
             month_data = self.check_month_luck(shan_xiang, month_name, bury=False)
             
             if month_data:
@@ -518,7 +602,15 @@ class ConstructionRuleChecker(EventRuleChecker):
             return
         
         try:
+            # 首先尝试使用完整的山向名称查找
             data = self.get_mountain_data(shan_xiang)
+            
+            # 如果找不到，尝试提取基础山向（去掉"兼"字及后面的部分）
+            if not data or 'avoid_info' not in data:
+                if '兼' in shan_xiang:
+                    base_shan_xiang = shan_xiang.split('兼')[0]
+                    data = self.get_mountain_data(base_shan_xiang)
+            
             if not data or 'avoid_info' not in data:
                 return
             
@@ -549,41 +641,82 @@ class ConstructionRuleChecker(EventRuleChecker):
                         ji_list.append(f'{shan_xiang}冲山：忌{chong_zhi}时')
             
             # 检查山家三煞
-            shanjia_sansha = avoid_info.get('shanjia_sansha', '')
-            if shanjia_sansha:
-                sansha_zhis = []
-                if '寅午戌' in shanjia_sansha:
-                    sansha_zhis = ['寅', '午', '戌']
-                elif '申子辰' in shanjia_sansha:
-                    sansha_zhis = ['申', '子', '辰']
-                elif '巳酉丑' in shanjia_sansha:
-                    sansha_zhis = ['巳', '酉', '丑']
-                elif '亥卯未' in shanjia_sansha:
-                    sansha_zhis = ['亥', '卯', '未']
+            shanjia_sansha_config = avoid_info.get('shanjia_sansha', '')
+            if shanjia_sansha_config:
+                # 处理字典格式（根据兼向不同）或字符串格式
+                if isinstance(shanjia_sansha_config, dict):
+                    # 字典格式：根据当前山向选择规则
+                    # 先尝试精确匹配
+                    shanjia_sansha = shanjia_sansha_config.get(shan_xiang, '')
+                    # 如果没有匹配，尝试使用第一个规则
+                    if not shanjia_sansha and shanjia_sansha_config:
+                        first_key = next(iter(shanjia_sansha_config))
+                        shanjia_sansha = shanjia_sansha_config[first_key]
+                else:
+                    # 字符串格式
+                    shanjia_sansha = shanjia_sansha_config
                 
-                for zhi in sansha_zhis:
-                    if year_zhi == zhi:
-                        ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}年')
-                    if month_zhi == zhi:
-                        ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}月')
-                    if day_zhi == zhi:
-                        ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}日')
+                if shanjia_sansha:
+                    sansha_zhis = []
+                    if '寅午戌' in shanjia_sansha:
+                        sansha_zhis = ['寅', '午', '戌']
+                    elif '申子辰' in shanjia_sansha:
+                        sansha_zhis = ['申', '子', '辰']
+                    elif '巳酉丑' in shanjia_sansha:
+                        sansha_zhis = ['巳', '酉', '丑']
+                    elif '亥卯未' in shanjia_sansha:
+                        sansha_zhis = ['亥', '卯', '未']
+                    
+                    for zhi in sansha_zhis:
+                        if year_zhi == zhi:
+                            ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}年')
+                        if month_zhi == zhi:
+                            ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}月')
+                        if day_zhi == zhi:
+                            ji_list.append(f'{shan_xiang}山家三煞：忌{zhi}日')
             
-            # 检查阴府
-            yinfu = avoid_info.get('yinfu', '')
-            if yinfu:
-                yinfu_gans = []
-                for gan in ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']:
-                    if gan in yinfu:
-                        yinfu_gans.append(gan)
+            # 检查阴府（使用新的配置表）
+            try:
+                from modules.二十四山择吉天机 import get_yinfu_config
                 
-                for gan in yinfu_gans:
-                    if year_gan == gan:
-                        ji_list.append(f'{shan_xiang}阴府：忌{gan}年干')
-                    if sizhu.get('month_gan') == gan:
-                        ji_list.append(f'{shan_xiang}阴府：忌{gan}月干')
-                    if sizhu.get('day_gan') == gan:
-                        ji_list.append(f'{shan_xiang}阴府：忌{gan}日干')
+                yinfu_config = get_yinfu_config(shan_xiang)
+                if yinfu_config:
+                    ji_gan_list = yinfu_config.get('忌干', [])
+                    yinfu_type = yinfu_config.get('type', '傍阴府')
+
+                    month_gan = sizhu.get('month_gan', '')
+                    day_gan = sizhu.get('day_gan', '')
+
+                    # 正阴府只检查日干和月干，不检查年干（太岁不受阴府制约）和时干
+                    for gan in ji_gan_list:
+                        if month_gan == gan:
+                            ji_list.append(f'{shan_xiang}{yinfu_type}：忌{gan}月干')
+                        if day_gan == gan:
+                            ji_list.append(f'{shan_xiang}{yinfu_type}：忌{gan}日干')
+            except ImportError:
+                # 如果无法导入配置，继续使用旧的文本解析方式
+                yinfu = avoid_info.get('yinfu', '')
+                if yinfu:
+                    # 正阴府：乙庚（主要忌日干，其次忌月干）
+                    zheng_yinfu = ['乙', '庚']
+                    # 傍阴府：丁壬、戊癸（扣分项）
+                    bang_yinfu = ['丁', '壬', '戊', '癸']
+                    month_gan = sizhu.get('month_gan', '')
+                    day_gan = sizhu.get('day_gan', '')
+
+                    # 正阴府只检查日干和月干，不检查年干（太岁不受阴府制约）和时干
+                    for gan in zheng_yinfu:
+                        if month_gan == gan:
+                            ji_list.append(f'{shan_xiang}正阴府：忌{gan}月干')
+                        if day_gan == gan:
+                            ji_list.append(f'{shan_xiang}正阴府：忌{gan}日干')
+
+                    # 傍阴府也只检查日干和月干
+                    for gan in bang_yinfu:
+                        if month_gan == gan:
+                            ji_list.append(f'{shan_xiang}傍阴府：忌{gan}月干')
+                        if day_gan == gan:
+                            ji_list.append(f'{shan_xiang}傍阴府：忌{gan}日干')
             
             # 检查山方煞
             shanfang_sha = avoid_info.get('shanfang_sha', {})
@@ -641,9 +774,14 @@ class ConstructionRuleChecker(EventRuleChecker):
             
             month = sizhu.get('month', 0)
             day = sizhu.get('day', 0)
+            year = sizhu.get('year', 0)
             
-            dongzhi_month = 12
-            is_after_dongzhi = month == dongzhi_month and day >= 22
+            # 使用精确节气判断冬至
+            try:
+                from ..二十四山择吉天机 import is_after_dongzhi
+                is_after_dongzhi = is_after_dongzhi(year, month, day)
+            except ImportError:
+                is_after_dongzhi = month == 12 and day >= 22
             
             if is_after_dongzhi:
                 key = 'dongzhi_hou'
@@ -655,81 +793,86 @@ class ConstructionRuleChecker(EventRuleChecker):
                 yun = info.get('yun', '')
                 ji = info.get('ji', '')
                 if yun and ji:
-                    ji_list.append(f'{shan_xiang}克山运：{yun}，{ji}')
+                    # 实际犯才报：山运纳音（如"己丑火"）受日课四柱纳音所克才入忌项，
+                    # 未犯不报，避免"忌X纳音克"说明文本无条件误报
+                    yun_wx = yun[-1:] if yun[-1] in '木火土金水' else ''
+                    # 忌纳音五行：优先从 ji 字段（如"忌水"）解析，失败则由山运五行反推
+                    ji_wx = ''
+                    for _wx in '木火土金水':
+                        if _wx in ji:
+                            ji_wx = _wx
+                            break
+                    if not ji_wx and yun_wx:
+                        ke_map = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'}
+                        for _wx, _sheng in ke_map.items():
+                            if _sheng == yun_wx:
+                                ji_wx = _wx
+                                break
+                    if not ji_wx:
+                        return
+                    # 日课四柱干支与纳音
+                    pillars = []
+                    for gz_key in ('年柱', '月柱', '日柱', '时柱'):
+                        gz = sizhu.get(gz_key, '')
+                        if isinstance(gz, str) and len(gz) >= 2:
+                            pillars.append((gz_key, gz[:2]))
+                    if not pillars:
+                        for pos in ('year', 'month', 'day', 'hour'):
+                            gan = sizhu.get(f'{pos}_gan', '')
+                            zhi = sizhu.get(f'{pos}_zhi', '')
+                            if gan and zhi:
+                                pillars.append((f'{pos}柱', gan + zhi))
+                    fan_sha = []
+                    try:
+                        from ..八字工具整合 import get_nayin
+                        for name, gz in pillars:
+                            nayin = get_nayin(gz)
+                            if nayin and nayin != '未知' and nayin[0] in '木火土金水' and nayin[0] == ji_wx:
+                                fan_sha.append(f'{name}{gz}纳音{nayin}')
+                    except ImportError:
+                        pass
+                    if fan_sha:
+                        ji_list.append(f'{shan_xiang}克山运：山运{yun}，日课{"、".join(fan_sha)}克山运，忌用')
+                    # 未犯克山运，不报
         except Exception:
             pass
     
-    def _check_veto_items(self, shan_xiang, sizhu, owners, ji_list):
+    def _check_veto_items(self, shan_xiang, sizhu, owners, ji_list, yi_list=None):
         """检查一票否决项
         
         根据传统择日学，以下事项应直接判为不合格：
-        1. 阴府（正阴府+傍阴府）- 修造大忌
-        2. 克山运 - 主宅气受损
-        3. 坐山犯三煞 - 修造大忌
-        4. 年冲事主 - 主事受冲不宜动土
+        1. 克山运 - 主宅气受损（但有吉神到山时可降级为警告）
+        2. 年冲事主（宅主/家长）- 主事受冲不宜动土
+        
+        注意：
+        - 正阴府和傍阴府已改为扣分项，不再作为一票否决项
+        - 月三煞已改为扣分项，不再作为一票否决项
+        - 克山运若有吉神（天德/月德/岁德等）到山，可制化降级
         """
         veto_reasons = []
         
-        # 1. 检查阴府（从ji_list中检查是否有阴府相关忌项）
-        for ji in ji_list:
-            if '阴府' in ji:
-                veto_reasons.append(ji)
+        # 吉神关键词：能制化克山运的吉神
+        JISHEN_KEYWORDS = ['天德', '月德', '岁德', '岁德合', '禄马贵人', '天乙贵人']
         
-        # 2. 检查克山运（从ji_list中检查）
+        # 1. 检查克山运（从ji_list中检查）
         for ji in ji_list:
             if '克山运' in ji:
-                veto_reasons.append(ji)
-        
-        # 3. 检查坐山犯三煞
-        if shan_xiang and self.has_mountain_data:
-            zuoshan = self._extract_zuoshan(shan_xiang)
-            if zuoshan:
-                # 检查月三煞
-                month_zhi = sizhu.get('month_zhi', '')
-                # 寅午戌月三煞在北方（亥子丑）
-                # 申子辰月三煞在南方（巳午未）
-                # 巳酉丑月三煞在东方（寅卯辰）
-                # 亥卯未月三煞在西方（申酉戌）
-                sansha_map = {
-                    '寅': ['亥', '子', '丑'],
-                    '午': ['亥', '子', '丑'],
-                    '戌': ['亥', '子', '丑'],
-                    '申': ['巳', '午', '未'],
-                    '子': ['巳', '午', '未'],
-                    '辰': ['巳', '午', '未'],
-                    '巳': ['寅', '卯', '辰'],
-                    '酉': ['寅', '卯', '辰'],
-                    '丑': ['寅', '卯', '辰'],
-                    '亥': ['申', '酉', '戌'],
-                    '卯': ['申', '酉', '戌'],
-                    '未': ['申', '酉', '戌']
-                }
-                sansha_zhis = sansha_map.get(month_zhi, [])
-                # 检查坐山是否在三煞方
-                zuoshan_zhis = []
-                if zuoshan in ['壬', '子', '癸']:
-                    zuoshan_zhis = ['子']
-                elif zuoshan in ['丑', '艮', '寅']:
-                    zuoshan_zhis = ['丑', '寅']
-                elif zuoshan in ['甲', '卯', '乙']:
-                    zuoshan_zhis = ['卯']
-                elif zuoshan in ['辰', '巽', '巳']:
-                    zuoshan_zhis = ['辰', '巳']
-                elif zuoshan in ['丙', '午', '丁']:
-                    zuoshan_zhis = ['午']
-                elif zuoshan in ['未', '坤', '申']:
-                    zuoshan_zhis = ['未', '申']
-                elif zuoshan in ['庚', '酉', '辛']:
-                    zuoshan_zhis = ['酉']
-                elif zuoshan in ['戌', '乾', '亥']:
-                    zuoshan_zhis = ['戌', '亥']
+                # 检查是否有吉神可制化
+                has_jishen = False
+                if yi_list:
+                    for yi in yi_list:
+                        for keyword in JISHEN_KEYWORDS:
+                            if keyword in yi:
+                                has_jishen = True
+                                break
+                        if has_jishen:
+                            break
                 
-                for zuoshan_zhi in zuoshan_zhis:
-                    if zuoshan_zhi in sansha_zhis:
-                        veto_reasons.append(f'{shan_xiang}坐山犯月三煞（{zuoshan}方为月三煞位）')
-                        break
+                if not has_jishen:
+                    veto_reasons.append(ji)
+                # 有吉神制化时不加入否决列表，保留为ji_list中的警告
         
-        # 4. 检查年冲事主
+        # 2. 检查年冲事主（宅主/家长）
         if owners:
             year_zhi = sizhu.get('year_zhi', '')
             chong_map = {
@@ -740,6 +883,7 @@ class ConstructionRuleChecker(EventRuleChecker):
             year_chong = chong_map.get(year_zhi, '')
             for owner in owners:
                 zodiac = owner.get('生肖', '')
+                is_zhuzhu = owner.get('is_zhuzhu', False)
                 if zodiac and year_chong:
                     zodiac_map = {
                         '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
@@ -748,8 +892,21 @@ class ConstructionRuleChecker(EventRuleChecker):
                     }
                     owner_zhi = zodiac_map.get(zodiac, '')
                     if owner_zhi == year_chong:
-                        veto_reasons.append(f'年支{year_zhi}冲事主{owner.get("name", "")}生肖{zodiac}')
-        
+                        if is_zhuzhu:
+                            veto_reasons.append(f'年支{year_zhi}冲宅主{owner.get("name", "")}生肖{zodiac}')
+
+        # 3. 检查岁破日（日支冲太岁年支）：岁破为修造大忌，一票否决
+        day_zhi = sizhu.get('day_zhi', '')
+        year_zhi = sizhu.get('year_zhi', '')
+        if day_zhi and year_zhi:
+            chong_map2 = {
+                '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+            }
+            if chong_map2.get(day_zhi, '') == year_zhi:
+                veto_reasons.append(f'岁破日：日支{day_zhi}冲太岁{year_zhi}，大事忌用')
+
         if veto_reasons:
             return True, "、".join(veto_reasons)
         

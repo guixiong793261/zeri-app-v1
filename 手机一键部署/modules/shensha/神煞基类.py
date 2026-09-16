@@ -20,8 +20,156 @@ except ImportError:
 class ShenShaChecker:
     """神煞检查器基类"""
     
+    # 时辰刑害表（时支与日支）：
+    #   六害：子未、丑午、寅巳、卯辰、申亥、酉戌 → -10分
+    #   相刑（两支互刑）：寅巳/巳申/寅申（无恩之刑）、丑戌/戌未/丑未（恃势之刑）、
+    #                    子卯（无礼之刑）、自刑辰午酉亥 → -15分
+    #   既刑又害（寅巳）：取重-15，不叠加
+    #   冲（六冲）不由本表处理：日破时已由get_lucky_hours单独禁用/扣分
+    XIANG_HAI_SETS = [('子', '未'), ('丑', '午'), ('寅', '巳'), ('卯', '辰'), ('申', '亥'), ('酉', '戌')]
+    XIANG_XING_SETS = [('寅', '巳'), ('巳', '申'), ('寅', '申'),
+                       ('丑', '戌'), ('戌', '未'), ('丑', '未'), ('子', '卯')]
+    ZI_XING_ZHI = {'辰', '午', '酉', '亥'}
+    
     def __init__(self):
         self.shensha_list = []
+
+    def _get_xinghai_penalty(self, day_zhi, hour_zhi):
+        """
+        时辰刑害扣分：时支与日支构成刑/害关系时的扣分值（2026-09-01 用户确认启动）
+        规则：刑 -15分、害 -10分、既刑又害取重-15（不叠加）、不禁用
+        Returns:
+            (penalty, reason): 扣分值(int，0为无) 与 说明文本(str，无则'')
+        """
+        if not day_zhi or not hour_zhi:
+            return 0, ''
+        pair = {day_zhi, hour_zhi}
+        is_xing = hour_zhi == day_zhi and hour_zhi in self.ZI_XING_ZHI  # 自刑
+        if not is_xing:
+            for a, b in self.XIANG_XING_SETS:
+                if pair == {a, b}:
+                    is_xing = True
+                    break
+        is_hai = any(pair == {a, b} for a, b in self.XIANG_HAI_SETS)
+        if is_xing and is_hai:
+            return -15, f'刑害日支（{hour_zhi}刑{day_zhi}）'
+        if is_xing:
+            return -15, f'刑日支（{hour_zhi}刑{day_zhi}）'
+        if is_hai:
+            return -10, f'害日支（{hour_zhi}害{day_zhi}）'
+        return 0, ''
+
+    def _get_xinghai_penalty_all(self, sizhu, hour_zhi):
+        """
+        时辰刑害扣分（年/月/日支全量检查，2026-09-15 修复时辰评分漏算）
+        时支与年支、月支、日支分别判定刑/害：刑-15、害-10、既刑又害取重-15；
+        不同地支的扣分叠加（如丑时遇戌日支刑、午年支害，则 -15 + -10 = -25）。
+        Args:
+            sizhu: 含 year_zhi/month_zhi/day_zhi 的字典
+            hour_zhi: 时支
+        Returns:
+            (total_penalty, reasons_list)
+        """
+        if not hour_zhi:
+            return 0, []
+        total = 0
+        reasons = []
+        branch_labels = [
+            (sizhu.get('year_zhi', ''), '年支'),
+            (sizhu.get('month_zhi', ''), '月支'),
+            (sizhu.get('day_zhi', ''), '日支'),
+        ]
+        for z, label in branch_labels:
+            if not z or z == hour_zhi:
+                continue
+            pair = {z, hour_zhi}
+            is_xing = any(pair == {a, b} for a, b in self.XIANG_XING_SETS)
+            is_hai = any(pair == {a, b} for a, b in self.XIANG_HAI_SETS)
+            if is_xing and is_hai:
+                total -= 15
+                reasons.append(f'刑害{label}（{hour_zhi}刑{z}）')
+            elif is_xing:
+                total -= 15
+                reasons.append(f'刑{label}（{hour_zhi}刑{z}）')
+            elif is_hai:
+                total -= 10
+                reasons.append(f'害{label}（{hour_zhi}害{z}）')
+        return total, reasons
+
+    def _get_sanhe_daycourse_bonus(self, sizhu, hour_zhi):
+        """
+        时支与日课年/月/日支构成三合局加分（2026-09-15 修复时辰评分漏算）
+        若时支与年/月/日支中任意两支同属一个三合局，则 +10 分。
+        Returns:
+            dict {'score': int, 'reason': str} 或 None
+        """
+        if not hour_zhi:
+            return None
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        branches = set(b for b in [year_zhi, month_zhi, day_zhi] if b)
+        if not branches:
+            return None
+        sanhe_groups = [
+            {'申', '子', '辰'}, {'寅', '午', '戌'},
+            {'巳', '酉', '丑'}, {'亥', '卯', '未'}
+        ]
+        for group in sanhe_groups:
+            if hour_zhi in group:
+                other = group - {hour_zhi}
+                if other.issubset(branches):
+                    members = sorted([hour_zhi] + list(other))
+                    return {'score': 10, 'reason': f'三合日课({",".join(members)})'}
+        return None
+
+    def _normalize_sizhu(self, sizhu_input):
+        """
+        标准化sizhu输入，支持两种格式：
+        1. 中文键名格式: {'年柱': '丙午', '月柱': '甲午', '日柱': '乙卯', '时柱': '丙子'}
+        2. 英文键名格式: {'year_gan': '丙', 'year_zhi': '午', 'month_gan': '甲', 'month_zhi': '午', ...}
+        
+        Args:
+            sizhu_input: 四柱信息（两种格式均可）
+            
+        Returns:
+            dict: 标准化后的四柱信息，包含year_gan, year_zhi, month_gan, month_zhi, day_gan, day_zhi, hour_gan, hour_zhi
+        """
+        if not isinstance(sizhu_input, dict):
+            return {}
+            
+        # 如果已经是英文键名格式，直接返回
+        if 'year_zhi' in sizhu_input:
+            return sizhu_input
+            
+        # 中文键名格式，需要转换
+        result = {}
+        
+        # 年柱
+        year_zhu = sizhu_input.get('年柱', '')
+        if len(year_zhu) >= 2:
+            result['year_gan'] = year_zhu[0]
+            result['year_zhi'] = year_zhu[1]
+        
+        # 月柱
+        month_zhu = sizhu_input.get('月柱', '')
+        if len(month_zhu) >= 2:
+            result['month_gan'] = month_zhu[0]
+            result['month_zhi'] = month_zhu[1]
+        
+        # 日柱
+        day_zhu = sizhu_input.get('日柱', '')
+        if len(day_zhu) >= 2:
+            result['day_gan'] = day_zhu[0]
+            result['day_zhi'] = day_zhu[1]
+        
+        # 时柱
+        hour_zhu = sizhu_input.get('时柱', '')
+        if len(hour_zhu) >= 2:
+            result['hour_gan'] = hour_zhu[0]
+            result['hour_zhi'] = hour_zhu[1]
+        
+        return result
     
     def check(self, sizhu, owners=None, **kwargs):
         """
@@ -35,6 +183,9 @@ class ShenShaChecker:
         Returns:
             list: 神煞列表
         """
+        # 标准化sizhu格式
+        sizhu = self._normalize_sizhu(sizhu)
+        
         self.shensha_list = []
         self._check_year_shensha(sizhu, **kwargs)
         self._check_month_shensha(sizhu, **kwargs)
@@ -44,17 +195,227 @@ class ShenShaChecker:
         return self.shensha_list
     
     def _check_year_shensha(self, sizhu, **kwargs):
-        """检查年神煞"""
-        pass
+        """检查年神煞（通用）"""
+        # 吉神
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 15, '岁德合，大吉')
+        if self._is_suihe(sizhu):
+            self._add_shensha('岁合', 12, '岁合主和合')
+        if self._is_sui_lu(sizhu):
+            self._add_shensha('岁禄', 15, '岁禄主财禄')
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 10, '天马星动，吉')
+        if self._is_fuxing(sizhu):
+            self._add_shensha('福星', 10, '福星主福泽，吉')
+        
+        # 凶煞
+        if self._is_jiesha(sizhu):
+            self._add_shensha('劫煞', -25, '劫煞忌大事')
+        if self._is_zaijiesha(sizhu):
+            self._add_shensha('灾煞', -25, '灾煞主灾祸')
+        if self._is_suisha(sizhu):
+            self._add_shensha('岁煞', -20, '岁煞忌用')
+        if self._is_huangfan(sizhu):
+            self._add_shensha('黄幡', -15, '黄幡主缠绕')
+        if self._is_baowei(sizhu):
+            self._add_shensha('豹尾', -12, '豹尾主损伤')
+        if self._is_flyinglian(sizhu):
+            self._add_shensha('飞廉', -12, '飞廉主虚惊')
+        if self._is_fubing(sizhu):
+            self._add_shensha('亡神', -12, '亡神主暗害')
+        if self._is_dahuo(sizhu):
+            self._add_shensha('大祸', -15, '大祸主凶')
+        if self._is_suixing(sizhu):
+            self._add_shensha('岁刑', -12, '岁刑主刑伤')
+        if self._is_suihai(sizhu):
+            self._add_shensha('岁害', -12, '岁害主妨害')
+        if self._is_lishi(sizhu):
+            self._add_shensha('力士', -10, '力士主冲撞')
+        if self._is_canguan(sizhu):
+            self._add_shensha('蚕官', -10, '蚕官主蚕灾')
+        if self._is_wugui(sizhu):
+            self._add_shensha('五鬼', -15, '五鬼主耗散')
+        if self._is_dasha(sizhu):
+            self._add_shensha('大煞', -12, '大煞忌用')
+        if self._is_jinshen(sizhu):
+            self._add_shensha('金神', -12, '金神主破败')
+        if self._is_pobai(sizhu):
+            self._add_shensha('破败', -10, '破败主破败')
+        if self._is_guanfu(sizhu):
+            self._add_shensha('官符', -10, '官符主官讼')
+        if self._is_chuguansheng(sizhu):
+            self._add_shensha('畜官', -10, '畜官主畜灾')
+        if self._is_sangmen(sizhu):
+            self._add_shensha('丧门', -15, '丧门主丧亡')
+        if self._is_diaoke(sizhu):
+            self._add_shensha('吊客', -12, '吊客主吊唁')
+        if self._is_bingfu(sizhu):
+            self._add_shensha('病符', -12, '病符主疾病')
+        if self._is_tianhao(sizhu):
+            self._add_shensha('天耗', -10, '天耗主损耗')
+        if self._is_dihao(sizhu):
+            self._add_shensha('地耗', -10, '地耗主损耗')
     
     def _check_month_shensha(self, sizhu, **kwargs):
-        """检查月神煞"""
-        pass
+        """检查月神煞（通用）"""
+        # 吉神
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合吉')
+        if self._is_yueen(sizhu):
+            self._add_shensha('月恩', 10, '月恩吉星')
+        if self._is_wufu(sizhu):
+            self._add_shensha('五富', 12, '五富主财富')
+        if self._is_jiqi(sizhu):
+            self._add_shensha('吉期', 10, '吉期主吉庆')
+        if self._is_yangde(sizhu):
+            self._add_shensha('阳德', 10, '阳德主阳和')
+        if self._is_yinde(sizhu):
+            self._add_shensha('阴德', 10, '阴德主阴德')
+        if self._is_wangri(sizhu):
+            self._add_shensha('王日', 10, '王日主旺相')
+        if self._is_guanri(sizhu):
+            self._add_shensha('官日', 8, '官日主官禄')
+        if self._is_fusheng(sizhu):
+            self._add_shensha('福生', 10, '福生主福生')
+        if self._is_jiqing(sizhu):
+            self._add_shensha('吉庆', 10, '吉庆主吉庆')
+        if self._is_yihou(sizhu):
+            self._add_shensha('益后', 12, '益后主益后代')
+        if self._is_xushi(sizhu):
+            self._add_shensha('续世', 10, '续世主续嗣')
+        if self._is_yaoan(sizhu):
+            self._add_shensha('要安', 8, '要安主安宁')
+        if self._is_bujiang(sizhu):
+            self._add_shensha('不将日', 15, '不将日吉')
+        if self._is_mingquan(sizhu):
+            self._add_shensha('鸣犬日', 12, '鸣犬日吉')
+        if self._is_mingquandui(sizhu):
+            self._add_shensha('鸣犬对日', 8, '鸣犬对日吉')
+        if self._is_yuekong(sizhu):
+            self._add_shensha('月空', 10, '月空主空亡')
+        
+        # 凶煞
+        if self._is_yuepo(sizhu):
+            self._add_shensha('月破', -30, '月破日诸事不宜')
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -15, '月厌凶日')
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -10, '月虚主虚耗')
+        if self._is_yuexing(sizhu):
+            self._add_shensha('月刑', -15, '月刑主刑伤')
+        if self._is_yuehai(sizhu):
+            self._add_shensha('月害', -15, '月害主妨害')
+        if self._is_tuwen(sizhu):
+            self._add_shensha('土瘟', -20, '土瘟忌用')
+        if self._is_dashi(sizhu):
+            self._add_shensha('大时', -12, '大时忌用')
+        if self._is_tianli(sizhu):
+            self._add_shensha('天吏', -15, '天吏主致死')
+        if self._is_sifei(sizhu):
+            self._add_shensha('四废', -15, '四废日凶')
+        if self._is_wumu(sizhu):
+            self._add_shensha('五墓', -12, '五墓主死丧')
+        if self._is_fuduan(sizhu):
+            self._add_shensha('伏断日', -15, '伏断日忌用')
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡', -20, '往亡日忌用')
+        if self._is_guiji(sizhu):
+            self._add_shensha('归忌', -15, '归忌日忌用')
     
     def _check_day_shensha(self, sizhu, **kwargs):
-        """检查日神煞"""
-        pass
+        """检查日神煞（通用）"""
+        # 吉神
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 20, '天德吉星，诸凶皆解')
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德吉星，诸事皆宜')
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 15, '天德合吉')
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合吉')
+        if self._is_sanqi(sizhu):
+            result = self._is_sanqi(sizhu)
+            if result:
+                self._add_shensha(f'三奇{result}', 15, f'{result}三奇照临')
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 12, '将星到座')
+        if self._is_yima(sizhu):
+            self._add_shensha('驿马', 10, '驿马日吉')
+        if self._is_tianma(sizhu):
+            self._add_shensha('天马', 8, '天马日吉')
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦', 25, '天赦日百无禁忌')
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓', 10, '母仓日吉')
+        if self._is_xiangri(sizhu):
+            self._add_shensha('相日', 10, '相日吉')
+        if self._is_minri(sizhu):
+            self._add_shensha('民日', 8, '民日吉')
+        if self._is_shangji(sizhu):
+            self._add_shensha('上吉日', 12, '上吉日吉')
+        if self._is_shengqi(sizhu):
+            self._add_shensha('生气', 10, '生气吉')
+        month_zhi_check = sizhu.get('month_zhi', '')
+        day_zhi_check = sizhu.get('day_zhi', '')
+        liuhe_map = {
+            '子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
+            '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
+            '巳': '申', '申': '巳', '午': '未', '未': '午'
+        }
+        if liuhe_map.get(month_zhi_check) == day_zhi_check:
+            self._add_shensha('六合', 12, '六合吉')
+        
+        sanhe_sets = [
+            {'申', '子', '辰'}, {'寅', '午', '戌'},
+            {'巳', '酉', '丑'}, {'亥', '卯', '未'}
+        ]
+        for s in sanhe_sets:
+            if month_zhi_check in s and day_zhi_check in s and month_zhi_check != day_zhi_check:
+                self._add_shensha('三合', 10, '三合吉')
+                break
+        
+        # 凶煞
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
+        if self._is_shousi_day(sizhu):
+            self._add_shensha('受死日', -22, '受死日忌用')
+        if self._is_wangwang(sizhu):
+            self._add_shensha('往亡日', -20, '往亡日忌用')
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -35, '四离日大忌')
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -35, '四绝日大忌')
+        if self._is_guchen_guasu(sizhu):
+            self._add_shensha('孤辰寡宿', -15, '孤辰寡宿凶')
+        if self._is_hongsha(sizhu):
+            self._add_shensha('红砂日', -15, '红砂日凶')
+        if self._is_yanggongji(sizhu):
+            self._add_shensha('杨公忌日', -20, '杨公忌日百事不宜')
+        if self._is_fanzhi(sizhu):
+            self._add_shensha('反支日', -12, '反支日凶')
+        if self._is_shangshuo(sizhu):
+            self._add_shensha('上朔日', -10, '上朔日凶')
+        if self._is_kuigang(sizhu):
+            self._add_shensha('魁罡日', -15, '魁罡日凶')
     
+    def _hour_delta(self, name, default):
+        """
+        时辰项目分值（2026-09-16 口径统一）：
+        与日课神煞同名的项目（如"日破时"）走 modules/事项标准.py 的 SHENSHA_SCORES
+        单一表，按 self._std_event 规范事项取数，保证选时/选日同名同价；
+        时辰专属项（贵人时、禄神时、冲坐山等）未登记时沿用调用处默认值。
+        """
+        try:
+            from ..事项标准 import shensha_score as _shensha_score
+            _resolved = _shensha_score(getattr(self, '_std_event', None), name, None)
+            if _resolved is not None:
+                return _resolved
+        except Exception:
+            pass
+        return default
+
     def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""
         pass
@@ -65,18 +426,32 @@ class ShenShaChecker:
     
     def _add_shensha(self, name, score, description):
         """
-        添加神煞
-        
+        添加神煞（自动去重，同一名称只保留首次添加）
+
         Args:
             name: 神煞名称
-            score: 分数
+            score: 分数（默认值）
             description: 描述
         """
-        self.shensha_list.append({
-            'name': name,
-            'score': score,
-            'description': description
-        })
+        # 去重检查
+        existing_names = [s['name'] for s in self.shensha_list]
+        if name not in existing_names:
+            # 2026-09-16 口径统一：分值以 modules/事项标准.py 的 SHENSHA_SCORES
+            # 单一表为准（按 self._std_event 规范事项取数）；表中未登记的神煞
+            # （动态名如"三奇{xx}"、或同名但分值随上下文变化者）沿用调用处默认值，
+            # 保证任何情况下评分行为不回退。
+            try:
+                from ..事项标准 import shensha_score as _shensha_score
+                _resolved = _shensha_score(getattr(self, '_std_event', None), name, score)
+                if _resolved is not None:
+                    score = _resolved
+            except Exception:
+                pass
+            self.shensha_list.append({
+                'name': name,
+                'score': score,
+                'description': description
+            })
     
     # ============ 通用吉星检查方法 ============
     
@@ -169,12 +544,12 @@ class ShenShaChecker:
         xingqi = ['壬', '癸', '辛']
         xingqi_count = sum(1 for g in xingqi if g in all_gans)
         
-        # 有两奇以上为吉
-        if riqi_count >= 2:
+        # 三奇需齐全为吉（遵循《协纪辨方书》标准，三位齐全方为真奇）
+        if riqi_count >= 3:
             return '日'
-        if yueqi_count >= 2:
+        if yueqi_count >= 3:
             return '月'
-        if xingqi_count >= 2:
+        if xingqi_count >= 3:
             return '星'
         
         return None
@@ -202,3 +577,1598 @@ class ShenShaChecker:
         
         jiangxing_list = sanhe_groups.get(day_zhi, [])
         return month_zhi in jiangxing_list
+    
+    # ============ 补充缺失的吉神检查方法 ============
+    
+    def _is_tianyuan(self, sizhu):
+        """天愿日
+        天愿：正月甲、二月乙、三月丙、四月丁、五月戊、六月己
+              七月庚、八月辛、九月壬、十月癸、十一月甲、十二月乙
+        """
+        month_idx = 0
+        month_gan_map = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙']
+        day_gan = sizhu.get('day_gan', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        
+        zhi_order = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑']
+        if month_zhi in zhi_order:
+            month_idx = zhi_order.index(month_zhi)
+            expected_gan = month_gan_map[month_idx]
+            return day_gan == expected_gan
+        return False
+    
+    def _is_yueen(self, sizhu):
+        """月恩日
+        月恩：正月寅、二月亥、三月申、四月巳、五月寅、六月亥
+              七月申、八月巳、九月寅、十月亥、十一月申、十二月巳
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        yueen_map = {
+            '寅': '寅', '卯': '亥', '辰': '申', '巳': '巳',
+            '午': '寅', '未': '亥', '申': '申', '酉': '巳',
+            '戌': '寅', '亥': '亥', '子': '申', '丑': '巳'
+        }
+        return day_zhi == yueen_map.get(month_zhi)
+    
+    def _is_sixiang(self, sizhu):
+        """四相日
+        春（寅卯辰月）：亥子日
+        夏（巳午未月）：寅卯日
+        秋（申酉戌月）：辰戌丑未日
+        冬（亥子丑月）：申酉日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi in ['亥', '子']
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi in ['寅', '卯']
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi in ['辰', '戌', '丑', '未']
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi in ['申', '酉']
+        return False
+    
+    def _is_shide(self, sizhu):
+        """时德日
+        时德：春辰巳午日、夏未申酉日、秋戌亥子日、冬丑寅卯日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi in ['辰', '巳', '午']
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi in ['未', '申', '酉']
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi in ['戌', '亥', '子']
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi in ['丑', '寅', '卯']
+        return False
+    
+    def _is_minri(self, sizhu):
+        """民日
+        民日：春丑辰未戌日、夏丑辰未戌日、秋丑辰未戌日、冬丑辰未戌日
+        （四季皆用）
+        """
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['丑', '辰', '未', '戌']
+    
+    def _is_tianma(self, sizhu):
+        """天马日
+        天马：寅午戌年/日在申子辰
+              申子辰年/日在寅午戌
+              亥卯未年/日在巳酉丑
+              巳酉丑年/日在亥卯未
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        tianma_map = {
+            '寅': '申', '午': '申', '戌': '申',
+            '申': '寅', '子': '寅', '辰': '寅',
+            '巳': '亥', '酉': '亥', '丑': '亥',
+            '亥': '巳', '卯': '巳', '未': '巳'
+        }
+        
+        # 天马是对宫，需要看对冲
+        chong_map = {'申': '寅', '寅': '申', '子': '午', '午': '子', 
+                     '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳',
+                     '酉': '卯', '卯': '酉', '丑': '未', '未': '丑'}
+        
+        # 天马查法：年支对宫
+        duigong = chong_map.get(year_zhi, '')
+        return day_zhi == duigong
+    
+    # ============ 补充缺失的凶煞检查方法 ============
+    
+    def _is_jiesha(self, sizhu):
+        """劫煞
+        劫煞：申子辰年在亥、亥卯未年在申、寅午戌年在巳、巳酉丑年在寅
+        即年支三合局的首支前一位（四孟）
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        jiesha_map = {
+            '申': '亥', '子': '亥', '辰': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '寅': '巳', '午': '巳', '戌': '巳',
+            '巳': '寅', '酉': '寅', '丑': '寅'
+        }
+        return day_zhi == jiesha_map.get(year_zhi)
+    
+    def _is_zaijiesha(self, sizhu):
+        """灾煞（七杀）
+        灾煞：申子辰年在午、亥卯未年在酉、寅午戌年在卯、巳酉丑年在子
+        即劫煞对冲位
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        jiesha_map = {
+            '申': '亥', '子': '亥', '辰': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '寅': '巳', '午': '巳', '戌': '巳',
+            '巳': '寅', '酉': '寅', '丑': '寅'
+        }
+        
+        chong_map = {'子': '午', '午': '子', '卯': '酉', '酉': '卯',
+                     '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳',
+                     '申': '寅', '寅': '申', '未': '丑', '丑': '未'}
+        
+        jiesha_zhi = jiesha_map.get(year_zhi, '')
+        if jiesha_zhi:
+            zaijiesha_zhi = chong_map.get(jiesha_zhi, '')
+            return day_zhi == zaijiesha_zhi
+        return False
+    
+    def _is_yuesha(self, sizhu):
+        """月煞（月虚）
+        月煞：申子辰月在亥、亥卯未月在申、寅午戌月在巳、巳酉丑月在寅
+        与劫煞类似，但按月支查
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        yuesha_map = {
+            '申': '亥', '子': '亥', '辰': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '寅': '巳', '午': '巳', '戌': '巳',
+            '巳': '寅', '酉': '寅', '丑': '寅'
+        }
+        return day_zhi == yuesha_map.get(month_zhi)
+    
+    def _is_yueyan(self, sizhu):
+        """月厌
+        月厌：正月在戌、二月在酉、三月在申、四月在未
+              五月在午、六月在巳、七月在辰、八月在卯
+              九月在寅、十月在丑、十一月在子、十二月在亥
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        yueyan_map = {
+            '寅': '戌', '卯': '酉', '辰': '申', '巳': '未',
+            '午': '午', '未': '巳', '申': '辰', '酉': '卯',
+            '戌': '寅', '亥': '丑', '子': '子', '丑': '亥'
+        }
+        return day_zhi == yueyan_map.get(month_zhi)
+    
+    def _is_dashi(self, sizhu):
+        """大时（咸池）
+        大时：春在酉、夏在子、秋在卯、冬在午
+        即四季的仲月对冲位
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '酉'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '子'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '卯'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '午'
+        return False
+    
+    def _is_tianli(self, sizhu):
+        """天吏（致死）
+        天吏：春在午、夏在酉、秋在子、冬在卯
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '午'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '酉'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '子'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '卯'
+        return False
+    
+    def _is_sifei(self, sizhu):
+        """四废日
+        四废：春在庚申、夏在壬子、秋在甲寅、冬在丙午
+        即春月见庚日、夏月见壬日、秋月见甲日、冬月见丙日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_gan == '庚'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_gan == '壬'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_gan == '甲'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_gan == '丙'
+        return False
+    
+    def _is_wumu(self, sizhu):
+        """五墓日
+        五墓：春在未、夏在戌、秋在丑、冬在辰
+        即四季的墓库位
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '未'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '戌'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '丑'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '辰'
+        return False
+    
+    # ============ 通用凶煞检查方法（子类通用） ============
+    
+    def _get_solar_term_dates(self, year, term_indices):
+        """获取指定年份的指定节气日期列表
+        
+        Args:
+            year: 年份
+            term_indices: 节气索引列表（sxtwl索引）
+        
+        Returns:
+            list: 节气对应的datetime.date对象列表
+        """
+        try:
+            import sxtwl
+            from datetime import datetime, timedelta, date as date_type
+            
+            jq_list = sxtwl.getJieQiByYear(year)
+            term_dates = []
+            
+            for idx in term_indices:
+                if idx < len(jq_list):
+                    jd = jq_list[idx].jd
+                    dd = sxtwl.JD2DD(jd)
+                    dt = datetime(int(dd.Y), int(dd.M), int(dd.D), int(dd.h), int(dd.m), int(dd.s))
+                    term_dates.append(dt.date())
+            
+            return term_dates
+        except ImportError:
+            return []
+        except Exception:
+            return []
+    
+    def _is_sili(self, sizhu):
+        """四离日（春分、夏至、秋分、冬至前一日）
+        精确计算版：使用sxtwl获取精确节气日期
+        """
+        try:
+            from datetime import date as date_type, timedelta
+            
+            target_date = None
+            
+            if 'date' in sizhu:
+                target_date = sizhu['date']
+                if not isinstance(target_date, date_type):
+                    target_date = None
+            
+            if target_date is None:
+                year = sizhu.get('year')
+                month = sizhu.get('month')
+                day = sizhu.get('day')
+                if year and month and day:
+                    try:
+                        target_date = date_type(int(year), int(month), int(day))
+                    except (ValueError, TypeError):
+                        return False
+            
+            if target_date is None:
+                return False
+            
+            year = target_date.year
+            
+            # 四离日对应的节气索引：春分(3)、夏至(9)、秋分(15)、冬至(21)
+            sili_indices = [3, 9, 15, 21]
+            
+            # 获取当年的节气日期
+            term_dates = self._get_solar_term_dates(year, sili_indices)
+            
+            # 如果目标日期在立春之前，需要检查上一年的冬至
+            lichun_dates = self._get_solar_term_dates(year, [0])
+            if lichun_dates and target_date < lichun_dates[0]:
+                prev_year_term_dates = self._get_solar_term_dates(year - 1, [21])
+                term_dates = prev_year_term_dates + term_dates
+            
+            # 如果目标日期在大寒之后，需要检查下一年的春分
+            dahan_dates = self._get_solar_term_dates(year, [23])
+            if dahan_dates and target_date > dahan_dates[0]:
+                next_year_term_dates = self._get_solar_term_dates(year + 1, [3])
+                term_dates = term_dates + next_year_term_dates
+            
+            # 检查目标日期是否是某个节气的前一天
+            for term_date in term_dates:
+                if target_date == term_date - timedelta(days=1):
+                    return True
+            
+            return False
+        except Exception:
+            return False
+    
+    def _is_sijue(self, sizhu):
+        """四绝日（立春、立夏、立秋、立冬前一日）
+        精确计算版：使用sxtwl获取精确节气日期
+        """
+        try:
+            from datetime import date as date_type, timedelta
+            
+            target_date = None
+            
+            if 'date' in sizhu:
+                target_date = sizhu['date']
+                if not isinstance(target_date, date_type):
+                    target_date = None
+            
+            if target_date is None:
+                year = sizhu.get('year')
+                month = sizhu.get('month')
+                day = sizhu.get('day')
+                if year and month and day:
+                    try:
+                        target_date = date_type(int(year), int(month), int(day))
+                    except (ValueError, TypeError):
+                        return False
+            
+            if target_date is None:
+                return False
+            
+            year = target_date.year
+            
+            # 四绝日对应的节气索引：立春(0)、立夏(6)、立秋(12)、立冬(18)
+            sijue_indices = [0, 6, 12, 18]
+            
+            # 获取当年的节气日期
+            term_dates = self._get_solar_term_dates(year, sijue_indices)
+            
+            # 如果目标日期在立春之前，需要检查上一年的立冬
+            lichun_dates = self._get_solar_term_dates(year, [0])
+            if lichun_dates and target_date < lichun_dates[0]:
+                prev_year_term_dates = self._get_solar_term_dates(year - 1, [18])
+                term_dates = prev_year_term_dates + term_dates
+            
+            # 如果目标日期在立冬之后，需要检查下一年的立春
+            lidong_dates = self._get_solar_term_dates(year, [18])
+            if lidong_dates and target_date > lidong_dates[0]:
+                next_year_term_dates = self._get_solar_term_dates(year + 1, [0])
+                term_dates = term_dates + next_year_term_dates
+            
+            # 检查目标日期是否是某个节气的前一天
+            for term_date in term_dates:
+                if target_date == term_date - timedelta(days=1):
+                    return True
+            
+            return False
+        except Exception:
+            return False
+    
+    def _is_shie_dabai(self, sizhu):
+        """十恶大败日
+        甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥
+        """
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not day_gan or not day_zhi:
+            return False
+        day_pillar = day_gan + day_zhi
+        shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
+        return day_pillar in shie_dabai
+    
+    def _is_yuepo(self, sizhu):
+        """月破日（日支与月支相冲）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not month_zhi or not day_zhi:
+            return False
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == chong_map.get(month_zhi)
+    
+    # ============ 年神类通用检查方法 ============
+    
+    def _is_suide(self, sizhu):
+        """岁德（年干之德）
+        甲年午、乙年申、丙年寅、丁年亥、戊年午、己年申、庚年寅、辛年亥、壬年午、癸年申
+        """
+        year_gan = sizhu.get('year_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        suide_map = {
+            '甲': '午', '乙': '申', '丙': '寅', '丁': '亥',
+            '戊': '午', '己': '申', '庚': '寅', '辛': '亥',
+            '壬': '午', '癸': '申'
+        }
+        return day_zhi == suide_map.get(year_gan)
+    
+    def _is_suide_he(self, sizhu):
+        """岁德合（岁德的六合位）"""
+        year_gan = sizhu.get('year_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        suide_map = {
+            '甲': '午', '乙': '申', '丙': '寅', '丁': '亥',
+            '戊': '午', '己': '申', '庚': '寅', '辛': '亥',
+            '壬': '午', '癸': '申'
+        }
+        suide_zhi = suide_map.get(year_gan, '')
+        liuhe_map = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
+                     '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
+                     '巳': '申', '申': '巳', '午': '未', '未': '午'}
+        if suide_zhi:
+            suide_he = liuhe_map.get(suide_zhi, '')
+            return day_zhi == suide_he
+        return False
+    
+    def _is_suihe(self, sizhu):
+        """岁合（年干的六合位）"""
+        year_gan = sizhu.get('year_gan', '')
+        day_gan = sizhu.get('day_gan', '')
+        gan_liuhe = {'甲': '己', '己': '甲', '乙': '庚', '庚': '乙',
+                     '丙': '辛', '辛': '丙', '丁': '壬', '壬': '丁',
+                     '戊': '癸', '癸': '戊'}
+        return day_gan == gan_liuhe.get(year_gan)
+    
+    def _is_huangfan(self, sizhu):
+        """黄幡（年支三合之末位）
+        寅午戌年在戌、亥卯未年在未、申子辰年在辰、巳酉丑年在丑
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        sanhe_map = {
+            '寅': '戌', '午': '戌', '戌': '戌',
+            '亥': '未', '卯': '未', '未': '未',
+            '申': '辰', '子': '辰', '辰': '辰',
+            '巳': '丑', '酉': '丑', '丑': '丑'
+        }
+        return day_zhi == sanhe_map.get(year_zhi)
+    
+    def _is_baowei(self, sizhu):
+        """豹尾（黄幡对冲位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        sanhe_map = {
+            '寅': '戌', '午': '戌', '戌': '戌',
+            '亥': '未', '卯': '未', '未': '未',
+            '申': '辰', '子': '辰', '辰': '辰',
+            '巳': '丑', '酉': '丑', '丑': '丑'
+        }
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        huangfan = sanhe_map.get(year_zhi, '')
+        if huangfan:
+            baowei = chong_map.get(huangfan, '')
+            return day_zhi == baowei
+        return False
+    
+    def _is_sangmen(self, sizhu):
+        """丧门（年支前两位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            sangmen = zh_list[(idx + 2) % 12]
+            return day_zhi == sangmen
+        return False
+    
+    def _is_diaoke(self, sizhu):
+        """吊客（丧门对冲位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            sangmen = zh_list[(idx + 2) % 12]
+            diaoke = chong_map.get(sangmen, '')
+            return day_zhi == diaoke
+        return False
+    
+    def _is_bingfu(self, sizhu):
+        """病符（年支前九位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            bingfu = zh_list[(idx + 9) % 12]
+            return day_zhi == bingfu
+        return False
+    
+    def _is_guanfu(self, sizhu):
+        """官符（年支前七位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            guanfu = zh_list[(idx + 7) % 12]
+            return day_zhi == guanfu
+        return False
+    
+    def _is_wugui(self, sizhu):
+        """五鬼（年支前五位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            wugui = zh_list[(idx + 5) % 12]
+            return day_zhi == wugui
+        return False
+    
+    def _is_dasha(self, sizhu):
+        """大煞（冲年支之月）
+        日支冲年支为岁破，月支冲年支为大煞
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        return month_zhi == chong_map.get(year_zhi)
+    
+    # 2026-09-16（第二批）删除 _is_tianyi_year / _is_tianwu_year 两个年支起例方法。
+    # 天医、天巫皆为月神（《协纪辨方书·卷四·义例二》：「天医者，正月起戌，顺行
+    # 十二辰」／「（天巫）常居月建前二辰」），本无"年支"起例；二者又分别与
+    # 日作用域 _is_tianyi_day / _is_tianwu_day 同名同分（各 +8）重复计分。
+    # 现已统一为日作用域的月支口径（天医 = 月支序 + 8，天巫 = 月支序 + 2）。
+
+    def _is_fuxing(self, sizhu):
+        """福星（年支前六位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            fuxing = zh_list[(idx + 6) % 12]
+            return day_zhi == fuxing
+        return False
+    
+    # ============ 月神类通用检查方法 ============
+    
+    def _is_yuekong(self, sizhu):
+        """月空（对冲月）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        return day_zhi == chong_map.get(month_zhi)
+    
+    def _is_yuexu(self, sizhu):
+        """月虚（对冲月前一天）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        duichong = chong_map.get(month_zhi, '')
+        if duichong and duichong in zh_list:
+            idx = zh_list.index(duichong)
+            yuexu = zh_list[(idx - 1) % 12]
+            return day_zhi == yuexu
+        return False
+    
+    def _is_yihou(self, sizhu):
+        """益后（正月未、二月戌、三月丑、四月辰、五月未、六月戌、七月丑、八月辰、九月未、十月戌、十一月丑、十二月辰）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yihou_map = {
+            '寅': '未', '卯': '戌', '辰': '丑', '巳': '辰',
+            '午': '未', '未': '戌', '申': '丑', '酉': '辰',
+            '戌': '未', '亥': '戌', '子': '丑', '丑': '辰'
+        }
+        return day_zhi == yihou_map.get(month_zhi)
+    
+    def _is_xushi(self, sizhu):
+        """续世（与益后查法相同）"""
+        return self._is_yihou(sizhu)
+    
+    def _is_yaoan(self, sizhu):
+        """要安（正月戌、二月酉、三月申、四月未、五月午、六月巳、七月辰、八月卯、九月寅、十月丑、十一月子、十二月亥）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yaoan_map = {
+            '寅': '戌', '卯': '酉', '辰': '申', '巳': '未',
+            '午': '午', '未': '巳', '申': '辰', '酉': '卯',
+            '戌': '寅', '亥': '丑', '子': '子', '丑': '亥'
+        }
+        return day_zhi == yaoan_map.get(month_zhi)
+    
+    def _is_jiqi(self, sizhu):
+        """吉期（正月卯、二月亥、三月酉、四月丑、五月亥、六月酉、七月丑、八月卯、九月亥、十月酉、十一月丑、十二月卯）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        jiqi_map = {
+            '寅': '卯', '卯': '亥', '辰': '酉', '巳': '丑',
+            '午': '亥', '未': '酉', '申': '丑', '酉': '卯',
+            '戌': '亥', '亥': '酉', '子': '丑', '丑': '卯'
+        }
+        return day_zhi == jiqi_map.get(month_zhi)
+    
+    def _is_wufu(self, sizhu):
+        """五富（寅午戌月亥、亥卯未月申、申子辰月寅、巳酉丑月巳）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        wufu_map = {
+            '寅': '亥', '午': '亥', '戌': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '申': '寅', '子': '寅', '辰': '寅',
+            '巳': '巳', '酉': '巳', '丑': '巳'
+        }
+        return day_zhi == wufu_map.get(month_zhi)
+    
+    def _is_yangde(self, sizhu):
+        """阳德（正月酉、二月辰、三月亥、四月午、五月卯、六月戌、七月酉、八月辰、九月亥、十月午、十一月卯、十二月戌）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yangde_map = {
+            '寅': '酉', '卯': '辰', '辰': '亥', '巳': '午',
+            '午': '卯', '未': '戌', '申': '酉', '酉': '辰',
+            '戌': '亥', '亥': '午', '子': '卯', '丑': '戌'
+        }
+        return day_zhi == yangde_map.get(month_zhi)
+    
+    def _is_yinde(self, sizhu):
+        """阴德（与阳德查法相同）"""
+        return self._is_yangde(sizhu)
+    
+    def _is_fusheng(self, sizhu):
+        """福生（正月甲、二月乙、三月丙、四月丁、五月戊、六月己、七月庚、八月辛、九月壬、十月癸、十一月甲、十二月乙）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        fusheng_map = {
+            '寅': '甲', '卯': '乙', '辰': '丙', '巳': '丁',
+            '午': '戊', '未': '己', '申': '庚', '酉': '辛',
+            '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'
+        }
+        return day_gan == fusheng_map.get(month_zhi)
+    
+    def _is_jiqing(self, sizhu):
+        """吉庆（正月戊、二月己、三月庚、四月辛、五月壬、六月癸、七月甲、八月乙、九月丙、十月丁、十一月戊、十二月己）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        jiqing_map = {
+            '寅': '戊', '卯': '己', '辰': '庚', '巳': '辛',
+            '午': '壬', '未': '癸', '申': '甲', '酉': '乙',
+            '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'
+        }
+        return day_gan == jiqing_map.get(month_zhi)
+    
+    def _is_shouriminri(self, sizhu):
+        """守日/民日（四季旺日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '寅'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '午'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '申'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '亥'
+        return False
+    
+    def _is_guanri(self, sizhu):
+        """官日（寅午戌月午、申子辰月子、亥卯未月卯、巳酉丑月酉）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        guanri_map = {
+            '寅': '午', '午': '午', '戌': '午',
+            '申': '子', '子': '子', '辰': '子',
+            '亥': '卯', '卯': '卯', '未': '卯',
+            '巳': '酉', '酉': '酉', '丑': '酉'
+        }
+        return day_zhi == guanri_map.get(month_zhi)
+    
+    def _is_bazhuan(self, sizhu):
+        """八专（天干重复，如甲寅、乙卯、丙午、丁未、戊申、己酉、庚申、辛酉、壬子、癸丑、丙寅、丁卯）"""
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not day_gan or not day_zhi:
+            return False
+        bazhuan_list = ['甲寅', '乙卯', '丙午', '丁未', '戊申', '己酉', 
+                        '庚申', '辛酉', '壬子', '癸丑', '丙寅', '丁卯']
+        day_pillar = day_gan + day_zhi
+        return day_pillar in bazhuan_list
+    
+    def _is_siji(self, sizhu):
+        """四忌（月支前四位）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if month_zhi in zh_list:
+            idx = zh_list.index(month_zhi)
+            siji = zh_list[(idx + 4) % 12]
+            return day_zhi == siji
+        return False
+    
+    # ============ 日神类通用检查方法 ============
+    
+    def _is_mingquan(self, sizhu):
+        """鸣犬日（戌日）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi == '戌'
+    
+    def _is_mingquandui(self, sizhu):
+        """鸣犬对日（辰日）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi == '辰'
+    
+    def _is_tianshe(self, sizhu):
+        """天赦日（春乙卯、夏丙午、秋辛酉、冬壬子）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_gan == '乙' and day_zhi == '卯'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_gan == '丙' and day_zhi == '午'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_gan == '辛' and day_zhi == '酉'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_gan == '壬' and day_zhi == '子'
+        return False
+    
+    def _is_mucang(self, sizhu):
+        """母仓日（春亥子、夏寅卯、秋辰戌丑未、冬申酉）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi in ['亥', '子']
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi in ['寅', '卯']
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi in ['辰', '戌', '丑', '未']
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi in ['申', '酉']
+        return False
+    
+    def _is_xiangri(self, sizhu):
+        """相日（春寅卯、夏巳午、秋申酉、冬亥子）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi in ['寅', '卯']
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi in ['巳', '午']
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi in ['申', '酉']
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi in ['亥', '子']
+        return False
+    
+    def _is_wangri(self, sizhu):
+        """旺日（四季旺日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '寅'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '午'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '申'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '亥'
+        return False
+    
+    def _is_shangji(self, sizhu):
+        """上吉日（子、午、卯、酉）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['子', '午', '卯', '酉']
+    
+    def _is_shengqi(self, sizhu):
+        """生气（四季长生）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '巳'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '申'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '亥'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '寅'
+        return False
+    
+    def _is_tianyi_day(self, sizhu):
+        """天医日（月支顺行八位）
+
+        依据《协纪辨方书·卷五·义例三》：「天医者，正月起戌，顺行十二辰」，
+        即寅月戌日、卯月亥日、辰月子日……（月支序 + 8）。
+
+        2026-09-16修复：原实现算出 tianyi_zhi 后并未使用，直接 return True，
+        使该神煞在任何一天都命中（恒真），日作用域 '天医日' 与月作用域 '天医'
+        因此每天都虚加 8 分。
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zhi_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if month_zhi in zhi_list and day_zhi in zhi_list:
+            idx = zhi_list.index(month_zhi)
+            tianyi_zhi = zhi_list[(idx + 8) % 12]
+            return day_zhi == tianyi_zhi
+        return False
+    
+    def _is_kuigang(self, sizhu):
+        """魁罡日（庚辰、戊戌、壬辰、庚戌）"""
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not day_gan or not day_zhi:
+            return False
+        kuigang_list = ['庚辰', '戊戌', '壬辰', '庚戌']
+        day_pillar = day_gan + day_zhi
+        return day_pillar in kuigang_list
+    
+    def _is_fanzhi(self, sizhu):
+        """反支日（地支相反）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        fanzhi_map = {
+            '子': '丑', '丑': '子', '寅': '卯', '卯': '寅',
+            '辰': '巳', '巳': '辰', '午': '未', '未': '午',
+            '申': '酉', '酉': '申', '戌': '亥', '亥': '戌'
+        }
+        expected = fanzhi_map.get(month_zhi, '')
+        return day_zhi == expected
+    
+    def _is_shangshuo(self, sizhu):
+        """上朔日（农历初一）
+        注：需要日期信息，这里简化处理
+        """
+        return False  # 需要公历日期信息才能判断
+    
+    def _is_guchen_guasu(self, sizhu):
+        """孤辰寡宿（年支查法）
+        亥子丑年寅、寅卯辰年巳、巳午未年申、申酉戌年亥
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        guchen_map = {
+            '亥': '寅', '子': '寅', '丑': '寅',
+            '寅': '巳', '卯': '巳', '辰': '巳',
+            '巳': '申', '午': '申', '未': '申',
+            '申': '亥', '酉': '亥', '戌': '亥'
+        }
+        guasu_map = {
+            '亥': '戌', '子': '戌', '丑': '戌',
+            '寅': '丑', '卯': '丑', '辰': '丑',
+            '巳': '辰', '午': '辰', '未': '辰',
+            '申': '未', '酉': '未', '戌': '未'
+        }
+        return day_zhi == guchen_map.get(year_zhi) or day_zhi == guasu_map.get(year_zhi)
+    
+    def _is_hongsha(self, sizhu):
+        """红砂日（四孟月酉日、四仲月巳日、四季月丑日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '申', '巳', '亥']:
+            return day_zhi == '酉'
+        elif month_zhi in ['卯', '酉', '午', '子']:
+            return day_zhi == '巳'
+        elif month_zhi in ['辰', '戌', '未', '丑']:
+            return day_zhi == '丑'
+        return False
+    
+    def _is_yanggongji(self, sizhu):
+        """杨公忌日
+        正月十三、二月十一、三月初九、四月初七、五月初五、六月初三、
+        七月初一、七月廿九、八月廿七、九月廿五、十月廿三、十一月廿一、十二月十九
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yanggong_map = {
+            '寅': '酉', '卯': '亥', '辰': '丑', '巳': '卯',
+            '午': '未', '未': '巳', '申': '亥', '酉': '丑',
+            '戌': '卯', '亥': '酉', '子': '巳', '丑': '未'
+        }
+        return day_zhi == yanggong_map.get(month_zhi)
+    
+    # ============ 修造专用检查方法 ============
+    
+    def _is_tuwang(self, sizhu):
+        """土王用事（四季土旺日，即土瘟）"""
+        return self._is_tuwen(sizhu)
+    
+    def _is_daozhen(self, sizhu):
+        """刀砧煞（春巳、夏申、秋亥、冬寅）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '巳'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '申'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '亥'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '寅'
+        return False
+    
+    def _is_futou(self, sizhu):
+        """斧头煞（春午、夏酉、秋子、冬卯）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '午'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '酉'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '子'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '卯'
+        return False
+    
+    def _is_muma(self, sizhu):
+        """木马煞（春未、夏戌、秋丑、冬辰）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '未'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '戌'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '丑'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '辰'
+        return False
+    
+    def _is_tiandizhuan(self, sizhu):
+        """天地转煞（春寅、夏亥、秋申、冬巳）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '寅'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '亥'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '申'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '巳'
+        return False
+    
+    def _is_shanyao(self, sizhu):
+        """山曜（春卯、夏午、秋酉、冬子）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '卯'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '午'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '酉'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '子'
+        return False
+    
+    # ============ 修造/动土通用检查方法（统一映射表） ============
+    
+    def _is_tufu(self, sizhu):
+        """土符日（依据《协纪辨方书》统一映射表）
+        寅月戌日、卯月亥日、辰月子日、巳月丑日、
+        午月寅日、未月卯日、申月辰日、酉月巳日、
+        戌月午日、亥月未日、子月申日、丑月酉日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        tufu_map = {
+            '寅': '戌', '卯': '亥', '辰': '子', '巳': '丑',
+            '午': '寅', '未': '卯', '申': '辰', '酉': '巳',
+            '戌': '午', '亥': '未', '子': '申', '丑': '酉'
+        }
+        return day_zhi == tufu_map.get(month_zhi)
+    
+    def _is_tianzei(self, sizhu):
+        """天贼日（依据《协纪辨方书》统一映射表）
+        寅月辰日、卯月巳日、辰月午日、巳月未日、
+        午月申日、未月酉日、申月戌日、酉月亥日、
+        戌月子日、亥月丑日、子月寅日、丑月卯日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        tianzei_map = {
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
+        }
+        return day_zhi == tianzei_map.get(month_zhi)
+    
+    def _is_dizei(self, sizhu):
+        """地贼日（依据《协纪辨方书》统一映射表）
+        寅月子日、卯月丑日、辰月寅日、巳月卯日、
+        午月辰日、未月巳日、申月午日、酉月未日、
+        戌月申日、亥月酉日、子月戌日、丑月亥日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        dizei_map = {
+            '寅': '子', '卯': '丑', '辰': '寅', '巳': '卯',
+            '午': '辰', '未': '巳', '申': '午', '酉': '未',
+            '戌': '申', '亥': '酉', '子': '戌', '丑': '亥'
+        }
+        return day_zhi == dizei_map.get(month_zhi)
+    
+    def _is_tufu2(self, sizhu):
+        """土府日（依据《协纪辨方书》统一映射表）
+        寅月辰日、卯月巳日、辰月午日、巳月未日、
+        午月申日、未月酉日、申月戌日、酉月亥日、
+        戌月子日、亥月丑日、子月寅日、丑月卯日
+        注：土府与天贼映射表相同
+        """
+        return self._is_tianzei(sizhu)
+    
+    def _is_tuwen(self, sizhu):
+        """土瘟日（依据《协纪辨方书》统一映射表）
+        寅月丑日、卯月寅日、辰月卯日、巳月辰日、
+        午月巳日、未月午日、申月未日、酉月申日、
+        戌月酉日、亥月戌日、子月亥日、丑月子日
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        tuwen_map = {
+            '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰',
+            '午': '巳', '未': '午', '申': '未', '酉': '申',
+            '戌': '酉', '亥': '戌', '子': '亥', '丑': '子'
+        }
+        return day_zhi == tuwen_map.get(month_zhi)
+    
+    def _is_dinang(self, sizhu):
+        """地囊日（依据《协纪辨方书》统一映射表）
+        地囊日为土王用事后，映射与土符相同
+        """
+        return self._is_tufu(sizhu)
+    
+    # ============ 嫁娶专用检查方法 ============
+    
+    def _is_wuli(self, sizhu):
+        """五离日（日支为申或酉）
+
+        依据《协纪辨方书·卷五·义例三》引《历例》：五合与五离相对，
+        「五合者，寅卯日也」→ 对冲之「五离者，申酉日也」（忌嫁娶、离别、破券）。
+
+        2026-09-16修正：原实现为"天干相离"自造表（甲与巳、乙与午、丙与申…共10组干支），
+        无典籍依据，且与已按典籍修正的 _is_wuhe（五合=寅卯日，同书同句）不成配对
+        （五合取地支、五离取干支），故统一为典籍口径"申酉日"。
+        用户 2026-09-16 裁决：改为典籍口径（申酉日）。
+        """
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ('申', '酉')
+    
+    def _is_yinjiang(self, sizhu):
+        """阴将（亥子丑寅日为阳将，卯辰巳午未申酉戌为阴将）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['卯', '辰', '巳', '午', '未', '申', '酉', '戌']
+    
+    def _is_yangjiang(self, sizhu):
+        """阳将（亥子丑寅日）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['亥', '子', '丑', '寅']
+    
+    # ============ 作灶专用检查方法 ============
+    
+    def _is_zaojun_chaotian(self, sizhu):
+        """灶君朝天（登天太微宫五日：戊戌、己亥、庚子、辛丑、壬寅）。  # _zjct0914
+
+        2026-09-14 订正：出《作灶凶忌歌》"内嫌戊戌至壬寅，五日灶君太微宫，
+        安作新修俱不利"，按【日干支】查。旧法误作"全年申、酉日"——申酉仅是
+        《居家必用事类全集》"逐月作灶忌日"中部分月份（正二月忌寅申酉、
+        七八月忌申寅卯）的支，另见 _is_zao_yueji，全年皆忌无据。
+        """
+        return (sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')) in (
+            '戊戌', '己亥', '庚子', '辛丑', '壬寅')
+
+    def _is_zao_yueji(self, sizhu):
+        """逐月作灶忌日（《居家必用事类全集·丁集》）：  # _zjct0914
+        正二月寅申酉、三四月辰戌亥、五六月午子丑、
+        七八月申寅卯、九十月戌辰巳、冬腊月子午未。"""
+        _yueji = {
+            '寅': ('寅', '申', '酉'), '卯': ('寅', '申', '酉'),
+            '辰': ('辰', '戌', '亥'), '巳': ('辰', '戌', '亥'),
+            '午': ('午', '子', '丑'), '未': ('午', '子', '丑'),
+            '申': ('申', '寅', '卯'), '酉': ('申', '寅', '卯'),
+            '戌': ('戌', '辰', '巳'), '亥': ('戌', '辰', '巳'),
+            '子': ('子', '午', '未'), '丑': ('子', '午', '未'),
+        }
+        return sizhu.get('day_zhi', '') in _yueji.get(sizhu.get('month_zhi', ''), ())
+    
+    def _is_huoji(self, sizhu):
+        """火忌（午、未日）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['午', '未']
+    
+    def _is_rongqi(self, sizhu):
+        """熔金（巳、午、未、申日）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        return day_zhi in ['巳', '午', '未', '申']
+    
+    # ============ 其他补充方法 ============
+    
+    def _is_shenhao(self, sizhu):
+        """神号日（寅午戌年四月、亥卯未年正月、申子辰年七月、巳酉丑年十月）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        shenhao_map = {
+            '寅': '巳', '午': '巳', '戌': '巳',
+            '亥': '寅', '卯': '寅', '未': '寅',
+            '申': '申', '子': '申', '辰': '申',
+            '巳': '亥', '酉': '亥', '丑': '亥'
+        }
+        return month_zhi == shenhao_map.get(year_zhi)
+    
+    def _is_guiqi(self, sizhu):
+        """鬼哭日（正月辰、二月巳、三月午、四月未、五月申、六月酉、七月戌、八月亥、九月子、十月丑、十一月寅、十二月卯）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        guiqi_map = {
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
+        }
+        return day_zhi == guiqi_map.get(month_zhi)
+    
+    def _is_huangsha(self, sizhu):
+        """黄沙日（寅午戌日在午、亥卯未日在酉、申子辰日在子、巳酉丑日在卯）"""
+        day_zhi = sizhu.get('day_zhi', '')
+        huangsha_map = {
+            '寅': '午', '午': '午', '戌': '午',
+            '亥': '酉', '卯': '酉', '未': '酉',
+            '申': '子', '子': '子', '辰': '子',
+            '巳': '卯', '酉': '卯', '丑': '卯'
+        }
+        month_zhi = sizhu.get('month_zhi', '')
+        return month_zhi == huangsha_map.get(day_zhi)
+    
+    def _is_flyinglian(self, sizhu):
+        """飞廉（正五行查）
+        木飞廉寅卯日、火飞廉巳午日、土飞廉辰戌丑未日、金飞廉申酉日、水飞廉亥子日
+        """
+        day_zhi = sizhu.get('day_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        
+        # 判断五行
+        if month_zhi in ['寅', '卯']:
+            return day_zhi in ['寅', '卯']
+        elif month_zhi in ['巳', '午']:
+            return day_zhi in ['巳', '午']
+        elif month_zhi in ['辰', '戌', '丑', '未']:
+            return day_zhi in ['辰', '戌', '丑', '未']
+        elif month_zhi in ['申', '酉']:
+            return day_zhi in ['申', '酉']
+        elif month_zhi in ['亥', '子']:
+            return day_zhi in ['亥', '子']
+        return False
+    
+    def _is_fubing(self, sizhu):
+        """伏兵（三合局墓库后一位）
+        寅午戌年亥、亥卯未年申、申子辰年寅、巳酉丑年巳
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        fubing_map = {
+            '寅': '亥', '午': '亥', '戌': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '申': '寅', '子': '寅', '辰': '寅',
+            '巳': '巳', '酉': '巳', '丑': '巳'
+        }
+        return day_zhi == fubing_map.get(year_zhi)
+    
+    def _is_dahuo(self, sizhu):
+        """大祸（伏兵对冲位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        fubing_map = {
+            '寅': '亥', '午': '亥', '戌': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '申': '寅', '子': '寅', '辰': '寅',
+            '巳': '巳', '酉': '巳', '丑': '巳'
+        }
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        fubing_zhi = fubing_map.get(year_zhi, '')
+        if fubing_zhi:
+            dahuo = chong_map.get(fubing_zhi, '')
+            return day_zhi == dahuo
+        return False
+    
+    def _is_suixing(self, sizhu):
+        """岁刑（年支三刑位）
+        子卯相刑、寅刑巳、巳刑申、申刑寅、丑戌未相刑、辰午酉亥自刑
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        
+        # 六刑
+        xing_map = {
+            '子': '卯', '卯': '子',
+            '寅': '巳', '巳': '申', '申': '寅',
+            '丑': '戌', '戌': '未', '未': '丑',
+            '辰': '辰', '午': '午', '酉': '酉', '亥': '亥'
+        }
+        return day_zhi == xing_map.get(year_zhi)
+    
+    def _is_suihai(self, sizhu):
+        """岁害（年支六害位）
+        子未相害、丑午相害、寅巳相害、卯辰相害、申亥相害、酉戌相害
+        """
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hai_map = {
+            '子': '未', '未': '子',
+            '丑': '午', '午': '丑',
+            '寅': '巳', '巳': '寅',
+            '卯': '辰', '辰': '卯',
+            '申': '亥', '亥': '申',
+            '酉': '戌', '戌': '酉'
+        }
+        return day_zhi == hai_map.get(year_zhi)
+    
+    def _is_lishi(self, sizhu):
+        """力士（年支前一位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            lishi = zh_list[(idx + 1) % 12]
+            return day_zhi == lishi
+        return False
+    
+    def _is_canguan(self, sizhu):
+        """蚕官（年支后三位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            canguan = zh_list[(idx - 3) % 12]
+            return day_zhi == canguan
+        return False
+    
+    def _is_jinshen(self, sizhu):
+        """金神（六甲旬空亡）
+        甲子旬空亡在戌亥、甲戌旬空亡在申酉、甲申旬空亡在午未、
+        甲午旬空亡在辰巳、甲辰旬空亡在寅卯、甲寅旬空亡在子丑
+        """
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        jinshen_map = {
+            '甲': ['戌', '亥'], '己': ['戌', '亥'],  # 甲子旬
+            '甲': ['申', '酉'], '己': ['申', '酉'],  # 甲戌旬（注：需检查日柱天干）
+        }
+        # 简化版
+        return False
+    
+    def _is_pobai(self, sizhu):
+        """破败（年月冲）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        return month_zhi == chong_map.get(year_zhi)
+    
+    def _is_chuguansheng(self, sizhu):
+        """畜官（年支后三位）"""
+        return self._is_canguan(sizhu)
+    
+    def _is_tianhao(self, sizhu):
+        """天耗（年支前四位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            tianhao = zh_list[(idx + 4) % 12]
+            return day_zhi == tianhao
+        return False
+    
+    def _is_dihao(self, sizhu):
+        """地耗（年支后四位）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            dihao = zh_list[(idx - 4) % 12]
+            return day_zhi == dihao
+        return False
+    
+    def _is_tianen(self, sizhu):
+        """天恩（年支前一位的六合）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        liuhe_map = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
+                     '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
+                     '巳': '申', '申': '巳', '午': '未', '未': '午'}
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            linshi = zh_list[(idx + 1) % 12]
+            tianen = liuhe_map.get(linshi, '')
+            return day_zhi == tianen
+        return False
+    
+    def _is_sui_lu(self, sizhu):
+        """岁禄（年干禄位）
+        甲禄在寅、乙禄在卯、丙戊禄在巳、丁己禄在午、庚禄在申、辛禄在酉、壬禄在亥、癸禄在子
+        """
+        year_gan = sizhu.get('year_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        lu_map = {
+            '甲': '寅', '乙': '卯', '丙': '巳', '戊': '巳',
+            '丁': '午', '己': '午', '庚': '申', '辛': '酉',
+            '壬': '亥', '癸': '子'
+        }
+        return day_zhi == lu_map.get(year_gan)
+    
+    def _is_zaisong(self, sizhu):
+        """在宋（年支前一位的对冲）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
+                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
+        if year_zhi in zh_list:
+            idx = zh_list.index(year_zhi)
+            lishi = zh_list[(idx + 1) % 12]
+            zaisong = chong_map.get(lishi, '')
+            return day_zhi == zaisong
+        return False
+    
+    # ============ 通用工具方法 ============
+
+    def _shengxiao_to_zhi(self, shengxiao):
+        """生肖转换为地支"""
+        shengxiao_map = {
+            '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+            '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+            '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
+        }
+        return shengxiao_map.get(shengxiao)
+
+    def _is_chong(self, zhi1, zhi2):
+        """检查两个地支是否相冲"""
+        if not zhi1 or not zhi2:
+            return False
+        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
+            zhi2 = self._shengxiao_to_zhi(zhi2)
+            if not zhi2:
+                return False
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return zhi1 == chong_map.get(zhi2)
+
+    def _is_he(self, zhi1, zhi2):
+        """检查两个地支是否相合（六合或三合）"""
+        if not zhi1 or not zhi2:
+            return False
+        if zhi2 not in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
+            zhi2 = self._shengxiao_to_zhi(zhi2)
+            if not zhi2:
+                return False
+        liuhe_map = {
+            '子': '丑', '丑': '子',
+            '寅': '亥', '亥': '寅',
+            '卯': '戌', '戌': '卯',
+            '辰': '酉', '酉': '辰',
+            '巳': '申', '申': '巳',
+            '午': '未', '未': '午'
+        }
+        if liuhe_map.get(zhi1) == zhi2:
+            return True
+        sanhe_sets = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
+        for s in sanhe_sets:
+            if zhi1 in s and zhi2 in s and zhi1 != zhi2:
+                return True
+        return False
+
+    # ============ 日神类补充检查方法 ============
+
+    def _is_liuhe(self, sizhu):
+        """地支六合（日支与月支六合）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        liuhe_map = {
+            '子': '丑', '丑': '子',
+            '寅': '亥', '亥': '寅',
+            '卯': '戌', '戌': '卯',
+            '辰': '酉', '酉': '辰',
+            '巳': '申', '申': '巳',
+            '午': '未', '未': '午'
+        }
+        return liuhe_map.get(month_zhi) == day_zhi
+
+    def _is_sanhe(self, sizhu):
+        """地支三合（日支与月支三合）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        sanhe_sets = [
+            {'申', '子', '辰'},
+            {'寅', '午', '戌'},
+            {'巳', '酉', '丑'},
+            {'亥', '卯', '未'}
+        ]
+        for s in sanhe_sets:
+            if month_zhi in s and day_zhi in s and month_zhi != day_zhi:
+                return True
+        return False
+
+    def _is_yima(self, sizhu):
+        """驿马（年支或月支查驿马日）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yima_map = {
+            '申': '寅', '子': '寅', '辰': '寅',
+            '寅': '申', '午': '申', '戌': '申',
+            '亥': '巳', '卯': '巳', '未': '巳',
+            '巳': '亥', '酉': '亥', '丑': '亥'
+        }
+        if day_zhi == yima_map.get(year_zhi):
+            return True
+        if day_zhi == yima_map.get(month_zhi):
+            return True
+        return False
+
+    def _is_shousi_day(self, sizhu):
+        """受死日（春戌、夏丑、秋辰、冬未）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi in ['寅', '卯', '辰']:
+            return day_zhi == '戌'
+        elif month_zhi in ['巳', '午', '未']:
+            return day_zhi == '丑'
+        elif month_zhi in ['申', '酉', '戌']:
+            return day_zhi == '辰'
+        elif month_zhi in ['亥', '子', '丑']:
+            return day_zhi == '未'
+        return False
+
+    def _is_wangwang(self, sizhu):
+        """往亡日（正月寅、二月巳、三月申、四月亥循环）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        wangwang_map = {
+            '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
+            '午': '寅', '未': '巳', '申': '申', '酉': '亥',
+            '戌': '寅', '亥': '巳', '子': '申', '丑': '亥'
+        }
+        return day_zhi == wangwang_map.get(month_zhi)
+
+    def _is_bujiang(self, sizhu):
+        """不将日（阳将阴将之日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        yang_zhi = ['亥', '子', '丑', '寅']
+        yin_zhi = ['卯', '辰', '巳', '午', '未', '申', '酉', '戌']
+        if month_zhi in yang_zhi and day_zhi in yin_zhi:
+            return True
+        if month_zhi in yin_zhi and day_zhi in yang_zhi:
+            return True
+        return False
+
+    # ============ 年神类补充检查方法 ============
+
+    def _is_taisui(self, sizhu):
+        """太岁：日支与年支相同"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        return year_zhi == day_zhi and year_zhi != ''
+
+    def _is_suipo(self, sizhu):
+        """岁破：日支冲年支"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == chong_map.get(year_zhi)
+
+    def _is_suisha(self, sizhu):
+        """岁煞：年支四孟煞位（与劫煞同）"""
+        year_zhi = sizhu.get('year_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        suisha_map = {
+            '申': '亥', '子': '亥', '辰': '亥',
+            '亥': '申', '卯': '申', '未': '申',
+            '寅': '巳', '午': '巳', '戌': '巳',
+            '巳': '寅', '酉': '寅', '丑': '寅'
+        }
+        return day_zhi == suisha_map.get(year_zhi)
+
+    # ============ 月神类补充检查方法 ============
+
+    def _is_yuexing(self, sizhu):
+        """月刑：月支刑日支"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        xing_map = {
+            '子': '卯', '卯': '子',
+            '寅': '巳', '巳': '申', '申': '寅',
+            '丑': '戌', '戌': '未', '未': '丑',
+            '辰': '辰', '午': '午', '酉': '酉', '亥': '亥'
+        }
+        return day_zhi == xing_map.get(month_zhi)
+
+    def _is_yuehai(self, sizhu):
+        """月害：月支害日支"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        hai_map = {
+            '子': '未', '未': '子',
+            '丑': '午', '午': '丑',
+            '寅': '巳', '巳': '寅',
+            '卯': '辰', '辰': '卯',
+            '申': '亥', '亥': '申',
+            '酉': '戌', '戌': '酉'
+        }
+        return day_zhi == hai_map.get(month_zhi)
+    
+    def _is_fuduan(self, sizhu):
+        """伏断日（月支冲日支）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == chong_map.get(month_zhi)
+    
+    def _is_guiji(self, sizhu):
+        """归忌（月支前七位）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if month_zhi in zh_list:
+            idx = zh_list.index(month_zhi)
+            guiji = zh_list[(idx + 7) % 12]
+            return day_zhi == guiji
+        return False
+
+    def _is_sui_sha(self, sizhu):
+        """岁煞（对冲位，即岁破）"""
+        return self._is_suipo(sizhu)

@@ -37,13 +37,16 @@ def get_day_ganzhi(date_obj):
 def get_tiande_month(month):
     """
     天德月（月神，返回天干或地支）
-    正月在丁，二月在坤，三月在壬，四月在辛，五月在亥，六月在甲，
-    七月在癸，八月在艮，九月在丙，十月在乙，十一月在巳，十二月在庚
+    正月在丁，二月在坤，三月在壬，四月在辛，五月在乾（亥），六月在甲，
+    七月在癸，八月在艮（寅），九月在丙，十月在乙，十一月在巽（巳），十二月在庚
+    （2026-09-01 修复：二月坤、八月艮为卦名月，原返回卦名导致 is_tiande_day
+    对全月任意日子误判天德日；现按卦宫所辖地支取代表支——坤宫未申取申、
+    艮宫丑寅取寅、乾宫戌亥取亥、巽宫辰巳取巳，与原5:'亥'、11:'巳'取法一致）
     返回：对应的天干、地支
     """
     map_month = {
-        1: '丁', 2: '坤', 3: '壬', 4: '辛', 5: '亥', 6: '甲',
-        7: '癸', 8: '艮', 9: '丙', 10: '乙', 11: '巳', 12: '庚'
+        1: '丁', 2: '申', 3: '壬', 4: '辛', 5: '亥', 6: '甲',
+        7: '癸', 8: '寅', 9: '丙', 10: '乙', 11: '巳', 12: '庚'
     }
     return map_month.get(month)
 
@@ -59,6 +62,8 @@ def is_tiande_day(date_obj):
             '七月': 7, '八月': 8, '九月': 9, '十月': 10, '十一月': 11, '腊月': 12
         }
         lunar_month_str = lunar_info.get('month', '')
+        if lunar_month_str.startswith('闰'):
+            lunar_month_str = lunar_month_str[1:]  # 闰月天德随本月（如闰六月按六月甲），防止回退公历月误判卦名月
         month = month_map.get(lunar_month_str, date_obj.month)
     except:
         # 回退到公历月份
@@ -66,14 +71,12 @@ def is_tiande_day(date_obj):
     
     tiande = get_tiande_month(month)
     day_gan, day_zhi = get_day_ganzhi(date_obj)
-    
-    # 天德可能是天干、地支或卦名（坤、乾、艮、巽）
+
+    # 天德为天干时按日干判定，为地支时按日支判定
+    # （2026-09-01 修复：原卦名月直接 return True，导致二月坤/八月艮月全月误报天德日）
     if tiande in GAN and day_gan == tiande:
         return True
     if tiande in ZHI and day_zhi == tiande:
-        return True
-    # 当夭德为卦名时，传统认为该日整体吉利，直接视为天德日
-    if tiande in ['坤', '乾', '艮', '巽']:
         return True
     return False
 
@@ -87,7 +90,10 @@ def get_yuede_month(year_gan, month):
     申月、子月、辰月 -> 天干壬
     巳月、酉月、丑月 -> 天干庚
     """
-    month_zhi = ZHI[(month - 1) % 12]  # 月地支
+    # month为农历月份数字（1=正月=寅月，2=二月=卯月...12=腊月=丑月）
+    # 月支 = ZHI[(month + 1) % 12]：正月(1)→寅、二月(2)→卯、腊月(12)→丑
+    # （2026-09-01 修复：原 ZHI[(month-1)%12] 把正月误作子月，导致月德 丙→壬 误报）
+    month_zhi = ZHI[(month + 1) % 12]  # 月地支
     if month_zhi in ['寅', '午', '戌']:
         return '丙'
     elif month_zhi in ['亥', '卯', '未']:
@@ -184,8 +190,9 @@ def is_tiandehe_day(date_obj):
         return False
     
     day_gan, day_zhi = get_day_ganzhi(date_obj)
-    
-    # 天德可能是天干、地支或卦名
+
+    # 天德合：天德为天干时按干五合，为地支时按支六合
+    # （2026-09-01 修复：原卦名月直接 return True，导致二月坤/八月艮月全月误报天德合日）
     if tiande in GAN:
         # 五合：甲己、乙庚、丙辛、丁壬、戊癸
         he_map = {'甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸',
@@ -201,11 +208,7 @@ def is_tiandehe_day(date_obj):
         tiande_he = he_map.get(tiande)
         if tiande_he:
             return day_zhi == tiande_he
-    elif tiande in ['坤', '乾', '艮', '巽']:
-        # 天德为卦名时，天德合日为与卦位相合的方位
-        # 简化处理：卦名天德的合日也视为吉利
-        return True
-    
+
     return False
 
 # ==================== 不将日 ====================
@@ -444,29 +447,47 @@ def get_fuxing_zixing(day_gan):
     }
 
 # ==================== 阴胎、阳气 ====================
+# 【典籍口径】（《选择求真·卷五》胎元起例 + 通书“天进一兮地三和”）：
+#   阴胎（女命/新娘）= 生月月柱：月干顺进 1 位 + 月支顺进 3 位（= 胎元）
+#   阳气（男命/新郎）= 生月月柱：月干顺进 1 位 + 月支顺进 3 位（与阴胎同法，男称阳气女称阴胎）
+#   注：旧版阳气误作“干+3支+1”，无典籍依据，2026-09 按典籍修正为同法。
 
 def get_yintai(month_gan, month_zhi):
-    """阴胎 = 月干顺进一位 + 月支顺进三位"""
+    """阴胎（女命）= 月干顺进 1 位 + 月支顺进 3 位（= 胎元）"""
     gan_idx = gan_index(month_gan)
     zhi_idx = zhi_index(month_zhi)
-    yintai_gan = GAN[(gan_idx + 1) % 10]   # 月干顺进一位
-    yintai_zhi = ZHI[(zhi_idx + 3) % 12]   # 月支顺进三位
+    yintai_gan = GAN[(gan_idx + 1) % 10]
+    yintai_zhi = ZHI[(zhi_idx + 3) % 12]
     return yintai_gan, yintai_zhi
 
 def get_yangqi(month_gan, month_zhi):
-    """阳气 = 月干顺进一位 + 月支顺进三位"""
+    """阳气（男命）= 月干顺进 1 位 + 月支顺进 3 位（与阴胎同法，即胎元）"""
     gan_idx = gan_index(month_gan)
     zhi_idx = zhi_index(month_zhi)
-    yangqi_gan = GAN[(gan_idx + 1) % 10]   # 月干顺进一位
-    yangqi_zhi = ZHI[(zhi_idx + 3) % 12]   # 月支顺进三位
+    yangqi_gan = GAN[(gan_idx + 1) % 10]
+    yangqi_zhi = ZHI[(zhi_idx + 3) % 12]
     return yangqi_gan, yangqi_zhi
 
 # ==================== 其它凶神 ====================
 
 def is_month_break(date_obj):
     """月破：日支与月支相冲"""
+    try:
+        from ..四柱计算器 import calculate_sizhu
+        sizhu = calculate_sizhu(date_obj, 12, 0)
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if month_zhi and day_zhi:
+            return is_chong(month_zhi, day_zhi)
+    except:
+        pass
+    
+    # 备用方案：使用农历月份计算
     month = _get_lunar_month(date_obj)
-    month_zhi = ZHI[(month-1)%12]
+    # 农历月份与地支对应：正月寅(1)、二月卯(2)、三月辰(3)...
+    # ZHI数组顺序：['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    # 正月寅对应ZHI[2]，所以偏移量为2
+    month_zhi = ZHI[(month + 1) % 12]  # 修正：(month-1+2) % 12 = (month+1) % 12
     _, day_zhi = get_day_ganzhi(date_obj)
     return is_chong(month_zhi, day_zhi)
 
@@ -501,11 +522,11 @@ def is_sansha(date_obj, year_zhi):
 def is_tiangang_day(date_obj):
     """
     判断是否为天罡日（妨翁日）
-    
-    根据《协纪辨方书》规则：
-    正月寅月→巳日、二月卯月→辰日、三月辰月→卯日、四月巳月→寅日
-    五月午月→丑日、六月未月→子日、七月申月→亥日、八月酉月→戌日
-    九月戌月→酉日、十月亥月→申日、十一月子月→未日、十二月丑月→午日
+
+    依《协纪辨方书·神煞对照表》：天罡日者，日支临月建也。
+    正月寅日、二月卯日、三月辰日、四月巳日、五月午日、六月未日、
+    七月申日、八月酉日、九月戌日、十月亥日、十一月子日、十二月丑日。
+    （旧实现误作六害日，已更正：日支与月支相同即为天罡妨翁日。）
     """
     # 获取月支和日支
     try:
@@ -513,35 +534,20 @@ def is_tiangang_day(date_obj):
         sizhu = calculate_sizhu(date_obj, 12, 0)
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        
-        # 天罡日规则（妨翁）
-        tiangang_map = {
-            '寅': '巳',  # 正月（寅月）的巳日是天罡日
-            '卯': '辰',  # 二月（卯月）的辰日是天罡日
-            '辰': '卯',  # 三月（辰月）的卯日是天罡日
-            '巳': '寅',  # 四月（巳月）的寅日是天罡日
-            '午': '丑',  # 五月（午月）的丑日是天罡日
-            '未': '子',  # 六月（未月）的子日是天罡日
-            '申': '亥',  # 七月（申月）的亥日是天罡日
-            '酉': '戌',  # 八月（酉月）的戌日是天罡日
-            '戌': '酉',  # 九月（戌月）的酉日是天罡日
-            '亥': '申',  # 十月（亥月）的申日是天罡日
-            '子': '未',  # 十一月（子月）的未日是天罡日
-            '丑': '午'   # 十二月（丑月）的午日是天罡日
-        }
-        
-        return tiangang_map.get(month_zhi) == day_zhi
+
+        # 天罡日规则（妨翁）：日支临月建
+        return bool(month_zhi) and day_zhi == month_zhi
     except Exception as e:
         return False
 
 def is_hekui_day(date_obj):
     """
     判断是否为河魁日（妨姑日）
-    
-    根据《协纪辨方书》规则：
-    正月寅月→亥日、二月卯月→戌日、三月辰月→酉日、四月巳月→申日
-    五月午月→未日、六月未月→午日、七月申月→巳日、八月酉月→辰日
-    九月戌月→卯日、十月亥月→寅日、十一月子月→丑日、十二月丑月→子日
+
+    依《协纪辨方书·神煞对照表》：河魁日者，日支临月破也。
+    正月申日、二月酉日、三月戌日、四月亥日、五月子日、六月丑日、
+    七月寅日、八月卯日、九月辰日、十月巳日、十一月午日、十二月未日。
+    （旧实现误作六合日——六合本为嫁娶大吉，绝无"妨姑"之理，已更正为月破六冲。）
     """
     # 获取月支和日支
     try:
@@ -549,23 +555,23 @@ def is_hekui_day(date_obj):
         sizhu = calculate_sizhu(date_obj, 12, 0)
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        
-        # 河魁日规则（妨姑）
+
+        # 河魁日规则（妨姑）：日支临月破（月支之六冲）
         hekui_map = {
-            '寅': '亥',  # 正月（寅月）的亥日是河魁日
-            '卯': '戌',  # 二月（卯月）的戌日是河魁日
-            '辰': '酉',  # 三月（辰月）的酉日是河魁日
-            '巳': '申',  # 四月（巳月）的申日是河魁日
-            '午': '未',  # 五月（午月）的未日是河魁日
-            '未': '午',  # 六月（未月）的午日是河魁日
-            '申': '巳',  # 七月（申月）的巳日是河魁日
-            '酉': '辰',  # 八月（酉月）的辰日是河魁日
-            '戌': '卯',  # 九月（戌月）的卯日是河魁日
-            '亥': '寅',  # 十月（亥月）的寅日是河魁日
-            '子': '丑',  # 十一月（子月）的丑日是河魁日
-            '丑': '子'   # 十二月（丑月）的子日是河魁日
+            '寅': '申',  # 正月（寅月）月破在申
+            '卯': '酉',  # 二月（卯月）月破在酉
+            '辰': '戌',  # 三月（辰月）月破在戌
+            '巳': '亥',  # 四月（巳月）月破在亥
+            '午': '子',  # 五月（午月）月破在子
+            '未': '丑',  # 六月（未月）月破在丑
+            '申': '寅',  # 七月（申月）月破在寅
+            '酉': '卯',  # 八月（酉月）月破在卯
+            '戌': '辰',  # 九月（戌月）月破在辰
+            '亥': '巳',  # 十月（亥月）月破在巳
+            '子': '午',  # 十一月（子月）月破在午
+            '丑': '未'   # 十二月（丑月）月破在未
         }
-        
+
         return hekui_map.get(month_zhi) == day_zhi
     except Exception as e:
         return False

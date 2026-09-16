@@ -58,11 +58,103 @@ class StoveShenShaChecker(ShenShaChecker):
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
         super()._check_month_shensha(sizhu, **kwargs)
-        # 土府日暂时禁用（无可靠依据）
+        
+        # ===== 凶煞 =====
+        
+        # 劫煞
+        if self._is_jiesha(sizhu):
+            self._add_shensha('劫煞', -25, '劫煞日忌作灶')
+        
+        # 灾煞
+        if self._is_zaijiesha(sizhu):
+            self._add_shensha('灾煞', -25, '灾煞日忌作灶')
+        
+        # 月煞
+        if self._is_yuesha(sizhu):
+            self._add_shensha('月煞', -20, '月煞日忌作灶')
+        
+        # 月厌
+        if self._is_yueyan(sizhu):
+            self._add_shensha('月厌', -20, '月厌日忌作灶')
+        
+        # 月破
+        if self._is_yuepo(sizhu):
+            self._add_shensha('月破', -25, '月破日忌作灶')
+        
+        # 土府日
+        if self._is_tufu2(sizhu):
+            self._add_shensha('土府日', -20, '土府日忌作灶')
+        
+        # 大耗
+        if self._is_dahao(sizhu):
+            self._add_shensha('大耗', -20, '大耗日忌作灶')
+        
+        # 小耗
+        if self._is_xiaohao(sizhu):
+            self._add_shensha('小耗', -15, '小耗日忌作灶')
     
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
         super()._check_day_shensha(sizhu, **kwargs)
+        
+        # ===== 凶煞 =====
+        
+        # 四离日
+        if self._is_sili(sizhu):
+            self._add_shensha('四离日', -30, '四离日忌作灶')
+        
+        # 四绝日
+        if self._is_sijue(sizhu):
+            self._add_shensha('四绝日', -30, '四绝日忌作灶')
+        
+        # 十恶大败
+        if self._is_shie_dabai(sizhu):
+            self._add_shensha('十恶大败', -30, '十恶大败日忌作灶')
+        
+        # 四废
+        if self._is_sifei(sizhu):
+            self._add_shensha('四废', -25, '四废日忌作灶')
+        
+        # 五墓
+        if self._is_wumu(sizhu):
+            self._add_shensha('五墓', -20, '五墓日忌作灶')
+        
+        # 大时
+        if self._is_dashi(sizhu):
+            self._add_shensha('大时', -15, '大时日忌作灶')
+        
+        # 天吏
+        if self._is_tianli(sizhu):
+            self._add_shensha('天吏', -20, '天吏日忌作灶')
+        
+        # ===== 吉神 =====
+        
+        # 天德
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 20, '天德吉星，作灶大吉')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德吉星，作灶大吉')
+        
+        # 天德合
+        if self._is_tiande_he(sizhu):
+            self._add_shensha('天德合', 15, '天德合，作灶吉')
+        
+        # 月德合
+        if self._is_yuede_he(sizhu):
+            self._add_shensha('月德合', 12, '月德合，作灶吉')
+        
+        # 三奇
+        sanqi_result = self._is_sanqi(sizhu)
+        if sanqi_result:
+            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，作灶上吉')
+        
+        # 将星
+        if self._is_jiangxing(sizhu):
+            self._add_shensha('将星', 12, '将星到座，作灶吉')
+        
+        # ===== 作灶专用 =====
         
         # 丙丁日（火旺适合作灶）
         if self._is_bingding(sizhu):
@@ -75,6 +167,91 @@ class StoveShenShaChecker(ShenShaChecker):
         # 地火日（传统公式：正月戌、二月亥、三月子...）
         if self._is_dihuo(sizhu):
             self._add_shensha('地火日', -12, '地火日不宜作灶')
+        
+        # 灶君朝天（登天太微宫五日：戊戌、己亥、庚子、辛丑、壬寅）  # _zjct0914
+        if self._is_zaojun_chaotian(sizhu):
+            self._add_shensha('灶君朝天', -15,
+                              '灶君朝天（登天太微宫）日忌作灶，安灶新修俱不利（古歌：吉神会聚可制化）')
+
+        # 逐月作灶忌日（《居家必用事类全集》）
+        if self._is_zao_yueji(sizhu):
+            self._add_shensha('作灶月忌', -15, '逐月作灶忌日，忌作灶')
+        
+        # 火忌（午未日）
+        if self._is_huoji(sizhu):
+            self._add_shensha('火忌', -10, '火忌日不宜作灶')
+        
+        # ===== 补充缺失的吉神检查 =====
+        
+        # 天德日
+        if self._is_tiande(sizhu):
+            self._add_shensha('天德', 15, '天德吉星，作灶大吉')
+        
+        # 月德
+        if self._is_yuede(sizhu):
+            self._add_shensha('月德', 18, '月德吉星，作灶大吉')
+        
+        # 天赦日
+        if self._is_tianshe(sizhu):
+            self._add_shensha('天赦日', 18, '天赦日百事吉，作灶尤佳')
+        
+        # 鸣犬日（作灶吉日）
+        if self._is_mingquan(sizhu):
+            self._add_shensha('鸣犬日', 10, '鸣犬日宜作灶')
+        
+        # 鸣犬对日（作灶吉日）
+        if self._is_mingquandui(sizhu):
+            self._add_shensha('鸣犬对日', 8, '鸣犬对日宜作灶')
+        
+        # 天愿
+        if self._is_tianyuan(sizhu):
+            self._add_shensha('天愿', 12, '天愿吉星，作灶吉')
+        
+        # 月恩
+        if self._is_yueen(sizhu):
+            self._add_shensha('月恩', 10, '月恩吉星，作灶吉')
+        
+        # 四相
+        if self._is_sixiang(sizhu):
+            self._add_shensha('四相', 10, '四相吉日，作灶吉')
+        
+        # 时德
+        if self._is_shide(sizhu):
+            self._add_shensha('时德', 10, '时德吉日，作灶吉')
+        
+        # 岁德
+        if self._is_suide(sizhu):
+            self._add_shensha('岁德', 15, '岁德吉星，作灶大吉')
+        
+        # 岁德合
+        if self._is_suide_he(sizhu):
+            self._add_shensha('岁德合', 12, '岁德合，作灶吉')
+        
+        # 母仓日
+        if self._is_mucang(sizhu):
+            self._add_shensha('母仓日', 10, '母仓日作灶吉')
+        
+        # 相日
+        if self._is_xiangri(sizhu):
+            self._add_shensha('相日', 8, '相日作灶吉')
+        
+        # ===== 补充缺失的凶煞检查 =====
+        
+        # 丧门
+        if self._is_sangmen(sizhu):
+            self._add_shensha('丧门', -18, '丧门日忌作灶')
+        
+        # 吊客
+        if self._is_diaoke(sizhu):
+            self._add_shensha('吊客', -15, '吊客日忌作灶')
+        
+        # 月虚
+        if self._is_yuexu(sizhu):
+            self._add_shensha('月虚', -12, '月虚日主虚耗，忌作灶')
+        
+        # 八专
+        if self._is_bazhuan(sizhu):
+            self._add_shensha('八专', -15, '八专日主消耗，忌作灶')
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（宅主）生肖与日课的冲合"""
@@ -84,38 +261,47 @@ class StoveShenShaChecker(ShenShaChecker):
         if not owners:
             return
         
+        def _ssw(raw, wv):
+            # 2026-09 作灶主事人模式：辅助者半权重
+            if wv >= 1.0:
+                return raw
+            _v = raw * wv
+            return int(_v + 0.5) if _v >= 0 else -int(-_v + 0.5)
+
         for i, owner in enumerate(owners):
             owner_zodiac = owner.get('生肖', '')
             owner_year_zhi = owner.get('年支', '')
-            owner_name = owner.get('姓名', f'宅主{i+1}')
+            owner_name = owner.get('姓名') or owner.get('name') or f'宅主{i+1}'
+            _wv = owner.get('_zaozhu_weight', None)
+            owner_weight = float(_wv) if _wv is not None else 1.0
             
             # 宅主灶向相合
             if self._check_owner_zao_match(sizhu, owner, zaoxiang, zaowei):
-                self._add_shensha('宅主灶向相合', 10, '宅主八字与灶向相合')
+                self._add_shensha('宅主灶向相合', _ssw(10, owner_weight), '宅主八字与灶向相合')
             
             # 年支相冲
             year_zhi = sizhu['year_zhi']
             if self._is_chong(year_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'年冲{owner_name}', -20, f'年支与{owner_name}生肖相冲')
+                self._add_shensha(f'年冲{owner_name}', _ssw(-20, owner_weight), f'年支与{owner_name}生肖相冲')
             
             # 月支相冲
             month_zhi = sizhu['month_zhi']
             if self._is_chong(month_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'月冲{owner_name}', -15, f'月支与{owner_name}生肖相冲')
+                self._add_shensha(f'月冲{owner_name}', _ssw(-15, owner_weight), f'月支与{owner_name}生肖相冲')
             
             # 日支相冲
             day_zhi = sizhu['day_zhi']
             if self._is_chong(day_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'日冲{owner_name}', -25, f'日支与{owner_name}生肖相冲，大忌')
+                self._add_shensha(f'日冲{owner_name}', _ssw(-25, owner_weight), f'日支与{owner_name}生肖相冲，大忌')
             elif self._check_owner_sanhe_liuhe(sizhu, owner):
-                self._add_shensha('日支与宅主合', 8, '日支与宅主年支相合')
+                self._add_shensha('日支与宅主合', _ssw(8, owner_weight), '日支与宅主年支相合')
             
             # 时支相冲
             hour_zhi = sizhu.get('hour_zhi', '')
             if hour_zhi and self._is_chong(hour_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'时冲{owner_name}', -12, f'时支与{owner_name}生肖相冲')
+                self._add_shensha(f'时冲{owner_name}', _ssw(-12, owner_weight), f'时支与{owner_name}生肖相冲')
             elif hour_zhi and self._is_he(hour_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
+                self._add_shensha(f'时合{owner_name}', _ssw(6, owner_weight), f'时支与{owner_name}生肖相合')
     
     def _shengxiao_to_zhi(self, shengxiao):
         """生肖转换为地支"""
@@ -125,6 +311,55 @@ class StoveShenShaChecker(ShenShaChecker):
             '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'
         }
         return shengxiao_map.get(shengxiao)
+    
+    def _is_yuepo(self, sizhu):
+        """是否月破日（日支与月支相冲）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        chong_map = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return day_zhi == chong_map.get(month_zhi)
+    
+    def _is_dahao(self, sizhu):
+        """是否大耗日（土府日之次日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        
+        # 使用基类的土府映射表
+        tufu_map = {
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
+        }
+        tufu_zhi = tufu_map.get(month_zhi)
+        if not tufu_zhi:
+            return False
+        tufu_idx = zh_list.index(tufu_zhi)
+        dahao_zhi = zh_list[(tufu_idx + 1) % 12]
+        return day_zhi == dahao_zhi
+    
+    def _is_xiaohao(self, sizhu):
+        """是否小耗日（大耗日之次日）"""
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        
+        # 使用基类的土府映射表
+        tufu_map = {
+            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
+            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
+            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
+        }
+        tufu_zhi = tufu_map.get(month_zhi)
+        if not tufu_zhi:
+            return False
+        tufu_idx = zh_list.index(tufu_zhi)
+        xiaohao_zhi = zh_list[(tufu_idx + 2) % 12]
+        return day_zhi == xiaohao_zhi
     
     def _is_chong(self, zhi1, zhi2):
         """检查两个地支是否相冲"""

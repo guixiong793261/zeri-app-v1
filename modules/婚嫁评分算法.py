@@ -5,16 +5,21 @@
 核心功能：
 1. 大利月/小利月检查
 2. 一票否决项检查（月破、岁破、上朔日、四离四绝、重丧日、三娘煞）
-3. 日课四柱内部地支合局评分
-4. 时辰评分（黄道时、五不遇时等）
-5. 夫妻命理互补分析
+3. 日课年月日柱内部地支合局评分
+4. 夫妻命理互补分析
+
+【彻底分离原则】日课评分不含时柱因素：
+日课四柱中的时柱为示例时辰（默认午时），实际用课可另选吉时，
+时辰吉凶统一由 modules/shensha/嫁娶神煞扩展.py 的 get_lucky_hours
+（十二时辰婚嫁吉凶表）独立评估（冲新娘/冲新郎禁用、合新娘/合新郎、
+大黄道、建除、红鸾/天喜/贵人/禄神/五不遇/日破等），
+不再计入日课总分，避免示例时柱冲合刑害失真及重复扣分。
 
 评分结构：
 - 基础分：60分
 - 吉神加分：不将日、天德、月德、黄道日等
 - 凶神扣分：三煞、阴胎、阳气、冲夫星、冲子星等
-- 地支合局加分：三合局、半合局、六合
-- 时辰加分：黄道时
+- 地支合局加分：三合局、半合局、六合（仅年月日三柱）
 """
 
 from datetime import date, datetime
@@ -54,15 +59,22 @@ HUANGDAO_SHI_TABLE = {
 }
 HUANGDAO_XING = ['青龙', '明堂', '金匮', '天德', '玉堂', '司命']
 
+# 【单一权威规则源】天乙贵人时辰地支表（正宗口诀）
+#   甲戊庚牛羊（丑、未）
+#   乙己鼠猴乡（子、申）
+#   丙丁猪鸡位（亥、酉）
+#   壬癸兔蛇藏（卯、巳）
+#   六辛逢马虎（寅、午）
+# 修正记录：此前 '庚' 误写为 ['寅','午']（与辛混淆），现更正为 ['丑','未']
 TIANYI_GUIREN = {
     '甲': ['丑', '未'],
     '戊': ['丑', '未'],
+    '庚': ['丑', '未'],   # 修正：甲戊庚牛羊（此前错配为寅午）
     '乙': ['子', '申'],
     '己': ['子', '申'],
     '丙': ['酉', '亥'],
     '丁': ['酉', '亥'],
-    '庚': ['寅', '午'],
-    '辛': ['寅', '午'],
+    '辛': ['寅', '午'],   # 六辛逢马虎（正确）
     '壬': ['卯', '巳'],
     '癸': ['卯', '巳']
 }
@@ -95,19 +107,22 @@ def get_liyue_score(bride_year_zhi, lunar_month):
     Returns:
         (score, reason): 得分和原因
     """
+    # 大利月口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
+    # 小利月口诀：鼠马二八月，牛羊四十当，虎猴正七月，兔鸡六腊月，龙狗三九月，蛇猪五十一
+    # （与 modules/shensha/嫁娶神煞扩展.py get_li_yue_info 保持单源一致，2026-09-15 修正）
     table = {
-        '子': {'dali': [6, 12], 'xiaoli': [1, 7]},
-        '午': {'dali': [6, 12], 'xiaoli': [1, 7]},
+        '子': {'dali': [6, 12], 'xiaoli': [2, 8]},
+        '午': {'dali': [6, 12], 'xiaoli': [2, 8]},
         '丑': {'dali': [5, 11], 'xiaoli': [4, 10]},
         '未': {'dali': [5, 11], 'xiaoli': [4, 10]},
-        '寅': {'dali': [2, 8], 'xiaoli': [3, 9]},
-        '申': {'dali': [2, 8], 'xiaoli': [3, 9]},
+        '寅': {'dali': [2, 8], 'xiaoli': [1, 7]},
+        '申': {'dali': [2, 8], 'xiaoli': [1, 7]},
         '卯': {'dali': [1, 7], 'xiaoli': [6, 12]},
         '酉': {'dali': [1, 7], 'xiaoli': [6, 12]},
-        '辰': {'dali': [4, 10], 'xiaoli': [5, 11]},
-        '戌': {'dali': [4, 10], 'xiaoli': [5, 11]},
-        '巳': {'dali': [3, 9], 'xiaoli': [2, 8]},
-        '亥': {'dali': [3, 9], 'xiaoli': [2, 8]}
+        '辰': {'dali': [4, 10], 'xiaoli': [3, 9]},
+        '戌': {'dali': [4, 10], 'xiaoli': [3, 9]},
+        '巳': {'dali': [3, 9], 'xiaoli': [5, 11]},
+        '亥': {'dali': [3, 9], 'xiaoli': [5, 11]}
     }
     info = table.get(bride_year_zhi, {})
     if lunar_month in info.get('dali', []):
@@ -124,9 +139,14 @@ def get_liyue_score(bride_year_zhi, lunar_month):
     return 0, None
 
 # ==================== 阴胎、阳气计算 ====================
+# 【典籍口径】（《选择求真·卷五》胎元起例 + 通书“天进一兮地三和”）：
+#   阴胎（女命/新娘）：生月月柱 月干顺进 1 位 + 月支顺进 3 位 = 胎元
+#   阳气（男命/新郎，婚嫁择日用于判断日课是否“犯阳气”）：
+#       生月月柱 月干顺进 1 位 + 月支顺进 3 位（与阴胎同法，男称阳气女称阴胎）
+#   说明：旧版阳气误作“干+3支+1”对称公式，无典籍依据，2026-09 按典籍修正。
 
 def get_yintai(month_gan, month_zhi):
-    """阴胎 = 月干顺进一位 + 月支顺进三位"""
+    """阴胎（女命）= 月干顺进 1 位 + 月支顺进 3 位（=胎元）"""
     gan_idx = gan_index(month_gan)
     zhi_idx = zhi_index(month_zhi)
     yt_gan = GAN[(gan_idx + 1) % 10]
@@ -134,7 +154,7 @@ def get_yintai(month_gan, month_zhi):
     return yt_gan, yt_zhi
 
 def get_yangqi(month_gan, month_zhi):
-    """阳气 = 月干顺进一位 + 月支顺进三位"""
+    """阳气（男命）= 月干顺进 1 位 + 月支顺进 3 位（与阴胎同法，即胎元）"""
     gan_idx = gan_index(month_gan)
     zhi_idx = zhi_index(month_zhi)
     yq_gan = GAN[(gan_idx + 1) % 10]
@@ -210,129 +230,67 @@ def get_zhiju_score(sizhu):
 
 # ==================== 夫星、子星计算 ====================
 
-def get_fuxing_zixing_by_year(year_gan, year_zhi):
-    """
-    根据年干和年支返回夫星（正官）、七杀、子星（食神）、伤官的完整干支
-    
-    推算规则：
-    1. 夫星天干：克年干的五行
-    2. 夫星地支：根据年支推算（年支三合局的长生位）
-    3. 子星天干：年干所生的五行
-    4. 子星地支：根据年支推算（年支三合局的帝旺位）
-    
+def get_fuxing_zixing_by_year(year_gan, year_zhi=None):
+    """女命真夫星/七杀、真天嗣（子星）/伤官完整干支——通书五虎遁起例。
+
+    【典籍口径】以年干为"我"：正官（克我、阴阳异）为真夫星，七杀（克我、
+    同阴阳）为偏夫，食神（我生、同阴阳）为真天嗣（子星），伤官（我生、
+    阴阳异）为子息偏星。四干地支一律从寅月五虎遁起遁到该干首次临宫之支，
+    只随年干变化，与年支无关（《选择求真》卷五嫁娶总集）。
+    定局（正官/食神）：甲辛未/丙寅，乙庚辰/丁亥，丙癸巳/戊戌，丁壬寅/己酉，
+    戊乙卯/庚申，己甲戌/辛未，庚丁亥/壬午，辛丙申/癸巳，壬己酉/甲辰，
+    癸戊午/乙卯。
+
     Args:
         year_gan: 年柱天干
-        year_zhi: 年柱地支
-        
+        year_zhi: 年柱地支（兼容旧签名，不参与计算）
+
     Returns:
         dict: {'fu':正官干支, 'qi':七杀干支, 'zi':食神干支, 'shang':伤官干支}
     """
-    zhi_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    
-    # 夫星地支映射（根据年支推算）
-    fu_zhi_map = {
-        '子': '巳', '丑': '申', '寅': '亥', '卯': '戌', '辰': '申', '巳': '申',
-        '午': '亥', '未': '申', '申': '寅', '酉': '巳', '戌': '寅', '亥': '寅'
-    }
-    
-    # 子星地支映射（根据年支推算）
-    zi_zhi_map = {
-        '子': '戌', '丑': '巳', '寅': '申', '卯': '未', '辰': '亥', '巳': '寅',
-        '午': '巳', '未': '巳', '申': '亥', '酉': '寅', '戌': '亥', '亥': '卯'
-    }
-    
-    # 五行生克关系
-    # 天干五行：甲=木, 乙=木, 丙=火, 丁=火, 戊=土, 己=土, 庚=金, 辛=金, 壬=水, 癸=水
-    # 夫星：克我者（火克金, 金克木, 木克土, 土克水, 水克火）
-    # 子星：我生者（木生火, 火生土, 土生金, 金生水, 水生木）
-    
-    # 夫星天干映射（克年干的五行）
-    # 阳日干取正官（阴阳相反），阴日干取七杀（阴阳相同）
-    # 金克木，木克土，土克水，水克火，火克金
+    # 天干：克我（官杀）、我生（食伤）
     fuxing_gan_map = {
-        '甲': '辛', '乙': '庚', '丙': '癸', '丁': '壬',
-        '戊': '乙', '己': '甲', '庚': '丁', '辛': '丙',
-        '壬': '己', '癸': '戊'
+        '甲': '辛', '乙': '庚', '丙': '癸', '丁': '壬', '戊': '乙',
+        '己': '甲', '庚': '丁', '辛': '丙', '壬': '己', '癸': '戊'
     }
-    
-    # 七杀天干映射（与夫星同五行的另一个天干）
     qisha_gan_map = {
-        '甲': '庚', '乙': '辛', '丙': '壬', '丁': '癸',
-        '戊': '甲', '己': '乙', '庚': '丙', '辛': '丁',
-        '壬': '戊', '癸': '己'
+        '甲': '庚', '乙': '辛', '丙': '壬', '丁': '癸', '戊': '甲',
+        '己': '乙', '庚': '丙', '辛': '丁', '壬': '戊', '癸': '己'
     }
-    
-    # 子星天干映射（年干所生的五行）
     zixing_gan_map = {
-        '甲': '丙', '乙': '丁', '丙': '戊', '丁': '己',
-        '戊': '庚', '己': '辛', '庚': '壬', '辛': '癸',
-        '壬': '甲', '癸': '乙'
+        '甲': '丙', '乙': '丁', '丙': '戊', '丁': '己', '戊': '庚',
+        '己': '辛', '庚': '壬', '辛': '癸', '壬': '甲', '癸': '乙'
     }
-    
-    # 伤官天干映射（与子星同五行的另一个天干）
     shangguan_gan_map = {
-        '甲': '丁', '乙': '丙', '丙': '己', '丁': '戊',
-        '戊': '辛', '己': '庚', '庚': '癸', '辛': '壬',
-        '壬': '乙', '癸': '甲'
+        '甲': '丁', '乙': '丙', '丙': '己', '丁': '戊', '戊': '辛',
+        '己': '庚', '庚': '癸', '辛': '壬', '壬': '乙', '癸': '甲'
     }
-    
-    # 根据用户提供的三个例子调整地支映射
-    # 辛未年（辛，未）→ 夫星丙申（申），子星癸巳（巳）
-    # 丙子年（丙，子）→ 夫星癸巳（巳），子星戊戌（戌）
-    # 己卯年（己，卯）→ 夫星甲戌（戌），子星辛未（未）
-    
-    # 调整后的地支映射
-    fu_zhi_map = {
-        '子': '巳', '丑': '申', '寅': '亥', '卯': '戌', '辰': '申', '巳': '申',
-        '午': '亥', '未': '申', '申': '寅', '酉': '巳', '戌': '寅', '亥': '寅'
-    }
-    
-    zi_zhi_map = {
-        '子': '戌', '丑': '巳', '寅': '申', '卯': '未', '辰': '亥', '巳': '寅',
-        '午': '巳', '未': '巳', '申': '亥', '酉': '寅', '戌': '亥', '亥': '卯'
-    }
-    
-    # 从例子中提取正确的映射
-    fu_zhi_map['未'] = '申'  # 辛未年夫星地支申
-    fu_zhi_map['子'] = '巳'  # 丙子年夫星地支巳
-    fu_zhi_map['卯'] = '戌'  # 己卯年夫星地支戌
-    
-    zi_zhi_map['未'] = '巳'  # 辛未年子星地支巳
-    zi_zhi_map['子'] = '戌'  # 丙子年子星地支戌
-    zi_zhi_map['卯'] = '未'  # 己卯年子星地支未
-    
-    fu_gan = fuxing_gan_map.get(year_gan, '')
-    fu_zhi = fu_zhi_map.get(year_zhi, '')
-    fu = fu_gan + fu_zhi if fu_gan and fu_zhi else ''
-    
-    zi_gan = zixing_gan_map.get(year_gan, '')
-    zi_zhi = zi_zhi_map.get(year_zhi, '')
-    zi = zi_gan + zi_zhi if zi_gan and zi_zhi else ''
-    
-    # 计算七杀（夫星地支顺数1位，使用七杀天干）
-    if fu and len(fu) == 2:
-        fu_zhi_idx = zhi_order.index(fu[1])
-        qi_zhi = zhi_order[(fu_zhi_idx + 1) % 12]
-        qi_gan = qisha_gan_map.get(year_gan, '')
-        qi = qi_gan + qi_zhi if qi_gan else ''
-    else:
-        qi = ''
-    
-    # 计算伤官（子星地支顺数1位，使用伤官天干）
-    if zi and len(zi) == 2:
-        zi_zhi_idx = zhi_order.index(zi[1])
-        shang_zhi = zhi_order[(zi_zhi_idx + 1) % 12]
-        shang_gan = shangguan_gan_map.get(year_gan, '')
-        shang = shang_gan + shang_zhi if shang_gan else ''
-    else:
-        shang = ''
-    
-    return {
-        'fu': fu,
-        'qi': qi,
-        'zi': zi,
-        'shang': shang
-    }
+    # 五虎遁年上起月首干
+    wuhu_start = {'甲': '丙', '己': '丙', '乙': '戊', '庚': '戊',
+                  '丙': '庚', '辛': '庚', '丁': '壬', '壬': '壬',
+                  '戊': '甲', '癸': '甲'}
+
+    if year_gan not in GAN:
+        return {'fu': '', 'qi': '', 'zi': '', 'shang': ''}
+
+    def _dun_zhi(target_gan):
+        """从寅月起遁，target_gan 首次临宫的地支"""
+        if target_gan not in GAN:
+            return ''
+        gi = gan_index(wuhu_start[year_gan])
+        zi0 = ZHI.index('寅')
+        for i in range(12):
+            if GAN[(gi + i) % 10] == target_gan:
+                return ZHI[(zi0 + i) % 12]
+        return ''
+
+    result = {}
+    for key, gan_map in (('fu', fuxing_gan_map), ('qi', qisha_gan_map),
+                         ('zi', zixing_gan_map), ('shang', shangguan_gan_map)):
+        star_gan = gan_map.get(year_gan, '')
+        star_zhi = _dun_zhi(star_gan)
+        result[key] = star_gan + star_zhi if star_gan and star_zhi else ''
+    return result
 
 
 def get_fuxing_zixing(day_gan):
@@ -540,6 +498,10 @@ def check_fuxing_being_ke(bride_bazi, sizhu):
         if fuxing_count < 1.0:
             score = -20
             reason = f'夫星受克（{ke_fuxing_wuxing}天干{",".join(ke_gan_list)}克制{fuxing_wuxing}夫星，夫星弱）'
+        elif len(ke_gan_list) >= 2:
+            # 多重克制（2个及以上天干克制夫星）加重扣分
+            score = -20
+            reason = f'夫星受克（{ke_fuxing_wuxing}天干{",".join(ke_gan_list)}多重克制{fuxing_wuxing}夫星）'
         elif ke_fuxing_count > 1.5:
             score = -15
             reason = f'夫星稍受克（{ke_fuxing_wuxing}天干{",".join(ke_gan_list)}克制{fuxing_wuxing}夫星）'
@@ -560,7 +522,9 @@ def check_fuxing_being_ke(bride_bazi, sizhu):
     if not reason:
         if day_wuxing_count > 3.0 and fuxing_count < 1.0:
             score = -20
-            reason = f'日主较旺耗夫星（{day_wuxing}旺{day_wuxing_count:.1f}）'
+            reason = (f'日主较旺耗夫星（日课{day_wuxing}元素强度{day_wuxing_count:.1f}，'
+                      f'夫星{fuxing_wuxing}偏弱仅{fuxing_count:.1f}，'
+                      f'{day_wuxing}过旺则{fuxing_wuxing}夫星不得力）')
     
     # 情况4：夫星本身太弱
     if not reason:
@@ -622,7 +586,7 @@ def check_sanxing_penalty(sizhu):
     total_penalty = 0
     reasons = []
     
-    # 三刑关系
+    # 三刑关系（刑名勘正：寅巳申=无恩之刑（寅刑巳巳刑申申刑寅），丑戌未=恃势之刑）
     sanxing_groups = [
         (['寅', '巳', '申'], '无恩之刑'),
         (['丑', '戌', '未'], '恃势之刑'),
@@ -646,11 +610,12 @@ def check_sanxing_penalty(sizhu):
         ('时柱', sizhu.get('hour_zhi', ''))
     ]
     
-    # 检查每一组三刑
+    # 检查每一组三刑（三刑局须组内地支齐备方成局：寅巳申/丑戌未须三支全现，
+    # 仅两支为相刑未成局不扣分，如巳申两支刑合并见只计六合；子卯无礼之刑两支即成）
     for group, name in sanxing_groups:
         # 获取该组中存在的不同地支
         present_zhis = set(z for z in zhi_list if z in group)
-        if len(present_zhis) >= 2:
+        if len(present_zhis) >= len(group):
             # 找到对应的地支
             matching_zhis = [f"{z_name}{z}" for z_name, z in zhis_with_name if z in present_zhis]
             total_penalty -= 8  # 三刑扣8分
@@ -760,12 +725,15 @@ def is_sansang(date_obj):
     return False
 
 def is_sanniangsha(date_obj):
-    """三娘煞：每月初三、初七、十三、十八、廿二、廿七
-    
+    """真三娘煞：农历日期与日干支同时满足特定条件（全年仅6天）
+
+    真三娘煞对照：初三逢庚午、初七逢辛未、十三逢戊申、十八逢己酉、
+    廿二逢丙午、廿七逢丁未。
+    仅农历日相符而干支不符的"假三娘煞"（每月固定6天）不再作为婚嫁禁忌。
     注意：三娘煞按农历日期判断，不是公历日期
     """
-    SANNIANGSHA_DAYS = [3, 7, 13, 18, 22, 27]
-    
+    ZHEN_SANNIANG_MAP = {3: '庚午', 7: '辛未', 13: '戊申', 18: '己酉', 22: '丙午', 27: '丁未'}
+
     try:
         from modules.四柱计算器 import get_lunar_date
         lunar_info = get_lunar_date(date_obj)
@@ -780,109 +748,41 @@ def is_sanniangsha(date_obj):
                 '廿六': 26, '廿七': 27, '廿八': 28, '廿九': 29, '三十': 30
             }
             lunar_day = day_map.get(lunar_info['day'], 0)
-            return lunar_day in SANNIANGSHA_DAYS
+            if lunar_day in ZHEN_SANNIANG_MAP:
+                day_gan, day_zhi = get_day_ganzhi(date_obj)
+                return (day_gan + day_zhi) == ZHEN_SANNIANG_MAP[lunar_day]
     except Exception as e:
         logger.error(f"判断三娘煞失败: {e}")
-    
+
     return False
 
 def check_reject_items(date_obj, sizhu):
     """
-    检查一票否决项
+    检查一票否决项（真正的绝对禁忌）
     
-    Returns:
-        (is_reject, reason): 是否否决及原因
+    注意：月破、上朔日、四离四绝已改为高扣分项（非绝对否决），
+    这些日子虽凶但有制化可用，不再一票否决。
+    保留的绝对否决项：岁破（日支冲年支）、重丧日、真三娘煞
     """
-    if is_month_break(date_obj, sizhu):
-        return True, '月破（月支冲年支）'
     if is_year_break(date_obj, sizhu):
         return True, '岁破（日支冲年支）'
-    if is_shangshuo(date_obj, sizhu):
-        return True, '上朔日'
-    if is_sili_sijue(date_obj):
-        return True, '四离四绝日'
     if is_sansang(date_obj):
         return True, '重丧日'
     if is_sanniangsha(date_obj):
-        return True, '三娘煞'
+        return True, '真三娘煞'
     return False, None
 
-# ==================== 时辰评分 ====================
-
-def get_shichen_score(sizhu, bride_bazi=None, groom_bazi=None):
-    """
-    计算时辰得分
-    
-    Args:
-        sizhu: 日课四柱信息（包含时柱）
-        bride_bazi: 新娘八字 {'ri_gan': '', 'ri_zhi': ''}
-        groom_bazi: 新郎八字 {'ri_gan': '', 'ri_zhi': ''}
-    
-    Returns:
-        (score, details): 得分和详情列表
-    """
-    score = 0
-    details = []
-    hour_zhi = sizhu.get('hour_zhi', '')
-    day_gan = sizhu['日柱'][0]
-    day_zhi = sizhu.get('day_zhi', sizhu['日柱'][1] if len(sizhu.get('日柱', '')) > 1 else '')
-    
-    # 1. 黄道时加分（根据日支查表）
-    if day_zhi in HUANGDAO_SHI_TABLE:
-        hour_idx = ZHI.index(hour_zhi) if hour_zhi in ZHI else 0
-        shi_xing = HUANGDAO_SHI_TABLE[day_zhi][hour_idx]
-        if shi_xing in HUANGDAO_XING:
-            score += 10
-            details.append((f'黄道时({shi_xing})', 10))
-    
-    # 1.5 天乙贵人加分（根据日干查表）
-    if day_gan in TIANYI_GUIREN:
-        guiren_zhis = TIANYI_GUIREN[day_gan]
-        if hour_zhi in guiren_zhis:
-            score += 15
-            details.append((f'天乙贵人时({hour_zhi}时)', 15))
-    
-    # 2. 五不遇时扣分（日干克时干）
-    hour_gan = sizhu.get('hour_gan', '')
-    if hour_gan:
-        # 五不遇时：甲日庚午时、乙日辛巳时、丙日壬辰时、丁日癸卯时、戊日甲寅时
-        # 己日乙丑时、庚日丙子时、辛日丁酉时、壬日戊申时、癸日己未时
-        wubuyu_pairs = [('甲', '庚'), ('乙', '辛'), ('丙', '壬'), ('丁', '癸'), ('戊', '甲'),
-                        ('己', '乙'), ('庚', '丙'), ('辛', '丁'), ('壬', '戊'), ('癸', '己')]
-        if (day_gan, hour_gan) in wubuyu_pairs:
-            score -= 20
-            details.append(('五不遇时', -20))
-    
-    # 3. 时支与新娘日支合局加分
-    if bride_bazi and bride_bazi.get('ri_zhi'):
-        bride_ri_zhi = bride_bazi['ri_zhi']
-        if is_liuhe(hour_zhi, bride_ri_zhi):
-            score += 8
-            details.append(('时支与新娘日支六合', 8))
-        # 检查半合
-        banhe_result, _ = is_banhe([hour_zhi, bride_ri_zhi])
-        if banhe_result:
-            score += 4
-            details.append(('时支与新娘日支半合', 4))
-    
-    # 3.5 时支冲新娘生肖（年支）- 大凶
-    if bride_bazi and bride_bazi.get('year_zhi'):
-        if is_chong(hour_zhi, bride_bazi['year_zhi']):
-            score -= 50  # 时支冲新娘生肖，禁用
-            details.append(('时支冲新娘生肖', -50))
-    
-    # 4. 时支与新郎日支合局加分
-    if groom_bazi and groom_bazi.get('ri_zhi'):
-        groom_ri_zhi = groom_bazi['ri_zhi']
-        if is_liuhe(hour_zhi, groom_ri_zhi):
-            score += 5
-            details.append(('时支与新郎六合', 5))
-        banhe_result, _ = is_banhe([hour_zhi, groom_ri_zhi])
-        if banhe_result:
-            score += 3
-            details.append(('时支与新郎半合', 3))
-    
-    return score, details
+# ==================== 时辰评分（已移除） ====================
+# 【彻底分离】原 get_shichen_score（黄道时/天乙贵人时/五不遇时/时支与新娘新郎
+# 冲合评分）已删除，不再计入日课总分：
+# 1. 日课四柱中的时柱为示例时辰（默认午时），实际用课可另选吉时，
+#    用示例时柱冲新娘生肖扣50分等属于对日课的误伤；
+# 2. 时辰吉凶统一由 modules/shensha/嫁娶神煞扩展.py 的 get_lucky_hours
+#    （十二时辰婚嫁吉凶表）独立评估：冲新娘/冲新郎→禁用、合新娘/合新郎+10、
+#    三合+12、大黄道±20、建除±8、红鸾+15、天喜+12、贵人+15、禄神+10、
+#    五不遇-15、日破→禁用，信息完整不丢失。
+# HUANGDAO_SHI_TABLE、TIANYI_GUIREN 常量保留，作为与 modules/黄道.py、
+# modules/shensha/通用神煞.py 规则对齐的参照源。
 
 # ==================== 辅助函数 ====================
 
@@ -977,7 +877,7 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         from .shensha.marriage_shensha import (
             is_tiande_day, is_yuede_day, is_bujiang_day, is_huangdao_day,
             is_sansha, get_fuxing_zixing, is_tiangang_day, is_hekui_day,
-            is_da_huangdao_day, is_xiao_huangdao_day
+            is_da_huangdao_day, is_xiao_huangdao_day, get_jianchu
         )
         
         # 吉神加分
@@ -993,24 +893,89 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             score += 15  # 月德
             details.append(('月德', 15))
         
-        # 大黄道（十二神）加分/扣分 - 更重要
-        if is_da_huangdao_day(date_obj):
-            score += 15  # 大黄道吉日（和天德月德同级）
-            details.append(('大黄道吉日', 15))
+        # 大黄道（十二神值日）/小黄道（建除十二神）计分
+        # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
+        # 【黄道信息】显示完全一致——大黄道青龙/明堂/天德/玉堂+15、金匮/司命+10、
+        # 六黑道-15；小黄道吉（除/定/执/危/成/开）+5、凶（建/满/平/破/收/闭）-10。
+        # 建星对嫁娶另有宜忌：除/危/执虽黄道为吉却忌嫁娶，按-5计。
+        try:
+            from .黄道 import calculate_huangdao as _calc_hd
+        except ImportError:
+            try:
+                from 黄道 import calculate_huangdao as _calc_hd
+            except ImportError:
+                _calc_hd = None
+        _hd = _calc_hd(sizhu) if _calc_hd else {}
+        _hd = _hd or {}
+        _da = _hd.get('da_huang_dao') or {}
+        _da_name = _da.get('name', '')
+        if _da.get('type') == '吉':
+            _da_score = int(_da.get('score', 10) or 10)
+            score += _da_score  # 大黄道吉日（司命/金匮+10，青龙/明堂/天德/玉堂+15）
+            details.append((f'大黄道{_da_name}日（黄道吉日）', _da_score))
         else:
-            score -= 15  # 大黄道凶日（有分量，即使小黄道吉也可能净扣分）
-            details.append(('大黄道凶日', -15))
+            score -= 15  # 六黑道凶日
+            details.append((f'大黄道{_da_name}黑道日', -15))
+
+        # 小黄道（建除）：吉建星+5、凶建星-10；除/危/执虽吉但嫁娶忌-5
+        _xo = _hd.get('xiao_huang_dao') or {}
+        _xn = _xo.get('name', '') or (get_jianchu(date_obj) if is_xiao_huangdao_day(date_obj) else '')
+        _jianchu_ji = {'除', '危', '执'}                 # 黄道为吉但嫁娶忌
+        _jianchu_xiong = {'建', '满', '平', '破', '收', '闭'}  # 黑道凶日
+        if _xn in _jianchu_ji:
+            score -= 5
+            details.append((f'小黄道{_xn}日忌嫁娶', -5))
+        elif _xn in _jianchu_xiong:
+            score -= 10
+            details.append((f'小黄道{_xn}日（黑道凶日）', -10))
+        elif _xn:  # 定/成/开等宜嫁娶的黄道吉日
+            _xo_score = int(_xo.get('score', 5) or 5)
+            score += _xo_score
+            details.append((f'小黄道{_xn}日（宜嫁娶）', _xo_score))
         
-        # 小黄道（建除）加分 - 次要
-        if is_xiao_huangdao_day(date_obj):
-            score += 8  # 小黄道吉日
-            details.append(('小黄道吉日', 8))
-        
-        # 凶神扣分
+        # 凶神扣分（新娘本命三煞：申子辰煞南巳午未、寅午戌煞北亥子丑、
+        # 亥卯未煞西申酉戌、巳酉丑煞东寅卯辰；组内依次为劫煞/灾煞/月煞。
+        # 真假三煞：三煞日天干克新娘年干＝真三煞，大凶-25宜避；
+        # 日干不克年干且得天德/月德化解＝假三煞，-10有吉神解厄可酌情；
+        # 不克但无吉神化解＝本命三煞，仍按-25）
         if bride_bazi and bride_bazi.get('year_zhi'):
             if is_sansha(date_obj, bride_bazi['year_zhi']):
-                score -= 25  # 三煞
-                details.append(('三煞', -25))
+                ny_zhi = bride_bazi['year_zhi']
+                ny_gan = bride_bazi.get('year_gan', '')
+                sd_gan, sd_zhi = get_day_ganzhi(date_obj)
+                sha_fang = {'巳': '南', '午': '南', '未': '南', '亥': '北', '子': '北', '丑': '北',
+                            '申': '西', '酉': '西', '戌': '西', '寅': '东', '卯': '东', '辰': '东'}.get(sd_zhi, '')
+                sha_ming = {'巳': '劫煞', '午': '灾煞', '未': '月煞', '亥': '劫煞', '子': '灾煞', '丑': '月煞',
+                            '申': '劫煞', '酉': '灾煞', '戌': '月煞', '寅': '劫煞', '卯': '灾煞', '辰': '月煞'}.get(sd_zhi, '')
+                GAN_WX = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+                          '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}
+                ke_map = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
+                zhen = bool(ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX
+                            and ke_map[GAN_WX[sd_gan]] == GAN_WX[ny_gan])
+                if zhen:
+                    penalty = -25
+                    label = (f"真三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}克年干{ny_gan}（"
+                             f"{GAN_WX.get(sd_gan,'?')}克{GAN_WX.get(ny_gan,'?')}），大凶宜避")
+                elif is_tiande_day(date_obj) or is_yuede_day(date_obj):
+                    penalty = -10
+                    _jie = '、'.join([n for n, f in (('天德', is_tiande_day), ('月德', is_yuede_day)) if f(date_obj)])
+                    # 2026-09-03 用户问题3修正：假三煞判定的制化条件（日干不克年干+得吉神化解）
+                    # 明确写入本段标签，不再与"庚日主失令（月令分析段）"同段混排，避免阅读时
+                    # 把月令判断"日主失令"误读为假三煞的归属依据。
+                    _ke_rel = (f"{GAN_WX.get(sd_gan,'?')}不克{GAN_WX.get(ny_gan,'?')}"
+                               if ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX and
+                                  ke_map[GAN_WX[sd_gan]] != GAN_WX[ny_gan]
+                               else f"日干{sd_gan}不克年干{ny_gan or '未知'}")
+                    label = (f"假三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯{sha_ming}；判为'假'的两项依据："
+                             f"①{_ke_rel}（真三煞需日干克年干），②得{_jie}化解。属有吉神解厄，可酌情")
+                else:
+                    penalty = -25
+                    label = (f"本命三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
+                score += penalty
+                details.append((label, penalty))
         
         # 日支冲新娘生肖（年支）- 大凶
         if bride_bazi and bride_bazi.get('year_zhi'):
@@ -1061,23 +1026,50 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                 if is_chong(day_zhi, zi_chong_zhi):
                     score -= 20
                     details.append(('冲子星', -20))
-            
-            # 阴胎（以月柱为基准）
-            yintai_gan, yintai_zhi = get_yintai(bride_bazi.get('yue_gan', '甲'), bride_bazi.get('yue_zhi', '子'))
-            if day_gan == yintai_gan and day_zhi == yintai_zhi:
+
+        # 阴胎 / 阳气 检查（只依赖双方生月月柱，独立于新娘日柱 ri_gan）
+        # 典籍（《协纪辨方书》嫁娶："日时勿冲犯阴胎阳气"）：日支与胎元地支六冲各-30；
+        # 时支冲不入日课总分，由【十二时辰婚嫁吉凶】表判该时辰禁用。
+        day_gan_ty, day_zhi_ty = get_day_ganzhi(date_obj)
+        _b_yue_gan = (bride_bazi or {}).get('yue_gan') or (bride_bazi or {}).get('month_gan')
+        _b_yue_zhi = (bride_bazi or {}).get('yue_zhi') or (bride_bazi or {}).get('month_zhi')
+        if _b_yue_gan and _b_yue_zhi:
+            yintai_gan, yintai_zhi = get_yintai(_b_yue_gan, _b_yue_zhi)
+            if is_chong(day_zhi_ty, yintai_zhi):
                 score -= 30
-                details.append(('犯阴胎', -30))
-            
-            # 阳气（以月柱为基准）
-            yangqi_gan, yangqi_zhi = get_yangqi(bride_bazi.get('yue_gan', '甲'), bride_bazi.get('yue_zhi', '子'))
-            if day_gan == yangqi_gan and day_zhi == yangqi_zhi:
+                details.append((f'犯阴胎（日支{day_zhi_ty}冲阴胎{yintai_gan}{yintai_zhi}）', -30))
+
+        _g_yue_gan = (groom_bazi or {}).get('yue_gan') or (groom_bazi or {}).get('month_gan')
+        _g_yue_zhi = (groom_bazi or {}).get('yue_zhi') or (groom_bazi or {}).get('month_zhi')
+        if _g_yue_gan and _g_yue_zhi:
+            yangqi_gan, yangqi_zhi = get_yangqi(_g_yue_gan, _g_yue_zhi)
+            if is_chong(day_zhi_ty, yangqi_zhi):
                 score -= 30
-                details.append(('犯阳气', -30))
-    
+                details.append((f'犯阳气（日支{day_zhi_ty}冲阳气{yangqi_gan}{yangqi_zhi}）', -30))
+
     except Exception as e:
         logger.warning(f"神煞计算异常: {e}")
     
-    # 4.5 夫星受克检查
+    # 4.5 传统凶煞扣分（原为一票否决，现改为高扣分项）
+    # 月破（-40分）
+    if is_month_break(date_obj, sizhu):
+        score -= 40
+        details.append(('月破', -40))
+        result['warnings'].append('月破：月支冲日支，大凶之日，慎用')
+    
+    # 上朔日（-35分）
+    if is_shangshuo(date_obj, sizhu):
+        score -= 35
+        details.append(('上朔日', -35))
+        result['warnings'].append('上朔日：阴阳德俱尽，慎用')
+    
+    # 四离四绝（-30分）
+    if is_sili_sijue(date_obj):
+        score -= 30
+        details.append(('四离四绝', -30))
+        result['warnings'].append('四离四绝：节气转换期，慎用')
+    
+    # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):
         fuxing_ke_score, fuxing_ke_reason = check_fuxing_being_ke(bride_bazi, sizhu)
         if fuxing_ke_score != 0 and fuxing_ke_reason:
@@ -1086,15 +1078,17 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             if fuxing_ke_score < -30:
                 result['warnings'].append(f"严重警告：{fuxing_ke_reason}")
     
-    # 4.6 六害检查
-    liuhai_score, liuhai_reasons = check_liuhai_penalty(sizhu)
+    # 4.6 六害检查（排除示例时柱：时辰可换，时柱层面由十二时辰吉凶表独立评估）
+    sizhu_no_hour = dict(sizhu)
+    sizhu_no_hour['hour_zhi'] = ''
+    liuhai_score, liuhai_reasons = check_liuhai_penalty(sizhu_no_hour)
     if liuhai_score != 0:
         score += liuhai_score
         for reason in liuhai_reasons:
             details.append((reason, -5))  # 每处六害扣5分
     
-    # 4.7 三刑检查
-    sanxing_score, sanxing_reasons = check_sanxing_penalty(sizhu)
+    # 4.7 三刑检查（排除示例时柱）
+    sanxing_score, sanxing_reasons = check_sanxing_penalty(sizhu_no_hour)
     if sanxing_score != 0:
         score += sanxing_score
         for reason in sanxing_reasons:
@@ -1104,17 +1098,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             elif '自刑' in reason:
                 details.append((reason, -6))
     
-    # 5. 日课四柱内部合局评分
-    zhiju_score, zhiju_reason = get_zhiju_score(sizhu)
+    # 5. 日课年月日柱内部合局评分（排除示例时柱）
+    zhiju_score, zhiju_reason = get_zhiju_score(sizhu_no_hour)
     if zhiju_reason:
         score += zhiju_score
         details.append((zhiju_reason, zhiju_score))
     
-    # 6. 时辰评分（默认使用中午12时）
-    # 用户可在实际使用时传入具体时辰
-    shichen_score, shichen_details = get_shichen_score(sizhu, bride_bazi, groom_bazi)
-    score += shichen_score
-    details.extend(shichen_details)
+    # 6. 时辰评分已移除（彻底分离）：日课评分不含时柱因素，
+    #    时辰吉凶由十二时辰婚嫁吉凶表（嫁娶神煞扩展.get_lucky_hours）独立评估
     
     # 7. 计算总分并确定等级
     result['score'] = max(0, score)

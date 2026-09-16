@@ -30,11 +30,13 @@
 - 五不遇时
 - 日破时（否决标志）
 - 冲新郎/新娘（否决标志）
+- 冲阴胎/冲阳气（时支冲新娘阴胎、新郎阳气的胎元地支，否决标志）
 ================================================================================
 """
 
 try:
     from .嫁娶神煞 import MarriageShenShaChecker
+    from .marriage_shensha import get_yintai, get_yangqi
     from ..工具函数 import DI_ZHI, TIAN_GAN
 except ImportError:
     import sys
@@ -43,13 +45,16 @@ except ImportError:
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
     from modules.shensha.嫁娶神煞 import MarriageShenShaChecker
+    from modules.shensha.marriage_shensha import get_yintai, get_yangqi
     from modules.工具函数 import DI_ZHI, TIAN_GAN
 
 
 class MarriageShenShaCheckerExt(MarriageShenShaChecker):
     """婚嫁神煞检查器扩展版"""
     
-    def __init__(self, bride_gan=None, bride_zhi=None, groom_gan=None, groom_zhi=None):
+    def __init__(self, bride_gan=None, bride_zhi=None, groom_gan=None, groom_zhi=None,
+                 bride_month_gan=None, bride_month_zhi=None,
+                 groom_month_gan=None, groom_month_zhi=None):
         """
         初始化
         
@@ -58,12 +63,20 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
             bride_zhi: 新娘年支（生肖）
             groom_gan: 新郎年干
             groom_zhi: 新郎年支（生肖）
+            bride_month_gan: 新娘生月天干（推阴胎，用于时辰冲阴胎禁用）
+            bride_month_zhi: 新娘生月地支
+            groom_month_gan: 新郎生月天干（推阳气，用于时辰冲阳气禁用）
+            groom_month_zhi: 新郎生月地支
         """
         super().__init__()
         self.bride_gan = bride_gan
         self.bride_zhi = bride_zhi
         self.groom_gan = groom_gan
         self.groom_zhi = groom_zhi
+        self.bride_month_gan = bride_month_gan
+        self.bride_month_zhi = bride_month_zhi
+        self.groom_month_gan = groom_month_gan
+        self.groom_month_zhi = groom_month_zhi
     
     def get_lucky_hours(self, sizhu):
         """
@@ -79,6 +92,7 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         - 红鸾时、天喜时
         - 五不遇时
         - 日破时、冲命（禁用标志）
+        - 冲阴胎、冲阳气（需构造时传入双方生月干支；禁用标志）
 
         Args:
             sizhu: 四柱信息
@@ -113,6 +127,18 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
             if self._is_chong_zhi(day_zhi, zhi):
                 is_disabled = True
                 reasons.append('日破时（禁用）')
+
+            # 时辰刑害扣分（年/月/日支全量检查；刑-15/害-10，不同支扣分叠加；冲已由日破时处理）
+            xh_pen, xh_reasons = self._get_xinghai_penalty_all(sizhu, zhi)
+            if xh_pen:
+                hour_score += xh_pen
+                reasons.extend(xh_reasons)
+
+            # 时支与日课年/月/日支构成三合局加分
+            sanhe_bonus = self._get_sanhe_daycourse_bonus(sizhu, zhi)
+            if sanhe_bonus:
+                hour_score += sanhe_bonus['score']
+                reasons.append(sanhe_bonus['reason'])
 
             gui_ren = self._get_gui_ren_shichen(day_gan)
             if zhi in gui_ren:
@@ -152,6 +178,20 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                         hour_score += 12
                         reasons.append('三合新郎')
 
+            # 冲阴胎 / 冲阳气（典籍"日时勿冲犯阴胎阳气"）：
+            # 时支冲新娘阴胎地支（子午冲等）或新郎阳气地支（丑未冲等）→ 该时辰禁用。
+            # 日支冲在日课评分中扣30分（婚嫁评分算法），时支冲只在此处置禁用，不入日课总分。
+            if self.bride_month_gan and self.bride_month_zhi:
+                _yt_gan, _yt_zhi = get_yintai(self.bride_month_gan, self.bride_month_zhi)
+                if self._is_chong_zhi(_yt_zhi, zhi):
+                    is_disabled = True
+                    reasons.append(f'冲阴胎（{zhi}{_yt_zhi}冲，禁用）')
+            if self.groom_month_gan and self.groom_month_zhi:
+                _yq_gan, _yq_zhi = get_yangqi(self.groom_month_gan, self.groom_month_zhi)
+                if self._is_chong_zhi(_yq_zhi, zhi):
+                    is_disabled = True
+                    reasons.append(f'冲阳气（{zhi}{_yq_zhi}冲，禁用）')
+
             if self._is_hongluan_hour(zhi, sizhu):
                 hour_score += 15
                 reasons.append('红鸾时')
@@ -178,6 +218,10 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
 
             if not reasons:
                 reasons.append('平')
+
+            # 禁用时辰分数强制封顶为 -20（避免"禁用"标记与正分并存误导用户）
+            if is_disabled:
+                hour_score = min(hour_score, -20)
 
             results.append({
                 '时辰': hour_names.get(zhi, f'{zhi}时'),
@@ -372,19 +416,21 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         if not self.bride_zhi:
             return {'大利月': [], '小利月': [], '当前月份状态': '未知（缺少新娘生肖）'}
         
+        # 大利月口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
+        # 小利月口诀：鼠马二八月，牛羊四十当，虎猴正七月，兔鸡六腊月，龙狗三九月，蛇猪五十一
         li_yue_table = {
-            '子': {'大利月': [6, 12], '小利月': [3, 9]},
-            '午': {'大利月': [6, 12], '小利月': [3, 9]},
-            '丑': {'大利月': [5, 11], '小利月': [1, 7]},
-            '未': {'大利月': [5, 11], '小利月': [1, 7]},
-            '寅': {'大利月': [2, 8], '小利月': [3, 9]},
-            '申': {'大利月': [2, 8], '小利月': [3, 9]},
+            '子': {'大利月': [6, 12], '小利月': [2, 8]},
+            '午': {'大利月': [6, 12], '小利月': [2, 8]},
+            '丑': {'大利月': [5, 11], '小利月': [4, 10]},
+            '未': {'大利月': [5, 11], '小利月': [4, 10]},
+            '寅': {'大利月': [2, 8], '小利月': [1, 7]},
+            '申': {'大利月': [2, 8], '小利月': [1, 7]},
             '卯': {'大利月': [1, 7], '小利月': [6, 12]},
             '酉': {'大利月': [1, 7], '小利月': [6, 12]},
-            '辰': {'大利月': [4, 10], '小利月': [5, 11]},
-            '戌': {'大利月': [4, 10], '小利月': [5, 11]},
-            '巳': {'大利月': [3, 9], '小利月': [2, 8]},
-            '亥': {'大利月': [3, 9], '小利月': [2, 8]}
+            '辰': {'大利月': [4, 10], '小利月': [3, 9]},
+            '戌': {'大利月': [4, 10], '小利月': [3, 9]},
+            '巳': {'大利月': [3, 9], '小利月': [5, 11]},
+            '亥': {'大利月': [3, 9], '小利月': [5, 11]}
         }
         
         info = li_yue_table.get(self.bride_zhi, {'大利月': [], '小利月': []})
@@ -396,19 +442,63 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         dali_names = [month_names.get(m, str(m)) for m in info['大利月']]
         xiaoli_names = [month_names.get(m, str(m)) for m in info['小利月']]
         
-        zhi_to_month = {
-            '寅': 1, '卯': 2, '辰': 3, '巳': 4,
-            '午': 5, '未': 6, '申': 7, '酉': 8,
-            '戌': 9, '亥': 10, '子': 11, '丑': 12
-        }
-        current_month = zhi_to_month.get(sizhu.get('month_zhi', ''), 0)
+        # 2026-09-03 利月一致性修复：当前农历月份以sizhu.date高精度农历转换结果为准，
+        # 不再用节气月支法（寅=1丑=12）代推，避免2026-02-05这类"寅月但农历腊月"被误判。
+        def _resolve_lunar_month(sz):
+            try:
+                from ...四柱计算器 import get_lunar_date as _gld
+            except Exception:
+                try:
+                    from 四柱计算器 import get_lunar_date as _gld
+                except Exception:
+                    _gld = None
+            # 1) 内建字段优先
+            lm = sz.get('lunar_month')
+            if isinstance(lm, (int, float)) and 1 <= int(lm) <= 12:
+                return int(lm)
+            try:
+                lun = sz.get('lunar')
+                if isinstance(lun, dict):
+                    m = lun.get('month')
+                    if isinstance(m, (int, float)) and 1 <= int(m) <= 12:
+                        return int(m)
+                    mc = str(lun.get('month_chinese') or lun.get('month') or '')
+                    mp = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
+                          '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                    if mc in mp: return mp[mc]
+            except Exception:
+                pass
+            # 2) 高精度农历（推荐）
+            d = sz.get('date') or sz.get('datetime')
+            if _gld is not None and hasattr(d, 'year'):
+                try:
+                    lun = _gld(d)
+                    if isinstance(lun, dict):
+                        m = lun.get('month')
+                        if isinstance(m, (int, float)) and 1 <= int(m) <= 12:
+                            return int(m)
+                        mc = str(lun.get('month_chinese') or lun.get('month') or '')
+                        mp = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
+                              '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                        if mc in mp: return mp[mc]
+                except Exception:
+                    pass
+            # 3) 回退：节气月支法
+            zhi_to_month = {
+                '寅': 1, '卯': 2, '辰': 3, '巳': 4,
+                '午': 5, '未': 6, '申': 7, '酉': 8,
+                '戌': 9, '亥': 10, '子': 11, '丑': 12
+            }
+            return zhi_to_month.get(sz.get('month_zhi', ''), 0)
+
+        current_month = _resolve_lunar_month(sizhu)
         
         if current_month in info['大利月']:
-            status = '大利月'
+            status = f"大利月（+30分，农历{current_month}月）"
         elif current_month in info['小利月']:
-            status = '小利月'
+            status = f"小利月（+15分，农历{current_month}月）"
         else:
-            status = '普通月份'
+            status = '普通月份（无利月加分）'
         
         return {
             '大利月': dali_names,
@@ -416,23 +506,25 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
             '当前月份状态': status
         }
     
-    def get_fuzi_info(self, bride_year_gan=None, bride_year_zhi=None, bride_day_gan=None, bride_day_zhi=None, bride_month_gan=None, bride_month_zhi=None):
+    def get_fuzi_info(self, bride_year_gan=None, bride_year_zhi=None, bride_day_gan=None, bride_day_zhi=None, bride_month_gan=None, bride_month_zhi=None, groom_month_gan=None, groom_month_zhi=None):
         """
-        计算新娘的夫子星、阴胎、阳气等信息
+        计算新娘的夫子星、阴胎，以及新郎的阳气等信息
 
-        注意：此功能需要新娘的年柱（年干、年支）才能准确计算夫子星。
-        阴胎和阳气的计算需要月柱（月干、月支）。
+        注意：夫子星需要新娘年柱（年干、年支）；
+        阴胎取新娘月柱、阳气取新郎月柱（均为干+1支+3胎元法）。
 
         Args:
             bride_year_gan: 新娘年干（计算夫子星必须）
             bride_year_zhi: 新娘年支（计算夫子星必须）
             bride_day_gan: 新娘日干（保留参数，兼容旧接口）
             bride_day_zhi: 新娘日支（保留参数，兼容旧接口）
-            bride_month_gan: 新娘月干（计算阴胎阳气必须）
-            bride_month_zhi: 新娘月支（计算阴胎阳气必须）
+            bride_month_gan: 新娘月干（计算阴胎必须）
+            bride_month_zhi: 新娘月支（计算阴胎必须）
+            groom_month_gan: 新郎月干（计算阳气必须）
+            groom_month_zhi: 新郎月支（计算阳气必须）
 
         Returns:
-            dict: 包含夫子星、阴胎、阳气等信息的字典
+            dict: 包含夫子星、阴胎（新娘）、阳气（新郎）等信息的字典
                   如果缺少必要信息，返回提示信息
         """
         result = {}
@@ -451,19 +543,24 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
             result['夫子星'] = '未知（缺少年柱信息）'
             result['子星'] = '未知（缺少年柱信息）'
         
-        # 计算阴胎和阳气（需要月柱）
-        if bride_month_gan and bride_month_zhi:
+        # 阴胎（新娘月柱）与阳气（新郎月柱），同法：干+1支+3（胎元）
+        try:
+            from modules.工具函数 import get_yintai, get_yangqi
+        except ImportError:
+            get_yintai = get_yangqi = None
+        if bride_month_gan and bride_month_zhi and get_yintai:
             try:
-                from modules.工具函数 import get_yintai, get_yangqi
-                yin_tai = get_yintai(bride_month_gan, bride_month_zhi)
-                yang_qi = get_yangqi(bride_month_gan, bride_month_zhi)
-                result['阴胎'] = yin_tai
-                result['阳气'] = yang_qi
-            except ImportError:
+                result['阴胎'] = get_yintai(bride_month_gan, bride_month_zhi)
+            except Exception:
                 result['阴胎'] = '未知'
+        else:
+            result['阴胎'] = '未知（缺少新娘月柱信息）'
+        if groom_month_gan and groom_month_zhi and get_yangqi:
+            try:
+                result['阳气'] = get_yangqi(groom_month_gan, groom_month_zhi)
+            except Exception:
                 result['阳气'] = '未知'
         else:
-            result['阴胎'] = '未知（缺少月柱信息）'
-            result['阳气'] = '未知（缺少月柱信息）'
+            result['阳气'] = '未知（缺少新郎月柱信息）'
         
         return result
