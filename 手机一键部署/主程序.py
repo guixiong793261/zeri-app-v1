@@ -6525,7 +6525,10 @@ class ZeriApp:
         # 修造类(修造/动土/拆舍/装修)与嫁娶类上方已有专属时辰表；
         # 2026-09 补：此前其余事项详情无此时辰表，但四柱段提示语却让用户"参考下方"。
         # 数据源与扫日推荐时柱一致：modules.推荐时柱.build_checker（同一 get_lucky_hours）。
-        if event_type not in construction_events and event_type not in marriage_events:
+        # 2026-09-17 修复：marriage_events 本地列表已由注册表 MARRIAGE_EVENTS 取代
+        # （口径与上方6288嫁娶专属段判断一致：嫁娶/订婚/纳采），漏改会导致 NameError、
+        # content 整段无法插入，详情窗口只显示到事主信息。
+        if event_type not in construction_events and event_type not in MARRIAGE_EVENTS:
             try:
                 from modules.推荐时柱 import build_checker as _build_hour_checker
 
