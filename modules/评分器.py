@@ -966,10 +966,15 @@ class Scorer:
                         if self.ji_list:
                             reason_parts.append('忌：' + '、'.join(self.ji_list))
                         
-                        # 添加月令分析（独立段落，只谈当令之气与日主旺衰）
+                        # 月令分析 + 其后完整正五行分析串（日主/地支合局/命局吉神/月令/
+                        # 喜用神/大黄道/小黄道/吉神/宜）。2026-09-17 应需求补全：原仅
+                        # "月令分析"一句即止，致详情综合评语缺少日主、合局、吉神等段。
                         yueling_analysis = self._generate_yueling_analysis(sizhu)
-                        if yueling_analysis:
-                            reason_parts.append(f'月令分析：{yueling_analysis}')
+                        _mrg_tail = self._build_marriage_reason_tail(
+                            wu_xing_result, yueling_analysis,
+                            yueling_score, xishen_score, shensha_list)
+                        if _mrg_tail:
+                            reason_parts.append(_mrg_tail)
                         
                         final_reason = '\n'.join(reason_parts)
                         
@@ -5100,6 +5105,109 @@ class Scorer:
             reason.append('忌：' + '、'.join(self.ji_list))
         
         return '；'.join(reason)
+
+    def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
+                                   yueling_score, xishen_score, shensha_list=None):
+        """
+        嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
+
+        原嫁娶评语在"月令分析：…"一句后即止，缺少日主旺衰、地支合局、命局吉神、
+        月令、喜用神、黄黑道、吉神、宜等正五行核心分析。此处按与 _generate_reason
+        完全一致的判定口径补齐，以"；"连成一段，接在月令分析同一段落内。
+
+        刻意不含：开头"五行："（已由"嫁娶要点"承载）、事主逐条匹配、太阳太阴、
+        独立"忌："行（嫁娶评语前段已单列）。
+
+        Args:
+            wu_xing_result: 五行审核结果（取 details：日主旺衰/地支关系/吉神）
+            yueling_analysis: _generate_yueling_analysis 产出的月令分析句
+            yueling_score: 月令得分（决定月令评语措辞）
+            xishen_score: 喜用神匹配得分（决定喜用神评语措辞）
+            shensha_list: 嫁娶路径本次神煞列表（取吉神名，如大利月）
+        """
+        seg = []
+        details = {}
+        if isinstance(wu_xing_result, dict):
+            _d = wu_xing_result.get('details', {})
+            if isinstance(_d, dict):
+                details = _d
+
+        def _clean(ln):
+            # 五行分析给时柱关系追加了"（示例时柱，不计分）"后缀；评语里只陈述合局，
+            # 不带此括注（与详情【地支关系】展示后缀区分，后者由主程序另做替换）。
+            return str(ln).replace('（示例时柱，不计分）', '').strip()
+
+        # 月令分析（本段首句）
+        if yueling_analysis:
+            seg.append(f'月令分析：{yueling_analysis}')
+
+        # 日主旺衰
+        if details.get('日主旺衰'):
+            seg.append(f"日主：{details['日主旺衰']}")
+
+        # 地支关系（合局 / 冲害）
+        if details.get('地支关系'):
+            rels = details['地支关系']
+            if isinstance(rels, (list, tuple)):
+                good = [_clean(r) for r in rels if ('三合' in str(r) or '六合' in str(r)) and _clean(r)]
+                bad = [_clean(r) for r in rels if ('冲' in str(r) or '害' in str(r) or '刑' in str(r)) and _clean(r)]
+                if good:
+                    seg.append(f"地支合局：{'；'.join(good)}")
+                if bad:
+                    seg.append(f"地支冲害：{'；'.join(bad)}")
+
+        # 命局吉神（天德贵人、禄神等）
+        if details.get('吉神'):
+            jishen = [str(j).strip() for j in details['吉神'] if str(j).strip()]
+            if jishen:
+                seg.append(f"命局吉神：{'；'.join(jishen)}")
+
+        # 月令评语（口径同 _generate_reason）
+        if yueling_score > 5:
+            seg.append('月令：得令助，日主旺相')
+        elif yueling_score > 0:
+            seg.append('月令：有生扶，日主得力')
+        elif yueling_score == 0:
+            seg.append('月令：平平，无明显助力')
+        elif yueling_score > -5:
+            seg.append('月令：气弱，需后天补救')
+        else:
+            seg.append('月令：失令，日主乏力')
+
+        # 喜用神评语（口径同 _generate_reason）
+        if xishen_score > 20:
+            seg.append('喜用神：日课大喜事主用神，能量共振极佳')
+        elif xishen_score > 10:
+            seg.append('喜用神：日课补益事主用神，有利催吉')
+        elif xishen_score > 0:
+            seg.append('喜用神：日课对事主有一定补益')
+        elif xishen_score == 0:
+            seg.append('喜用神：日课与事主八字无明显冲突')
+
+        # 大黄道 / 小黄道（口径同 _generate_reason：凶报黑道，小黄道仅吉时入评语）
+        hd = self.huangdao_info if isinstance(self.huangdao_info, dict) else {}
+        da = hd.get('da_huang_dao') if isinstance(hd.get('da_huang_dao'), dict) else {}
+        if da.get('type') == '吉':
+            seg.append(f"大黄道{da.get('name', '')}，{da.get('description', '')}")
+        elif da.get('type') == '凶':
+            seg.append(f"黑道{da.get('name', '')}，{da.get('description', '')}")
+        xo = hd.get('xiao_huang_dao') if isinstance(hd.get('xiao_huang_dao'), dict) else {}
+        if xo.get('type') == '吉':
+            seg.append(f"小黄道{xo.get('name', '')}，{xo.get('description', '')}")
+
+        # 吉神（本次嫁娶神煞中的加分项，如大利月）
+        _ss_src = shensha_list if isinstance(shensha_list, list) else (self.shensha_list or [])
+        _ss_all = [s for s in _ss_src if isinstance(s, dict)]
+        good_shensha = sorted([s for s in _ss_all if s.get('score', 0) > 0],
+                              key=lambda s: s.get('score', 0), reverse=True)
+        if good_shensha:
+            seg.append('吉神：' + '、'.join([s['name'] for s in good_shensha]))
+
+        # 宜（与综合评语末句保持一致，取本次 yi_list）
+        if self.yi_list:
+            seg.append('宜：' + '、'.join(self.yi_list))
+
+        return '；'.join(seg)
 
     def _generate_yueling_analysis(self, sizhu):
         """
