@@ -79,7 +79,7 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 往亡
         if self._is_wangwang(sizhu):
-            self._add_shensha('往亡', -22, '往亡日不宜出行')
+            self._add_shensha('往亡', -20, '往亡日不宜出行')
         
         # 月空
         if self._is_yuekong(sizhu):

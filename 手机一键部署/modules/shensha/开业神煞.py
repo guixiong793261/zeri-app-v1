@@ -97,7 +97,7 @@ class OpeningShenShaChecker(ShenShaChecker):
         
         # 月刑
         if self._is_yuexing(sizhu):
-            self._add_shensha('月刑', -18, '月刑日不宜开业')
+            self._add_shensha('月刑', -15, '月刑日不宜开业')
         
         # 月德
         if self._is_yuede(sizhu):
@@ -206,7 +206,7 @@ class OpeningShenShaChecker(ShenShaChecker):
         
         # 天马
         if self._is_tianma(sizhu):
-            self._add_shensha('天马', 8, '天马主行动')
+            self._add_shensha('天马', 10, '天马主行动')
         
         # 天赦
         if self._is_tianshe(sizhu):

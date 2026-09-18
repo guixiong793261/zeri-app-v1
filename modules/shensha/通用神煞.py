@@ -168,11 +168,11 @@ class CommonShenShaChecker(ShenShaChecker):
 
         # 月刑
         if self._is_yuexing(sizhu):
-            self._add_shensha('月刑', -18, '与月建相刑，诸事不利')
+            self._add_shensha('月刑', -15, '与月建相刑，诸事不利')
 
         # 月害
         if self._is_yuehai(sizhu):
-            self._add_shensha('月害', -18, '与月建相害，诸事不顺')
+            self._add_shensha('月害', -15, '与月建相害，诸事不顺')
 
         # ===== 吉神 =====
         if self._is_yuedehe(sizhu):
@@ -239,10 +239,10 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('月虚', -10, '月虚之日，虚耗不实')
 
         if self._is_bazhuan(sizhu):
-            self._add_shensha('八专', -12, '八专日，阴阳失衡')
+            self._add_shensha('八专', -15, '八专日，阴阳失衡')
 
         if self._is_siji(sizhu):
-            self._add_shensha('四忌', -10, '四忌之辰，当避')
+            self._add_shensha('四忌', -12, '四忌之辰，当避')
 
         if self._is_tufu(sizhu):
             self._add_shensha('土符', -15, '土符之日，忌动土')
@@ -254,13 +254,13 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('土瘟', -20, '土瘟临日，大忌动土')
 
         if self._is_dinang(sizhu):
-            self._add_shensha('地囊', -12, '地囊之日，忌破土')
+            self._add_shensha('地囊', -25, '地囊之日，忌破土')
 
         if self._is_dahao(sizhu):
-            self._add_shensha('大耗', -15, '大耗临身，破财耗气')
+            self._add_shensha('大耗', -20, '大耗临身，破财耗气')
 
         if self._is_xiaohao(sizhu):
-            self._add_shensha('小耗', -10, '小耗之日，略有损耗')
+            self._add_shensha('小耗', -15, '小耗之日，略有损耗')
 
         if self._is_dashi(sizhu):
             self._add_shensha('大时', -12, '大时咸池，桃花煞')

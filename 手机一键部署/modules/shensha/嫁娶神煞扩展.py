@@ -162,9 +162,9 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                     if self._is_liuhe_zhi(self.bride_zhi, zhi):
                         hour_score += 10
                         reasons.append('合新娘')
-                    if self._is_sanhe_zhi(self.bride_zhi, zhi):
-                        hour_score += 12
-                        reasons.append('三合新娘')
+                    if self._is_banhe_zhi(self.bride_zhi, zhi):
+                        hour_score += 6
+                        reasons.append('半合新娘')
 
             if self.groom_zhi:
                 if self._is_chong_zhi(self.groom_zhi, zhi):
@@ -174,9 +174,9 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                     if self._is_liuhe_zhi(self.groom_zhi, zhi):
                         hour_score += 10
                         reasons.append('合新郎')
-                    if self._is_sanhe_zhi(self.groom_zhi, zhi):
-                        hour_score += 12
-                        reasons.append('三合新郎')
+                    if self._is_banhe_zhi(self.groom_zhi, zhi):
+                        hour_score += 6
+                        reasons.append('半合新郎')
 
             # 冲阴胎 / 冲阳气（典籍"日时勿冲犯阴胎阳气"）：
             # 时支冲新娘阴胎地支（子午冲等）或新郎阳气地支（丑未冲等）→ 该时辰禁用。
@@ -317,8 +317,12 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         }
         return liuhe_map.get(zhi1) == zhi2
     
-    def _is_sanhe_zhi(self, zhi1, zhi2):
-        """检查两个地支是否三合"""
+    def _is_banhe_zhi(self, zhi1, zhi2):
+        """检查两个地支是否半合（同属一个三合局且非相同地支）。
+
+        注意：两支仅构成半合局（缺第三支），非完整三合局。
+        完整三合局（三支齐备）的判定见神煞基类._get_sanhe_daycourse_bonus。
+        """
         sanhe_groups = [
             {'申', '子', '辰'},
             {'寅', '午', '戌'},
@@ -351,15 +355,16 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         """检查五不遇时
 
         五不遇时：时干克日干，且两者阴阳相同。
-        位移差固定为4（顺数第5位）。
+        位移差固定为6（顺数第7位）：甲日庚时、乙日辛时、丙日壬时、
+        丁日癸时、戊日甲时、己日乙时、庚日丙时、辛日丁时、壬日戊时、癸日己时。
 
-        例如：甲日→戊时（甲0，戊4，差4）；乙日→己时（1→5，差4）。
+        例如：甲日→庚时（甲0，庚6，差6，金克木）；丁日→癸时（丁3，癸9，差6，水克火）。
         """
         try:
             hour_idx = TIAN_GAN.index(hour_gan)
             day_idx = TIAN_GAN.index(day_gan)
 
-            if (hour_idx - day_idx) % 10 == 4:
+            if (hour_idx - day_idx) % 10 == 6:
                 yang_gan = ['甲', '丙', '戊', '庚', '壬']
                 hour_is_yang = hour_gan in yang_gan
                 day_is_yang = day_gan in yang_gan

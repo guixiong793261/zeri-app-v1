@@ -87,11 +87,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 归忌（移徙大忌）
         if self._is_guiji(sizhu):
-            self._add_shensha('归忌', -22, '归忌日不宜移徙、入宅')
+            self._add_shensha('归忌', -15, '归忌日不宜移徙、入宅')
         
         # 往亡（出行、移徙忌）
         if self._is_wangwang(sizhu):
-            self._add_shensha('往亡', -22, '往亡日不宜入宅')
+            self._add_shensha('往亡', -20, '往亡日不宜入宅')
         
         # 红嘴朱雀（入宅大忌）
         if self._is_hongzui_zhuque(sizhu):
@@ -99,7 +99,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 天狗
         if self._is_tiangou(sizhu):
-            self._add_shensha('天狗', -15, '天狗日入宅不吉')
+            self._add_shensha('天狗', -12, '天狗日入宅不吉')
         
         # 伏断日
         if self._is_fuduan(sizhu):
@@ -119,11 +119,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 月刑
         if self._is_yuexing(sizhu):
-            self._add_shensha('月刑', -18, '月刑日不宜入宅')
+            self._add_shensha('月刑', -15, '月刑日不宜入宅')
         
         # 月害
         if self._is_yuehai(sizhu):
-            self._add_shensha('月害', -18, '月害日不宜入宅')
+            self._add_shensha('月害', -15, '月害日不宜入宅')
         
         # ===== 补充缺失的凶煞检查 =====
         
@@ -141,23 +141,23 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 月厌
         if self._is_yueyan(sizhu):
-            self._add_shensha('月厌', -20, '月厌日入宅不吉')
+            self._add_shensha('月厌', -15, '月厌日入宅不吉')
         
         # 大时
         if self._is_dashi(sizhu):
-            self._add_shensha('大时', -15, '大时日入宅不吉')
+            self._add_shensha('大时', -12, '大时日入宅不吉')
         
         # 天吏
         if self._is_tianli(sizhu):
-            self._add_shensha('天吏', -20, '天吏日入宅不吉')
+            self._add_shensha('天吏', -15, '天吏日入宅不吉')
         
         # 四废
         if self._is_sifei(sizhu):
-            self._add_shensha('四废', -25, '四废日入宅大忌')
+            self._add_shensha('四废', -15, '四废日入宅大忌')
         
         # 五墓
         if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -20, '五墓日入宅不吉')
+            self._add_shensha('五墓', -12, '五墓日入宅不吉')
         
         # ===== 吉神 =====
         
@@ -195,7 +195,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 民日
         if self._is_minri(sizhu):
-            self._add_shensha('民日', 10, '民日宜入宅')
+            self._add_shensha('民日', 8, '民日宜入宅')
         
         # 天马
         if self._is_tianma(sizhu):
@@ -212,7 +212,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 驿马
         if self._is_yima(sizhu):
-            self._add_shensha('驿马', 12, '驿马星动，迁居顺利')
+            self._add_shensha('驿马', 10, '驿马星动，迁居顺利')
         
         # 建星吉日：成、开、满
         if self._is_jianxing_ji(sizhu):
@@ -254,7 +254,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 三合
         if self._is_sanhe(sizhu):
-            self._add_shensha('三合', 12, '三合吉日，入宅顺遂')
+            self._add_shensha('三合', 10, '三合吉日，入宅顺遂')
         
         # 六合
         if self._is_liuhe(sizhu):
@@ -266,21 +266,21 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 相日
         if self._is_xiangri(sizhu):
-            self._add_shensha('相日', 8, '相日入宅吉')
+            self._add_shensha('相日', 10, '相日入宅吉')
         
         # ===== 补充缺失的吉神检查 =====
         
         # 岁德（岁之德神，入宅大吉）
         if self._is_suide(sizhu):
-            self._add_shensha('岁德', 15, '岁德吉星，入宅大吉')
+            self._add_shensha('岁德', 20, '岁德吉星，入宅大吉')
         
         # 岁德合（岁德合，入宅大吉）
         if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 12, '岁德合，入宅吉')
+            self._add_shensha('岁德合', 15, '岁德合，入宅吉')
         
         # 岁合（主和合）
         if self._is_suihe(sizhu):
-            self._add_shensha('岁合', 10, '岁合主和合，入宅吉')
+            self._add_shensha('岁合', 12, '岁合主和合，入宅吉')
         
         # 五富（主财富）
         if self._is_wufu(sizhu):
@@ -288,11 +288,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 益后（利于后代）
         if self._is_yihou(sizhu):
-            self._add_shensha('益后', 10, '益后日主益后代，入宅吉')
+            self._add_shensha('益后', 12, '益后日主益后代，入宅吉')
         
         # 续世（利于续嗣）
         if self._is_xushi(sizhu):
-            self._add_shensha('续世', 8, '续世日主续嗣，入宅吉')
+            self._add_shensha('续世', 10, '续世日主续嗣，入宅吉')
         
         # 福生（福生之日）
         if self._is_fusheng(sizhu):
@@ -300,11 +300,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 8, '吉庆日入宅吉')
+            self._add_shensha('吉庆', 10, '吉庆日入宅吉')
         
         # 鸣犬日（入宅吉日）
         if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 10, '鸣犬日宜入宅')
+            self._add_shensha('鸣犬日', 12, '鸣犬日宜入宅')
         
         # 鸣犬对日（入宅吉日）
         if self._is_mingquandui(sizhu):
@@ -316,25 +316,25 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 旺日
         if self._is_wangri(sizhu):
-            self._add_shensha('旺日', 6, '旺日入宅吉')
+            self._add_shensha('旺日', 10, '旺日入宅吉')
         
         # ===== 补充缺失的凶煞检查 =====
         
         # 丧门（主丧亡，忌入宅）
         if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -18, '丧门日忌入宅')
+            self._add_shensha('丧门', -15, '丧门日忌入宅')
         
         # 吊客（主吊唁，忌入宅）
         if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -15, '吊客日忌入宅')
+            self._add_shensha('吊客', -12, '吊客日忌入宅')
         
         # 病符（主疾病，忌入宅）
         if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -15, '病符日忌入宅')
+            self._add_shensha('病符', -12, '病符日忌入宅')
         
         # 官符（主官讼，忌入宅）
         if self._is_guanfu(sizhu):
-            self._add_shensha('官符', -12, '官符日忌入宅')
+            self._add_shensha('官符', -10, '官符日忌入宅')
         
         # 五鬼（主耗散）
         if self._is_wugui(sizhu):
@@ -342,7 +342,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 月虚（主虚耗）
         if self._is_yuexu(sizhu):
-            self._add_shensha('月虚', -12, '月虚日主虚耗，忌入宅')
+            self._add_shensha('月虚', -10, '月虚日主虚耗，忌入宅')
         
         # 八专（主消耗）
         if self._is_bazhuan(sizhu):

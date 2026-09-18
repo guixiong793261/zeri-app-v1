@@ -79,7 +79,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 土瘟
         if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -25, '忌动土、修造，犯之主病')
+            self._add_shensha('土瘟', -20, '忌动土、修造，犯之主病')
         
         # 地囊
         if self._is_dinang(sizhu):
@@ -111,19 +111,19 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 月厌
         if self._is_yueyan(sizhu):
-            self._add_shensha('月厌', -20, '月厌日忌修造')
+            self._add_shensha('月厌', -15, '月厌日忌修造')
         
         # 大时
         if self._is_dashi(sizhu):
-            self._add_shensha('大时', -15, '大时日忌修造')
+            self._add_shensha('大时', -12, '大时日忌修造')
         
         # 天吏
         if self._is_tianli(sizhu):
-            self._add_shensha('天吏', -20, '天吏日忌修造')
+            self._add_shensha('天吏', -15, '天吏日忌修造')
         
         # 四废
         if self._is_sifei(sizhu):
-            self._add_shensha('四废', -25, '四废日忌修造、动土')
+            self._add_shensha('四废', -15, '四废日忌修造、动土')
         
         # 五墓
         if self._is_wumu(sizhu):
@@ -224,11 +224,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 驿马
         if self._is_yima(sizhu):
-            self._add_shensha('驿马', 12, '动土催吉，主迁动')
+            self._add_shensha('驿马', 10, '动土催吉，主迁动')
         
         # 三合
         if self._is_sanhe(sizhu):
-            self._add_shensha('三合', 12, '动土吉利，主和合')
+            self._add_shensha('三合', 10, '动土吉利，主和合')
         
         # 六合
         if self._is_month_day_liuhe(sizhu):
@@ -250,7 +250,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 岁德（岁之德神，修造大吉）
         if self._is_suide(sizhu):
-            self._add_shensha('岁德', 15, '岁德吉星，修造大吉')
+            self._add_shensha('岁德', 20, '岁德吉星，修造大吉')
         
         # 岁德合（岁德合，修造大吉）
         if self._is_suide_he(sizhu):
@@ -258,11 +258,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 岁合（主和合）
         if self._is_suihe(sizhu):
-            self._add_shensha('岁合', 10, '岁合主和合，修造吉')
+            self._add_shensha('岁合', 12, '岁合主和合，修造吉')
         
         # 天赦日（赦宥之神）
         if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 18, '天赦日百事吉，修造尤佳')
+            self._add_shensha('天赦日', 25, '天赦日百事吉，修造尤佳')
         
         # 五富（主财富）
         if self._is_wufu(sizhu):
@@ -282,7 +282,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 8, '吉庆日修造吉')
+            self._add_shensha('吉庆', 10, '吉庆日修造吉')
         
         # 天恩（天恩之神）
         if self._is_tianen(sizhu):
@@ -296,19 +296,19 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 丧门（主丧亡，忌修造）
         if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -18, '丧门日忌修造')
+            self._add_shensha('丧门', -15, '丧门日忌修造')
         
         # 吊客（主吊唁，忌修造）
         if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -15, '吊客日忌修造')
+            self._add_shensha('吊客', -12, '吊客日忌修造')
         
         # 病符（主疾病，忌修造）
         if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -15, '病符日忌修造')
+            self._add_shensha('病符', -12, '病符日忌修造')
         
         # 官符（主官讼，忌修造）
         if self._is_guanfu(sizhu):
-            self._add_shensha('官符', -12, '官符日忌修造')
+            self._add_shensha('官符', -10, '官符日忌修造')
         
         # 五鬼（主耗散）
         if self._is_wugui(sizhu):
@@ -316,7 +316,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 月虚（主虚耗）
         if self._is_yuexu(sizhu):
-            self._add_shensha('月虚', -12, '月虚日主虚耗，忌修造')
+            self._add_shensha('月虚', -10, '月虚日主虚耗，忌修造')
         
         # 八专（主消耗）
         if self._is_bazhuan(sizhu):

@@ -75,11 +75,11 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 月厌
         if self._is_yueyan(sizhu):
-            self._add_shensha('月厌', -20, '月厌日忌作灶')
+            self._add_shensha('月厌', -15, '月厌日忌作灶')
         
         # 月破
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -25, '月破日忌作灶')
+            self._add_shensha('月破', -30, '月破日忌作灶')
         
         # 土府日
         if self._is_tufu2(sizhu):
@@ -101,11 +101,11 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 四离日
         if self._is_sili(sizhu):
-            self._add_shensha('四离日', -30, '四离日忌作灶')
+            self._add_shensha('四离日', -35, '四离日忌作灶')
         
         # 四绝日
         if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -30, '四绝日忌作灶')
+            self._add_shensha('四绝日', -35, '四绝日忌作灶')
         
         # 十恶大败
         if self._is_shie_dabai(sizhu):
@@ -113,19 +113,19 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 四废
         if self._is_sifei(sizhu):
-            self._add_shensha('四废', -25, '四废日忌作灶')
+            self._add_shensha('四废', -15, '四废日忌作灶')
         
         # 五墓
         if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -20, '五墓日忌作灶')
+            self._add_shensha('五墓', -12, '五墓日忌作灶')
         
         # 大时
         if self._is_dashi(sizhu):
-            self._add_shensha('大时', -15, '大时日忌作灶')
+            self._add_shensha('大时', -12, '大时日忌作灶')
         
         # 天吏
         if self._is_tianli(sizhu):
-            self._add_shensha('天吏', -20, '天吏日忌作灶')
+            self._add_shensha('天吏', -15, '天吏日忌作灶')
         
         # ===== 吉神 =====
         
@@ -166,7 +166,7 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 地火日（传统公式：正月戌、二月亥、三月子...）
         if self._is_dihuo(sizhu):
-            self._add_shensha('地火日', -12, '地火日不宜作灶')
+            self._add_shensha('地火日', -10, '地火日不宜作灶')
         
         # 灶君朝天（登天太微宫五日：戊戌、己亥、庚子、辛丑、壬寅）  # _zjct0914
         if self._is_zaojun_chaotian(sizhu):
@@ -185,7 +185,7 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 天德日
         if self._is_tiande(sizhu):
-            self._add_shensha('天德', 15, '天德吉星，作灶大吉')
+            self._add_shensha('天德', 20, '天德吉星，作灶大吉')
         
         # 月德
         if self._is_yuede(sizhu):
@@ -193,11 +193,11 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 天赦日
         if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 18, '天赦日百事吉，作灶尤佳')
+            self._add_shensha('天赦日', 25, '天赦日百事吉，作灶尤佳')
         
         # 鸣犬日（作灶吉日）
         if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 10, '鸣犬日宜作灶')
+            self._add_shensha('鸣犬日', 12, '鸣犬日宜作灶')
         
         # 鸣犬对日（作灶吉日）
         if self._is_mingquandui(sizhu):
@@ -221,11 +221,11 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 岁德
         if self._is_suide(sizhu):
-            self._add_shensha('岁德', 15, '岁德吉星，作灶大吉')
+            self._add_shensha('岁德', 20, '岁德吉星，作灶大吉')
         
         # 岁德合
         if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 12, '岁德合，作灶吉')
+            self._add_shensha('岁德合', 15, '岁德合，作灶吉')
         
         # 母仓日
         if self._is_mucang(sizhu):
@@ -233,21 +233,21 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # 相日
         if self._is_xiangri(sizhu):
-            self._add_shensha('相日', 8, '相日作灶吉')
+            self._add_shensha('相日', 10, '相日作灶吉')
         
         # ===== 补充缺失的凶煞检查 =====
         
         # 丧门
         if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -18, '丧门日忌作灶')
+            self._add_shensha('丧门', -15, '丧门日忌作灶')
         
         # 吊客
         if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -15, '吊客日忌作灶')
+            self._add_shensha('吊客', -12, '吊客日忌作灶')
         
         # 月虚
         if self._is_yuexu(sizhu):
-            self._add_shensha('月虚', -12, '月虚日主虚耗，忌作灶')
+            self._add_shensha('月虚', -10, '月虚日主虚耗，忌作灶')
         
         # 八专
         if self._is_bazhuan(sizhu):

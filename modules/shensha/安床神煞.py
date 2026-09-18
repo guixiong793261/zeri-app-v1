@@ -180,7 +180,7 @@ class BedShenShaChecker(ShenShaChecker):
 
         # 天马
         if self._is_tianma(sizhu):
-            self._add_shensha('天马', 8, '天马日利于安床')
+            self._add_shensha('天马', 10, '天马日利于安床')
 
         # 天赦
         if self._is_tianshe(sizhu):

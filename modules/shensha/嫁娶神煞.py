@@ -182,7 +182,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 往亡日
         if self._is_wangwang(sizhu):
-            self._add_shensha('往亡日', -18, '往亡日忌婚嫁')
+            self._add_shensha('往亡日', -20, '往亡日忌婚嫁')
         
         # 重丧日 - 嫁娶大忌
         if self._is_zhongsang(sizhu):
@@ -197,7 +197,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 黄沙日
         if self._is_huangsha(sizhu):
-            self._add_shensha('黄沙日', -15, '黄沙日忌婚嫁')
+            self._add_shensha('黄沙日', -12, '黄沙日忌婚嫁')
         
         # 神号鬼哭日
         if self._is_shenhao(sizhu):
@@ -283,17 +283,17 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 旺日
         if self._is_wangri(sizhu):
-            self._add_shensha('旺日', 6, '旺日婚嫁吉')
+            self._add_shensha('旺日', 10, '旺日婚嫁吉')
         
         # ===== 补充缺失的吉神检查 =====
         
         # 益后（利于后代，嫁娶大吉）
         if self._is_yihou(sizhu):
-            self._add_shensha('益后', 15, '益后日主益后代，婚嫁大吉')
+            self._add_shensha('益后', 12, '益后日主益后代，婚嫁大吉')
         
         # 续世（利于续嗣，嫁娶大吉）
         if self._is_xushi(sizhu):
-            self._add_shensha('续世', 12, '续世日主续嗣，婚嫁吉')
+            self._add_shensha('续世', 10, '续世日主续嗣，婚嫁吉')
         
         # 阴德（阴德之神，利婚嫁）
         if self._is_yinde(sizhu):
@@ -309,15 +309,15 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 要安（安宁之日，利婚嫁）
         if self._is_yaoan(sizhu):
-            self._add_shensha('要安', 10, '要安日婚嫁吉')
+            self._add_shensha('要安', 8, '要安日婚嫁吉')
         
         # 天赦日（赦宥之神，百事皆宜）
         if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 18, '天赦日百事吉，婚嫁尤佳')
+            self._add_shensha('天赦日', 25, '天赦日百事吉，婚嫁尤佳')
         
         # 鸣犬日（嫁娶吉日）
         if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 10, '鸣犬日宜嫁娶')
+            self._add_shensha('鸣犬日', 12, '鸣犬日宜嫁娶')
         
         # 鸣犬对日（嫁娶吉日）
         if self._is_mingquandui(sizhu):
@@ -325,15 +325,15 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 岁德（岁之德神，主化凶为吉）
         if self._is_suide(sizhu):
-            self._add_shensha('岁德', 15, '岁德吉星，婚嫁大吉')
+            self._add_shensha('岁德', 20, '岁德吉星，婚嫁大吉')
         
         # 岁德合（岁德合，大吉）
         if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 12, '岁德合，婚嫁吉')
+            self._add_shensha('岁德合', 15, '岁德合，婚嫁吉')
         
         # 岁合（主和合）
         if self._is_suihe(sizhu):
-            self._add_shensha('岁合', 10, '岁合主和合，婚嫁吉')
+            self._add_shensha('岁合', 12, '岁合主和合，婚嫁吉')
         
         # 福生（福生之日，利婚嫁）
         if self._is_fusheng(sizhu):
@@ -341,7 +341,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 8, '吉庆日婚嫁吉')
+            self._add_shensha('吉庆', 10, '吉庆日婚嫁吉')
         
         # ===== 补充缺失的凶煞检查 =====
         
@@ -351,23 +351,23 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 丧门（主丧亡，忌婚嫁）
         if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -18, '丧门日忌婚嫁')
+            self._add_shensha('丧门', -15, '丧门日忌婚嫁')
         
         # 吊客（主吊唁，忌婚嫁）
         if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -15, '吊客日忌婚嫁')
+            self._add_shensha('吊客', -12, '吊客日忌婚嫁')
         
         # 病符（主疾病，忌婚嫁）
         if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -15, '病符日忌婚嫁')
+            self._add_shensha('病符', -12, '病符日忌婚嫁')
         
         # 官符（主官讼，忌婚嫁）
         if self._is_guanfu(sizhu):
-            self._add_shensha('官符', -12, '官符日忌婚嫁')
+            self._add_shensha('官符', -10, '官符日忌婚嫁')
         
         # 月虚（主虚耗，忌婚嫁）
         if self._is_yuexu(sizhu):
-            self._add_shensha('月虚', -12, '月虚日主虚耗，忌婚嫁')
+            self._add_shensha('月虚', -10, '月虚日主虚耗，忌婚嫁')
         
         # 八专（主消耗，忌婚嫁）
         if self._is_bazhuan(sizhu):
@@ -379,7 +379,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 魁罡日（主聪明但婚姻不顺）
         if self._is_kuigang(sizhu):
-            self._add_shensha('魁罡日', -8, '魁罡日聪明但婚姻不顺')
+            self._add_shensha('魁罡日', -15, '魁罡日聪明但婚姻不顺')
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞（与新人相关）"""

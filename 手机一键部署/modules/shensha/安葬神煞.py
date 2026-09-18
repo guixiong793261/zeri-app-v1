@@ -276,7 +276,7 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 天马
         if self._is_tianma(sizhu):
-            self._add_shensha('天马', 8, '天马吉日，利于安葬')
+            self._add_shensha('天马', 10, '天马吉日，利于安葬')
         
         # 天赦
         if self._is_tianshe(sizhu):

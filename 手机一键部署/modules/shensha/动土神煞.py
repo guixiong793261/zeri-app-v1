@@ -237,11 +237,11 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         
         # 驿马
         if self._is_yima(sizhu):
-            self._add_shensha('驿马', 12, '动土催吉，主迁动')
+            self._add_shensha('驿马', 10, '动土催吉，主迁动')
         
         # 三合
         if self._is_sanhe(sizhu):
-            self._add_shensha('三合', 12, '动土吉利，主和合')
+            self._add_shensha('三合', 10, '动土吉利，主和合')
         
         # 六合
         if self._is_month_day_liuhe(sizhu):
