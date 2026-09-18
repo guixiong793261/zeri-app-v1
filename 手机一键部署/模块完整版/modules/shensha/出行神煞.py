@@ -63,7 +63,7 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 劫煞
         if self._is_jiesha(sizhu):
-            self._add_shensha('劫煞', -25, '劫煞大吉，切忌出行')
+            self._add_shensha('劫煞', -25, '劫煞凶，切忌出行')
         
         # 灾煞
         if self._is_zaijiesha(sizhu):

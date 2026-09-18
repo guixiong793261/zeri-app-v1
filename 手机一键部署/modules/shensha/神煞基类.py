@@ -2204,7 +2204,3 @@ class ShenShaChecker:
             guiji = zh_list[(idx + 7) % 12]
             return day_zhi == guiji
         return False
-
-    def _is_sui_sha(self, sizhu):
-        """岁煞（对冲位，即岁破）"""
-        return self._is_suipo(sizhu)

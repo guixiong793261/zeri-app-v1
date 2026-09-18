@@ -95,13 +95,14 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_xiaohao(sizhu):
             self._add_shensha('小耗', -15, '忌动土，犯之主小损')
         
-        # ===== 补充缺失的凶煞检查 =====
-        
-        # 劫煞
+        # ===== 补充年神检查（劫煞/灾煞为年支查表，不属月神；因基类
+        # _check_year_shensha 已查过并去重，此处重加仅保证事项专属文案） =====
+
+        # 劫煞（年神）
         if self._is_jiesha(sizhu):
             self._add_shensha('劫煞', -25, '劫煞日忌修造、动土')
-        
-        # 灾煞
+
+        # 灾煞（年神）
         if self._is_zaijiesha(sizhu):
             self._add_shensha('灾煞', -25, '灾煞日忌修造、动土')
         
