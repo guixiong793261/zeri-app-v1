@@ -584,20 +584,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         tiande = tiande_map.get(month_zhi)
         return day_gan == tiande
     
-    def _is_yuede(self, sizhu):
-        """月德日"""
-        month_zhi = sizhu['month_zhi']
-        day_gan = sizhu['day_gan']
-        
-        yuede_map = {
-            '寅': '丙', '午': '丙', '戌': '丙',
-            '申': '壬', '子': '壬', '辰': '壬',
-            '巳': '庚', '酉': '庚', '丑': '庚',
-            '亥': '甲', '卯': '甲', '未': '甲'
-        }
-        
-        return day_gan == yuede_map.get(month_zhi)
-    
+    # _is_yuede 内嵌表已删除：原表与基类/工具函数 YUEDE 权威表逐字一致（纯表副本），
+    # 2026-09-18 拍板方案A改继承基类统一表（与天赦/岁煞收口同手法），行为零变化。
     def _is_yima(self, sizhu):
         """驿马日"""
         year_zhi = sizhu['year_zhi']
