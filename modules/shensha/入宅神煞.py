@@ -749,27 +749,6 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         """
         return False
     
-    def _is_tianshe(self, sizhu):
-        """
-        天赦日：春戊寅，夏甲午，秋戊申，冬甲子
-        春季（寅卯辰月）：戊寅日
-        夏季（巳午未月）：甲午日
-        秋季（申酉戌月）：戊申日
-        冬季（亥子丑月）：甲子日
-        """
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        month_zhi = sizhu['month_zhi']
-        if month_zhi in ['寅', '卯', '辰'] and day_gan == '戊' and day_zhi == '寅':
-            return True
-        if month_zhi in ['巳', '午', '未'] and day_gan == '甲' and day_zhi == '午':
-            return True
-        if month_zhi in ['申', '酉', '戌'] and day_gan == '戊' and day_zhi == '申':
-            return True
-        if month_zhi in ['亥', '子', '丑'] and day_gan == '甲' and day_zhi == '子':
-            return True
-        return False
-    
     def _is_sanhe(self, sizhu):
         """
         三合日：日支与月支三合
