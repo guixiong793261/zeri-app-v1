@@ -4572,14 +4572,23 @@ class Scorer:
         day_gan = day_zhu[0] if len(day_zhu) >= 1 else sizhu.get('day_gan', '')
         day_zhi = day_zhu[1] if len(day_zhu) > 1 else ''
         
-        # 天德贵人查法（以月支查日干）
+        # 天德贵人查法（以月支查日干/日支，维度感知）
+        # 2026-09-19 锚点③漏网副本修复：本表 8 干型月（丁/壬/辛/甲/癸/丙/乙/庚）
+        # 比日干；4 地支型四维月（卯→申、午→亥、酉→寅、子→巳，四维卦取宫内
+        # 后位地支）须比日支。旧码一律比日干导致这 4 个月天德贵人详情永不显示
+        # （与 shensha 层 1889a1e 同一维度 bug，本详情层为展示口径，不参与计分）。
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
             '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
             '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
         }
-        if month_zhi in tiande_map and day_gan == tiande_map[month_zhi]:
-            details['吉神'].append(f"天德贵人: 月支{month_zhi}见日干{day_gan}")
+        if month_zhi in tiande_map:
+            tdv = tiande_map[month_zhi]
+            if tdv in ('子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'):
+                if day_zhi == tdv:
+                    details['吉神'].append(f"天德贵人: 月支{month_zhi}见日支{day_zhi}")
+            elif day_gan == tdv:
+                details['吉神'].append(f"天德贵人: 月支{month_zhi}见日干{day_gan}")
         
         # 月德贵人查法（以月支查日干）
         # 三合局规则：寅午戌月丙，申子辰月壬，亥卯未月甲，巳酉丑月庚
