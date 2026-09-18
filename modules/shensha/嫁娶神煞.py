@@ -1119,17 +1119,22 @@ class MarriageShenShaChecker(ShenShaChecker):
         return day_zhi in zhoutang_ji.get(month_zhi, [])
     
     def _is_tiande(self, sizhu):
-        """是否天德日"""
+        """是否天德日
+        比较维度（2026-09-19 锚点③修复）：天干型比日干；
+        地支型（卯月申/午月亥/酉月寅/子月巳，四维月取宫内地支）比日支。
+        """
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
-        
+
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
             '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
             '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
         }
-        
+
         tiande = tiande_map.get(month_zhi)
+        if tiande in DI_ZHI:
+            return sizhu.get('day_zhi', '') == tiande
         return day_gan == tiande
     
     # _is_yuede 内嵌表已删除：原表与基类/工具函数 YUEDE 权威表逐字一致（纯表副本），

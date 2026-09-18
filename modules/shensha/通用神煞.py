@@ -576,12 +576,19 @@ class CommonShenShaChecker(ShenShaChecker):
         return day_pillar in shie_dabai
 
     def _is_tiande(self, sizhu):
-        """是否天德"""
+        """是否天德
+
+        比较维度（2026-09-19 锚点③修复）：天干型比日干；
+        地支型（卯月申/午月亥/酉月寅/子月巳，四维月取宫内地支）比日支。
+        """
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
         zh_list = DI_ZHI
         idx = zh_list.index(month_zhi)
-        return day_gan == TIANDE.get(idx)
+        td = TIANDE.get(idx)
+        if td in DI_ZHI:
+            return sizhu.get('day_zhi', '') == td
+        return day_gan == td
 
     def _is_yuede(self, sizhu):
         """是否月德"""
@@ -592,7 +599,11 @@ class CommonShenShaChecker(ShenShaChecker):
         return day_gan == YUEDE.get(idx)
 
     def _is_tiandehe(self, sizhu):
-        """是否天德合"""
+        """是否天德合（月支→天德合值直查表）
+
+        比较维度（2026-09-19 锚点③修复）：合值为天干时比日干（五合）；
+        合值为地支时（卯巳/午寅/酉亥/子申，六合）比日支（原比日干恒为 False）。
+        """
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
 
@@ -601,7 +612,10 @@ class CommonShenShaChecker(ShenShaChecker):
             '午': '寅', '未': '己', '申': '戊', '酉': '亥',
             '戌': '辛', '亥': '庚', '子': '申', '丑': '乙'
         }
-        return day_gan == tiandehe_map.get(month_zhi)
+        he = tiandehe_map.get(month_zhi)
+        if he in DI_ZHI:
+            return sizhu.get('day_zhi', '') == he
+        return day_gan == he
 
     def _is_yuedehe(self, sizhu):
         """是否月德合"""
