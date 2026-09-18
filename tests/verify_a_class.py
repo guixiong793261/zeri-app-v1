@@ -40,6 +40,7 @@ from verify_suisha import (
     case_table as c_suisha_table,
 )
 from verify_yima import cases as c_yima_cases
+from verify_yuesha import case_base as c_yuesha_base
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -47,6 +48,7 @@ CASES = [
     c_jiesha_base, c_jiesha_table,
     c_zaisha_base, c_zaisha_table,
     c_suisha_base, c_suisha_dongtu, c_suisha_table,
+    c_yuesha_base,
 ] + c_yima_cases
 
 
