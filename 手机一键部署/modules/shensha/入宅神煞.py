@@ -571,17 +571,22 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return day_zhi == yuehai_map.get(month_zhi)
     
     def _is_tiande(self, sizhu):
-        """天德日"""
+        """天德日
+        比较维度（2026-09-19 锚点③修复）：天干型比日干；
+        地支型（卯月申/午月亥/酉月寅/子月巳，四维月取宫内地支）比日支。
+        """
         month_zhi = sizhu['month_zhi']
         day_gan = sizhu['day_gan']
-        
+
         tiande_map = {
             '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
             '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
             '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚'
         }
-        
+
         tiande = tiande_map.get(month_zhi)
+        if tiande in DI_ZHI:
+            return sizhu.get('day_zhi', '') == tiande
         return day_gan == tiande
     
     # _is_yuede 内嵌表已删除：原表与基类/工具函数 YUEDE 权威表逐字一致（纯表副本），
@@ -615,14 +620,18 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         tiande = tiande_map.get(month_zhi, '')
         if not tiande:
             return False
-        
+
         # 天德合：与天德五行相合
         he_map = {'甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸',
                  '己': '甲', '庚': '乙', '辛': '丙', '壬': '丁', '癸': '戊',
                  '寅': '亥', '申': '巳', '亥': '寅', '巳': '申'}
-        
+
         tiande_he = he_map.get(tiande, '')
-        return day_gan == tiande_he or tiande_he == day_gan
+        # 2026-09-19 锚点③修复：天干型天德比日干（五合）；
+        # 地支型天德其合为地支（六合），须比日支（原比日干恒为 False）
+        if tiande_he in DI_ZHI:
+            return sizhu.get('day_zhi', '') == tiande_he
+        return day_gan == tiande_he
     
     def _is_yuede_he(self, sizhu):
         """月德合日"""

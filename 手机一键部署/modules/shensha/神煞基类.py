@@ -488,16 +488,26 @@ class ShenShaChecker:
     # ============ 通用吉星检查方法 ============
     
     def _is_tiande(self, sizhu):
-        """是否天德"""
+        """是否天德
+
+        比较维度（2026-09-19 锚点③修复）：天德值分两类——
+        - 天干型 8 个月（丁/壬/辛/甲/癸/丙/乙/庚）：与日干比较；
+        - 地支型 4 个月（卯月申/午月亥/酉月寅/子月巳，四维月取宫内地支）：
+          与日支比较。原实现地支型月也错误地比日干，恒为 False，
+          导致卯/午/酉/子四个月天德日永不命中。
+        """
         month_zhi = sizhu.get('month_zhi', '')
         day_gan = sizhu.get('day_gan', '')
         if not month_zhi or not day_gan:
             return False
         try:
             idx = DI_ZHI.index(month_zhi)
-            return day_gan == TIANDE.get(idx)
+            td = TIANDE.get(idx)
         except (ValueError, KeyError):
             return False
+        if td in DI_ZHI:
+            return sizhu.get('day_zhi', '') == td
+        return day_gan == td
     
     def _is_yuede(self, sizhu):
         """是否月德"""
@@ -525,13 +535,17 @@ class ShenShaChecker:
         tiande = tiande_map.get(month_zhi, '')
         if not tiande:
             return False
-        
+
         he_map = {'甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸',
                  '己': '甲', '庚': '乙', '辛': '丙', '壬': '丁', '癸': '戊',
                  '寅': '亥', '申': '巳', '亥': '寅', '巳': '申'}
-        
+
         tiande_he = he_map.get(tiande, '')
-        return day_gan == tiande_he or tiande_he == day_gan
+        # 2026-09-19 锚点③修复：天干型天德比日干（五合）；
+        # 地支型天德其合为地支（六合），须比日支（原比日干恒为 False）
+        if tiande_he in DI_ZHI:
+            return sizhu.get('day_zhi', '') == tiande_he
+        return day_gan == tiande_he
     
     def _is_yuede_he(self, sizhu):
         """月德合日"""

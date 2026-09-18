@@ -155,9 +155,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
 
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        # 不调用 super()，避免重复检查杀师日
-        # 修造神煞在 _check_day_shensha 中检查杀师日(-25分)
-        # 动土神煞使用更高的扣分(-30分)
+        # 不调用 super()：历史原因为杀师日分值差异（现已同为 -30 且 _add_shensha
+        # 按名去重不会双计），但本手抄副本与修造日检查已存在差异（缺刀砧煞/斧头煞/
+        # 木马煞/天地转煞/山曜/八专/四忌及岁合/益后/续世/福生/吉庆/天恩等），
+        # 贸然改走继承会引入大范围行为变化——如需收口须专项处理，勿在本方法随手改。
         
         # ===== 继承修造神煞的其他日神煞检查（手动调用，除了杀师日）=====
         # 天贼
@@ -207,8 +208,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # ===== 吉神 =====
         
         # 天德日（与天德同源吉神，二选一保留较高者，避免重复计分虚高）
+        # 2026-09-19 锚点③拍板：动土天德日由 +15 统一为 +20，与其他事项天德口径一致
         if self._is_tiande(sizhu) and '天德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('天德日', 15, '天德日，动土修造大吉')
+            self._add_shensha('天德日', 20, '天德日，动土修造大吉')
         
         # 月德日（与月德同源吉神，二选一保留较高者，避免重复计分虚高）
         if self._is_yuede(sizhu) and '月德' not in [s['name'] for s in self.shensha_list]:
