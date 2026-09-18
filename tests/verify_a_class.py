@@ -31,10 +31,23 @@ from verify_liuhai import case as c_liuhai
 from verify_sanxing import case as c_sanxing
 from verify_po import case as c_po
 
+# 第二批神煞（劫煞/灾煞/岁煞/驿马真空亡，2026-09-18 接入）
+from verify_jiesha import case_base as c_jiesha_base, case_table as c_jiesha_table
+from verify_zaisha import case_base as c_zaisha_base, case_table as c_zaisha_table
+from verify_suisha import (
+    case_base as c_suisha_base,
+    case_dongtu as c_suisha_dongtu,
+    case_table as c_suisha_table,
+)
+from verify_yima import cases as c_yima_cases
+
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
     c_sanhe, c_liuhe, c_liuchong, c_liuhai, c_sanxing, c_po,
-]
+    c_jiesha_base, c_jiesha_table,
+    c_zaisha_base, c_zaisha_table,
+    c_suisha_base, c_suisha_dongtu, c_suisha_table,
+] + c_yima_cases
 
 
 if __name__ == '__main__':
