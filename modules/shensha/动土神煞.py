@@ -281,19 +281,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
             '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
         }
         return day_zhi == chong_map.get(year_zhi)
-    
-    def _is_suisha(self, sizhu):
-        """岁煞：年支四孟煞位（与劫煞同）"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        suisha_map = {
-            '申': '亥', '子': '亥', '辰': '亥',
-            '亥': '申', '卯': '申', '未': '申',
-            '寅': '巳', '午': '巳', '戌': '巳',
-            '巳': '寅', '酉': '寅', '丑': '寅'
-        }
-        return day_zhi == suisha_map.get(year_zhi)
-    
+
+    # 岁煞 _is_suisha 已删除 override，直接继承神煞基类的权威墓库位表
+    # （申子辰→未、巳酉丑→辰、寅午戌→丑、亥卯未→戌，2026-09-18 修正）
+
     def _is_yuexing(self, sizhu):
         """月刑：月支刑日支"""
         month_zhi = sizhu.get('month_zhi', '')
