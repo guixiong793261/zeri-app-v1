@@ -863,21 +863,6 @@ class ConstructionShenShaChecker(ShenShaChecker):
         """
         return False
     
-    def _is_tianshe(self, sizhu):
-        """天赦日：春戊寅，夏甲午，秋戊申，冬甲子"""
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        month_zhi = sizhu['month_zhi']
-        if month_zhi in ['寅', '卯', '辰'] and day_gan == '戊' and day_zhi == '寅':
-            return True
-        if month_zhi in ['巳', '午', '未'] and day_gan == '甲' and day_zhi == '午':
-            return True
-        if month_zhi in ['申', '酉', '戌'] and day_gan == '戊' and day_zhi == '申':
-            return True
-        if month_zhi in ['亥', '子', '丑'] and day_gan == '甲' and day_zhi == '子':
-            return True
-        return False
-    
     def _is_qinglong(self, sizhu):
         """青龙日：十二建星中的青龙"""
         day_zhi = sizhu['day_zhi']

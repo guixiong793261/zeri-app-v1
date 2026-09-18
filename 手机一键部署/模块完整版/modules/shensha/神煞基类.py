@@ -1363,18 +1363,24 @@ class ShenShaChecker:
         return day_zhi == '辰'
     
     def _is_tianshe(self, sizhu):
-        """天赦日（春乙卯、夏丙午、秋辛酉、冬壬子）"""
+        """天赦日（《协纪辨方书·卷五》：春戊寅、夏甲午、秋戊申、冬甲子，百无禁忌）
+        四季按节气划分（月支由节气定月，寅卯辰=春等效立春~立夏前），
+        季内全部命中不限序次（2026-09-18 用户拍板：全部命中口径）。
+        旧表"春乙卯、夏丙午、秋辛酉、冬壬子"为错表（2026 年误命中 7 天、
+        漏 6 天真值），经 verify_tianshe.py 365 日历样本穷举实证后纠正。
+        修造/入宅两处 override 已删除，各事项统一走本权威表。
+        """
         month_zhi = sizhu.get('month_zhi', '')
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         if month_zhi in ['寅', '卯', '辰']:
-            return day_gan == '乙' and day_zhi == '卯'
+            return day_gan == '戊' and day_zhi == '寅'
         elif month_zhi in ['巳', '午', '未']:
-            return day_gan == '丙' and day_zhi == '午'
+            return day_gan == '甲' and day_zhi == '午'
         elif month_zhi in ['申', '酉', '戌']:
-            return day_gan == '辛' and day_zhi == '酉'
+            return day_gan == '戊' and day_zhi == '申'
         elif month_zhi in ['亥', '子', '丑']:
-            return day_gan == '壬' and day_zhi == '子'
+            return day_gan == '甲' and day_zhi == '子'
         return False
     
     def _is_mucang(self, sizhu):
