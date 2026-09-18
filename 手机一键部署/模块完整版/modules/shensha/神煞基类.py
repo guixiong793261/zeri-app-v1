@@ -736,29 +736,22 @@ class ShenShaChecker:
         return day_zhi == jiesha_map.get(year_zhi)
     
     def _is_zaijiesha(self, sizhu):
-        """灾煞（七杀）
-        灾煞：申子辰年在午、亥卯未年在酉、寅午戌年在卯、巳酉丑年在子
-        即劫煞对冲位
+        """灾煞（三煞体系之"中神冲"位）
+        权威（《渊海子平》《三命通会》三煞体系：煞方帝旺位为灾煞，
+        即三合局中神之冲，2026-09-18 按 verify_zaisha.py 权威表修正）：
+        申子辰年在午、巳酉丑年在卯、寅午戌年在子、亥卯未年在酉。
+        （旧实现内嵌错劫煞表再取六冲，四局全错，已废。）
         """
         year_zhi = sizhu.get('year_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        
-        jiesha_map = {
-            '申': '亥', '子': '亥', '辰': '亥',
-            '亥': '申', '卯': '申', '未': '申',
-            '寅': '巳', '午': '巳', '戌': '巳',
-            '巳': '寅', '酉': '寅', '丑': '寅'
+
+        zaisha_map = {
+            '申': '午', '子': '午', '辰': '午',
+            '巳': '卯', '酉': '卯', '丑': '卯',
+            '寅': '子', '午': '子', '戌': '子',
+            '亥': '酉', '卯': '酉', '未': '酉'
         }
-        
-        chong_map = {'子': '午', '午': '子', '卯': '酉', '酉': '卯',
-                     '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳',
-                     '申': '寅', '寅': '申', '未': '丑', '丑': '未'}
-        
-        jiesha_zhi = jiesha_map.get(year_zhi, '')
-        if jiesha_zhi:
-            zaijiesha_zhi = chong_map.get(jiesha_zhi, '')
-            return day_zhi == zaijiesha_zhi
-        return False
+        return day_zhi == zaisha_map.get(year_zhi)
     
     def _is_yuesha(self, sizhu):
         """月煞（月虚）
