@@ -484,15 +484,36 @@ class TestGuiRen10GanFull(unittest.TestCase):
 #   五行生克（方向修正 VII 断言）：必须出现 "木克土：日柱乙(木)克月柱己(土)"，
 #                                   禁止出现旧 bug 的 "月柱己(土)克日柱乙(木)"
 #   安全方位 15 个：壬子癸艮甲乙巽丙丁坤庚辛乾亥（均0分）
+#
+# 注：上为 2021 年用户贴的原始报告（历史输入，不删改）；其 175/151/136 评分为当时规则
+# 产物。2026-09-18 起黄金断言锁现行规则真值 20/42（否决链已解除，差距为 09 月拍板的
+# 规则强化累积），依据见下方 GOLD_XIUZAO_20211203_SCORE 注释。
 # ============================================================================
 GOLD_XIUZAO_20211203_SIZHU = {
     'date_tuple': (2021, 12, 3),
     '四柱': ('辛丑', '己亥', '乙酉', '壬午'),  # 年/月/日/时柱
 }
-# 黄金评分（真实 calculate_score 返回值；注意 report UI 层展示 175=195上限裁剪，接口本身不裁剪返回136）
-GOLD_XIUZAO_20211203_SCORE = 136  # 接口返回真实总分（字符串'136'或int 136）
-GOLD_XIUZAO_20211203_LEVEL = '★★★★ 大吉'  # 真实 level 文案
-GOLD_XIUZAO_20211203_WUXING_SCORE = 151  # 五行评分（接口真实值）
+# 黄金评分（2026-09-18 用户拍板更新为现行规则真值；setUpClass 与 GUI 同口径注入事主喜用神）
+#
+# 【为什么是 20/42 而不是旧基准 136/151】否决链已于 2026-09-18 三档口径修复后全部解除
+# （veto_reasons=[]），数值差距来自 09 月历次【用户已拍板】的规则强化累积，非 bug、非放水：
+#   五行 42 = 基础100 + 神煞61 + 宜事30 + 忌事-150 + 十二长生-7 + 地支关系0 + 纳音8
+#   正五行 16 = 五行42 + 月令5 + 喜用44 + 相主-35 + 黄道-10 + 太阳太阴10 + 三煞-40
+#   总分  20 = int(16×0.7 + (50+飞星-20)×0.3) = int(20.2) = 20
+#             （方案B飞星加权，2026-09-01 用户确认；时柱关系-6 已含于五行地支关系，不重复计）
+# 忌事 -150 十项：月三煞(日柱)/时灾煞(无制化)/正阴府(无制化)/年柱丑冲事主2与4（含扶山不论1项）/
+#                 兼山山家三煞×2/正阴府忌乙日干/克山运（已带"有制化：天德到山，不禁用"，仅忌项不否决）。
+GOLD_XIUZAO_20211203_SCORE = 20  # 接口返回真实总分（feixing 加权后，与 GUI 一致）
+GOLD_XIUZAO_20211203_LEVEL = '❌ 凶'  # 真实 level 文案（20 分档）
+GOLD_XIUZAO_20211203_WUXING_SCORE = 42  # 五行评分（接口真实值，分项锁见 test_03）
+# 五行分项锁（键名与 wu_xing_result.score_breakdown 精确一致；七项之和必须=42）
+GOLD_XIUZAO_20211203_WUXING_BREAKDOWN = {
+    '基础分': 100, '神煞得分': 61, '宜事得分': 30, '忌事得分': -150,
+    '十二长生得分': -7, '地支关系得分': 0, '纳音匹配得分': 8,
+}
+# 正五行总分（飞星加权前）与方案B加权公式锁
+GOLD_XIUZAO_20211203_ZHENGWU = 16
+GOLD_XIUZAO_20211203_FEIXING = -20
 # 三煞干支集（纯地支）+ 月三煞犯日柱 + 三煞扣分
 GOLD_XIUZAO_20211203_SANSHA = {
     '年三煞': {'寅', '卯', '辰'},
@@ -515,9 +536,9 @@ GOLD_XIUZAO_20211203_HUANGDAO = {
     'shichen_name': '金匮', 'shichen_type': '吉', 'shichen_score': +10,
     'score_sum': -10,
 }
-# 月令 + 喜用神（接口本身不自动计算事主喜用神，需外部传入；真实返回 0）
+# 月令 + 喜用神（2026-09-18 起 setUpClass 与 GUI 同口径注入喜用，喜用由 0 变真值 44）
 GOLD_XIUZAO_20211203_YUELING = {'旺衰': '相', '总分': +5}
-GOLD_XIUZAO_20211203_XISHEN = {'总分': 0}
+GOLD_XIUZAO_20211203_XISHEN = {'总分': 44}
 
 
 class TestXiuZao20211203(unittest.TestCase):
@@ -557,6 +578,13 @@ class TestXiuZao20211203(unittest.TestCase):
         sz['时柱'] = sz.get('时柱', '') or (sz.get('hour_gan') or '') + (sz.get('hour_zhi') or '')
         cls.sizhu = sz
         cls.owners = cls._build_owners()
+        # 2026-09-18：与主程序/GUI 同口径注入事主喜用神（calculate_score 接口本身不自动
+        # 计算喜用，未注入时喜用项=0、总分被 feixing 加权后钳为 0 分，与 GUI 看到的不一致）
+        from modules.喜用神计算器 import calculate_xishen_yongshen
+        for _o in cls.owners:
+            _xy = calculate_xishen_yongshen(
+                calculate_sizhu(_o['birth_date'], _o.get('birth_hour', 12), _o.get('birth_minute', 0)))
+            _o['xishen'], _o['yongshen'] = _xy[0], _xy[1]
         cls.result = calculate_score(sizhu=sz, event_type='修造',
                                      owners=cls.owners,
                                      house_type='阳宅',
@@ -572,9 +600,15 @@ class TestXiuZao20211203(unittest.TestCase):
             self.assertEqual(self.sizhu.get(k), exp, "四柱%r 错：基准=%r 实际=%r"
                 % (k, exp, self.sizhu.get(k)))
 
-    def test_02_score_and_components_sum_136(self):
-        """I-02 总分 136（calculate_score 接口真实返回值；report UI 另做 195→175 上限裁剪）"""
+    def test_02_score_and_components_feixing_weighted_20(self):
+        """I-02 总分 20（2026-09-18 现行规则真值，setUpClass 注入事主喜用、feixing 默认模式，
+        与 GUI 同口径）。先锁否决链为空，再锁分数：
+          正五行16 = 五行42+月令5+喜用44+相主-35+黄道-10+太阳10+三煞-40
+          总分 20 = int(16×0.7 + (50+飞星-20)×0.3)（方案B加权，2026-09-01 用户确认）"""
         self.assertIsInstance(self.result, dict, "calculate_score 应返回 dict，实际 %r" % type(self.result))
+        # 否决链必须为空：2026-09-18 三档口径（克山运仅日柱/年命六冲三档）修复后此课不再被否决
+        self.assertEqual(self.result.get('veto_reasons') or [], [],
+            "2021 黄金课否决链应为空（三档口径后），实际=%r" % (self.result.get('veto_reasons'),))
         s_raw = self.result.get('score')
         self.assertIsNotNone(s_raw, "result 缺 score 字段")
         s = int(s_raw) if isinstance(s_raw, (str, int, float)) else None
@@ -587,13 +621,28 @@ class TestXiuZao20211203(unittest.TestCase):
         if total_raw is not None:
             self.assertEqual(int(total_raw), GOLD_XIUZAO_20211203_SCORE,
                 "score_details.总分 与 result.score 不一致：detail=%r score_raw=%r" % (total_raw, s_raw))
+        # 方案B加权公式锁：正五行×0.7 + (50+飞星)×0.3 → 20
+        _zw = sd.get('正五行总分')
+        _fx = sd.get('飞星评分')
+        if _zw is not None and _fx is not None:
+            self.assertEqual(int(_zw), GOLD_XIUZAO_20211203_ZHENGWU,
+                "正五行总分（加权前）应为 16，实际=%r" % (_zw,))
+            self.assertEqual(int(_fx), GOLD_XIUZAO_20211203_FEIXING,
+                "飞星评分应为 -20，实际=%r" % (_fx,))
+            self.assertEqual(
+                max(0, min(100, int(int(_zw) * 0.7 + (50 + int(_fx)) * 0.3))),
+                GOLD_XIUZAO_20211203_SCORE,
+                "方案B加权公式产出与总分不一致：正五行=%r 飞星=%r" % (_zw, _fx))
         # level 文本
         lv = self.result.get('level')
         self.assertEqual(lv, GOLD_XIUZAO_20211203_LEVEL,
             "level 文案错：基准=%r 实际=%r" % (GOLD_XIUZAO_20211203_LEVEL, lv))
 
-    def test_03_wuxing_base_151(self):
-        """I-03 五行评分 151 = 基础100 + 神煞76 + 宜50 - 忌75（分项锁；wu_xing_result.score 精确一致）"""
+    def test_03_wuxing_base_42(self):
+        """I-03 五行评分 42（2026-09-18 现行规则真值）=
+        基础100 + 神煞61 + 宜事30 + 忌事-150 + 十二长生-7 + 地支关系0 + 纳音8（七项分项锁）。
+        忌事 -150 是 09 月历次用户拍板的规则强化（三煞/阴府/冲主/山家三煞/克山运），
+        非为通过测试而放宽；wu_xing_result.score 精确一致。"""
         sd = self.result.get('score_details', {})
         wsc = sd.get('五行评分')
         if wsc is not None:
@@ -607,15 +656,18 @@ class TestXiuZao20211203(unittest.TestCase):
         if wxs is not None:
             self.assertEqual(int(wxs), GOLD_XIUZAO_20211203_WUXING_SCORE,
                 "wu_xing_result.score 应为%r 实际=%r" % (GOLD_XIUZAO_20211203_WUXING_SCORE, wxs))
-        # 分项锁：score_breakdown（基础100 / 神煞76 / 宜50 / 忌-75）
+        # 分项锁：score_breakdown 七项（键名/值精确，和必须=42）
         brk = wxr.get('score_breakdown') if isinstance(wxr, dict) else None
         if brk is None and wxr is not None and hasattr(wxr, 'score_breakdown'):
             brk = wxr.score_breakdown
         if isinstance(brk, dict) and brk:
-            self.assertEqual(int(brk.get('基础分', 0)), 100, "score_breakdown 基础分应为100")
-            self.assertEqual(int(brk.get('神煞得分', 0)), 76, "score_breakdown 神煞得分应为76（修造16个神煞净和）")
-            self.assertEqual(int(brk.get('宜事得分', 0)), 50, "score_breakdown 宜事得分应为50")
-            self.assertEqual(int(brk.get('忌事得分', 0)), -75, "score_breakdown 忌事得分应为-75")
+            _part_sum = 0
+            for key, exp_v in GOLD_XIUZAO_20211203_WUXING_BREAKDOWN.items():
+                self.assertEqual(int(brk.get(key, 0)), exp_v,
+                    "score_breakdown %s 应为%d（实际=%r）" % (key, exp_v, brk.get(key)))
+                _part_sum += exp_v
+            self.assertEqual(_part_sum, GOLD_XIUZAO_20211203_WUXING_SCORE,
+                "七项分项之和 %d 应闭合为五行评分 42" % _part_sum)
 
     def test_04_huangdao_da_xiao_shichen_sum(self):
         """I-04 大黄道=朱雀凶-15 / 小黄道=开吉+5 / 时辰=金匮吉+10 / 综合-10"""
