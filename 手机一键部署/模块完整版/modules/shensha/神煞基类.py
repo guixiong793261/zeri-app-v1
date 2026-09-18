@@ -30,6 +30,9 @@ class ShenShaChecker:
     XIANG_XING_SETS = [('寅', '巳'), ('巳', '申'), ('寅', '申'),
                        ('丑', '戌'), ('戌', '未'), ('丑', '未'), ('子', '卯')]
     ZI_XING_ZHI = {'辰', '午', '酉', '亥'}
+    # 六破（相破）：子酉、丑辰、寅亥、卯午、巳申、未戌
+    XIANG_PO_SETS = [('子', '酉'), ('丑', '辰'), ('寅', '亥'), ('卯', '午'),
+                     ('巳', '申'), ('未', '戌')]
     
     def __init__(self):
         self.shensha_list = []
@@ -61,9 +64,11 @@ class ShenShaChecker:
 
     def _get_xinghai_penalty_all(self, sizhu, hour_zhi):
         """
-        时辰刑害扣分（年/月/日支全量检查，2026-09-15 修复时辰评分漏算）
-        时支与年支、月支、日支分别判定刑/害：刑-15、害-10、既刑又害取重-15；
-        不同地支的扣分叠加（如丑时遇戌日支刑、午年支害，则 -15 + -10 = -25）。
+        时辰刑害破扣分（年/月/日支全量检查，2026-09-18 补相破/自刑）
+        时支与年支、月支、日支分别判定：刑-15、害-10、相破-4、自刑-8、既刑又害取重-15；
+        相破/自刑分值与评分器._calc_hour_zhi_relations_detail 及主程序
+        _calc_hour_zhi_relation_score 完全一致（三处口径统一）。
+        不同地支的扣分叠加。冲（六冲）不由本表处理：日破时已由 get_lucky_hours 单独禁用。
         Args:
             sizhu: 含 year_zhi/month_zhi/day_zhi 的字典
             hour_zhi: 时支
@@ -80,11 +85,18 @@ class ShenShaChecker:
             (sizhu.get('day_zhi', ''), '日支'),
         ]
         for z, label in branch_labels:
-            if not z or z == hour_zhi:
+            if not z:
+                continue
+            if z == hour_zhi:
+                # 同支：辰午酉亥为自刑（-8），其余同支伏吟不计分
+                if hour_zhi in self.ZI_XING_ZHI:
+                    total -= 8
+                    reasons.append(f'自刑{label}（{hour_zhi}{z}自刑）')
                 continue
             pair = {z, hour_zhi}
             is_xing = any(pair == {a, b} for a, b in self.XIANG_XING_SETS)
             is_hai = any(pair == {a, b} for a, b in self.XIANG_HAI_SETS)
+            is_po = any(pair == {a, b} for a, b in self.XIANG_PO_SETS)
             if is_xing and is_hai:
                 total -= 15
                 reasons.append(f'刑害{label}（{hour_zhi}刑{z}）')
@@ -94,6 +106,9 @@ class ShenShaChecker:
             elif is_hai:
                 total -= 10
                 reasons.append(f'害{label}（{hour_zhi}害{z}）')
+            elif is_po:
+                total -= 4
+                reasons.append(f'破{label}（{hour_zhi}破{z}）')
         return total, reasons
 
     def _get_sanhe_daycourse_bonus(self, sizhu, hour_zhi):
@@ -185,13 +200,30 @@ class ShenShaChecker:
         """
         # 标准化sizhu格式
         sizhu = self._normalize_sizhu(sizhu)
-        
+
+        # 交节日口径：注入本次评分真实时柱月支，供神煞内部 get_jianchu(date)
+        # （默认按当日12:00取月支）与小黄道统一，避免交节日“闭/建”错配。
+        try:
+            from .marriage_shensha import push_month_zhi_context, pop_month_zhi_context
+            _mz = (sizhu.get('month_zhi') or sizhu.get('月支')
+                   or (sizhu.get('月柱')[1] if sizhu.get('月柱') else ''))
+            _mz_token = push_month_zhi_context(_mz)
+        except Exception:
+            _mz_token = None
+
         self.shensha_list = []
-        self._check_year_shensha(sizhu, **kwargs)
-        self._check_month_shensha(sizhu, **kwargs)
-        self._check_day_shensha(sizhu, **kwargs)
-        self._check_hour_shensha(sizhu, **kwargs)
-        self._check_special_shensha(sizhu, owners, **kwargs)
+        try:
+            self._check_year_shensha(sizhu, **kwargs)
+            self._check_month_shensha(sizhu, **kwargs)
+            self._check_day_shensha(sizhu, **kwargs)
+            self._check_hour_shensha(sizhu, **kwargs)
+            self._check_special_shensha(sizhu, owners, **kwargs)
+        finally:
+            if _mz_token is not None:
+                try:
+                    pop_month_zhi_context(_mz_token)
+                except Exception:
+                    pass
         return self.shensha_list
     
     def _check_year_shensha(self, sizhu, **kwargs):

@@ -5,6 +5,31 @@
 
 from datetime import date, datetime
 import math
+from contextvars import ContextVar
+
+# ==================== 当前评分时柱月支上下文 ====================
+# 交节日（如小暑当天 09:56 交节）当天，所选时辰可能仍属上一个月。规则/神煞检查
+# 都在一次评分周期内针对“真实时柱四柱”进行，此处用 ContextVar 把该月支透传给
+# get_jianchu/is_da_huangdao_day 等原本只按日期（内部固定取 12:00）推算的日级神煞，
+# 使其月建与小黄道（直接取 sizhu['月柱'][1]）保持一致。未设置时回退原 12:00 口径。
+_current_month_zhi_ctx = ContextVar('current_month_zhi', default=None)
+
+
+def push_month_zhi_context(month_zhi):
+    """设置当前评分周期月支，返回 token 供恢复（支持嵌套）。"""
+    return _current_month_zhi_ctx.set(month_zhi or None)
+
+
+def pop_month_zhi_context(token):
+    """恢复 push 之前的上下文。"""
+    try:
+        _current_month_zhi_ctx.reset(token)
+    except Exception:
+        _current_month_zhi_ctx.set(None)
+
+
+def get_current_month_zhi():
+    return _current_month_zhi_ctx.get()
 
 # ==================== 基础干支转换 ====================
 
@@ -246,17 +271,23 @@ def is_bujiang_day(date_obj):
 
 # ==================== 建除十二神 ====================
 
-def get_jianchu(date_obj):
+def get_jianchu(date_obj, month_zhi=None):
     """
     建除十二神：建、除、满、平、定、执、破、危、成、收、开、闭
     按月建（月地支）起建，顺数至日地支。
     返回神名（如'建'、'除'...）
+
+    month_zhi 取值优先级：显式参数 > 当前评分时柱月支(ContextVar) > 当日12:00月支。
+    交节日当天，12:00 可能已入新月、而所选时辰尚未交节，故评分周期内必须用真实时柱月支。
     """
     # 直接从四柱获取月支，避免从农历月份反推的错误
     try:
-        from ..四柱计算器 import calculate_sizhu
-        sizhu = calculate_sizhu(date_obj, 12, 0)
-        month_zhi = sizhu.get('month_zhi', '')
+        if not month_zhi:
+            month_zhi = _current_month_zhi_ctx.get()
+        if not month_zhi:
+            from ..四柱计算器 import calculate_sizhu
+            sizhu = calculate_sizhu(date_obj, 12, 0)
+            month_zhi = sizhu.get('month_zhi', '')
     except:
         # 回退方案：从农历月份计算月支
         month = _get_lunar_month(date_obj)
@@ -273,21 +304,24 @@ def get_jianchu(date_obj):
     jianchu_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
     return jianchu_list[offset]
 
-def is_xiao_huangdao_day(date_obj):
+def is_xiao_huangdao_day(date_obj, month_zhi=None):
     """小黄道（建除）吉日：除、危、定、执、成、开"""
-    jianchu = get_jianchu(date_obj)
+    jianchu = get_jianchu(date_obj, month_zhi)
     huangdao = ['除', '危', '定', '执', '成', '开']
     return jianchu in huangdao
 
-def is_da_huangdao_day(date_obj):
+def is_da_huangdao_day(date_obj, month_zhi=None):
     """大黄道（十二神）吉日：青龙、明堂、金匮、天德、玉堂、司命
     
     使用汉程黄历算法：result = (日支索引 - 2*月支索引 + 4) % 12
     """
     try:
-        from ..四柱计算器 import calculate_sizhu
-        sizhu = calculate_sizhu(date_obj, 12, 0)
-        month_zhi = sizhu.get('month_zhi', '')
+        if not month_zhi:
+            month_zhi = _current_month_zhi_ctx.get()
+        if not month_zhi:
+            from ..四柱计算器 import calculate_sizhu
+            sizhu = calculate_sizhu(date_obj, 12, 0)
+            month_zhi = sizhu.get('month_zhi', '')
         _, day_zhi = get_day_ganzhi(date_obj)
         
         zhi_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
@@ -307,12 +341,12 @@ def is_da_huangdao_day(date_obj):
     except:
         return False
 
-def is_huangdao_day(date_obj):
+def is_huangdao_day(date_obj, month_zhi=None):
     """大黄道（十二神）吉日：青龙、明堂、金匮、天德、玉堂、司命
     
     使用汉程黄历算法
     """
-    return is_da_huangdao_day(date_obj)
+    return is_da_huangdao_day(date_obj, month_zhi)
 
 # ==================== 冲克刑害 ====================
 

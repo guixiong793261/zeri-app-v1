@@ -47,9 +47,33 @@ class EventRuleChecker(ABC):
         Raises:
             NotImplementedError: 如果子类未实现 _check_rules
         """
-        # 调用子类实现的具体规则检查
-        result = self._check_rules(sizhu, owners, **kwargs)
-        
+        # 交节日口径：把本次评分的“真实时柱月支”注入上下文，供建除等日级神煞
+        # （get_jianchu 内部默认按当日 12:00 取月支）与小黄道(sizhu['月柱'][1])统一。
+        def _month_zhi_of(sz):
+            try:
+                if not isinstance(sz, dict):
+                    return ''
+                return (sz.get('month_zhi') or sz.get('月支')
+                        or (sz.get('月柱')[1] if sz.get('月柱') else ''))
+            except Exception:
+                return ''
+        try:
+            from ..shensha.marriage_shensha import (
+                push_month_zhi_context, pop_month_zhi_context)
+            _mz_token = push_month_zhi_context(_month_zhi_of(sizhu))
+        except Exception:
+            _mz_token = None
+
+        try:
+            # 调用子类实现的具体规则检查
+            result = self._check_rules(sizhu, owners, **kwargs)
+        finally:
+            if _mz_token is not None:
+                try:
+                    pop_month_zhi_context(_mz_token)
+                except Exception:
+                    pass
+
         # 处理返回值（支持新老两种格式）
         if isinstance(result, tuple) and len(result) == 4:
             yi_list, ji_list, veto, veto_reason = result
