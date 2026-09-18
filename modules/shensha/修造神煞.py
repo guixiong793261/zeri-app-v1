@@ -261,10 +261,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，修造吉')
         
-        # 天赦日（赦宥之神）
-        if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 25, '天赦日百事吉，修造尤佳')
-        
+        # '天赦日'重加已删除（2026-09-18，001跟踪项13.2方案①）：基类
+        # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
+        # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
+        # 拆舍经继承链自动同步修复；注意动土/通用的天赦加分为独立活分支，不适用本清理。
+
         # 五富（主财富）
         if self._is_wufu(sizhu):
             self._add_shensha('五富', 12, '五富日主财，修造吉')

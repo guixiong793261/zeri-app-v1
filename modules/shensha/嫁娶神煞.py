@@ -311,10 +311,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_yaoan(sizhu):
             self._add_shensha('要安', 8, '要安日婚嫁吉')
         
-        # 天赦日（赦宥之神，百事皆宜）
-        if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 25, '天赦日百事吉，婚嫁尤佳')
-        
+        # '天赦日'重加已删除（2026-09-18，001跟踪项13.2方案①）：基类
+        # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
+        # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
+
         # 鸣犬日（嫁娶吉日）
         if self._is_mingquan(sizhu):
             self._add_shensha('鸣犬日', 12, '鸣犬日宜嫁娶')
