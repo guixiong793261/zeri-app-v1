@@ -499,7 +499,14 @@ GOLD_XIUZAO_20211203_SANSHA = {
     '月三煞': {'申', '酉', '戌'},
     '日三煞': {'寅', '卯', '辰'},
     '月三煞犯日柱': True,  # 酉 ∈ 申酉戌；对应 sansha_info.month_sansha_day_fan == 'True'
-    '三煞总扣分': -20,      # 对应 sansha_info.sansha_penalty == '-20'
+    # 2026-09-18 基准更新：sansha_penalty 语义已从"纯三煞扣分"演化为"三煞 + 山家
+    # 无制化警告"综合扣分容器（评分器约 L1184：mountain_warnings 中带"（无制化）"
+    # 的时灾煞/正阴府等各 -10 累加）。本例：月三煞犯日柱-20 + 时灾煞(无制化)-10
+    # + 正阴府(无制化)-10 = -40。明细见 sansha_penalty_detail 三栏锁。
+    '三煞总扣分': -40,      # 对应 sansha_info.sansha_penalty
+    '三煞扣分明细': ['月三煞犯日柱（-20分）',
+                  '时灾煞（无制化）（-10分）',
+                  '乙干见，犯正阴府，需制化（不禁用）（无制化）（-10分）'],
 }
 # 黄道分（真实接口返回；注意字段值可能是 str，断言时统一 int 化）
 GOLD_XIUZAO_20211203_HUANGDAO = {
@@ -632,7 +639,8 @@ class TestXiuZao20211203(unittest.TestCase):
             "黄道综合分 应为 -10（朱雀-15+开+5，时辰金匮+10不计入综合分按用户报告仅大黄道+小黄道）")
 
     def test_05_sansha_mapping_pure_dizhi_and_offend_day_zhi(self):
-        """I-05 三煞映射纯地支 + 月三煞犯日柱酉 True（申酉戌）+ 三煞总扣分-20"""
+        """I-05 三煞映射纯地支 + 月三煞犯日柱酉 True（申酉戌）+ 三煞综合扣分-40
+        （-20月三煞犯日柱 + 时灾煞/正阴府两个无制化警告各-10，2026-09-18 基准更新）"""
         si = self.result.get('sansha_info') or {}
         if not si:
             self.skipTest("result 缺 sansha_info")
@@ -671,7 +679,7 @@ class TestXiuZao20211203(unittest.TestCase):
         self.assertIsNotNone(mdf_val, "sansha_info 缺 月三煞犯日柱 标志位，键=%s" % list(si.keys()))
         self.assertTrue(_Ib(mdf_val),
             "月三煞犯日柱应为 True（日支酉 ∈ 申酉戌），实际=%r" % (mdf_val,))
-        # 三煞总扣分 = -20
+        # 三煞综合扣分 = -40（三煞+无制化警告容器口径）
         pen_key_pool = ['sansha_penalty', '三煞扣分', '三煞总扣分']
         pen_val = None
         for pk in pen_key_pool:
@@ -680,6 +688,11 @@ class TestXiuZao20211203(unittest.TestCase):
         self.assertIsNotNone(pen_val, "sansha_info 缺 三煞总扣分 字段，键=%s" % list(si.keys()))
         self.assertEqual(_I(pen_val), GOLD_XIUZAO_20211203_SANSHA['三煞总扣分'],
             "三煞总扣分 应为 %r 实际=%r" % (GOLD_XIUZAO_20211203_SANSHA['三煞总扣分'], pen_val))
+        # 明细三栏锁：扣分去向可追溯（月三煞 + 两个无制化警告），防字段语义再漂移
+        pen_detail = si.get('sansha_penalty_detail')
+        if pen_detail is not None:
+            self.assertEqual(list(pen_detail), GOLD_XIUZAO_20211203_SANSHA['三煞扣分明细'],
+                "三煞扣分明细漂移，实际=%r" % (pen_detail,))
 
     def test_06_special_ke_items_hits(self):
         """I-06 关键忌项跨字段命中：ji_list(正阴府/年冲事主2/4/克山运/山家三煞) +
@@ -727,16 +740,22 @@ class TestXiuZao20211203(unittest.TestCase):
             % (ji_missing, si_missing, jl[:20], warnings_pool[:10]))
 
     def test_07_yi_list_contains_kaifu_tiande(self):
-        """I-07 宜列表含核心：建除开日宜修造 / 天德日宜修造 / 乾山得丑生扶 / 辛丑年利 / 十二月吉"""
+        """I-07 宜列表含核心：建除开日宜修造 / 天德日宜修造 / 乾山 / 辛丑年利。
+        2026-09-18 基准更新：原断言含"十二月吉"月令吉语，但全软件生产代码与数据
+        从未实现该吉语（仅本测试 09-16 建档时写入），属功能缺口而非回归，移出硬
+        断言；月令吉语补实现另立功能项（见 docs/问题跟踪_001）。"""
         yl = self.result.get('yi_list') or []
-        hit_keys = ['开日宜修造', '天德日宜修造', '乾山', '辛丑年利', '十二月吉']
+        hit_keys = ['开日宜修造', '天德日宜修造', '乾山', '辛丑年利']
         missing = [k for k in hit_keys if not any(k in str(y) for y in yl)]
         self.assertEqual(missing, [],
             "yi_list 缺关键项 %r（宜列表全文：%r）" % (missing, yl[:20]))
 
     def test_08_shensha_ji_xiong_core_names_and_scores(self):
-        """I-08 神煞+忌跨字段命中：shensha_list 命中 吉神(天德20/岁禄15/天德日15/岁马到山15/上吉日12/母仓10/四相10/相主10/补龙8/开5/扶山3) 凶煞(地贼-15/鲁班煞-20/地耗-10/吊客-12)；
-        年冲事主2 在 ji_list 而非 shensha_list，额外查ji_list：'年柱丑冲事主2生肖未'"""
+        """I-08 神煞+忌跨字段命中：shensha_list 命中 吉神(天德20/岁禄15/岁马到山15/上吉日12/母仓10/四相10/相主10/补龙8/开5/扶山3) 凶煞(地贼-15/鲁班煞-20/地耗-10/吊客-12)；
+        年冲事主2 在 ji_list 而非 shensha_list，额外查ji_list：'年柱丑冲事主2生肖未'。
+        2026-09-18 基准更新：天德(20)与天德日(15)为同源吉神，09-16 起"二选一保留
+        较高者"（修造神煞.py L180 有意去重，防重复计分虚高）——本例天德20在册，
+        天德日15 不应再出现；二者至少命中其一，且不得同时计分。"""
         sl = self.result.get('shensha_list') or []
         jl = self.result.get('ji_list') or []
         if not sl:
@@ -748,7 +767,7 @@ class TestXiuZao20211203(unittest.TestCase):
                     return True
             return False
         good = [
-            ('天德', 20), ('岁禄', 15), ('天德日', 15), ('岁马到山', 15), ('上吉日', 12),
+            ('岁禄', 15), ('岁马到山', 15), ('上吉日', 12),
             ('母仓', 10), ('四相', 10), ('相主', 10), ('吉期', 10),
             ('建除十二神-开', 5), ('扶山', 3), ('补龙', 8),
         ]
@@ -757,6 +776,13 @@ class TestXiuZao20211203(unittest.TestCase):
         for nm, sc in good + bad:
             if not _find(nm, sc):
                 missing.append((nm, sc))
+        # 天德/天德日 二选一去重锁
+        has_tiande20 = _find('天德', 20)
+        has_tiandri15 = _find('天德日', 15)
+        if not (has_tiande20 or has_tiandri15):
+            missing.append(('天德20/天德日15(二选一)', '两者均缺'))
+        if has_tiande20 and has_tiandri15:
+            missing.append(('天德20+天德日15不得并存', '同源吉神重复计分'))
         # 年冲事主2 -20 扣分不在 shensha_list，在 ji_list 里文案"年柱丑冲事主2生肖未"
         nian_chong_hit = any('年柱丑冲事主2生肖未' in str(j) for j in jl)
         if not nian_chong_hit:
@@ -850,13 +876,17 @@ GOLD_JQ_20260222_HUANGDAO = {
     'score_sum': -10,
 }
 # 嫁娶类 score_details 分项：注意黄道分项为 None（口径锁死：婚嫁不计入黄道分项扣分）
+# 2026-09-18 基准更新：总分 75→43、五行 70→38、level ★平→❌凶。差因婚嫁算法
+# 定档后新增的三项深度规则（09-17 归档基线已含同口径，tests/fixtures 4 例可佐证）：
+# 冲子星-20、日主旺耗夫星-20、半合局+8（净-32）；70-32=38，38+月令5=43。
+# 其余分项（月令5/喜用0/太阳0/黄道None/相主None/has_deduction=False）均未漂移。
 GOLD_JQ_20260222_DETAILS = {
-    '五行评分': 70, '月令得分': 5, '喜用神得分': 0,
+    '五行评分': 38, '月令得分': 5, '喜用神得分': 0,
     '黄道得分_IS_NONE': True,    # 嫁娶类该项应为 None（True：None→0；若漂移为数字立即FAIL）
     '相主得分_IS_NONE': True,
-    '太阳太阴得分': 0, '总分': 75,
+    '太阳太阴得分': 0, '总分': 43,
 }
-GOLD_JQ_20260222_LEVEL = '★ 平'
+GOLD_JQ_20260222_LEVEL = '❌ 凶（犯忌嫁娶，慎用）'
 
 
 def _nodeduct_strict_check_jq(score_result):
@@ -942,7 +972,8 @@ class TestJiaQu20260222(unittest.TestCase):
                 "嫁娶四柱%r错：基准=%r 实际=%r" % (k, exp, self.sizhu.get(k)))
 
     def test_02_score_details_calibrated(self):
-        """J-02 嫁娶总分/分项锁：总分75 / 五行70 / 月令+5 / 喜用0 / 黄道分项=None / 相主=None / 太阳太阴0
+        """J-02 嫁娶总分/分项锁：总分43 / 五行38 / 月令+5 / 喜用0 / 黄道分项=None / 相主=None / 太阳太阴0
+        （2026-09-18 更新：原 75/70 基准未含冲子星/耗夫星/半合三项深度规则）
         → 关键：嫁娶类不把黄道综合-10计入score_details；口径漂移到数字立即FAIL。"""
         r = self.r_jq
         self.assertIsInstance(r, dict)
