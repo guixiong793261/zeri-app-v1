@@ -191,10 +191,10 @@ class StoveShenShaChecker(ShenShaChecker):
         if self._is_yuede(sizhu):
             self._add_shensha('月德', 18, '月德吉星，作灶大吉')
         
-        # 天赦日
-        if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 25, '天赦日百事吉，作灶尤佳')
-        
+        # '天赦日'重加已删除（2026-09-18，001跟踪项13.2方案①）：基类
+        # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
+        # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
+
         # 鸣犬日（作灶吉日）
         if self._is_mingquan(sizhu):
             self._add_shensha('鸣犬日', 12, '鸣犬日宜作灶')

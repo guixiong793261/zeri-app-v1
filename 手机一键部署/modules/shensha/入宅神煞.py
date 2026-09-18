@@ -248,10 +248,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # ===== 吉日 =====
         
-        # 天赦日
-        if self._is_tianshe(sizhu):
-            self._add_shensha('天赦日', 25, '天赦日百事吉，入宅尤佳')
-        
+        # '天赦日'重加已删除（2026-09-18，001跟踪项13.2方案①）：基类
+        # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
+        # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
+
         # 三合
         if self._is_sanhe(sizhu):
             self._add_shensha('三合', 10, '三合吉日，入宅顺遂')
