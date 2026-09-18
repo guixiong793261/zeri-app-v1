@@ -43,6 +43,9 @@
   ④ RuZhaiShenShaChecker._is_tiande / _is_tiande_he（内嵌表）
   ⑤ CommonShenShaChecker._is_tiande / _is_tiandehe（合值直查表）
   ⑥ 端到端：check() 全链路神煞列表应含/不含 天德/天德日/天德合
+  ⑦ 评分器._generate_wu_xing_details 八字详情层"天德贵人"（展示口径，
+     2026-09-19 A 类比较维度审计时发现的锚点③漏网副本：该层支型月
+     仍比日干恒 False，已同轮修复）
 """
 import sys
 from pathlib import Path
@@ -339,6 +342,21 @@ assert _he_base(('寅', '壬', '子')) is True, '正向：寅月壬日应命中�
 assert _he_base(('卯', '乙', '亥')) is False, '反向：卯月亥日不是天德合'
 
 # ===== 验证用例 =====
+def _scorer_td_ad(inp):
+    """评分器八字详情层天德贵人 adapter（展示口径，不参与计分）。
+
+    锚点③首批修复（1889a1e）漏网副本：该层支型四维月仍比日干恒 False，
+    2026-09-19 A 类比较维度静态审计时补查出并修复，故补此入口防回归。
+    """
+    mz, dg, dz = inp
+    if not hasattr(_scorer_td_ad, '_s'):
+        from modules.评分器 import Scorer
+        _scorer_td_ad._s = Scorer()
+    sizhu = {'年柱': '丙午', '月柱': '甲' + mz, '日柱': dg + dz, '时柱': '甲子'}
+    d = _scorer_td_ad._s._generate_wu_xing_details(sizhu, [])
+    return any('天德贵人' in x for x in d.get('吉神', []))
+
+
 cases = [
     ShenShaCase(name='天德(神煞基类·计分入口)', category='B',
                 description='维度感知：干型比日干/支型比日支；2026 应命中 36 天；作灶/出行/安床/安葬/开业继承',
@@ -378,6 +396,9 @@ cases += [
                 inputs=inputs_full, expected=expected_he_e2e,
                 adapter=_e2e_ad('modules.shensha.修造神煞.ConstructionShenShaChecker', ('天德合',)),
                 compare='bool'),
+    ShenShaCase(name='天德(评分器八字详情层)', category='B',
+                description='展示口径：干型"见日干"/支型"见日支"；与计分层同口径命中 36 天（漏网副本补修）',
+                inputs=inputs_cal, expected=expected_td_fn, adapter=_scorer_td_ad, compare='bool'),
 ]
 
 if __name__ == '__main__':
