@@ -133,7 +133,7 @@ except ImportError:
 # 事件类型分组（2026-09-16 口径统一：唯一来源 modules/事项标准.py，禁止在此另列事项）
 # SHAN_EVENTS 为 UI 山向段落分组（含历史标签上梁/竖柱）；MARRIAGE_EVENTS 含订婚/纳采等别名；
 # FEIXING_EVENTS 为玄空飞星参与事项（含别名），与评分器飞星口径一致。
-from modules.事项标准 import SHAN_UI_EVENTS as SHAN_EVENTS, MARRIAGE_EVENTS, MARRIAGE_UI_EVENTS, FEIXING_EVENTS
+from modules.事项标准 import SHAN_UI_EVENTS as SHAN_EVENTS, MARRIAGE_EVENTS, MARRIAGE_UI_EVENTS, FEIXING_EVENTS, UI_EVENTS
 
 
 def _fmt_score(v, empty='-'):
@@ -285,6 +285,25 @@ def _star_row_tag(level):
         if '★' * _n in s:
             return f'{_n}star'
     return ''
+
+
+def _owners_fingerprint(owners):
+    """事主信息指纹（推荐时柱缓存键用，模块级函数便于脱离实例的测试桩复用）。
+
+    owners 为 start_calculation 预取的普通 dict 列表（值仅 str/int/date 等
+    可稳定 repr 的类型，不含 Tk 变量）。用排序后的 (键, repr(值)) 元组，
+    保证内容一致即指纹一致：不受 dict 键顺序影响，也不依赖 list 对象身份。
+    """
+    if not isinstance(owners, list):
+        return ()
+    _fp = []
+    for _o in owners:
+        if isinstance(_o, dict):
+            _fp.append(tuple(sorted((str(_k), repr(_v))
+                                    for _k, _v in _o.items())))
+        else:
+            _fp.append(repr(_o))
+    return tuple(_fp)
 
 
 class ZeriApp:
@@ -505,10 +524,8 @@ class ZeriApp:
         # 事项选择
         ttk.Label(form_frame, text="事项类型：", font=("微软雅黑", 8, "bold")).grid(row=0, column=0, sticky=tk.W, pady=6, padx=4)
         self.event_var = tk.StringVar(value="嫁娶")
-        event_combo = ttk.Combobox(form_frame, textvariable=self.event_var, 
-                                   values=["嫁娶", "修造", "动土", "拆舍", "入宅", "开业", 
-                                          "出行", "安床", "作灶", "移徙", "入学", "求医",
-                                          "签约", "安葬"], width=20, state="readonly", 
+        event_combo = ttk.Combobox(form_frame, textvariable=self.event_var,
+                                   values=UI_EVENTS, width=20, state="readonly",
                                    font=("微软雅黑", 8))
         event_combo.grid(row=0, column=1, sticky=tk.W, pady=6, padx=9)
         event_combo.bind("<<ComboboxSelected>>", self.on_event_change)
@@ -1532,7 +1549,11 @@ class ZeriApp:
                 'yongshen_var': yongshen_var,
                 'fuzi_var': fuzi_var,
                 'yintai_var': yintai_var,
-                'yangqi_var': yangqi_var
+                'yangqi_var': yangqi_var,
+                # 2026-09-17 修复 Bug1：补 calendar_type_var 键
+                #   否则 calculate_owner_sizhu L2495 / _parse_owner L7493 读取恒 None，
+                #   用户勾"农历"输入生辰仍按公历排，四柱/生肖/喜用神全错。
+                'calendar_type_var': calendar_type_var
             }
             self.owners_info.append(owner_info)
         
@@ -2864,9 +2885,22 @@ class ZeriApp:
             from modules.推荐时柱 import resolve_recommended_hour
             _sv0 = getattr(self, 'shan_xiang', None)
             _shan_str0 = _sv0.get() if hasattr(_sv0, 'get') else (_sv0 or '')
-            _rec = resolve_recommended_hour(
-                wushu_sizhu, event_type,
-                owners_info if isinstance(owners_info, list) else [], _shan_str0)
+            # 2026-09-17 隐患1 方案C：优先复用 _rescan_best_hour 缓存的 _rec
+            #   （扫日循环内 _rescan 与 _inject 紧邻成对调用，命中即避免重复构造
+            #   checker）。lucky_hours 不依赖输入 sizhu 时柱，故可安全复用。
+            # 复用条件：缓存键（日期 / 事项 / 事主指纹 / 坐山）四者全等；
+            #   跨天、切换事项、编辑事主或更改坐山一律缓存失效并重新解析，
+            #   杜绝隐式依赖"成对紧邻调用"，也保证两次择优共用同一份 lucky_hours。
+            _cached_rec = getattr(self, '_cached_rec', None)
+            _cached_key = getattr(self, '_cached_rec_key', None)
+            _expect_key = (current_date, event_type,
+                           _owners_fingerprint(owners_info), _shan_str0)
+            if _cached_rec is not None and _cached_key == _expect_key:
+                _rec = _cached_rec
+            else:
+                _rec = resolve_recommended_hour(
+                    wushu_sizhu, event_type,
+                    owners_info if isinstance(owners_info, list) else [], _shan_str0)
             lucky_hours = _rec['lucky_hours'] if _rec else None
 
             if not isinstance(lucky_hours, list) or not lucky_hours:
@@ -2981,8 +3015,11 @@ class ZeriApp:
                     if isinstance(_rv, str) and len(_rv) >= 2:
                         _rep_zhi = _rv[1]
                     # _ck0915：仅嫁娶事件将时辰表分数纳入排序优先级；
-                    # 非嫁娶（作灶/修造等）仍以完整评分器总分为准
-                    _ck_w = 1 if event_type in ('嫁娶', '订婚', '结婚', '领证') else 0
+                    # 非嫁娶（作灶/修造等）仍以完整评分器总分为准。
+                    # 2026-09-17 方案C收口：以注册表 MARRIAGE_EVENTS（嫁娶/订婚/纳采）
+                    # 为唯一口径，与 _rescan_best_hour 完全一致；'结婚'/'领证' 非注册
+                    # 事项不再按嫁娶加权，'纳采' 恢复嫁娶加权。
+                    _ck_w = 1 if event_type in MARRIAGE_EVENTS else 0
 
                     def _skey(_rr, _z=''):
                         # order: fewer vetoes (incl. fenjin severe preview)
@@ -3022,6 +3059,14 @@ class ZeriApp:
                         }
                         if len(_auth_gz) >= 2:
                             best_shizhu = _auth_gz[0:2]
+                        # 交节日防御：选中时辰可能与基准 wushu_sizhu 跨节气（如小暑当天
+                        # 12:00 基准属乙未月，而选中的寅时 3-5 点尚未交节仍属甲午月）。
+                        # 年/月/日柱必须跟随真实选中四柱 _best_hs，不能沿用函数开头从
+                        # wushu_sizhu 缓存的年月柱，否则出现“显示乙未月、评分按甲午”的错配。
+                        if isinstance(_best_hs, dict):
+                            nian_zhu = str(_best_hs.get('年柱') or nian_zhu)
+                            yue_zhu = str(_best_hs.get('月柱') or yue_zhu)
+                            ri_zhu = str(_best_hs.get('日柱') or ri_zhu)
                         result['sizhu'] = f"{nian_zhu} {yue_zhu} {ri_zhu} {best_shizhu}"
                         result['score'] = score_result.get('score', 0)
                         result['level'] = score_result.get('level', '')
@@ -3111,14 +3156,45 @@ class ZeriApp:
                         _rds.shensha_list = score_result.get('shensha_list') or []
                         _rds.yi_list = score_result.get('yi_list') or []
                         _rds.ji_list = score_result.get('ji_list') or []
-                        score_result['reason'] = _rds._generate_reason(
-                            _wr3 if isinstance(_wr3, dict) else {},
-                            score_result.get('huangdao_info') or {},
-                            _sd.get('月令得分', 0) or 0,
-                            _sd.get('喜用神得分', 0) or 0,
-                            score_result.get('owner_matches'),
-                            score_result.get('sun_moon_info') or {},
-                        )
+                        _rds.huangdao_info = score_result.get('huangdao_info') or {}
+                        if event_type in MARRIAGE_EVENTS:
+                            # 嫁娶保持评分器专属评语结构（嫁娶要点/宜/忌独立行 ＋ "月令分析："
+                            # 起的完整 tail）。不可用通用 _generate_reason 整体覆盖：评分器已把
+                            # 完整 final_reason 回填到 wu_xing_result['ji_yu']，通用函数会先把整段
+                            # 包进"五行："，再由其日主/合局/吉神/月令/喜用/黄道/宜逻辑重拼一遍，
+                            # 造成 tail 大段重复（2026-09-17 补全 tail 后显现）。
+                            # 此处仅按权威时柱重算 tail（地支关系/命局吉神随时柱刷新），前段保留。
+                            _old_reason = str(score_result.get('reason') or '')
+                            _head_parts = []
+                            for _line in _old_reason.split('\n'):
+                                if _line.startswith('月令分析：'):
+                                    break
+                                _head_parts.append(_line)
+                            _sz_for_yl = score_result.get('sizhu')
+                            if not isinstance(_sz_for_yl, dict):
+                                _sz_for_yl = {}
+                            _yl_new = _rds._generate_yueling_analysis(_sz_for_yl)
+                            _tail_new = _rds._build_marriage_reason_tail(
+                                _wr3 if isinstance(_wr3, dict) else {},
+                                _yl_new,
+                                _sd.get('月令得分', 0) or 0,
+                                _sd.get('喜用神得分', 0) or 0,
+                                score_result.get('shensha_list') or [])
+                            _new_parts = [p for p in _head_parts if p]
+                            if _tail_new:
+                                _new_parts.append(_tail_new)
+                            score_result['reason'] = '\n'.join(_new_parts)
+                            if isinstance(_wr3, dict):
+                                _wr3['ji_yu'] = score_result['reason']
+                        else:
+                            score_result['reason'] = _rds._generate_reason(
+                                _wr3 if isinstance(_wr3, dict) else {},
+                                score_result.get('huangdao_info') or {},
+                                _sd.get('月令得分', 0) or 0,
+                                _sd.get('喜用神得分', 0) or 0,
+                                score_result.get('owner_matches'),
+                                score_result.get('sun_moon_info') or {},
+                            )
                     except Exception as _re:
                         print(f"[最佳吉时] 重算综合评语失败: {_re}")
                 except Exception as _e5:
@@ -3295,6 +3371,43 @@ class ZeriApp:
             _sxf_full = f"{_sxf_full}{_jxs}"
         _cur_sc = int(init_result.get('score') or 0)
         _cur_veto = len(init_result.get('veto_reasons') or [])
+
+        # 2026-09-17 隐患1 方案C：调 resolve_recommended_hour 拿 lucky_hours，
+        #   计算 _ck_scores 与 _ck_w（嫁娶专用时辰表分数权重），
+        #   与 _inject_best_hour_to_result 的 _skey 第2位 _ck 项同口径。
+        #   lucky_hours 不依赖输入 sizhu 的时柱（推荐时柱.py L183 注释明确
+        #   "时柱无需提供"，由年月日柱 + 事项类型 + checker 决定），
+        #   所以 _rescan 用 init_sizhu 算出的 lucky_hours 与 _inject 用
+        #   _best_sz 算出的 lucky_hours 实质等价；缓存到 self._cached_rec
+        #   供 _inject 复用，避免重复构造 checker。
+        try:
+            from modules.推荐时柱 import resolve_recommended_hour
+            _sv0 = getattr(self, 'shan_xiang', None)
+            _shan_str0 = _sv0.get() if hasattr(_sv0, 'get') else (_sv0 or '')
+            _rec = resolve_recommended_hour(
+                init_sizhu, event_type,
+                owners_data if isinstance(owners_data, list) else [],
+                _shan_str0)
+            _lh = _rec['lucky_hours'] if _rec else None
+            # 缓存键四元组：日期/事项/事主指纹/坐山。_inject 复用前必须四者全等，
+            # 防止跨天、切换事项、编辑事主或更改坐山后误用前一轮推荐时柱。
+            self._cached_rec = _rec
+            self._cached_rec_key = (current, event_type,
+                                    _owners_fingerprint(owners_data), _shan_str0)
+        except Exception:
+            _lh = None
+            self._cached_rec = None
+            self._cached_rec_key = None
+        _ck_scores = {}
+        if isinstance(_lh, list):
+            for _h in _lh:
+                if isinstance(_h, dict):
+                    _ck_scores[str(_h.get('地支', ''))] = int(_h.get('分值', 0) or 0)
+        # _ck0915：仅嫁娶事件将时辰表分数纳入排序优先级；非嫁娶仍以完整评分器总分为准
+        # 2026-09-17 隐患1 方案C收口：两处 _ck_w 统一以注册表 MARRIAGE_EVENTS
+        #   （嫁娶/订婚/纳采）为唯一口径，禁止再硬编码事项列表。
+        _ck_w = 1 if event_type in MARRIAGE_EVENTS else 0
+
         _hour_candidates = [
             (0, '子'), (2, '丑'), (4, '寅'), (6, '卯'), (8, '辰'), (10, '巳'),
             (12, '午'), (14, '未'), (16, '申'), (18, '酉'), (20, '戌'), (22, '亥')
@@ -3333,14 +3446,25 @@ class ZeriApp:
                     _sxf_full, str(_hfg.get('年柱', '')), str(_hfg.get('月柱', '')),
                     str(_hfg.get('日柱', '')), str(_hfg.get('时柱', '')),
                     _hr.get('yi_list') or [], _hr.get('shensha_list') or [])
-                # veto(+severe) > post-(6) score > no sha-shi
-                # > clean fenjin > raw wuxing (same key as inject (5.5))
+                # 越小越优 + <（与 _inject_best_hour (5.5) 的 _skey 同口径）：
+                # fewer vetoes(+severe) > higher checker score (时辰表分数, # _ck0915 嫁娶专用)
+                # > higher post-(6) score > no sha-shi > clean fenjin > higher raw wuxing。
+                # 2026-07 修正：旧元组用“>”且否决数未取负，导致否决多的候选反而替换
+                # 代表（交节日会让交节后被否时辰占住基准月柱）。统一改为“越小越优 + <”。
+                # 2026-09-17 隐患1 方案C：在原 5 元组第 2 位插入 _ck 项（与 _inject._skey
+                #   完全一致），消除两次择优排序键不一致；_ck_scores 取不到时辰的地支记 0。
+                _cur_sz_hz = ''
+                _rv = _best_sz.get('时柱', '') if isinstance(_best_sz, dict) else ''
+                if isinstance(_rv, str) and len(_rv) >= 2:
+                    _cur_sz_hz = _rv[1]
                 _bet = ((_hs_veto + (1 if _hfl == 2 else 0),
-                         _hs_sc - (_hfd if _hfl >= 1 else 0),
-                         -_hs_ss, _hfl, _hs_wx) >
+                         -(_ck_scores.get(_hz, 0) * _ck_w),
+                         -(_hs_sc - (_hfd if _hfl >= 1 else 0)),
+                         _hs_ss, _hfl, -_hs_wx) <
                         (_cur_veto + (1 if _cfl == 2 else 0),
-                         _cur_sc - (_cfd if _cfl >= 1 else 0),
-                         -_cur_ss, _cfl, _cur_wx))
+                         -(_ck_scores.get(_cur_sz_hz, 0) * _ck_w),
+                         -(_cur_sc - (_cfd if _cfl >= 1 else 0)),
+                         _cur_ss, _cfl, -_cur_wx))
                 if _bet:
                     _best_sz = _hs
                     _best_r = _hr
@@ -4897,12 +5021,18 @@ class ZeriApp:
                 detail_ref = result.get('detail')
                 if isinstance(detail_ref, dict):
                     parts4 = auth_sizhu.split()
-                    detail_ref['sizhu'] = {
+                    # 2026-09-17 修复 Bug5（位置1）：原写法整体替换 detail_ref['sizhu']
+                    #   丢失 'date'/'year'/'month'/'day' 等键，导致神煞扩展按高精度
+                    #   农历取月用 detail['sizhu'].get('date') 落空。改为保留旧键。
+                    _old = detail_ref.get('sizhu') or {}
+                    _new = dict(_old) if isinstance(_old, dict) else {}
+                    _new.update({
                         '年柱': parts4[0],
                         '月柱': parts4[1],
                         '日柱': parts4[2],
                         '时柱': parts4[3],
-                    }
+                    })
+                    detail_ref['sizhu'] = _new
                     # 额外保存权威来源，给【四柱八字】段用
                     detail_ref['_auth_sizhu'] = True
             except Exception:
@@ -5026,10 +5156,15 @@ class ZeriApp:
                             new_str = f"{bs['年柱']} {bs['月柱']} {bs['日柱']} {bs['时柱']}"
                             result['sizhu'] = new_str
                             if isinstance(detail_ref, dict):
-                                detail_ref['sizhu'] = {
+                                # 2026-09-17 修复 Bug5（位置2）：同位置1，
+                                #   保留旧 detail_ref['sizhu'] 的 'date'/'year'/'month'/'day' 等键。
+                                _old2 = detail_ref.get('sizhu') or {}
+                                _new2 = dict(_old2) if isinstance(_old2, dict) else {}
+                                _new2.update({
                                     '年柱': bs['年柱'], '月柱': bs['月柱'],
                                     '日柱': bs['日柱'], '时柱': bs['时柱'],
-                                }
+                                })
+                                detail_ref['sizhu'] = _new2
                                 detail_ref['_auth_sizhu'] = True
                             try:
                                 vv = list(self.result_tree.item(selected[0], 'values'))
@@ -5450,6 +5585,13 @@ class ZeriApp:
                 for detail_name, detail_score in marriage_details:
                     if detail_score != 0:
                         content += f"    {'├─' if score_breakdown else ''}{detail_name}：{detail_score:+d} 分\n"
+                # 2026-09-17 归零透明化：嫁娶明细合计可能为负（如 -2），算法按 max(0,…)
+                # 兜底归零显示 0。此处明示归零前合计，避免"明细加总≠显示分"无法追溯。
+                _raw_wx = score_details.get('五行原始分')
+                if isinstance(_raw_wx, (int, float)) and _raw_wx < 0 and wuxing_score == 0:
+                    _veto_tag = '（本日另触发一票否决，总分归零）' if score_details.get('否决原因') else ''
+                    content += (f"    └─ 五行明细合计 {int(_raw_wx):+d} 分，"
+                                f"按规则负分归零为 0 分{_veto_tag}\n")
             
             content += f"  月令得分：{yueling_score:+d} 分\n"
             
@@ -5654,7 +5796,12 @@ class ZeriApp:
                 return v[:1] if isinstance(v, str) and len(v) >= 1 else ''
             def _sz_zhi(key_cn, key_en):
                 v = sizhu.get(key_en, '') or sizhu.get(key_cn, '')
-                return v[1:2] if isinstance(v, str) and len(v) >= 2 else ''
+                if not isinstance(v, str) or len(v) < 1:
+                    return ''
+                # 英文键 month_zhi/day_zhi 存单字符地支（如"酉"），
+                # 中文键 月柱/日柱 存"天干+地支"（如"丁酉"）。
+                # 取末位字符统一兼容两种形态（单字符直接返回，两字符取地支）。
+                return v[-1]
             day_gan = _sz_gan('日柱', 'day_gan')
             month_zhi = _sz_zhi('月柱', 'month_zhi')
             if day_gan and month_zhi:
@@ -5955,9 +6102,10 @@ class ZeriApp:
                 _xt = xiao_hd.get('type', 'N/A')
                 _xd = xiao_hd.get('description', '')
                 # _yj0915：嫁娶场景除/危/执虽为吉但忌嫁娶，显示口径与评分详情一致
-                _mrg_evts = getattr(self, 'MARRIAGE_EVENTS', None)
-                if _mrg_evts is None:
-                    _mrg_evts = ['嫁娶', '订婚', '结婚', '领证']
+                # 2026-09-17 修复 Bug4：MARRIAGE_EVENTS 是模块级导入变量（L136），
+                #   getattr(self, 'MARRIAGE_EVENTS', None) 恒 None 走 fallback 硬编码
+                #   会导致注册表（事项标准.py）更新后此处不同步。直接引用模块级变量。
+                _mrg_evts = MARRIAGE_EVENTS
                 _cur_ev = ''
                 try: _cur_ev = self.event_var.get()
                 except Exception: pass
@@ -6493,17 +6641,30 @@ class ZeriApp:
                 for zhi in hour_order:
                     for h in lucky_hours:
                         if h['地支'] == zhi:
+                            # 展示层去重：时支冲日支(=新娘/新郎支)时，"日破时"与
+                            # "冲新娘/冲新郎"是同一冲的两个称谓，合并为"日破时/冲X（禁用）"。
+                            _raw = list(h.get('说明', []))
+                            _has_ribo = any('日破时' in r for r in _raw)
+                            _chong_targets = [r for r in _raw if '冲新娘' in r or '冲新郎' in r]
+                            if _has_ribo and _chong_targets:
+                                _keep = [r for r in _raw if r not in _chong_targets]
+                                _suffix = '/'.join(r.split('（')[0] for r in _chong_targets)
+                                _merged = []
+                                for r in _keep:
+                                    if '日破时' in r:
+                                        _merged.append(f'日破时/{_suffix}（禁用）')
+                                    else:
+                                        _merged.append(r)
+                                _raw = _merged
+                            reasons_str = '、'.join(_raw)
                             if h.get('禁用', False):
                                 mark = '✗'
-                                reasons_str = '、'.join(h['说明'])
                                 content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
                             elif h['分值'] > 0:
                                 mark = '★'
-                                reasons_str = '、'.join(h['说明'])
                                 content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
                             elif h['分值'] < 0:
                                 mark = '✗'
-                                reasons_str = '、'.join(h['说明'])
                                 content += f"    {mark} {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n"
                             else:
                                 content += f"      {h['天干']}{h['地支']}时 {h['时辰']}  平\n"
@@ -6810,7 +6971,11 @@ class ZeriApp:
                     from 报告生成器 import generate_report
                 
                 # 准备数据
-                shan_xiang = self.shan_xiang_var.get() if hasattr(self, 'shan_xiang_var') else None
+                # 2026-09-17 修复 Bug2：实例属性是 self.shan_xiang（无 _var 后缀，
+                #   见 L1184/L1210）；原写法 hasattr(self,'shan_xiang_var') 永远 False
+                #   导致 HTML/文本报告坐山信息恒为空。
+                _sv = getattr(self, 'shan_xiang', None)
+                shan_xiang = _sv.get() if hasattr(_sv, 'get') else (_sv or None)
                 
                 # 转换results为报告生成器需要的格式
                 report_results = []
@@ -7113,7 +7278,9 @@ class ZeriApp:
         try:
             from modules.日课评分系统 import DayScoreWindow
             # 精简版：按用户需求隐藏 标题/事主信息/特殊选项 等不相关区块
-            score_window = DayScoreWindow(mode='embedded')
+            # 2026-09-17 修复 Bug3：embedded 模式仍依赖 master 创建 Toplevel，
+            #   缺 master 会抛异常。与 open_score_system L7116 同步补 master=self.root。
+            score_window = DayScoreWindow(master=self.root, mode='embedded')
             
             # 准备事主数据
             owners_data = []

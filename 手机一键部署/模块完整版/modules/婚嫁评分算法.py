@@ -419,31 +419,37 @@ def calculate_wuxing_distribution(sizhu):
 def check_fuxing_being_ke(bride_bazi, sizhu):
     """
     检查日课中是否存在夫星受克的情况
-    
-    女命夫星为克日主的五行（官杀）：
-    - 日主为木：夫星为金
-    - 日主为火：夫星为水
-    - 日主为土：夫星为木
-    - 日主为金：夫星为火
-    - 日主为水：夫星为土
-    
+
+    2026-09-17 口径统一：夫星一律以新娘【年干】起真夫星（通书《选择求真》
+    五虎遁，与日课详情头示"夫星"及 get_fuxing_zixing_by_year 完全一致），
+    不再用日干支平法——此前头示夫星按年干（如丙年=癸巳·水）、本检查却按
+    日干（如己土日主→木夫星），同一份报告两套夫星自相矛盾（庚午日误判
+    "庚金克木夫星"，实则庚金生年干法的水夫星）。
+
+    女命真夫星为克年干的五行（正官）：
+    - 年干为木：夫星为金
+    - 年干为火：夫星为水
+    - 年干为土：夫星为木
+    - 年干为金：夫星为火
+    - 年干为水：夫星为土
+
     夫星受克的情况：
     1. 克制夫星的五行过旺（如夫星为水，土旺则克水）
-    2. 日主太旺耗夫星（如日主火太旺，水夫星被耗）
+    2. 年命本气太旺耗夫星
     3. 夫星本身太弱
-    4. 日课中直接有天干克制夫星（如月干克日支或日干）
-    
+    4. 日课中直接有天干克制夫星
+
     Args:
-        bride_bazi: 新娘八字 {'ri_gan': '', ...}
+        bride_bazi: 新娘八字 {'year_gan': '', ...}
         sizhu: 日课四柱信息
-        
+
     Returns:
         (score, reason): 扣分和原因
     """
-    if not bride_bazi or not bride_bazi.get('ri_gan'):
+    # 优先年干（通书真夫星口径）；缺年干时回退日干（老数据兼容）
+    day_gan = bride_bazi.get('year_gan') or bride_bazi.get('ri_gan')
+    if not bride_bazi or not day_gan:
         return 0, None
-    
-    day_gan = bride_bazi['ri_gan']
     day_wuxing = GAN_WUXING.get(day_gan, '')
     
     # 夫星五行：克日主的五行
@@ -849,13 +855,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     sizhu['hour_gan'] = sizhu['时柱'][0]
     
     # 1. 检查一票否决项
+    # 2026-09-17 透明度修复：否决日不再提前返回空明细。此前一旦命中（重丧日/岁破/
+    # 真三娘煞）直接 return，details=[]，导致日课详情【评分详情】的五行评分无任何
+    # 分项（基础分/利月/神煞/合局全丢）、月令也无旺衰明细，与"各项扣分项已完整
+    # 显示用于对比"的说明自相矛盾。现继续完整计算全部 details（分数仅供追溯），
+    # 调用方（评分器）据 reject_reason 把总分强制归零。
     is_reject, reject_reason = check_reject_items(date_obj, sizhu)
     if is_reject:
         result['reject_reason'] = reject_reason
-        result['score'] = 0
-        result['level'] = '❌ 凶'
-        result['reason'] = reject_reason
-        return result
     
     # 2. 基础分
     score = 60
@@ -978,12 +985,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                 details.append((label, penalty))
         
         # 日支冲新娘生肖（年支）- 大凶
+        # 2026-09-17 用户口径：日支之冲无法靠换吉时化解（时支冲由时辰表判禁用），
+        # 日辰冲新娘本命/阴胎/阳气升为一票否决（-45/-30 明细仍保留供追溯）。
+        _day_clash_veto = []
         if bride_bazi and bride_bazi.get('year_zhi'):
             day_gan, day_zhi = get_day_ganzhi(date_obj)
             if is_chong(day_zhi, bride_bazi['year_zhi']):
                 score -= 45  # 日支冲新娘生肖
                 details.append(('日支冲新娘生肖', -45))
                 result['warnings'].append(f"日支{day_zhi}冲新娘生肖{bride_bazi['year_zhi']}")
+                _day_clash_veto.append(f'日支{day_zhi}冲新娘本命{bride_bazi["year_zhi"]}')
         
         # 天罡日（妨翁）检查 - 嫁娶大忌
         if is_tiangang_day(date_obj):
@@ -997,35 +1008,26 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             details.append(('河魁日（妨姑）', -40))
             result['warnings'].append("河魁日：对新郎母亲不利")
         
-        # 夫星、子星检查（如果有新娘日柱）
-        if bride_bazi and bride_bazi.get('ri_gan'):
+        # 夫星、子星检查（年干通书口径，与头示"夫星/子星"一致）
+        if bride_bazi and bride_bazi.get('year_gan'):
             day_gan, day_zhi = get_day_ganzhi(date_obj)
-            fuxing_info = get_fuxing_zixing(bride_bazi['ri_gan'])
-            
-            # 冲夫星（日支冲夫星对应的地支）
-            fu_gan = fuxing_info.get('fu', '')
-            if fu_gan:
-                # 夫星地支：需要根据夫星天干确定对应的地支
-                # 这里简化处理：直接检查日支是否与夫星天冲
-                # 实际应考虑夫星地支
-                fu_chong_zhi = {'甲': '庚', '庚': '甲', '乙': '辛', '辛': '乙',
-                                '丙': '壬', '壬': '丙', '丁': '癸', '癸': '丁',
-                                '戊': '甲', '己': '乙', '庚': '丙', '辛': '丁',
-                                '壬': '戊', '癸': '己'}.get(fu_gan, '')
-                if is_chong(day_zhi, fu_chong_zhi):
+            fuxing_info = get_fuxing_zixing_by_year(bride_bazi['year_gan'])
+
+            # 冲夫星：日支冲真夫星（完整干支）的地支，如丙年夫星癸巳，日支亥冲巳
+            fu_gz = fuxing_info.get('fu', '')
+            if len(fu_gz) >= 2:
+                fu_zhi = fu_gz[1]
+                if is_chong(day_zhi, fu_zhi):
                     score -= 35
-                    details.append(('冲夫星', -35))
-            
-            # 冲子星（日支冲子星对应的地支）
-            zi_gan = fuxing_info.get('zi', '')
-            if zi_gan:
-                zi_chong_zhi = {'甲': '庚', '庚': '甲', '乙': '辛', '辛': '乙',
-                                '丙': '壬', '壬': '丙', '丁': '癸', '癸': '丁',
-                                '戊': '甲', '己': '乙', '庚': '丙', '辛': '丁',
-                                '壬': '戊', '癸': '己'}.get(zi_gan, '')
-                if is_chong(day_zhi, zi_chong_zhi):
+                    details.append((f'冲夫星（日支{day_zhi}冲真夫星{fu_gz}）', -35))
+
+            # 冲子星：日支冲真子星（完整干支）的地支，如丙年子星戊戌，日支辰冲戌
+            zi_gz = fuxing_info.get('zi', '')
+            if len(zi_gz) >= 2:
+                zi_zhi = zi_gz[1]
+                if is_chong(day_zhi, zi_zhi):
                     score -= 20
-                    details.append(('冲子星', -20))
+                    details.append((f'冲子星（日支{day_zhi}冲真子星{zi_gz}）', -20))
 
         # 阴胎 / 阳气 检查（只依赖双方生月月柱，独立于新娘日柱 ri_gan）
         # 典籍（《协纪辨方书》嫁娶："日时勿冲犯阴胎阳气"）：日支与胎元地支六冲各-30；
@@ -1038,6 +1040,7 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             if is_chong(day_zhi_ty, yintai_zhi):
                 score -= 30
                 details.append((f'犯阴胎（日支{day_zhi_ty}冲阴胎{yintai_gan}{yintai_zhi}）', -30))
+                _day_clash_veto.append(f'日支{day_zhi_ty}冲阴胎{yintai_gan}{yintai_zhi}')
 
         _g_yue_gan = (groom_bazi or {}).get('yue_gan') or (groom_bazi or {}).get('month_gan')
         _g_yue_zhi = (groom_bazi or {}).get('yue_zhi') or (groom_bazi or {}).get('month_zhi')
@@ -1046,6 +1049,13 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             if is_chong(day_zhi_ty, yangqi_zhi):
                 score -= 30
                 details.append((f'犯阳气（日支{day_zhi_ty}冲阳气{yangqi_gan}{yangqi_zhi}）', -30))
+                _day_clash_veto.append(f'日支{day_zhi_ty}冲阳气{yangqi_gan}{yangqi_zhi}')
+
+        # 日支冲新娘本命/阴胎/阳气 → 一票否决（与前置 check_reject_items 的硬忌并列）
+        if _day_clash_veto:
+            _joined = '、'.join(_day_clash_veto)
+            _prev_rr = result.get('reject_reason')
+            result['reject_reason'] = f'{_prev_rr}、{_joined}' if _prev_rr else _joined
 
     except Exception as e:
         logger.warning(f"神煞计算异常: {e}")
@@ -1108,6 +1118,7 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     #    时辰吉凶由十二时辰婚嫁吉凶表（嫁娶神煞扩展.get_lucky_hours）独立评估
     
     # 7. 计算总分并确定等级
+    result['raw_score'] = score          # 明细合计（可能为负），供展示层说明归零
     result['score'] = max(0, score)
     result['details'] = details
     
@@ -1136,6 +1147,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         reason_parts.append(f"忌：{'；'.join(negative)}")
     
     result['reason'] = '；'.join(reason_parts) if reason_parts else '普通日课'
+
+    # 否决日：明细完整保留供追溯，但等级强制为凶、理由前置否决原因
+    # 日支冲新娘本命/阴胎/阳气等否决项在第4节才写入 result['reject_reason']，此处回读
+    reject_reason = result.get('reject_reason') or reject_reason
+    is_reject = bool(reject_reason)
+    if is_reject:
+        result['level'] = '❌ 凶'
+        result['reason'] = f'【一票否决：{reject_reason}】' + result['reason']
     
     # 添加四柱信息到结果中，供后续处理使用
     result['sizhu'] = sizhu
