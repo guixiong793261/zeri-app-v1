@@ -576,6 +576,10 @@ class Scorer:
                             if _prof['marriage']:
                                 if isinstance(wu_xing_result, dict):
                                     wu_xing_result['score_breakdown'] = {}
+                                    # 2026-09-17：五行评分与正常嫁娶路径同口径——
+                                    # 即嫁娶专用评分（基础60＋利月/神煞/合局，否决日该分
+                                    # 仅供追溯，总分仍强制归零），不用修造式 _check_wu_xing 分。
+                                    wu_xing_result['score'] = marriage_result.get('score', 0)
 
                             # 计算基本评分详情
                             yueling_score = self._calculate_yueling_help(sizhu)
@@ -597,7 +601,8 @@ class Scorer:
                                 xiangzhu_score, xiangzhu_details = 0, []
                             
                             score_details = {
-                                '五行评分': wu_xing_result.get('score', 0),
+                                '五行评分': marriage_result.get('score', 0),
+                                '五行原始分': marriage_result.get('raw_score', marriage_result.get('score', 0)),
                                 '月令得分': yueling_score,
                                 '喜用神得分': xishen_score,
                                 # 【D5】嫁娶路径黄道已并入嫁娶评分，不单独列黄道得分键
@@ -609,6 +614,12 @@ class Scorer:
                                 '总分': 0,
                                 '否决原因': veto_reasons,
                                 '说明': '一票否决：' + '；'.join(veto_reasons) + '，得分=0，但各项扣分项已完整显示用于对比'
+                            }
+                            # 2026-09-17：否决日补齐月令旺衰/支支明细，与正常嫁娶路径
+                            # （下方 score_details['月令详细']）同口径，避免月令得分无分项。
+                            score_details['月令详细'] = {
+                                '旺衰得分': self._calculate_wangxiang(sizhu),
+                                '支支关系得分': self._calculate_zhizhi_relation(sizhu)
                             }
 
                             # 【D3 问题二修复】统一大利月分值：嫁娶神煞检查器(self.shensha_list)
@@ -662,19 +673,26 @@ class Scorer:
                                                 'score': _ms
                                             })
                             
-                            # 生成综合评语（包含月令分析）
+                            # 生成综合评语（2026-09-17：与正常嫁娶路径同结构——
+                            # 否决横幅/宜/忌为独立行 ＋ "月令分析："起的完整正五行 tail，
+                            # 既保证否决日也有日主/合局/吉神等完整分析，又使主程序(5')
+                            # 按权威时柱重算 tail 时能精确替换，不出现大段重复）
                             reason_parts = ['；'.join(veto_reasons)]
                             if self.yi_list:
                                 reason_parts.append('宜：' + '、'.join(self.yi_list))
                             if self.ji_list:
                                 reason_parts.append('忌：' + '、'.join(self.ji_list))
-                            
-                            # 添加月令分析
+
                             yueling_analysis = self._generate_yueling_analysis(sizhu)
-                            if yueling_analysis:
-                                reason_parts.append(f'月令：{yueling_analysis}')
-                            
-                            final_reason = '；'.join(reason_parts)
+                            _veto_tail = self._build_marriage_reason_tail(
+                                wu_xing_result, yueling_analysis,
+                                yueling_score, xishen_score, self.shensha_list)
+                            if _veto_tail:
+                                reason_parts.append(_veto_tail)
+
+                            final_reason = '\n'.join(reason_parts)
+                            if isinstance(wu_xing_result, dict):
+                                wu_xing_result['ji_yu'] = final_reason
                             # 三煞信息（即使婚嫁否决日，也保留用于日课评分系统显示完整犯煞情况）
                             sansha_info = {}
                             try:
@@ -779,6 +797,7 @@ class Scorer:
                             # 三合等吉神、假三煞/夫星等凶煞，黄道已并入，不再单列）。
                             # 补此键使详情页【五行评分】行取到真实分，而非缺省回退100。
                             '五行评分': marriage_result['score'],
+                            '五行原始分': marriage_result.get('raw_score', marriage_result['score']),
                             '月令得分': yueling_score,
                             '喜用神得分': xishen_score,
                             '太阳太阴得分': sun_moon_score,
@@ -949,6 +968,11 @@ class Scorer:
                                     except Exception as e:
                                         logger.error(f"检查利月失败: {e}")
                         
+                        # 羊刃计分（冠带派）：婚嫁路径与通用事项同口径，单见-15/两见以上-25
+                        _yr_mrg = self._build_yangren_shensha(sizhu, event_type)
+                        if _yr_mrg:
+                            shensha_list.append(_yr_mrg)
+                        
                         # 生成综合评语（2026-09-03 问题4：格式化+分节，避免假三煞/月令混排）
                         # 结构：嫁娶评分要点 → 宜 → 忌 → 月令分析（独立小标题）
                         reason_parts = []
@@ -963,8 +987,21 @@ class Scorer:
                             reason_parts.append(f"嫁娶要点：{mrg_reason.rstrip('。；;')}")
                         if self.yi_list:
                             reason_parts.append('宜：' + '、'.join(self.yi_list))
-                        if self.ji_list:
-                            reason_parts.append('忌：' + '、'.join(self.ji_list))
+                        # 综合评语的"忌"须与【宜忌信息】段同一口径：self.ji_list +
+                        # marriage_details 负分项（如大黄道凶日、小黄道忌嫁娶等），
+                        # 避免综合评语漏列核心禁忌。
+                        _ji_for_reason = list(self.ji_list)
+                        _mrg_details = marriage_result.get('details', [])
+                        if isinstance(_mrg_details, list):
+                            for _d in _mrg_details:
+                                try:
+                                    _nm, _sc = _d[0], _d[1]
+                                except Exception:
+                                    continue
+                                if isinstance(_sc, (int, float)) and _sc < 0 and _nm not in _ji_for_reason:
+                                    _ji_for_reason.append(_nm)
+                        if _ji_for_reason:
+                            reason_parts.append('忌：' + '、'.join(_ji_for_reason))
                         
                         # 月令分析 + 其后完整正五行分析串（日主/地支合局/命局吉神/月令/
                         # 喜用神/大黄道/小黄道/吉神/宜）。2026-09-17 应需求补全：原仅
@@ -1738,7 +1775,9 @@ class Scorer:
             'score': 100,
             'level': '吉',
             'reasons': [],
-            'details': {}
+            'details': {},
+            '_chong_penalty': 0,  # 2026-09-18：年命×流年支六冲扣分（扣分不否决档），
+                                 # 不计入末尾 suitable 兜底阈值
         }
         
         # 如果有兼向，合并山向和兼向
@@ -1760,13 +1799,17 @@ class Scorer:
                     _zz_w = owner.get('_zaozhu_weight', None)
                     _zz_aux = _event_profile(event_type)['zaozhu_half'] and _zz_w is not None and float(_zz_w) < 1.0
                     _zz_suf = '（辅助·半权重）' if _zz_aux else ''
-                    # 检查冲刑害关系
+                    # 2026-09-18 用户拍板年命六冲三档口径：
+                    #   年命×日课日支六冲 = 硬否决；年命×日课年/月/时支六冲 = 扣分不否决；
+                    #   辰午酉亥自刑 = 一票否决。此处是【年支（流年/冲太岁）】档，
+                    #   不再把整年判 suitable=False 整列剔除，仅扣分提示；日课总分层
+                    #   另有 _check_owner_day_zhichong 的"流年冲太岁"-15 计入相主分。
                     if self.check_liuchong(year_zhi, owner_year_zhi):
-                        if not _zz_aux:
-                            analysis['suitable'] = False
-                        analysis['score'] += _zaozhu_weighted(-30, 0.5 if _zz_aux else 1.0)
+                        _cp = _zaozhu_weighted(-30, 0.5 if _zz_aux else 1.0)
+                        analysis['score'] += _cp
+                        analysis['_chong_penalty'] += _cp  # 扣分不否决档，隔离兜底阈值
                         analysis['reasons'].append(
-                            f"与{owner['name']}年命六冲" + ('（辅助，半权重不否决）' if _zz_aux else ''))
+                            f"与{owner['name']}年命六冲（冲太岁年，扣分不否决）" + ('（辅助，半权重）' if _zz_aux else ''))
                     elif self.check_po(year_zhi, owner_year_zhi):
                         analysis['score'] += _zaozhu_weighted(-20, 0.5 if _zz_aux else 1.0)
                         analysis['reasons'].append(f"与{owner['name']}年命相破{_zz_suf}")
@@ -1985,10 +2028,16 @@ class Scorer:
             analysis['level'] = '小凶'
         else:
             analysis['level'] = '大凶'
-            analysis['suitable'] = False
-        
+            # 2026-09-18 三档口径：若 <50 纯粹由"年命×流年支六冲（扣分不否决）"
+            # 造成（剔除该档后回到 50+），不转 suitable=False；山向犯煞/太岁/岁破/
+            # 五黄/二黑等硬项均已在上方显式置 suitable=False，不受影响。
+            _score_excl_chong = analysis['score'] - analysis.get('_chong_penalty', 0)
+            if _score_excl_chong < 50:
+                analysis['suitable'] = False
+        analysis.pop('_chong_penalty', None)
+
         return analysis
-    
+
     def analyze_month(self, test_date, event_type, owners=None, shan_xiang=None, direction=None, day_sizhu=None, zeli_mode='feixing'):  # _zm0915
         """
         分析月份吉凶
@@ -2067,7 +2116,9 @@ class Scorer:
             'score': 70,
             'level': '凶',
             'reasons': [],
-            'details': {}
+            'details': {},
+            '_chong_penalty': 0,  # 2026-09-18：年命×月支六冲扣分（扣分不否决档），
+                                 # 不计入末尾 suitable 兜底阈值
         }
 
         # 继承年份分析的关键结论（坐太岁可用、年三煞、太岁方、岁破方等方位煞忌信息），
@@ -2118,13 +2169,15 @@ class Scorer:
                     _zz_w = owner.get('_zaozhu_weight', None)
                     _zz_aux = _event_profile(event_type)['zaozhu_half'] and _zz_w is not None and float(_zz_w) < 1.0
                     _zz_suf = '（辅助·半权重）' if _zz_aux else ''
-                    # 检查冲刑害关系
+                    # 2026-09-18 年命六冲三档口径：【月支】档为"扣分不否决"
+                    # （有制化余地），不再把整月判 suitable=False；日课总分层在
+                    # _check_owner_day_zhichong 内按 -15 计入相主分。
                     if self.check_liuchong(month_zhi, owner_year_zhi):
-                        if not _zz_aux:
-                            analysis['suitable'] = False
-                        analysis['score'] += _zaozhu_weighted(-25, 0.5 if _zz_aux else 1.0)
+                        _cp = _zaozhu_weighted(-25, 0.5 if _zz_aux else 1.0)
+                        analysis['score'] += _cp
+                        analysis['_chong_penalty'] += _cp  # 扣分不否决档，隔离兜底阈值
                         analysis['reasons'].append(
-                            f"月支与{owner['name']}生肖相冲" + ('（辅助，半权重不否决）' if _zz_aux else ''))
+                            f"月支与{owner['name']}生肖相冲（扣分不否决）" + ('（辅助，半权重）' if _zz_aux else ''))
                     elif self.check_po(month_zhi, owner_year_zhi):
                         analysis['score'] += _zaozhu_weighted(-15, 0.5 if _zz_aux else 1.0)
                         analysis['reasons'].append(f"月支与{owner['name']}生肖相破{_zz_suf}")
@@ -2611,10 +2664,15 @@ class Scorer:
             analysis['level'] = '小凶'
         else:
             analysis['level'] = '大凶'
-            analysis['suitable'] = False
-        
+            # 2026-09-18 三档口径：月支冲年命属"扣分不否决"档，低分纯粹由此造成时
+            # （剔除后回到 50+）不转 suitable=False；阴府/月三煞等硬项已显式置位。
+            _score_excl_chong = analysis['score'] - analysis.get('_chong_penalty', 0)
+            if _score_excl_chong < 50:
+                analysis['suitable'] = False
+        analysis.pop('_chong_penalty', None)
+
         return analysis
-    
+
     def analyze_day_detail(self, year, month, day, event_type, owners=None, shan_xiang=None, jian_xiang=None):
         """
         详细分析日课的吉凶情况
@@ -3704,12 +3762,14 @@ class Scorer:
             try:
                 # 首先检查日课日支与事主生肖（年支）的关系（生肖相主，更重要）
                 if owner_year_zhi:
-                    # 六冲检查（硬性门槛：一票否决）
+                    # 六冲检查（2026-09-18 用户拍板三档口径·档1：
+                    # 年命×日课日支六冲，冲主命宫最重 → 硬否决，-30）
                     if check_liuchong(day_zhi, owner_year_zhi):
                         score = -30  # 生肖相冲更严重
                         total_score += score
                         details.append(f"[硬性门槛]{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}六冲（年命六冲），不可用，{score}分")
-                    # 自刑检查（硬性门槛：辰午酉亥自刑，一票否决）
+                    # 自刑检查（三档口径·档3：年命与日课日支辰午酉亥同支自刑。
+                    # 辰午酉亥自刑出自《三命通会》三刑之说 → 一票否决，-25）
                     elif day_zhi == owner_year_zhi and day_zhi in ('辰', '午', '酉', '亥'):
                         score = -25
                         total_score += score
@@ -3740,18 +3800,22 @@ class Scorer:
                         total_score += score
                         details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}三合（年支合），+{score}分")
                 
-                # 然后检查日课日支与事主日柱地支的关系
+                # 然后检查日课日支与事主日柱地支的关系。
+                # 2026-09-18 三档口径：硬否决仅定义在【事主年命】层；事主日元（日支）
+                # 与日课日支的冲/自刑降为普通扣分（日元为辅，有制化余地）。
+                # 嫁娶另由 _check_marriage_day_chong 独立判"冲夫妻宫"大忌并归零，
+                # 不受此处降级影响。
                 if owner_day_zhi and owner_day_zhi != owner_year_zhi:  # 避免重复检查
-                    # 六冲检查（硬性门槛：一票否决）
+                    # 六冲（扣分不否决；-20）
                     if check_liuchong(day_zhi, owner_day_zhi):
                         score = -20
                         total_score += score
-                        details.append(f"[硬性门槛]{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}六冲，不可用，{score}分")
-                    # 自刑检查（硬性门槛：辰午酉亥自刑，一票否决）
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}六冲，{score}分")
+                    # 自刑（辰午酉亥同支；扣分不否决，-15）
                     elif day_zhi == owner_day_zhi and day_zhi in ('辰', '午', '酉', '亥'):
                         score = -15
                         total_score += score
-                        details.append(f"[硬性门槛]{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}自刑，不可用，{score}分")
+                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}自刑，{score}分")
                     # 三刑检查
                     elif check_xing(day_zhi, owner_day_zhi):
                         score = -15
@@ -3777,6 +3841,20 @@ class Scorer:
                         score = 3
                         total_score += score
                         details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
+
+                # 三档口径·档2：年命×日课月支/时支六冲 = 扣分不否决。
+                # 月为提纲，对齐本函数末段"流年冲太岁"-15 档；时为末位，
+                # 对齐既有相害 -10 档。年支档（流年冲太岁）在本函数末段统一处理。
+                _xz_mz = sizhu.get('month_zhi', '')
+                _xz_hz = sizhu.get('hour_zhi', '')
+                if owner_year_zhi and _xz_mz and check_liuchong(_xz_mz, owner_year_zhi):
+                    score = -15
+                    total_score += score
+                    details.append(f"{owner_name}年命{owner_year_zhi}与日课月支{_xz_mz}六冲（月柱冲年命，扣分不否决），{score}分")
+                if owner_year_zhi and _xz_hz and check_liuchong(_xz_hz, owner_year_zhi):
+                    score = -10
+                    total_score += score
+                    details.append(f"{owner_name}年命{owner_year_zhi}与日课时支{_xz_hz}六冲（时柱冲年命，扣分不否决），{score}分")
             except Exception as e:
                 logger.error(f"相主检查失败({owner_name}日支{owner_day_zhi}与日课日支{day_zhi}): {str(e)}")
                 pass
@@ -3913,6 +3991,11 @@ class Scorer:
             # 其他事项使用原检查器
             shensha_checker = get_checker(event_type)
             self.shensha_list = shensha_checker.check(sizhu, owners, zaozhu_mode=zaozhu_mode)
+        
+        # 羊刃计分（冠带派）：日干查地支，单见-15/两见以上-25；所有事项统一，作为通用凶煞
+        _yr = self._build_yangren_shensha(sizhu, event_type)
+        if _yr and not any(isinstance(_s, dict) and _s.get('name') == '羊刃' for _s in self.shensha_list):
+            self.shensha_list.append(_yr)
         
         # 检查宜忌规则
         rule_checker = get_rule_checker(event_type)
@@ -4240,6 +4323,51 @@ class Scorer:
             from 玄空飞星引擎 import score_feixing
         return score_feixing(sizhu, full_shan_xiang)
 
+    # 羊刃（冠带派）日干→地支映射：甲卯乙辰丙午丁未戊午己未庚酉辛戌壬子癸丑
+    _YANGREN_MAP = {
+        '甲': '卯', '乙': '辰', '丙': '午', '丁': '未',
+        '戊': '午', '己': '未', '庚': '酉', '辛': '戌',
+        '壬': '子', '癸': '丑',
+    }
+
+    def _build_yangren_shensha(self, sizhu, event_type):
+        """构建羊刃神煞计分条目（冠带派，日干查地支）。
+
+        单见：分值取 SHENSHA_SCORES[('*','羊刃')] = -15；
+        两见以上：-25。典籍依据：羊刃为刚暴之星，传统命理以"喜一位而忌重见"
+        为常说（《三命通会》论羊刃以一位为用、重见则招非致祸；旧注《五行精纪》
+        亦以刃多为忌），故重见按重煞论，分值取与劫煞/灾煞单犯同档的 -25。
+        2026-09-18 用户拍板（口径B）：保留两见加重并补此典籍注释。
+        说明（2026-09-18 核对）：劫煞/灾煞按日支单查，结构上不会两见，
+        -25 并非"对齐其两见规则"，而是"羊刃重见 ≈ 一次劫煞级别"的分量对齐。
+        无命中返回 None。仅在评分器内调用，不改任何现有神煞分值。
+        """
+        day_zhu = sizhu.get('日柱', '')
+        day_gan = day_zhu[0] if len(day_zhu) >= 1 else sizhu.get('day_gan', '')
+        target = self._YANGREN_MAP.get(day_gan)
+        if not target:
+            return None
+        zhis = []
+        for pn in ('年柱', '月柱', '日柱', '时柱'):
+            p = sizhu.get(pn, '')
+            if len(p) >= 2:
+                zhis.append((pn, p[1]))
+        hits = [(pn, z) for pn, z in zhis if z == target]
+        if not hits:
+            return None
+        try:
+            from .事项标准 import shensha_score as _ss
+        except ImportError:
+            from 事项标准 import shensha_score as _ss
+        base = _ss(_canonical_event(event_type), '羊刃', -15)
+        score = base if len(hits) == 1 else -25  # 两见以上：重见按重煞论（典籍"刃喜一位忌重见"），取劫煞/灾煞单犯分量 -25
+        desc = '、'.join(f"{pn}{z}" for pn, z in hits)
+        return {
+            'name': '羊刃',
+            'score': score,
+            'description': f"羊刃（日干{day_gan}见{desc}）",
+        }
+
     def _generate_wu_xing_details(self, sizhu, owners, is_demo_hour=True):
         """
         生成详细的五行分析信息
@@ -4265,6 +4393,7 @@ class Scorer:
             '十二长生': {},
             '纳音五行': {},
             '吉神': [],
+            '凶煞': [],
             '日主旺衰': '',
             '五行生克': []
         }
@@ -4508,6 +4637,18 @@ class Scorer:
             for zhi_name, zhi in zhis:
                 if zhi == lushen_map[day_gan]:
                     details['吉神'].append(f"禄神: 日干{day_gan}见{zhi_name}{zhi}")
+        
+        # 9.5 羊刃查法（以日干查地支，冠带派）
+        # 甲卯、乙辰、丙午、丁未、戊午、己未、庚酉、辛戌、壬子、癸丑
+        yangren_map = {
+            '甲': '卯', '乙': '辰', '丙': '午', '丁': '未',
+            '戊': '午', '己': '未', '庚': '酉', '辛': '戌',
+            '壬': '子', '癸': '丑',
+        }
+        if day_gan in yangren_map:
+            for zhi_name, zhi in zhis:
+                if zhi == yangren_map[day_gan]:
+                    details['凶煞'].append(f"羊刃: 日干{day_gan}见{zhi_name}{zhi}")
         
         # 10. 日主旺衰分析
         if day_gan and month_zhi:

@@ -810,24 +810,28 @@ class ConstructionRuleChecker(EventRuleChecker):
                                 break
                     if not ji_wx:
                         return
-                    # 日课四柱干支与纳音
+                    # 日课纳音：2026-09-18 用户拍板口径B——克山运只论【日柱】纳音
+                    # （《协纪辨方书》体系主流：克山运只论日柱纳音；年月柱为天时段，
+                    # 不参与克山运判定，时柱亦不论）。旧码扫四柱任一导致乾山类
+                    # 91.8% 日辰误犯，过严不可用。
                     pillars = []
-                    for gz_key in ('年柱', '月柱', '日柱', '时柱'):
-                        gz = sizhu.get(gz_key, '')
-                        if isinstance(gz, str) and len(gz) >= 2:
-                            pillars.append((gz_key, gz[:2]))
+                    gz = sizhu.get('日柱', '')
+                    if isinstance(gz, str) and len(gz) >= 2:
+                        pillars.append(('日柱', gz[:2]))
                     if not pillars:
-                        for pos in ('year', 'month', 'day', 'hour'):
-                            gan = sizhu.get(f'{pos}_gan', '')
-                            zhi = sizhu.get(f'{pos}_zhi', '')
-                            if gan and zhi:
-                                pillars.append((f'{pos}柱', gan + zhi))
+                        _dg = sizhu.get('day_gan', '')
+                        _dz = sizhu.get('day_zhi', '')
+                        if _dg and _dz:
+                            pillars.append(('日柱', _dg + _dz))
                     fan_sha = []
                     try:
                         from ..八字工具整合 import get_nayin
                         for name, gz in pillars:
                             nayin = get_nayin(gz)
-                            if nayin and nayin != '未知' and nayin[0] in '木火土金水' and nayin[0] == ji_wx:
+                            # 纳音全名形如"泉中水""壁上土"，五行字在末位；
+                            # 旧码 nayin[0] 取到"泉/壁"等首字，导致实犯永远漏报
+                            nayin_wx = nayin[-1] if nayin and nayin[-1] in '木火土金水' else ''
+                            if nayin_wx and nayin_wx == ji_wx:
                                 fan_sha.append(f'{name}{gz}纳音{nayin}')
                     except ImportError:
                         pass
@@ -855,22 +859,29 @@ class ConstructionRuleChecker(EventRuleChecker):
         JISHEN_KEYWORDS = ['天德', '月德', '岁德', '岁德合', '禄马贵人', '天乙贵人']
         
         # 1. 检查克山运（从ji_list中检查）
-        for ji in ji_list:
+        for _idx, ji in enumerate(ji_list):
             if '克山运' in ji:
                 # 检查是否有吉神可制化
-                has_jishen = False
+                _hit_jishen = []
                 if yi_list:
                     for yi in yi_list:
                         for keyword in JISHEN_KEYWORDS:
-                            if keyword in yi:
-                                has_jishen = True
-                                break
-                        if has_jishen:
-                            break
-                
+                            if keyword in str(yi):
+                                if keyword not in _hit_jishen:
+                                    _hit_jishen.append(keyword)
+                has_jishen = bool(_hit_jishen)
+
                 if not has_jishen:
                     veto_reasons.append(ji)
-                # 有吉神制化时不加入否决列表，保留为ji_list中的警告
+                elif '（有制化：' not in str(ji):
+                    # 有吉神制化时不加入否决列表，保留为ji_list中的警告。
+                    # 2026-09-18：须同步给忌项文本打"（有制化：…）"标记——评分器
+                    # 放宽闸门（_HARD_VETO_KEYWORDS 含"克山运"）只认真实制化标记，
+                    # 与 analyze_month 正/傍阴府"（有制化：X），不禁用"同构，
+                    # 否则规则层判不否决、评分层仍按未制化二次归零（两层口径打架）。
+                    ji_list[_idx] = (
+                        f"{ji}（有制化：{'、'.join(_hit_jishen)}到山，不禁用）"
+                    )
         
         # 2. 检查年冲事主（宅主/家长）
         if owners:
