@@ -148,10 +148,12 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
 
         # 真三娘煞日：农历日+干支日双条件见 _is_sanniangsha
 
-        # 红纱日
+        # 红纱日（《玉匣记》口诀"四孟金鸡四仲蛇，四季逢丑是红纱"：
+        # 孟=酉、仲=巳、季=丑；2026-09-20 纠正原表孟仲对调，
+        # 与 rules/嫁娶规则.HONGSHA 保持一致——第六种失效模式同修）
         self.hongsha = {
-            1: ['巳'], 4: ['巳'], 7: ['巳'], 10: ['巳'],
-            2: ['酉'], 5: ['酉'], 8: ['酉'], 11: ['酉'],
+            1: ['酉'], 4: ['酉'], 7: ['酉'], 10: ['酉'],
+            2: ['巳'], 5: ['巳'], 8: ['巳'], 11: ['巳'],
             3: ['丑'], 6: ['丑'], 9: ['丑'], 12: ['丑']
         }
         
@@ -230,11 +232,12 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         # 真三娘煞
         if self._is_sanniangsha(sizhu):
             self._add_shensha('真三娘煞', -15, '真三娘煞日忌婚嫁、修建')
-        
-        # 红纱日
-        if self._is_hongsha(sizhu):
-            self._add_shensha('红纱日', -15, '百事忌，犯之主血光')
-        
+
+        # 红纱日已由基类 _check_day_shensha 统一添加（'红砂日' -15，判定走
+        # 本类 override 的农历月版 _is_hongsha）。此处原独立分支 '红纱日' 与
+        # 基类条目不同名不去重，2026-09-20 红纱死链修复后会双重扣分，已删除
+        # （与杨公忌日收敛同款机制）。
+
         # 重丧日 - 修造需参看，非首要禁忌
         if self._is_zhongsang(sizhu):
             self._add_shensha('重丧日', -10, '重丧日，修造需参看，非首要禁忌')
@@ -276,22 +279,24 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         return False
     
     def _is_hongsha(self, sizhu):
-        """是否红纱日"""
-        try:
-            from ..四柱计算器 import get_lunar_date
-        except ImportError:
-            from 四柱计算器 import get_lunar_date
-        
-        try:
-            if 'date' in sizhu:
-                lunar = get_lunar_date(sizhu['date'])
-                month = lunar.get('month_num', 0)
-                day_zhi = sizhu['day_zhi']
-                if month in self.hongsha:
-                    return day_zhi in self.hongsha[month]
-        except:
-            pass
-        return False
+        """是否红纱日（《玉匣记》口诀"四孟金鸡四仲蛇，四季逢丑是红纱"，闰月不计）
+
+        2026-09-20 修复第五种失效模式：原实现取 get_lunar_date() 中不存在的
+        'month_num' 键（实际返回中文键 'month'，已含'闰'与'月'字），.get 默认
+        0 → 静默 False → 全年 0 命中；并纠正孟仲对调错表（第六种失效模式）。
+        """
+        if 'date' not in sizhu:
+            return False
+        from ..四柱计算器 import get_lunar_date
+        lunar = get_lunar_date(sizhu['date'])
+        ms = str(lunar.get('month', ''))
+        if '闰' in ms:   # 闰月不计（通用规则，与杨公忌口径一致）
+            return False
+        month_map = {'正': 1, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                     '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, '冬': 11, '腊': 12}
+        month = month_map.get(ms.replace('月', ''), 0)
+        day_zhi = sizhu.get('day_zhi', '')
+        return month in self.hongsha and day_zhi in self.hongsha[month]
     
     def _is_zhongsang(self, sizhu):
         """是否重丧日

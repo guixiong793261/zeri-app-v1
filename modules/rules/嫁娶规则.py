@@ -81,10 +81,12 @@ class MarriageRuleChecker(EventRuleChecker):
     # 杨公忌日表已收敛至 神煞基类._YANGGONGJI_LUNAR（2026-09-20，
     # 农历月日唯一口径、闰月不计），判定统一走 is_yanggongji_by_lunar
 
-    # 红纱日
+    # 红纱日（《玉匣记》通行口诀"四孟金鸡四仲蛇，四季逢丑是红纱"：
+    # 孟月=农历正/四/七/十月见酉，仲月=二/五/八/十一月见巳，季月=三/六/九/腊月见丑；
+    # 2026-09-20 纠正原表孟仲对调——第六种失效模式"多实现一致的结构性抄错"）
     HONGSHA = {
-        1: ['巳'], 4: ['巳'], 7: ['巳'], 10: ['巳'],
-        2: ['酉'], 5: ['酉'], 8: ['酉'], 11: ['酉'],
+        1: ['酉'], 4: ['酉'], 7: ['酉'], 10: ['酉'],
+        2: ['巳'], 5: ['巳'], 8: ['巳'], 11: ['巳'],
         3: ['丑'], 6: ['丑'], 9: ['丑'], 12: ['丑']
     }
     
@@ -244,7 +246,11 @@ class MarriageRuleChecker(EventRuleChecker):
                 '七月': 7, '八月': 8, '九月': 9, '十月': 10, '冬月': 11, '腊月': 12
             }
             lunar_month_str = lunar_info.get('month', '')
-            lunar_month_num = month_map.get(lunar_month_str, date_obj.month)
+            # 闰月显式标记（get_lunar_date 的 month 已含'闰'前缀，如'闰六月'）；
+            # 闰月按通用规则"不计"（见 docs/神煞验证清单.md 顶部），month_num
+            # 仍按本月序号解析供展示层使用，判定层凭 is_leap 排除
+            is_leap = '闰' in lunar_month_str
+            lunar_month_num = month_map.get(lunar_month_str.replace('闰', ''), date_obj.month)
             
             # 解析农历日期为数字
             day_map = {
@@ -261,10 +267,11 @@ class MarriageRuleChecker(EventRuleChecker):
             # 添加数字字段
             lunar_info['month_num'] = lunar_month_num
             lunar_info['lunar_day'] = lunar_day_num
-            
+            lunar_info['is_leap'] = is_leap
+
             return lunar_info
         except:
-            return {'month_num': date_obj.month, 'lunar_day': date_obj.day}
+            return {'month_num': date_obj.month, 'lunar_day': date_obj.day, 'is_leap': False}
     
     def _get_owner_zodiac(self, owner):
         """获取事主生肖"""
@@ -441,7 +448,8 @@ class MarriageRuleChecker(EventRuleChecker):
         self._check_day_gods(sizhu, date_obj, lunar_month, lunar_day, owners, yi_list, ji_list)
         
         # 4. 检查凶神
-        self._check_bad_gods(lunar_month, lunar_day, sizhu, owners, yi_list, ji_list)
+        self._check_bad_gods(lunar_month, lunar_day, sizhu, owners, yi_list, ji_list,
+                             is_leap=lunar_info.get('is_leap', False))
         
         # 5. 检查事主相冲（新增）
         self._check_shengxiao_chong(sizhu, owners, ji_list)
@@ -608,8 +616,8 @@ class MarriageRuleChecker(EventRuleChecker):
             if day_gan == gods.get('月德') and '月德日' not in yi_list:
                 yi_list.append('月德')
     
-    def _check_bad_gods(self, lunar_month, lunar_day, sizhu, owners, yi_list, ji_list):
-        """检查凶神"""
+    def _check_bad_gods(self, lunar_month, lunar_day, sizhu, owners, yi_list, ji_list, is_leap=False):
+        """检查凶神（is_leap：当日为闰月时按通用规则"闰月不计"排除月日神煞）"""
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         year_zhi = sizhu.get('year_zhi', '')
@@ -637,8 +645,8 @@ class MarriageRuleChecker(EventRuleChecker):
         if date_obj and is_yanggongji_by_lunar(date_obj):
             ji_list.append('杨公忌')
         
-        # 红纱日
-        if lunar_month in self.HONGSHA:
+        # 红纱日（闰月不计）
+        if not is_leap and lunar_month in self.HONGSHA:
             if day_zhi in self.HONGSHA[lunar_month]:
                 ji_list.append(f'红纱日')
         
