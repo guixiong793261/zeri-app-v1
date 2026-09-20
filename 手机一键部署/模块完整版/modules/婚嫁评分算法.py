@@ -650,44 +650,19 @@ def is_year_break(date_obj, sizhu):
     return is_chong(sizhu['day_zhi'], sizhu['year_zhi'])
 
 def is_shangshuo(date_obj, sizhu):
-    """上朔日
-    
-    上朔日判断规则：
-    - 阳年：年干加寅顺数至亥
-    - 阴年：年干加丑顺数至巳（阴年加四带巳）
-    
-    简化方法：根据年干确定上朔日干支
-    阳年（甲丙戊庚壬）：年干+3 = 上朔日天干，地支固定为亥
-    阴年（乙丁己辛癸）：年干+4 = 上朔日天干，地支固定为巳
-    
-    例如：2025年乙巳年（阴年），乙+4=己，所以上朔日是己巳日
+    """上朔日（阳年干+3取亥日、阴年干+4取巳日）
+
+    2026-09-20 收敛：原本地年干推算已下沉为 shensha 层唯一实现
+    神煞基类.is_shangshuo_by_ganzhi，本函数改委托（算法逐字等价，
+    下方 -35 扣分分支行为与命中集合不变；非婚嫁 pipeline 同源自 -10，
+    事项差按用户拍板A保留）。
     """
-    year_gan = sizhu['year_gan']
-    day_gan, day_zhi = sizhu['日柱'][0], sizhu['日柱'][1]
-    
-    # 天干顺序
-    gan_order = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-    
     try:
-        year_gan_index = gan_order.index(year_gan)
-        
-        # 判断阳年还是阴年（甲丙戊庚壬为阳，乙丁己辛癸为阴）
-        is_yang = year_gan_index % 2 == 0
-        
-        if is_yang:
-            # 阳年：年干+3，地支为亥
-            shangshuo_gan_index = (year_gan_index + 3) % 10
-            shangshuo_gan = gan_order[shangshuo_gan_index]
-            shangshuo_zhi = '亥'
-        else:
-            # 阴年：年干+4，地支为巳（阴年加四带巳）
-            shangshuo_gan_index = (year_gan_index + 4) % 10
-            shangshuo_gan = gan_order[shangshuo_gan_index]
-            shangshuo_zhi = '巳'
-        
-        return (day_gan, day_zhi) == (shangshuo_gan, shangshuo_zhi)
-    except (ValueError, IndexError):
-        return False
+        from .shensha.神煞基类 import is_shangshuo_by_ganzhi
+    except ImportError:
+        from modules.shensha.神煞基类 import is_shangshuo_by_ganzhi
+    day_gan, day_zhi = sizhu['日柱'][0], sizhu['日柱'][1]
+    return is_shangshuo_by_ganzhi(sizhu['year_gan'], day_gan, day_zhi)
 
 def is_sili_sijue(date_obj):
     """四离四绝（四离=二分二至前一日；四绝=四立前一日）

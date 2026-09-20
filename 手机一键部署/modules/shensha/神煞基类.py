@@ -17,6 +17,32 @@ except ImportError:
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
 
+# 天干顺序（上朔日推算用）
+_GAN_ORDER = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+
+
+def is_shangshuo_by_ganzhi(year_gan, day_gan, day_zhi):
+    """上朔日年干推算（2026-09-20 抽自 婚嫁评分算法.is_shangshuo，全项目唯一实现）
+
+    权威口径：阳年（甲丙戊庚壬）年干顺推三位取该干【亥】日；
+              阴年（乙丁己辛癸）年干顺推四位取该干【巳】日。
+    例：丙午阳年，丙+3=己，上朔日为己亥日（2026 全年 5 天：
+        03-26/05-25/07-24/09-22/11-21）；乙巳阴年，乙+4=己，上朔日为己巳日。
+    年干以立春为年界（调用方传入的 year_gan 须为立春后年柱天干，
+    2025-01-18 尚属甲辰阳年→丁亥、2027-01-20 尚属丙午阳年→己亥）。
+    """
+    if not year_gan or not day_gan or not day_zhi:
+        return False
+    try:
+        year_idx = _GAN_ORDER.index(year_gan)
+        day_idx = _GAN_ORDER.index(day_gan)
+    except ValueError:
+        return False
+    if year_idx % 2 == 0:
+        return day_idx == (year_idx + 3) % 10 and day_zhi == '亥'
+    return day_idx == (year_idx + 4) % 10 and day_zhi == '巳'
+
+
 class ShenShaChecker:
     """神煞检查器基类"""
     
@@ -1500,10 +1526,22 @@ class ShenShaChecker:
         return day_zhi == expected
     
     def _is_shangshuo(self, sizhu):
-        """上朔日（农历初一）
-        注：需要日期信息，这里简化处理
+        """上朔日（年干推算：阳年干+3取亥日、阴年干+4取巳日）
+
+        2026-09-20 修复：原桩 return False（旧注"需要公历日期信息"）导致基类
+        pipeline 的 '上朔日' -10 及通用/出行等全部继承子类全年 0 命中。年干推算
+        本不需要公历日期，sizhu 已带 year_gan/day_gan/day_zhi；现改调模块级唯一
+        实现 is_shangshuo_by_ganzhi（与婚嫁评分算法 -35 路径同源）。
+        分值按各 pipeline 既有口径保留事项差：非婚嫁 -10、婚嫁 -35（用户拍板A）。
+        另：旧 docstring"上朔日（农历初一）"为错误描述，上朔日是年干推算的
+        特定干支日，与农历朔日无关，一并更正。
         """
-        return False  # 需要公历日期信息才能判断
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if (not day_gan or not day_zhi) and sizhu.get('日柱'):
+            day_gan = sizhu['日柱'][0]
+            day_zhi = sizhu['日柱'][1]
+        return is_shangshuo_by_ganzhi(sizhu.get('year_gan', ''), day_gan, day_zhi)
     
     def _is_guchen_guasu(self, sizhu):
         """孤辰寡宿（年支查法）
