@@ -912,15 +912,22 @@ class MarriageShenShaChecker(ShenShaChecker):
         return lunar_day in zhen_sanniang_map and ganzhi in zhen_sanniang_map[lunar_day]
     
     def _is_huangsha(self, sizhu):
-        """是否黄沙日"""
+        """是否黄沙日（农历月版：孟月午日、仲月寅日、季月子日；闰月不计——
+        2026-09-20 通用规则，与杨公忌/红纱/三娘煞口径一致。原实现对'闰六月'
+        解析失败返回 0 属偶然不命中，现显式排除防止 _parse_chinese_month 改进后
+        行为变化。fallback sizhu['lunar_month'] 路径无农历月字串、无法判闰月，
+        保持原行为。）"""
         lunar_month = 0
         try:
             date_obj = self._get_date_from_sizhu(sizhu)
             if date_obj:
                 from modules.四柱计算器 import get_lunar_date
                 lunar_info = get_lunar_date(date_obj)
-                if lunar_info and 'month' in lunar_info:
-                    lunar_month = self._parse_chinese_month(lunar_info['month'])
+                if lunar_info:
+                    if '闰' in str(lunar_info.get('month', '')):
+                        return False
+                    if 'month' in lunar_info:
+                        lunar_month = self._parse_chinese_month(lunar_info['month'])
             elif 'lunar_month' in sizhu:
                 lunar_month = sizhu['lunar_month']
         except:

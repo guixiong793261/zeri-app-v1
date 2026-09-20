@@ -650,8 +650,8 @@ class MarriageRuleChecker(EventRuleChecker):
             if day_zhi in self.HONGSHA[lunar_month]:
                 ji_list.append(f'红纱日')
         
-        # 黄沙日
-        if lunar_month in self.HUANGSHA:
+        # 黄沙日（闰月不计——2026-09-20 通用规则，与杨公忌/红纱/三娘煞口径一致）
+        if not is_leap and lunar_month in self.HUANGSHA:
             if day_zhi in self.HUANGSHA[lunar_month]:
                 ji_list.append(f'黄沙日')
         
