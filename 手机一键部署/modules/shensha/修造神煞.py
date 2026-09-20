@@ -148,14 +148,6 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_dizei(sizhu):
             self._add_shensha('地贼', -15, '忌修造、动土，犯之主失盗')
         
-        # 四离日
-        if self._is_sili(sizhu):
-            self._add_shensha('四离日', -35, '春分、秋分、夏至、冬至前一日，忌大事')
-        
-        # 四绝日
-        if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -35, '立春、立夏、立秋、立冬前一日，忌大事')
-        
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '忌动土修造，犯之主败')
@@ -177,15 +169,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
             self._add_shensha('杀师时', -30, '时辰逢戊午为杀师时，对现场工匠不利，宜避开')
 
         # ===== 吉神 =====
-        
-        # 天德日（与天德同源吉神，二选一保留较高者，避免重复计分虚高）
-        if self._is_tiande(sizhu) and '天德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('天德日', 15, '天德日，动土修造大吉')
-        
-        # 月德日（与月德同源吉神，二选一保留较高者，避免重复计分虚高）
-        if self._is_yuede(sizhu) and '月德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('月德日', 15, '月德日，动土修造大吉')
-        
+
         # 天德合
         if self._is_tiandehe(sizhu):
             self._add_shensha('天德合', 15, '动土修造吉利')

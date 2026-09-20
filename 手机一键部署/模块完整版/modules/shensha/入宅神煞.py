@@ -227,15 +227,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日 =====
-        
-        # 四离日（节气前一日）
-        if self._is_sili(sizhu):
-            self._add_shensha('四离日', -35, '四离日大事不宜，入宅大忌')
-        
-        # 四绝日（季节交替日）
-        if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -35, '四绝日大事不宜，入宅大忌')
-        
+
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日，入宅大忌')

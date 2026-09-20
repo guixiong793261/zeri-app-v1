@@ -204,14 +204,6 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日不宜安床')
 
-        # 四离日
-        if self._is_sili(sizhu):
-            self._add_shensha('四离日', -35, '四离日大忌，不宜安床')
-
-        # 四绝日
-        if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -35, '四绝日大忌，不宜安床')
-
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日，不宜安床')

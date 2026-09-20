@@ -98,15 +98,7 @@ class StoveShenShaChecker(ShenShaChecker):
         super()._check_day_shensha(sizhu, **kwargs)
         
         # ===== 凶煞 =====
-        
-        # 四离日
-        if self._is_sili(sizhu):
-            self._add_shensha('四离日', -35, '四离日忌作灶')
-        
-        # 四绝日
-        if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -35, '四绝日忌作灶')
-        
+
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日忌作灶')
