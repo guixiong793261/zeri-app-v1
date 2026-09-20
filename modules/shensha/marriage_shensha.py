@@ -531,10 +531,18 @@ def is_year_break(date_obj, year_zhi):
     return is_chong(year_zhi, day_zhi)
 
 def is_sili_sijue(date_obj):
-    """四离四绝：立春、立夏、立秋、立冬前一日为四离；春分、秋分、夏至、冬至前一日为四绝"""
-    # 简化：检查是否在节气前一日，需要精确节气数据，这里用月份粗略判断
-    # 实际应调用节气计算函数
-    return False  # 待实现
+    """四离四绝：四离=春分/夏至/秋分/冬至前一日；四绝=立春/立夏/立秋/立冬前一日
+
+    2026-09-20 修复：原桩 return False（"待实现"）导致通用/修造/动土/拆舍/入宅/
+    安葬/高级安葬/作灶/安床/嫁娶/开业等 11 个 rules 检查器的忌项文案链全年不命中
+    （shensha 计分层为独立实现不受影响，-35 照扣但用户看不到扣分原因）。
+    现复用 ShenShaChecker 的 sxtwl 精确节气判定（按自然日判定、含跨年处理）。
+    注意：旧 docstring 曾将二分二至与四立互换，正解为四离=二分二至前一日、
+    四绝=四立前一日（与神煞基类 _is_sili/_is_sijue 及《协纪辨方书》一致），一并更正。
+    """
+    from .神煞基类 import ShenShaChecker
+    checker = ShenShaChecker()
+    return checker._is_sili({'date': date_obj}) or checker._is_sijue({'date': date_obj})
 
 def is_sansha(date_obj, year_zhi):
     """

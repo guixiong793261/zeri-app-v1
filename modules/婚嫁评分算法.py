@@ -690,9 +690,17 @@ def is_shangshuo(date_obj, sizhu):
         return False
 
 def is_sili_sijue(date_obj):
-    """四离四绝（简化版）"""
-    # 实际应调用节气计算函数，这里简化处理
-    return False
+    """四离四绝（四离=二分二至前一日；四绝=四立前一日）
+
+    2026-09-20 修复：原桩 return False 恒假（"简化版"待实现），导致下方
+    四离四绝扣分分支全年不可达。现委托 shensha 层 sxtwl 精确判定，
+    保持单一实现路径（与 marriage_shensha.is_sili_sijue 同源）。
+    """
+    try:
+        from .shensha.marriage_shensha import is_sili_sijue as _impl
+    except ImportError:
+        from modules.shensha.marriage_shensha import is_sili_sijue as _impl
+    return _impl(date_obj)
 
 def is_sansang(date_obj):
     """重丧日（按规则判断）
@@ -1073,10 +1081,11 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         details.append(('上朔日', -35))
         result['warnings'].append('上朔日：阴阳德俱尽，慎用')
     
-    # 四离四绝（-30分）
+    # 四离四绝（-35分，2026-09-20 与事项标准.py SHENSHA_SCORES 对齐：原-30为漂移值；
+    # 同日桩函数修复后本分支自全年不可达恢复为 8 天可达）
     if is_sili_sijue(date_obj):
-        score -= 30
-        details.append(('四离四绝', -30))
+        score -= 35
+        details.append(('四离四绝', -35))
         result['warnings'].append('四离四绝：节气转换期，慎用')
     
     # 4.6 夫星受克检查
