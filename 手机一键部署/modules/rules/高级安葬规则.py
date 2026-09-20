@@ -314,19 +314,17 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             ji_list.append('岁破日忌安葬')
         
         # 8. 四离四绝
+        # 2026-09-20 死表清理：原 else 备用检查引用 _is_sili/_is_sijue 月支→日支
+        # 固定映射表，原理不成立（四离四绝是节气前一日，随节气日期逐年漂移，
+        # 与月支日支无固定对应），且 has_marriage_shensha 恒为 True 时该分支
+        # 不可达。已连同两个死表方法一并删除，四离四绝仅保留 marriage_shensha
+        # 单一实现路径（sxtwl 精确判定）。
         if self.has_marriage_shensha:
             try:
                 if self.is_sili_sijue(date_obj):
                     ji_list.append('四离四绝日忌安葬')
             except:
                 pass
-        else:
-            # 备用检查
-            if month_zhi and day_zhi:
-                if self._is_sili(month_zhi, day_zhi):
-                    ji_list.append('四离日忌安葬')
-                if self._is_sijue(month_zhi, day_zhi):
-                    ji_list.append('四绝日忌安葬')
         
         # 9. 往亡日
         if month_zhi and day_zhi and self._is_wangwang(month_zhi, day_zhi):
@@ -440,21 +438,11 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
     def _is_shie_dabai(self, day_pillar):
         """是否十恶大败日"""
         return day_pillar in self.SHIE_DABAI
-    
-    def _is_sili(self, month_zhi, day_zhi):
-        """是否四离日"""
-        sili_map = {'卯': '辰', '午': '未', '酉': '戌', '子': '丑'}
-        return day_zhi == sili_map.get(month_zhi)
-    
-    def _is_sijue(self, month_zhi, day_zhi):
-        """是否四绝日"""
-        sijue_map = {'丑': '寅', '辰': '巳', '未': '申', '戌': '亥'}
-        return day_zhi == sijue_map.get(month_zhi)
-    
+
     def _is_sui_po_day(self, year_zhi, day_zhi):
         """是否岁破日（日支与年支相冲）"""
         return self._is_chong(year_zhi, day_zhi)
-    
+
     def _is_mingfei(self, day_pillar):
         """是否鸣吠日"""
         return day_pillar in self.MINGFEI
