@@ -719,27 +719,32 @@ def is_sanniangsha(date_obj):
     真三娘煞对照：初三逢庚午、初七逢辛未、十三逢戊申、十八逢己酉、
     廿二逢丙午、廿七逢丁未。
     仅农历日相符而干支不符的"假三娘煞"（每月固定6天）不再作为婚嫁禁忌。
-    注意：三娘煞按农历日期判断，不是公历日期
+    注意：三娘煞按农历日期判断，不是公历日期。
+    闰月不计（2026-09-20 通用规则，与杨公忌/红纱口径一致）。
     """
     ZHEN_SANNIANG_MAP = {3: '庚午', 7: '辛未', 13: '戊申', 18: '己酉', 22: '丙午', 27: '丁未'}
 
     try:
         from modules.四柱计算器 import get_lunar_date
         lunar_info = get_lunar_date(date_obj)
-        if lunar_info and 'day' in lunar_info:
-            # 解析中文日期为数字
-            day_map = {
-                '初一': 1, '初二': 2, '初三': 3, '初四': 4, '初五': 5,
-                '初六': 6, '初七': 7, '初八': 8, '初九': 9, '初十': 10,
-                '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
-                '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
-                '廿一': 21, '廿二': 22, '廿三': 23, '廿四': 24, '廿五': 25,
-                '廿六': 26, '廿七': 27, '廿八': 28, '廿九': 29, '三十': 30
-            }
-            lunar_day = day_map.get(lunar_info['day'], 0)
-            if lunar_day in ZHEN_SANNIANG_MAP:
-                day_gan, day_zhi = get_day_ganzhi(date_obj)
-                return (day_gan + day_zhi) == ZHEN_SANNIANG_MAP[lunar_day]
+        if lunar_info:
+            # 闰月不计（get_lunar_date 的 month 已含'闰'前缀，如'闰六月'）
+            if '闰' in str(lunar_info.get('month', '')):
+                return False
+            if 'day' in lunar_info:
+                # 解析中文日期为数字
+                day_map = {
+                    '初一': 1, '初二': 2, '初三': 3, '初四': 4, '初五': 5,
+                    '初六': 6, '初七': 7, '初八': 8, '初九': 9, '初十': 10,
+                    '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
+                    '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
+                    '廿一': 21, '廿二': 22, '廿三': 23, '廿四': 24, '廿五': 25,
+                    '廿六': 26, '廿七': 27, '廿八': 28, '廿九': 29, '三十': 30
+                }
+                lunar_day = day_map.get(lunar_info['day'], 0)
+                if lunar_day in ZHEN_SANNIANG_MAP:
+                    day_gan, day_zhi = get_day_ganzhi(date_obj)
+                    return (day_gan + day_zhi) == ZHEN_SANNIANG_MAP[lunar_day]
     except Exception as e:
         logger.error(f"判断三娘煞失败: {e}")
 

@@ -260,22 +260,30 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
 
         初三逢庚午、初七逢辛未、十三逢戊申、十八逢己酉、廿二逢丙午、廿七逢丁未；
         仅农历日相符的"假三娘煞"不再作为禁忌。
+        口径依据软件现行共识（嫁娶规则/嫁娶神煞/婚嫁评分算法/本扩展四处表一字
+        不差，非《协纪》正式条目）；闰月不计（通用规则，与杨公忌口径一致）。
+        2026-09-20 修复第五种失效模式：原实现取 get_lunar_date() 中不存在的
+        'day_num' 键（实际返回中文键 'day'，如'初三'），.get 默认 0 → 静默
+        False → 全年 0 命中。
         """
-        try:
-            from ..四柱计算器 import get_lunar_date
-        except ImportError:
-            from 四柱计算器 import get_lunar_date
-
+        if 'date' not in sizhu:
+            return False
+        from ..四柱计算器 import get_lunar_date
+        lunar = get_lunar_date(sizhu['date'])
+        ms = str(lunar.get('month', ''))
+        if '闰' in ms:   # 闰月不计（通用规则，与杨公忌口径一致）
+            return False
+        day_map = {'初一': 1, '初二': 2, '初三': 3, '初四': 4, '初五': 5,
+                   '初六': 6, '初七': 7, '初八': 8, '初九': 9, '初十': 10,
+                   '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
+                   '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
+                   '廿一': 21, '廿二': 22, '廿三': 23, '廿四': 24, '廿五': 25,
+                   '廿六': 26, '廿七': 27, '廿八': 28, '廿九': 29, '三十': 30}
+        day = day_map.get(str(lunar.get('day', '')), 0)
         zhen_map = {3: '庚午', 7: '辛未', 13: '戊申', 18: '己酉', 22: '丙午', 27: '丁未'}
-        try:
-            if 'date' in sizhu:
-                lunar = get_lunar_date(sizhu['date'])
-                day = lunar.get('day_num', 0)
-                if day in zhen_map:
-                    ganzhi = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
-                    return ganzhi == zhen_map[day]
-        except:
-            pass
+        if day in zhen_map:
+            ganzhi = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
+            return ganzhi == zhen_map[day]
         return False
     
     def _is_hongsha(self, sizhu):

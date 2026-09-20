@@ -873,11 +873,16 @@ class MarriageShenShaChecker(ShenShaChecker):
         return month_map.get(month_str, 0)
     
     def _is_zhen_sanniang(self, sizhu):
-        """是否真三娘煞（特定干支）"""
+        """是否真三娘煞（特定干支）
+
+        口径依据软件现行共识（非《协纪》正式条目）；闰月不计（通用规则，
+        与杨公忌/红纱口径一致）。fallback sizhu['lunar_day'] 路径无农历
+        月信息、无法判闰月，保持原行为不动。
+        """
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         ganzhi = day_gan + day_zhi
-        
+
         zhen_sanniang_map = {
             3: ['庚午'],
             7: ['辛未'],
@@ -886,20 +891,24 @@ class MarriageShenShaChecker(ShenShaChecker):
             22: ['丙午'],
             27: ['丁未']
         }
-        
+
         lunar_day = 0
         try:
             date_obj = self._get_date_from_sizhu(sizhu)
             if date_obj:
                 from modules.四柱计算器 import get_lunar_date
                 lunar_info = get_lunar_date(date_obj)
-                if lunar_info and 'day' in lunar_info:
-                    lunar_day = self._parse_chinese_day(lunar_info['day'])
+                if lunar_info:
+                    # 闰月不计（get_lunar_date 的 month 已含'闰'前缀）
+                    if '闰' in str(lunar_info.get('month', '')):
+                        return False
+                    if 'day' in lunar_info:
+                        lunar_day = self._parse_chinese_day(lunar_info['day'])
             elif 'lunar_day' in sizhu:
                 lunar_day = sizhu['lunar_day']
         except:
             pass
-        
+
         return lunar_day in zhen_sanniang_map and ganzhi in zhen_sanniang_map[lunar_day]
     
     def _is_huangsha(self, sizhu):
