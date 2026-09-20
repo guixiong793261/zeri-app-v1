@@ -239,9 +239,9 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌日', -10, '杨公忌日不宜安床')
 
-        # 红砂日
-        if self._is_hongsha(sizhu):
-            self._add_shensha('红砂日', -15, '红砂日不宜安床')
+        # 红砂日已由基类 _check_day_shensha 统一添加（'红砂日' -15，判定经
+        # self._is_hongsha 分派到本类农历月版 override）。此处原自有分支与
+        # 基类同名，_add_shensha 同名保留首次，本就为死代码，2026-09-20 删除。
 
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（安床者）生肖与日课的冲合"""
@@ -327,11 +327,33 @@ class BedShenShaChecker(ShenShaChecker):
         return is_yanggongji_by_lunar(sizhu)
 
     def _is_hongsha(self, sizhu):
-        """是否红砂日"""
-        day_zhi = sizhu['day_zhi']
-        # 红砂日
-        hongsha = ['酉', '巳', '丑']
-        return day_zhi in hongsha
+        """是否红砂日（《玉匣记》口诀"四孟金鸡四仲蛇，四季逢丑是红纱"，
+        农历月版，与嫁娶规则/修造扩展口径一致；闰月不计——2026-09-20
+        通用规则。
+
+        2026-09-20 专项修复：原实现不看月、日支∈{酉,巳,丑}即命中，把
+        "按月命中"错成"按日命中"——2026 实测命中 91 天（正确 29 天），
+        误扣 62 天，属活错表（第六种失效模式家族，与嫁娶/修造孟仲对调
+        同源）。基类 _check_day_shensha 经 self 分派到本 override，安床
+        自有同名分支已删（_add_shensha 同名保留首次，该分支本就是死代码）。
+        """
+        if 'date' not in sizhu:
+            return False
+        from ..四柱计算器 import get_lunar_date
+        lunar = get_lunar_date(sizhu['date'])
+        ms = str(lunar.get('month', ''))
+        if '闰' in ms:   # 闰月不计（通用规则）
+            return False
+        month_map = {'正': 1, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                     '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, '冬': 11, '腊': 12}
+        month = month_map.get(ms.replace('月', ''), 0)
+        hongsha = {
+            1: ['酉'], 4: ['酉'], 7: ['酉'], 10: ['酉'],
+            2: ['巳'], 5: ['巳'], 8: ['巳'], 11: ['巳'],
+            3: ['丑'], 6: ['丑'], 9: ['丑'], 12: ['丑']
+        }
+        day_zhi = sizhu.get('day_zhi', '')
+        return month in hongsha and day_zhi in hongsha[month]
 
     def _check_owner_anchuang_match(self, sizhu, owner):
         """检查事主与安床日是否相合"""
