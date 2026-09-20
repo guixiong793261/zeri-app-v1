@@ -180,10 +180,9 @@ class TaishenQueryDialog:
             lunar_month = lunar['month']
             lunar_day = lunar['day']
             lunar_year = lunar['year']
-            is_leap = lunar.get('is_leap', False)
-            lunar_str = f"{lunar_year}年{lunar_month}月{lunar_day}日"
-            if is_leap:
-                lunar_str = f"{lunar_year}年闰{lunar_month}月{lunar_day}日"
+            # get_lunar_date 的 month 已含闰前缀与"月"字（'六月'/'闰六月'），无 is_leap 键；
+            # 闰标记由源串自含，不再走恒 False 的 .get('is_leap') 死分支。
+            lunar_str = f"{lunar_year}年{lunar_month}{lunar_day}日"
         except Exception as e:
             messagebox.showerror("错误", f"农历转换失败：{e}")
             return
@@ -227,7 +226,7 @@ class TaishenQueryDialog:
         result += f"  【农历】{lunar_str}\n"
         result += f"  【日柱】{day_pillar if day_pillar else '未计算'}\n"
         result += "=" * 40 + "\n\n"
-        result += f"★ 本月胎神（通书逐月胎神占，农历{lunar_month}月）：{month_taishen}\n"
+        result += f"★ 本月胎神（通书逐月胎神占，农历{lunar_month}）：{month_taishen}\n"
         result += f"★ 今日胎神（{day_pillar}日·六十甲子）：{day_taishen}\n"
         result += f"★ 太岁方位（{nian_zhu if nian_zhu else '当年'}年）：{taisui_fang}\n\n"
         result += "─" * 40 + "\n"

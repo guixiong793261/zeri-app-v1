@@ -38,8 +38,12 @@ _MONTH_KEY = {'正': 1, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六':
 
 
 def _lunar_month_str(m, is_leap=False):
-    """农历月统一为中文（'七月'；数字1-12自动转）"""
+    """农历月统一为中文（'七月'；数字1-12自动转；源串含'闰'时保留闰月前缀）"""
     if isinstance(m, str):
+        # get_lunar_date 的 month 已含闰前缀（'闰七月'）但无 is_leap 键：
+        # 中文→数字转换会丢'闰'，须先从源串回收闰标记（修复闰月显示丢"闰"）。
+        if '闰' in m:
+            is_leap = True
         key = m.replace('月', '').replace('闰', '')
         if key in _MONTH_KEY:
             m = _MONTH_KEY[key]
