@@ -240,14 +240,6 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_hekui(sizhu):
             self._add_shensha('河魁日', -25, '河魁日妨姑，不利新郎母亲')
 
-        # 天德日（与天德同源吉神，二选一保留较高者，避免重复计分虚高）
-        if self._is_tiande(sizhu) and '天德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('天德日', 12, '天德日百事吉')
-        
-        # 月德日（与月德同源吉神，二选一保留较高者，避免重复计分虚高）
-        if self._is_yuede(sizhu) and '月德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('月德日', 10, '月德日百事吉')
-        
         # 天德合
         if self._is_tiande_he(sizhu):
             self._add_shensha('天德合', 15, '天德合，婚嫁吉')
@@ -1121,8 +1113,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     # _is_yuede 内嵌表已删除：原表与基类/工具函数 YUEDE 权威表逐字一致（纯表副本），
     # 2026-09-18 拍板方案A改继承基类统一表（与天赦/岁煞收口同手法），行为零变化。
-    # 另注：L248"月德日"重加分支带 '月德' not in 守卫，基类先加后恒不可达（死分支），
-    # 已登记 001 跟踪文档留专项清理。
+    # 原日方法内"月德日"/"天德日"守卫重加死分支（基类 super 先加同名条目，守卫恒
+    # False）已于 2026-09-21 13.1 死代码专项删除，730 天×14 检查器零差异。
     def _is_sanhe(self, sizhu):
         """是否三合日"""
         month_zhi = sizhu['month_zhi']

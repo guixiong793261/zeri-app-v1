@@ -196,15 +196,7 @@ class BurialShenShaChecker(ShenShaChecker):
         month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日（安葬绝对禁忌）=====
-        
-        # 四离日
-        if self._is_sili(sizhu):
-            self._add_shensha('四离日', -35, '春分、秋分、夏至、冬至前一日，安葬大忌')
-        
-        # 四绝日
-        if self._is_sijue(sizhu):
-            self._add_shensha('四绝日', -35, '立春、立夏、立秋、立冬前一日，安葬大忌')
-        
+
         # 十恶大败日
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日，诸事不宜，安葬大忌')
