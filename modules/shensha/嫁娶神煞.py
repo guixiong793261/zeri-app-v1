@@ -31,7 +31,7 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
     try:
         from ..工具函数 import DI_ZHI, TIAN_GAN
     except ImportError:
@@ -755,47 +755,13 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     def _is_yanggongji(self, sizhu):
         """
-        是否杨公忌日（固定农历日期）
-        正月十三、二月十一、三月初九、四月初七、五月初五、六月初三、
-        七月初一、七月廿九、八月廿七、九月廿五、十月廿三、十一月廿一、十二月十九
-        
-        【实现说明】
-        使用 lunar_python 计算农历日期，判断是否为固定的13个杨公忌日
-        若 lunar_python 不可用，则使用简化版判断
+        是否杨公忌日（2026-09-20 收敛：改委托 is_yanggongji_by_lunar）
+
+        原为反转桩：lunar_python 已安装 → try 分支恒 return False，
+        except 中的"简化版"日支表（与真表 2026 零重合）永不执行。
+        现统一走农历月日唯一口径（闰月不计）。
         """
-        try:
-            from lunar_python import Solar
-            
-            # 从 sizhu 中提取年、月、日信息
-            # 注意：这里需要从外部传入公历日期，或者通过其他方式获取
-            # 暂时假设 sizhu 中包含公历日期信息
-            # 实际使用时，需要从调用方传入完整的日期信息
-            
-            # 简化实现：返回 False，实际使用时需要根据具体日期计算
-            # 后续可通过修改接口，让调用方传入完整的日期信息
-            return False
-        except ImportError:
-            # 简化版：按日支判断（仅供参考）
-            month_zhi = sizhu['month_zhi']
-            day_zhi = sizhu['day_zhi']
-            
-            # 杨公忌日对应日支（简化版，实际需农历）
-            yanggongji_map = {
-                '寅': '午',   # 正月十三（午日附近）
-                '卯': '辰',   # 二月十一
-                '辰': '寅',   # 三月初九
-                '巳': '子',   # 四月初七
-                '午': '戌',   # 五月初五
-                '未': '申',   # 六月初三
-                '申': '午',   # 七月初一
-                '酉': '辰',   # 七月廿九/八月廿七
-                '戌': '寅',   # 九月廿五
-                '亥': '子',   # 十月廿三
-                '子': '戌',   # 十一月廿一
-                '丑': '申'    # 十二月十九
-            }
-            
-            return day_zhi == yanggongji_map.get(month_zhi)
+        return is_yanggongji_by_lunar(sizhu)
     
     def _is_shousi(self, situ):
         """

@@ -31,10 +31,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
     from ..工具函数 import TIANDE, YUEDE, DI_ZHI
 except ImportError:
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
 class CommonShenShaChecker(ShenShaChecker):
@@ -873,18 +873,11 @@ class CommonShenShaChecker(ShenShaChecker):
         return False
 
     def _is_yanggongji(self, sizhu):
-        """杨公忌日
-        正月十三、二月十一、三月初九、四月初七、五月初五、六月初三、
-        七月初一、七月廿九、八月廿七、九月廿五、十月廿三、十一月廿一、十二月十九
+        """杨公忌日（2026-09-20 收敛：改委托基类模块级 is_yanggongji_by_lunar）
+
+        原月支日支表为错表（与真表 2026 仅 2 天碰巧重合，漏 12 误 26），已删除。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        yanggong_map = {
-            '寅': '酉', '卯': '亥', '辰': '丑', '巳': '卯',
-            '午': '未', '未': '巳', '申': '亥', '酉': '丑',
-            '戌': '卯', '亥': '酉', '子': '巳', '丑': '未'
-        }
-        return day_zhi == yanggong_map.get(month_zhi)
+        return is_yanggongji_by_lunar(sizhu)
 
     def _is_tiangang(self, sizhu):
         """天罡日（月支前五位）"""
