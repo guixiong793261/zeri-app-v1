@@ -25,6 +25,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..shensha.神煞基类 import is_yanggongji_by_lunar
 from datetime import date, datetime
 
 class MarriageRuleChecker(EventRuleChecker):
@@ -77,12 +78,9 @@ class MarriageRuleChecker(EventRuleChecker):
         '申': '牛', '酉': '鼠', '戌': '猪', '亥': '狗'
     }
     
-    # 杨公忌日（农历）
-    YANGGONGJI = {
-        1: [13], 2: [11], 3: [9], 4: [7], 5: [5], 6: [3],
-        7: [1, 29], 8: [27], 9: [25], 10: [23], 11: [21], 12: [19]
-    }
-    
+    # 杨公忌日表已收敛至 神煞基类._YANGGONGJI_LUNAR（2026-09-20，
+    # 农历月日唯一口径、闰月不计），判定统一走 is_yanggongji_by_lunar
+
     # 红纱日
     HONGSHA = {
         1: ['巳'], 4: ['巳'], 7: ['巳'], 10: ['巳'],
@@ -634,10 +632,10 @@ class MarriageRuleChecker(EventRuleChecker):
         # 三娘煞：按传统口径只有"真三娘煞"（农历日与干支日同时满足）才为禁忌，
         # 仅农历日相符的"假三娘煞"不再列入（见下方真三娘煞判定）
 
-        # 杨公忌
-        if lunar_month in self.YANGGONGJI:
-            if lunar_day in self.YANGGONGJI[lunar_month]:
-                ji_list.append(f'杨公忌')
+        # 杨公忌（2026-09-20 收敛：委托 is_yanggongji_by_lunar，
+        # 农历月日唯一口径、闰月不计；原 13 日表已删除）
+        if date_obj and is_yanggongji_by_lunar(date_obj):
+            ji_list.append('杨公忌')
         
         # 红纱日
         if lunar_month in self.HONGSHA:

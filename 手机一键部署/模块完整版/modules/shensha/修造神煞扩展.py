@@ -34,10 +34,12 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .修造神煞 import ConstructionShenShaChecker
+    from .神煞基类 import is_yanggongji_by_lunar
     from ..工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from ..二十四山 import ZhengTiWuXingSelectorDB
 except ImportError:
     from 修造神煞 import ConstructionShenShaChecker
+    from 神煞基类 import is_yanggongji_by_lunar
     from 工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from 二十四山 import ZhengTiWuXingSelectorDB
 
@@ -141,22 +143,9 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             24: '丙'
         }
         
-        # 杨公忌日（农历）
-        self.yanggongji = {
-            1: [13],    # 正月十三
-            2: [11],    # 二月十一
-            3: [9],     # 三月初九
-            4: [7],     # 四月初七
-            5: [5],     # 五月初五
-            6: [3],     # 六月初三
-            7: [1, 29], # 七月初一、二十九
-            8: [27],    # 八月二十七
-            9: [25],    # 九月二十五
-            10: [23],   # 十月二十三
-            11: [21],   # 十一月二十一
-            12: [19]    # 十二月十九
-        }
-        
+        # 杨公忌日表已收敛至 神煞基类._YANGGONGJI_LUNAR（2026-09-20，
+        # 农历月日唯一口径、闰月不计），判定统一走 is_yanggongji_by_lunar
+
         # 真三娘煞日：农历日+干支日双条件见 _is_sanniangsha
 
         # 红纱日
@@ -234,10 +223,10 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     
     def _check_additional_shensha(self, sizhu):
         """检查补充的凶煞"""
-        # 杨公忌
-        if self._is_yanggongji(sizhu):
-            self._add_shensha('杨公忌', -20, '百事忌，修建大凶')
-        
+        # 杨公忌日已由基类 _check_day_shensha 统一添加（'杨公忌日' -20，
+        # 判定走 is_yanggongji_by_lunar）。此处原独立分支 '杨公忌' 与基类
+        # 条目不同名不去重，2026-09-20 收敛后会双重扣分，已删除。
+
         # 真三娘煞
         if self._is_sanniangsha(sizhu):
             self._add_shensha('真三娘煞', -15, '真三娘煞日忌婚嫁、修建')
@@ -255,22 +244,13 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             self._add_shensha('重复日', -10, '重复日，忌凶事，利吉事')
     
     def _is_yanggongji(self, sizhu):
-        """是否杨公忌日"""
-        try:
-            from ..四柱计算器 import get_lunar_date
-        except ImportError:
-            from 四柱计算器 import get_lunar_date
-        
-        try:
-            if 'date' in sizhu:
-                lunar = get_lunar_date(sizhu['date'])
-                month = lunar.get('month_num', 0)
-                day = lunar.get('day_num', 0)
-                if month in self.yanggongji:
-                    return day in self.yanggongji[month]
-        except:
-            pass
-        return False
+        """是否杨公忌日（2026-09-20 修复第五种失效模式：字段名隐性死链）
+
+        原实现取 get_lunar_date() 返回值中不存在的 'month_num'/'day_num' 键
+        （实际返回中文键 'month'/'day'），.get 默认 0 → 静默 False → 全年 0 命中。
+        现改委托 神煞基类.is_yanggongji_by_lunar（sxtwl 直取农历数字月日）。
+        """
+        return is_yanggongji_by_lunar(sizhu)
     
     def _is_sanniangsha(self, sizhu):
         """是否真三娘煞日：农历日与日干支同时满足（全年仅6天）

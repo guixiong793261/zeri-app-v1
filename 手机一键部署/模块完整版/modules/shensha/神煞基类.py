@@ -43,6 +43,41 @@ def is_shangshuo_by_ganzhi(year_gan, day_gan, day_zhi):
     return day_idx == (year_idx + 4) % 10 and day_zhi == '巳'
 
 
+# 杨公忌日权威表（农历月日，2026-09-20 用户拍板：农历 13 日为唯一口径，闰月不计）
+# 与 rules/嫁娶规则.YANGGONGJI 同表互证（该实现为收敛前唯一真活，sxtwl 实测一致）
+_YANGGONGJI_LUNAR = {
+    1: (13,), 2: (11,), 3: (9,), 4: (7,), 5: (5,), 6: (3,),
+    7: (1, 29), 8: (27,), 9: (25,), 10: (23,), 11: (21,), 12: (19,),
+}
+
+
+def is_yanggongji_by_lunar(date_or_sizhu):
+    """杨公忌日判定（2026-09-20 收敛为全项目唯一实现：农历月日口径，闰月不计）
+
+    权威口径（农历 13 日，全年 13 个农历日期；公历年通常命中 14 天，因冬月廿一
+    等跨公历年可出现两次）：
+        正月十三、二月十一、三月初九、四月初七、五月初五、六月初三、
+        七月初一、七月廿九、八月廿七、九月廿五、十月廿三、十一月廿一、十二月十九。
+    闰月不计：闰月（isLunarLeap）中同序号日期不命中（如 2025 闰六月初三不算）。
+
+    失效模式背景（桩函数普查 P3）：原 5 处实现中，修造扩展因取不存在的
+    'month_num'/'day_num' 键而全年静默 0 命中（第五种失效模式：字段名隐性死链）；
+    基类/通用的月支日支表与安床的六冲表均为错表（与真表仅 2 天碰巧重合）；
+    嫁娶神煞为反转桩。本函数改用 sxtwl 直取农历数字月日，不吞异常。
+    """
+    d = date_or_sizhu
+    if isinstance(d, dict):
+        d = d.get('date')
+    if d is None or not hasattr(d, 'year'):
+        return False
+    import sxtwl
+    day = sxtwl.fromSolar(d.year, d.month, d.day)
+    if day.isLunarLeap():
+        return False
+    days = _YANGGONGJI_LUNAR.get(day.getLunarMonth())
+    return days is not None and day.getLunarDay() in days
+
+
 class ShenShaChecker:
     """神煞检查器基类"""
     
@@ -1576,18 +1611,12 @@ class ShenShaChecker:
         return False
     
     def _is_yanggongji(self, sizhu):
-        """杨公忌日
-        正月十三、二月十一、三月初九、四月初七、五月初五、六月初三、
-        七月初一、七月廿九、八月廿七、九月廿五、十月廿三、十一月廿一、十二月十九
+        """杨公忌日（2026-09-20 收敛：农历月日唯一口径，闰月不计）
+
+        原月支日支表（寅酉/卯亥/辰丑…）为错表——与真表 2026 仅 2 天碰巧重合
+        （漏 12 误 26），已删除，改委托模块级 is_yanggongji_by_lunar。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        yanggong_map = {
-            '寅': '酉', '卯': '亥', '辰': '丑', '巳': '卯',
-            '午': '未', '未': '巳', '申': '亥', '酉': '丑',
-            '戌': '卯', '亥': '酉', '子': '巳', '丑': '未'
-        }
-        return day_zhi == yanggong_map.get(month_zhi)
+        return is_yanggongji_by_lunar(sizhu)
     
     # ============ 修造专用检查方法 ============
     

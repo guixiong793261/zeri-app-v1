@@ -26,9 +26,9 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
 except ImportError:
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
 
 
 class BedShenShaChecker(ShenShaChecker):
@@ -319,16 +319,12 @@ class BedShenShaChecker(ShenShaChecker):
         return day_zhi == chongchuang.get(month_zhi)
 
     def _is_yanggongji(self, sizhu):
-        """是否杨公忌日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 杨公忌日
-        yanggongji = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == yanggongji.get(month_zhi)
+        """是否杨公忌日（2026-09-20 收敛：改委托 is_yanggongji_by_lunar）
+
+        原六冲表（子午/丑未/寅申…）与杨公忌毫无关系——与真表 2026 仅 2 天
+        碰巧重合（漏 12 误 29），已删除。安床扣分维持 -10 事项差（同天赦先例）。
+        """
+        return is_yanggongji_by_lunar(sizhu)
 
     def _is_hongsha(self, sizhu):
         """是否红砂日"""
