@@ -739,10 +739,10 @@ class TodayHuangLiDialog:
             lunar_month = lunar['month']
             lunar_day = lunar['day']
             lunar_year = lunar['year']
-            is_leap = lunar.get('is_leap', False)
-            lunar_str = f"{lunar_year}年{lunar_month}月{lunar_day}日"
-            if is_leap:
-                lunar_str = f"{lunar_year}年闰{lunar_month}月{lunar_day}日"
+            # get_lunar_date 的 month 已含闰前缀与"月"字（'六月'/'闰六月'），无 is_leap 键；
+            # 闰标记从源串推导（修复原 .get('is_leap') 恒 False 死链），供 calc_liuyao 形参。
+            is_leap = '闰' in str(lunar_month)
+            lunar_str = f"{lunar_year}年{lunar_month}{lunar_day}日"
         except Exception as e:
             messagebox.showerror("错误", f"农历转换失败：{e}")
             return
@@ -865,7 +865,7 @@ class TodayHuangLiDialog:
         result += f"  【公历】{dt.strftime('%Y年%m月%d日')} {weekday}\n"
         result += f"  【农历】{lunar_str} 属{zodiac}\n"
         result += f"  【干支】{nian_zhu}年 {yue_zhu}月 {ri_zhu}日\n"
-        result += f"  【佛历】{fo_li}年{str(lunar_month).zfill(2)}月{str(lunar_day).zfill(2)}日    【道历】{dao_li}年\n"
+        result += f"  【佛历】{fo_li}年{str(lunar_month)}{str(lunar_day)}日    【道历】{dao_li}年\n"
         result += f"  【星座】{constellation}\n"
         result += sep + "\n\n"
 
