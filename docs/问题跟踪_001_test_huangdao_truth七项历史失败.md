@@ -1097,4 +1097,53 @@ owners_plans）不受 reset 影响。备份 `C:\Temp\uni_backup_20260921_step2\`
 3. 涉及评分逻辑变更，按惯例等用户拍板后再动，动时同步四端 + verify 锚点
    （建议先立 verify_taiyangdaoshan.py 权威表：节气序→山，2026 全年锚点）。
 
+---
+
+## 跟踪项 23：单文件版整合脚本 v2 重写（基础设施，**2026-09-22 当日完成，commit 8318b51**）
+
+### 旧版两大缺陷（产物实测启动即崩）
+
+- 实证：`python 手机一键部署/单文件版/择日软件完整版.py` 首行即抛
+  `ModuleNotFoundError: No module named 'modules'`（旧产物 2026-09-18 生成后从未跑通过）；
+- 缺陷 1：手工 MODULES 列表仅 20 项且永远过时——rules/shensha 共 20 个
+  检查器经 `事项标准.py` 的 importlib 派发表懒加载
+  （RULE_CHECKER_CLASSES / SHENSHA_CHECKER_CLASSES / GENERIC_RULE_CLASS /
+  GENERIC_SHENSHA_CLASS / CONSTRUCTION_SHENSHA_EXT_CLASS），
+  静态清单根本列不全；
+- 缺陷 2：纯文本拼接不处理 import——主程序头部
+  `from modules.xxx import` 原样保留，单文件运行目录无 modules 包。
+
+### v2 方案设计
+
+1. **依赖双源动态发现**（清单永不过时）：
+   - 主程序静态 import 正则扫描（dotted 全路径，45 seeds，含函数内
+     条件导入的 shensha 两个扩展）；
+   - `事项标准.py` 派发表 **AST 解析**（ast.literal_eval 五个派发变量，
+     动态加载的 20+2 个检查器全部并入 seeds）；
+   - BFS 静态依赖闭包 → **54 个模块**（含 shensha/rules 两个真实
+     __init__.py；modules/ 根无 __init__.py，为 Python3 隐式命名空间包）。
+2. **sys.meta_path 内嵌加载**（import 语义全兼容）：
+   - 54 模块源码 zlib+base64 内嵌 `_EMBED_B64`（产物 1,137,466 字节，
+     较旧 1,638,358 减 30%）；
+   - `_EmbedFinder` 拦截 `modules.*` 的 import 交给原生导入机制：
+     相对导入 / 循环依赖 / importlib 动态派发 / 部分初始化语义全兼容；
+   - namespace 式空包容错（modules 根无 __init__.py → 包无嵌入源时
+     按空包处理）；虚拟 `__file__` 预置（shensha 双轨 sys.path 套路
+     顶层引用 __file__）。
+3. **三层验证内置**（退出码 0/1 可挂 CI）：
+   - `--smoke`：内嵌 import 链 + 20 派发检查器全实例化 + 2026-02-04
+     立春换柱（丙午年）黄金断言；
+   - `py_compile` 产物语法校验；
+   - `--verify`：GUI 启动 6 秒存活 + stderr 无 Traceback。
+
+### 第五端同步口径（2026-09-22 拍板）
+
+- 产物 `手机一键部署/单文件版/` 维持 .gitignore 排除，**由脚本随时再生成**
+  （`python integrate_single_file.py --verify`）；
+- 镜像位置：`手机一键部署/模块完整版/单文件版/`，Copy-Item + SHA256 核对
+  （当前 E48EAEA1…BF20 一致）；后续按主源同步惯例执行；
+- 未入包 7 文件（孤儿/独立工具）：事主八字分析、事主日课匹配评分、
+  八字排盘模块、神煞配置表、神煞验证与校准、评分权重校准、调试工具——
+  其中校准类工具顶层可能有写盘副作用，明确排除。
+
 
