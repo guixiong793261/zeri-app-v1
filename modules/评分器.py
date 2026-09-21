@@ -1826,25 +1826,6 @@ class Scorer:
                         analysis['score'] += _zaozhu_weighted(15, 0.5 if _zz_aux else 1.0)
                         analysis['reasons'].append(f"与{owner['name']}年命三合{_zz_suf}")
         
-        # 对于嫁娶，检查大利年
-        if _event_profile(event_type)['liyue'] and owners:
-            for owner in owners:
-                if owner.get('role') == '新娘' or owner.get('性别') == '女':
-                    # 计算新娘年干
-                    if 'birth_date' in owner:
-                        owner_sizhu = calculate_sizhu(owner['birth_date'], 
-                                                   owner.get('birth_hour', 12), 
-                                                   owner.get('birth_minute', 0))
-                        bride_year_gan = owner_sizhu.get('year_gan', '')
-                        
-                        # 检查大利年
-                        if self._is_dali_year(bride_year_gan, year_gan):
-                            analysis['score'] += 30
-                            analysis['reasons'].append("新娘大利年")
-                        elif self._is_xiaoli_year(bride_year_gan, year_gan):
-                            analysis['score'] += 15
-                            analysis['reasons'].append("新娘小利年")
-        
         # 对于修造类事项，分析年煞和二十四山方位吉凶（仅提供信息，不扣分）
         if _event_profile(event_type)['year_month_shan']:
             # 年三煞分析（纯地支，符合三合局规则）
@@ -3330,43 +3311,6 @@ class Scorer:
         # 妨夫月、妨妻月（简化判断）
         # 一般来说，除了大利月、小利月外，其他月份需要谨慎
         return '普通月'
-    
-    def _is_dali_year(self, bride_year_gan, year_gan):
-        """
-        检查是否为新娘大利年
-        依据：女命年干与流年干的关系
-        """
-        # 大利年规则（简化版）
-        # 实际规则需要更复杂的计算，这里使用简化版本
-        # 基于女命年干与流年干的相合关系
-        tian_gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-        if bride_year_gan and year_gan:
-            try:
-                bride_index = tian_gan.index(bride_year_gan)
-                year_index = tian_gan.index(year_gan)
-                # 六合关系
-                liuhe_pairs = [(0, 5), (1, 6), (2, 7), (3, 8), (4, 9)]
-                return (bride_index, year_index) in liuhe_pairs
-            except ValueError:
-                pass
-        return False
-    
-    def _is_xiaoli_year(self, bride_year_gan, year_gan):
-        """
-        检查是否为新娘小利年
-        """
-        # 小利年规则（简化版）
-        tian_gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-        if bride_year_gan and year_gan:
-            try:
-                bride_index = tian_gan.index(bride_year_gan)
-                year_index = tian_gan.index(year_gan)
-                # 相生关系
-                sheng_pairs = [(0, 2), (1, 3), (2, 4), (3, 5), (4, 6), (5, 7), (6, 8), (7, 9), (8, 0), (9, 1)]
-                return (bride_index, year_index) in sheng_pairs
-            except ValueError:
-                pass
-        return False
     
     def _calculate_yueling_help(self, sizhu):
         """
