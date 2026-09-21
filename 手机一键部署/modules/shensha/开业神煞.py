@@ -79,9 +79,7 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼主耗散')
         
-        # 金神
-        if self._is_jinshen(sizhu):
-            self._add_shensha('金神', -12, '金神主破败')
+        # 金神：年神方位煞，不用于日课评分（见基类 _get_jinshen_positions）
         
         # 破败
         if self._is_pobai(sizhu):

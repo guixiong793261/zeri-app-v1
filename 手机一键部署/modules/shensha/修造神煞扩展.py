@@ -659,6 +659,13 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         # 冲山
         if self._is_chong_shan(day_zhi, shan_zhi):
             self._add_shensha('冲山', -30, f'日冲{self.zuoshan}山，修建大凶')
+        
+        # 金神到山（年家方位煞：坐山落在当年金神方位，开山立向修方忌）
+        year_gan = sizhu.get('year_gan', '')
+        jinshen_pos = self._get_jinshen_positions(year_gan)
+        if jinshen_pos and shan_zhi in jinshen_pos:
+            self._add_shensha('金神到山', -15,
+                f'{self.zuoshan}山（{shan_zhi}）犯{year_gan}年金神，开山立向修方忌')
     
     def _get_shan_zhi(self, shan):
         """获取山家对应的地支"""

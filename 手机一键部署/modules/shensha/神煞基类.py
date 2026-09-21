@@ -332,8 +332,7 @@ class ShenShaChecker:
             self._add_shensha('五鬼', -15, '五鬼主耗散')
         if self._is_dasha(sizhu):
             self._add_shensha('大煞', -12, '大煞忌用')
-        if self._is_jinshen(sizhu):
-            self._add_shensha('金神', -12, '金神主破败')
+        # 金神：年神方位煞，不用于日课评分（见 _get_jinshen_positions，山向事项接入）
         if self._is_pobai(sizhu):
             self._add_shensha('破败', -10, '破败主破败')
         if self._is_guanfu(sizhu):
@@ -1981,19 +1980,35 @@ class ShenShaChecker:
             return day_zhi == canguan
         return False
     
-    def _is_jinshen(self, sizhu):
-        """金神（六甲旬空亡）
-        甲子旬空亡在戌亥、甲戌旬空亡在申酉、甲申旬空亡在午未、
-        甲午旬空亡在辰巳、甲辰旬空亡在寅卯、甲寅旬空亡在子丑
+    def _get_jinshen_positions(self, year_gan):
+        """金神方位（年家，按年干查。2026-09-21 按《协纪》体系：金神为年神，
+        主开山立向修方之方位吉凶，不用于日课评分。废弃原日家金神桩。）
+
+        年干口诀：
+            甲己年：午、未、申、酉
+            乙庚年：辰、巳
+            丙辛年：子、丑、寅、卯、午、未
+            丁壬年：寅、卯、戌、亥
+            戊癸年：申、酉、子、丑
+
+        Args:
+            year_gan: 年干（甲己丙辛丁壬戊癸乙庚之一）
+        Returns:
+            金神所占方位地支列表；年干无效返回空列表。
         """
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
         jinshen_map = {
-            '甲': ['戌', '亥'], '己': ['戌', '亥'],  # 甲子旬
-            '甲': ['申', '酉'], '己': ['申', '酉'],  # 甲戌旬（注：需检查日柱天干）
+            '甲': ['午', '未', '申', '酉'],
+            '己': ['午', '未', '申', '酉'],
+            '乙': ['辰', '巳'],
+            '庚': ['辰', '巳'],
+            '丙': ['子', '丑', '寅', '卯', '午', '未'],
+            '辛': ['子', '丑', '寅', '卯', '午', '未'],
+            '丁': ['寅', '卯', '戌', '亥'],
+            '壬': ['寅', '卯', '戌', '亥'],
+            '戊': ['申', '酉', '子', '丑'],
+            '癸': ['申', '酉', '子', '丑'],
         }
-        # 简化版
-        return False
+        return jinshen_map.get(year_gan, [])
     
     def _is_pobai(self, sizhu):
         """破败（年月冲）"""

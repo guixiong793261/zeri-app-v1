@@ -122,8 +122,7 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_dasha(sizhu):
             self._add_shensha('大煞', -12, '大煞当令，慎勿轻动')
 
-        if self._is_jinshen(sizhu):
-            self._add_shensha('金神', -12, '金神为煞，忌动土')
+        # 金神：年神方位煞，不用于日课评分（见基类 _get_jinshen_positions）
 
         if self._is_pobai(sizhu):
             self._add_shensha('破败', -10, '破败当头，诸事耗散')
