@@ -27,7 +27,9 @@ from modules.shensha.神煞基类 import ShenShaChecker
 from modules.shensha.修造神煞扩展 import ConstructionShenShaCheckerExt
 
 
-# 权威年干方位表（硬编码）
+# 权威年干方位表（硬编码，5 组年干口诀，绝不从软件读取）
+# 年界：年干取 calculate_sizhu 年柱，sxtwl 以【立春】换年柱（非正月初一），
+# 故金神年家方位同样以立春为界。
 AUTH_JINSHEN = {
     '甲': ['午', '未', '申', '酉'],
     '己': ['午', '未', '申', '酉'],
@@ -101,6 +103,18 @@ _notes.append('山向接入：2024甲辰年午山犯金神/子山不犯')
 # 日家桩废弃：任意日 check 不产出金神条目
 assert not _ad_no_jinshen_day((datetime.date(2026, 5, 1),)), '日课评分路径不应产出金神条目'
 _notes.append('日家桩废弃：_check_day_shensha 无金神条目')
+
+# 年界：立春换年柱（2026 立春=02-04，sxtwl 当天即换丙午；02-03 仍乙巳）
+# 乙年金神在辰巳；丙年金神在子丑寅卯午未。午山/辰山交叉断言：
+assert not _ad_jinshen_daoshan((datetime.date(2026, 2, 3), '午')), \
+    '立春前 02-03 年干乙（金神辰巳），午山不应犯金神'
+assert _ad_jinshen_daoshan((datetime.date(2026, 2, 4), '午')), \
+    '立春当天 02-04 年干换丙（金神含午），午山应犯金神到山'
+assert _ad_jinshen_daoshan((datetime.date(2026, 2, 3), '辰')), \
+    '立春前 02-03 年干乙（金神辰巳），辰山应犯金神到山'
+assert not _ad_jinshen_daoshan((datetime.date(2026, 2, 4), '辰')), \
+    '立春当天 02-04 年干换丙（金神不含辰），辰山不应犯金神'
+_notes.append('年界锁：2026-02-03 乙巳 vs 02-04 立春换丙午，午/辰山交叉断言通过')
 
 
 # 穷举：年干方位表
