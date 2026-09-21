@@ -730,18 +730,19 @@ class MarriageShenShaChecker(ShenShaChecker):
     def _is_hongsha(self, sizhu):
         """
         是否红砂日（按孟仲季月）
-        口诀：四孟月酉，四仲月巳，四季月丑
+        《协纪辨方书》辨讹：四孟月巳，四仲月酉，四季月丑
         孟月：正月、四月、七月、十月（寅巳申亥）
         仲月：二月、五月、八月、十一月（子午卯酉）
         季月：三月、六月、九月、十二月（辰戌丑未）
+        2026-09-21 纠正孟巳仲酉（原孟酉仲巳为相传误）。
         """
         month = sizhu['month_zhi']
         day = sizhu['day_zhi']
         meng = ['寅','巳','申','亥']
         zhong = ['子','午','卯','酉']
         ji = ['辰','戌','丑','未']
-        if month in meng and day == '酉': return True
-        if month in zhong and day == '巳': return True
+        if month in meng and day == '巳': return True
+        if month in zhong and day == '酉': return True
         if month in ji and day == '丑': return True
         return False
     

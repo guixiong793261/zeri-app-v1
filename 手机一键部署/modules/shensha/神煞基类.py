@@ -1599,13 +1599,15 @@ class ShenShaChecker:
         return day_zhi == guchen_map.get(year_zhi) or day_zhi == guasu_map.get(year_zhi)
     
     def _is_hongsha(self, sizhu):
-        """红砂日（四孟月酉日、四仲月巳日、四季月丑日）"""
+        """红砂日（《协纪辨方书》辨讹：四孟月巳日、四仲月酉日、四季月丑日）
+        2026-09-21 纠正：原"孟酉仲巳"为《协纪》斥为"相传误"的版本，
+        改为《协纪》正解"孟巳仲酉"。"""
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
         if month_zhi in ['寅', '申', '巳', '亥']:
-            return day_zhi == '酉'
-        elif month_zhi in ['卯', '酉', '午', '子']:
             return day_zhi == '巳'
+        elif month_zhi in ['卯', '酉', '午', '子']:
+            return day_zhi == '酉'
         elif month_zhi in ['辰', '戌', '未', '丑']:
             return day_zhi == '丑'
         return False
