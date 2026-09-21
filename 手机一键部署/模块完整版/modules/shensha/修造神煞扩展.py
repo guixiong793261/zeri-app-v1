@@ -661,6 +661,16 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             self._add_shensha('冲山', -30, f'日冲{self.zuoshan}山，修建大凶')
         
         # 金神到山（年家方位煞：坐山落在当年金神方位，开山立向修方忌）
+        # 【分值依据】典籍义例：《协纪》体系金神为年神（非日神），所理之方
+        # 忌开山、立向、修方；原典籍不具现代分值，软件分值按既有凶煞档位对齐：
+        # 冲山-30（日冲坐山，最重）> 月三煞犯日柱-20 > 红砂日/地贼-15 >
+        # 大煞-12。金神到山为"年神方位犯坐山"，非日柱直接冲克，归入 -15 档，
+        # 与红砂日、地贼同级（SHENSHA_SCORES 未设'金神到山'专项，沿用本处直配）。
+        # 【影响面】365天×24山穷举（calculate_sizhu 实测）：仅在传入 zuoshan 的
+        # 修造事项生效；2025 年（乙巳，金神辰巳，另含年初甲辰段34天）命中
+        # 1893/8760=21.6%，2026 年（丙午，金神子丑寅卯午未，另含年初乙巳段34天）
+        # 命中 3811/8760=43.5%。无坐山事项（嫁娶/开业/安床等）零影响。
+        # 【年界】年干随立春换柱（verify_jinshen 边界断言：2026-02-03/02-04）。
         year_gan = sizhu.get('year_gan', '')
         jinshen_pos = self._get_jinshen_positions(year_gan)
         if jinshen_pos and shan_zhi in jinshen_pos:
