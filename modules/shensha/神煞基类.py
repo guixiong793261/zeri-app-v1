@@ -1862,16 +1862,17 @@ class ShenShaChecker:
         return day_zhi == guiqi_map.get(month_zhi)
     
     def _is_huangsha(self, sizhu):
-        """黄沙日（寅午戌日在午、亥卯未日在酉、申子辰日在子、巳酉丑日在卯）"""
+        """黄沙日（节气月支版：四孟寅申巳亥月逢午日、四仲子午卯酉月逢寅日、
+        四季辰戌丑未月子日。2026-09-21 按《协纪》义例体系统一为节气月口径，
+        废弃原日支三合局版。）"""
+        month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
         huangsha_map = {
-            '寅': '午', '午': '午', '戌': '午',
-            '亥': '酉', '卯': '酉', '未': '酉',
-            '申': '子', '子': '子', '辰': '子',
-            '巳': '卯', '酉': '卯', '丑': '卯'
+            '寅': '午', '申': '午', '巳': '午', '亥': '午',
+            '子': '寅', '午': '寅', '卯': '寅', '酉': '寅',
+            '辰': '子', '戌': '子', '丑': '子', '未': '子'
         }
-        month_zhi = sizhu.get('month_zhi', '')
-        return month_zhi == huangsha_map.get(day_zhi)
+        return huangsha_map.get(month_zhi) == day_zhi
     
     def _is_flyinglian(self, sizhu):
         """飞廉（正五行查）

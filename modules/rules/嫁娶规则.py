@@ -91,11 +91,11 @@ class MarriageRuleChecker(EventRuleChecker):
         3: ['丑'], 6: ['丑'], 9: ['丑'], 12: ['丑']
     }
     
-    # 黄沙日
+    # 黄沙日（节气月支版：四孟寅申巳亥月逢午、四仲子午卯酉月逢寅、四季辰戌丑未月子）
     HUANGSHA = {
-        1: ['午'], 4: ['午'], 7: ['午'], 10: ['午'],
-        2: ['寅'], 5: ['寅'], 8: ['寅'], 11: ['寅'],
-        3: ['子'], 6: ['子'], 9: ['子'], 12: ['子']
+        '寅': ['午'], '申': ['午'], '巳': ['午'], '亥': ['午'],
+        '子': ['寅'], '午': ['寅'], '卯': ['寅'], '酉': ['寅'],
+        '辰': ['子'], '戌': ['子'], '丑': ['子'], '未': ['子']
     }
     
     # 真三娘煞日（特定干支）
@@ -651,9 +651,10 @@ class MarriageRuleChecker(EventRuleChecker):
             if day_zhi in self.HONGSHA[lunar_month]:
                 ji_list.append(f'红纱日')
         
-        # 黄沙日（闰月不计——2026-09-20 通用规则，与杨公忌/红纱/三娘煞口径一致）
-        if not is_leap and lunar_month in self.HUANGSHA:
-            if day_zhi in self.HUANGSHA[lunar_month]:
+        # 黄沙日（节气月支版：四孟寅申巳亥月逢午、四仲子午卯酉月逢寅、四季辰戌丑未月子；
+        # 2026-09-21 按《协纪》义例体系统一为节气月口径，废弃农历月版）
+        if month_zhi in self.HUANGSHA:
+            if day_zhi in self.HUANGSHA[month_zhi]:
                 ji_list.append(f'黄沙日')
         
         # 真三娘煞（特定干支；闰月不计——通用规则，与杨公忌/红纱口径一致）
