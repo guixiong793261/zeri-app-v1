@@ -212,9 +212,8 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_tiande(sizhu) and '天德' not in [s['name'] for s in self.shensha_list]:
             self._add_shensha('天德日', 20, '天德日，动土修造大吉')
         
-        # 月德日（与月德同源吉神，二选一保留较高者，避免重复计分虚高）
-        if self._is_yuede(sizhu) and '月德' not in [s['name'] for s in self.shensha_list]:
-            self._add_shensha('月德日', 15, '月德日，动土修造大吉')
+        # 月德计分由月神煞方法统一加（'月德' +18），日方法此处分支在完整
+        # check() 五步链路中守卫恒假（月神煞先执行），已于 2026-09-21 删除。
         
         # 天德合
         if self._is_tiandehe(sizhu):
