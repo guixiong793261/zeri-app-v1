@@ -250,10 +250,6 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
         # 拆舍经继承链自动同步修复；注意动土/通用的天赦加分为独立活分支，不适用本清理。
 
-        # 五富（主财富）
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富日主财，修造吉')
-        
         # 益后（利于后代）
         if self._is_yihou(sizhu):
             self._add_shensha('益后', 10, '益后日主益后代，修造吉')

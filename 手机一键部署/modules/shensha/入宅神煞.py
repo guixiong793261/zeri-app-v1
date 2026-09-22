@@ -274,10 +274,6 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，入宅吉')
         
-        # 五富（主财富）
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富日主财，入宅吉')
-        
         # 益后（利于后代）
         if self._is_yihou(sizhu):
             self._add_shensha('益后', 12, '益后日主益后代，入宅吉')

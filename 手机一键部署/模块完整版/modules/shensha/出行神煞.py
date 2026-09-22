@@ -89,10 +89,6 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩吉星，宜出行')
         
-        # 五富
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富吉星，宜出行')
-        
         # 吉期
         if self._is_jiqi(sizhu):
             self._add_shensha('吉期', 10, '吉期吉星，宜出行')

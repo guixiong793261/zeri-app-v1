@@ -109,10 +109,6 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩日主恩泽')
         
-        # 五富
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富主财富')
-        
         # 吉期
         if self._is_jiqi(sizhu):
             self._add_shensha('吉期', 10, '吉期主吉庆')

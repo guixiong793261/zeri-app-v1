@@ -131,10 +131,6 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空吉，利于安葬')
         
-        # 五富
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富吉日，利于安葬')
-        
         # 吉期
         if self._is_jiqi(sizhu):
             self._add_shensha('吉期', 10, '吉期吉日，利于安葬')

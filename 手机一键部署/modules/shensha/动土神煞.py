@@ -137,10 +137,6 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_shide(sizhu):
             self._add_shensha('时德', 10, '时德吉日，动土修造吉')
         
-        # 五富
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富吉星，动土修造吉')
-        
         # 月虚
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚日，忌动土修造')

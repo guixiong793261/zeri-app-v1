@@ -1402,16 +1402,24 @@ class ShenShaChecker:
         return day_zhi == jiqi_map.get(month_zhi)
     
     def _is_wufu(self, sizhu):
-        """五富（寅午戌月亥、亥卯未月申、申子辰月寅、巳酉丑月巳）"""
+        """五富（月神·日支）
+
+        典据《协纪辨方书》卷六·义例四：「五富者，正月起亥，顺行四孟」，
+        即按月建序循环四孟（亥、寅、巳、申）：寅月亥、卯月寅、辰月巳、
+        巳月申、午月亥、未月寅、申月巳、酉月申、戌月亥、亥月寅、子月巳、
+        丑月申（《星历考原》同载；曹振圭注"亥卯未月寅、巳酉丑月申"互证）。
+        2026-09-22 修复：原表按三合局取（亥卯未月申、申子辰月寅、
+        巳酉丑月巳），仅寅午戌火局正确，木/金/水三局与典载皆异。
+        """
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        wufu_map = {
-            '寅': '亥', '午': '亥', '戌': '亥',
-            '亥': '申', '卯': '申', '未': '申',
-            '申': '寅', '子': '寅', '辰': '寅',
-            '巳': '巳', '酉': '巳', '丑': '巳'
-        }
-        return day_zhi == wufu_map.get(month_zhi)
+        # 月建序（寅月起）对应四孟循环 亥→寅→巳→申
+        month_order = ['寅', '卯', '辰', '巳', '午', '未',
+                       '申', '酉', '戌', '亥', '子', '丑']
+        simeng = ['亥', '寅', '巳', '申']
+        if month_zhi not in month_order:
+            return False
+        return day_zhi == simeng[month_order.index(month_zhi) % 4]
     
     def _is_yangde(self, sizhu):
         """阳德（正月酉、二月辰、三月亥、四月午、五月卯、六月戌、七月酉、八月辰、九月亥、十月午、十一月卯、十二月戌）"""

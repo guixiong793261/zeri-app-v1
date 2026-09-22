@@ -85,10 +85,6 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空日，主空亡，安床吉')
 
-        # 五富
-        if self._is_wufu(sizhu):
-            self._add_shensha('五富', 12, '五富日，主财富，安床吉')
-
         # 吉期
         if self._is_jiqi(sizhu):
             self._add_shensha('吉期', 10, '吉期日，主吉庆，安床吉')
