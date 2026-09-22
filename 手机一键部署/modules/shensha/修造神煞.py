@@ -258,10 +258,6 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_xushi(sizhu):
             self._add_shensha('续世', 8, '续世日主续嗣，修造吉')
         
-        # 福生（福生之日）
-        if self._is_fusheng(sizhu):
-            self._add_shensha('福生', 10, '福生日修造吉')
-        
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆日修造吉')

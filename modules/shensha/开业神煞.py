@@ -121,10 +121,6 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_guanri(sizhu):
             self._add_shensha('官日', 8, '官日主官禄')
         
-        # 福生
-        if self._is_fusheng(sizhu):
-            self._add_shensha('福生', 10, '福生主福生')
-        
         # 吉庆
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆主吉庆')

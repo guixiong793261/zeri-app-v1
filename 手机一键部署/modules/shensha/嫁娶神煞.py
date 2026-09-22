@@ -327,10 +327,6 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，婚嫁吉')
         
-        # 福生（福生之日，利婚嫁）
-        if self._is_fusheng(sizhu):
-            self._add_shensha('福生', 10, '福生日婚嫁吉')
-        
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆日婚嫁吉')

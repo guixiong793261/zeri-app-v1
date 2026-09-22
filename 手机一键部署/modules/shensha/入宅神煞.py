@@ -282,10 +282,6 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_xushi(sizhu):
             self._add_shensha('续世', 10, '续世日主续嗣，入宅吉')
         
-        # 福生（福生之日）
-        if self._is_fusheng(sizhu):
-            self._add_shensha('福生', 10, '福生日入宅吉')
-        
         # 吉庆（吉庆之日）
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆日入宅吉')
