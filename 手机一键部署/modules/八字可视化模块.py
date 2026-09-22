@@ -514,11 +514,13 @@ def show_bazi_dialog(parent: tk.Tk, panpan_data: Dict):
 
 
 def show_bazi_from_birth(parent: tk.Tk, year: int, month: int, day: int, 
-                         hour: int = 12, minute: int = 0, gender: str = '男',
-                         use_true_solar: bool = False, longitude: float = 120.0, latitude: float = 30.0):
+                         hour: int = 12, minute: int = 0, gender: str = '男'):
     """
     从出生信息直接显示八字排盘
-    
+
+    【时间口径】统一平太阳时（北京时间 UTC+8）。真太阳时已立项未实现，
+    见 docs/001 开发记账。
+
     Args:
         parent: 父窗口
         year: 出生年
@@ -527,19 +529,13 @@ def show_bazi_from_birth(parent: tk.Tk, year: int, month: int, day: int,
         hour: 出生时（默认12）
         minute: 出生分（默认0）
         gender: 性别（默认'男'）
-        use_true_solar: 是否使用真太阳时（默认False）
-        longitude: 经度（默认120.0，北京时间基准）
-        latitude: 纬度（默认30.0，参考值）
-        
+
     Returns:
         BaZiDialog: 对话框对象
     """
     # 使用八字排盘模块创建排盘
     bazi = BaZiPanPan(
-        year, month, day, hour, minute, gender,
-        use_true_solar=use_true_solar,
-        longitude=longitude,
-        latitude=latitude
+        year, month, day, hour, minute, gender
     )
     panpan_data = bazi.get_panpan_result()
     

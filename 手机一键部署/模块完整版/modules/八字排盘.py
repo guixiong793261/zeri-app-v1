@@ -147,10 +147,14 @@ class BaZiPanPan:
     提供完整的八字排盘和分析功能
     """
     
-    def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, gender: str = '男', use_true_solar: bool = False, longitude: float = 120.0, latitude: float = 30.0):
+    def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, gender: str = '男'):
         """
         初始化八字排盘
-        
+
+        【时间口径】当前版本统一使用平太阳时（北京时间 UTC+8，东经120°标准时），
+        不做真太阳时经度修正与均时差校正。真太阳时（出生地经度+均时差）已单独立项，
+        见 docs/001 开发记账，落地前禁止在此添加未经接线的伪参数。
+
         Args:
             year: 出生年
             month: 出生月
@@ -158,9 +162,6 @@ class BaZiPanPan:
             hour: 出生时（0-23）
             minute: 出生分（0-59）
             gender: 性别，'男'或'女'
-            use_true_solar: 是否使用真太阳时
-            longitude: 经度（默认120.0，北京时间基准）
-            latitude: 纬度（默认30.0，参考值）
         """
         self.year = year
         self.month = month
@@ -168,9 +169,6 @@ class BaZiPanPan:
         self.hour = hour
         self.minute = minute
         self.gender = gender
-        self.use_true_solar = use_true_solar
-        self.longitude = longitude
-        self.latitude = latitude
         
         # 四柱信息
         self.sizhu = {}
