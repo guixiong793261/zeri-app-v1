@@ -52,15 +52,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
     def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞"""
         super()._check_year_shensha(sizhu, **kwargs)
-        
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，动土修造大吉')
-        
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，动土修造吉利')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）。
+
         # 太岁
         if self._is_taisui(sizhu):
             self._add_shensha('太岁', -20, '太岁当头，忌动土')
@@ -218,11 +213,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 天愿
         if self._is_tianyuan(sizhu):
             self._add_shensha('天愿', 12, '天愿吉星，修造吉')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马星动，修造吉')
-        
+
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
+
         # 三奇
         sanqi_result = self._is_sanqi(sizhu)
         if sanqi_result:
@@ -243,15 +236,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 六合
         if self._is_month_day_liuhe(sizhu):
             self._add_shensha('六合', 12, '动土吉利，主和谐')
-        
-        # 鸣吠日（破土专用）
-        if self._is_mingfei(sizhu):
-            self._add_shensha('鸣吠日', 15, '破土、启攒专用吉日')
-        
-        # 鸣吠对日
-        if self._is_mingfeidui(sizhu):
-            self._add_shensha('鸣吠对日', 10, '破土吉日')
-        
+
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 重加删除（继承修造错表谓词，
+        # 基类月作用域已按 13/11 典载日柱统一注册，动土取 15/10 分值键）。
+
         # 不将日
         if self._is_bujiang(sizhu):
             self._add_shensha('不将日', 15, '修造吉日')

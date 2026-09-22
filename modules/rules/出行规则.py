@@ -143,7 +143,9 @@ class TravelRuleChecker(EventRuleChecker):
             else:
                 yi_text = str(yi_ji_data)
 
-            for shensha in ['天德', '月德', '不将日', '鸣犬', '要安', '六合', '天赦']:
+            # 2026-10 A1：'鸣犬' 改典据正名 '鸣吠'（黄历宜文字用「鸣吠」，
+            # 旧 token 永不命中）；CHUXING_YI_DAYS 中同名死属性归 C 批清理。
+            for shensha in ['天德', '月德', '不将日', '鸣吠', '要安', '六合', '天赦']:
                 if shensha in yi_text:
                     yi_list.append(f'{shensha}日宜出行')
         except Exception:

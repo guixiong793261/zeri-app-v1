@@ -187,14 +187,9 @@ class StoveShenShaChecker(ShenShaChecker):
         # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
         # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
 
-        # 鸣犬日（作灶吉日）
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日宜作灶')
-        
-        # 鸣犬对日（作灶吉日）
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日宜作灶')
-        
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 同名重加删除（基类月作用域统一注册，
+        # 旧软件名「鸣犬日/对」已正名，谓词收为 13/11 典载日柱）。
+
         # 天愿
         if self._is_tianyuan(sizhu):
             self._add_shensha('天愿', 12, '天愿吉星，作灶吉')
@@ -210,15 +205,10 @@ class StoveShenShaChecker(ShenShaChecker):
         # 时德
         if self._is_shide(sizhu):
             self._add_shensha('时德', 10, '时德吉日，作灶吉')
-        
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，作灶大吉')
-        
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，作灶吉')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 谓词已修为年干比日干典载口径）。
+
         # 母仓日
         if self._is_mucang(sizhu):
             self._add_shensha('母仓日', 10, '母仓日作灶吉')

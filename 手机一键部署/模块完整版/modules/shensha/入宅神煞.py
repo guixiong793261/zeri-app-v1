@@ -196,11 +196,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 民日
         if self._is_minri(sizhu):
             self._add_shensha('民日', 8, '民日宜入宅')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马星动，迁居顺利')
-        
+
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
+
         # 三奇
         sanqi_result = self._is_sanqi(sizhu)
         if sanqi_result:
@@ -261,15 +259,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
             self._add_shensha('相日', 10, '相日入宅吉')
         
         # ===== 补充缺失的吉神检查 =====
-        
-        # 岁德（岁之德神，入宅大吉）
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，入宅大吉')
-        
-        # 岁德合（岁德合，入宅大吉）
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，入宅吉')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）。
+
         # 岁合（主和合）
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，入宅吉')
@@ -286,17 +279,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆日入宅吉')
         
-        # 鸣犬日（入宅吉日）
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日宜入宅')
-        
-        # 鸣犬对日（入宅吉日）
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日宜入宅')
-        
-        # 天恩（天恩之神）
-        if self._is_tianen(sizhu):
-            self._add_shensha('天恩', 10, '天恩日入宅吉')
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 同名重加删除（基类月作用域统一
+        # 注册，旧名「鸣犬日/对」已正名，谓词收为 13/11 典载日柱）。
+
+        # 2026-10 A1：'天恩' 同名重加删除——天恩已收口基类日作用域单点注册。
         
         # 旺日
         if self._is_wangri(sizhu):

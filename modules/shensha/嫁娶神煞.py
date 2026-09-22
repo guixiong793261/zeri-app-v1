@@ -307,22 +307,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         # _check_day_shensha 已加'天赦'+25（本类日方法 super 先行且全路径必达），
         # 原异名重加致真天赦日 +50 双计；删除后走基类统一，天赦日=+25。
 
-        # 鸣犬日（嫁娶吉日）
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日宜嫁娶')
-        
-        # 鸣犬对日（嫁娶吉日）
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日宜嫁娶')
-        
-        # 岁德（岁之德神，主化凶为吉）
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，婚嫁大吉')
-        
-        # 岁德合（岁德合，大吉）
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，婚嫁吉')
-        
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 同名重加删除（旧名「鸣犬」，
+        # 基类月作用域按典载 13/11 日柱统一注册）；'岁德'/'岁德合' 同名
+        # 重加删除（基类年作用域统一注册，年干比日干典载口径）。
+
         # 岁合（主和合）
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，婚嫁吉')

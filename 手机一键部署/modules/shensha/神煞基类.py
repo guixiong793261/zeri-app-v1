@@ -78,6 +78,148 @@ def is_yanggongji_by_lunar(date_or_sizhu):
     return days is not None and day.getLunarDay() in days
 
 
+# =====================================================================================
+# A1 批七项权威表（2026-10 广度扩展批次 A1：比较对象错收口，全项目唯一实现）
+# 逐项典据：
+#   岁德/岁德合 ——《协纪辨方书》卷三·义例一：岁德乃岁干之德，【比日干】（旧表
+#                  误作年干比日支）；岁德合为岁德干之五合，亦比日干。
+#   月空      ——《协纪》卷五·义例三＋《星历考原》：寅午戌月壬、申子辰月丙、
+#                  亥卯未月庚、巳酉丑月甲，月神【比日干】（旧实现误作月破日支）。
+#   天马      ——《星历考原》卷三：「正月起午，顺行六阳辰」，月神【比日支】
+#                  （旧实现误作年支对冲＝岁破）。
+#   反支      ——《协纪》卷九立成＋《星历考原》卷四：「戌亥朔一日反支，申酉朔
+#                  二日，午未朔三日，辰巳朔四日，寅卯朔五日，子丑朔六日」，其后
+#                  每十二日一遇；按【农历月】以朔日地支起算（含闰月独立起算），
+#                  非月支邻支。
+#   天恩      ——《协纪》卷五·义例三：「常以甲子至戊辰、己卯至癸未、己酉至癸丑，
+#                  凡一十五日」，日神比【日柱干支】（旧实现误作年支前一六合）。
+#   鸣吠日    ——《协纪》卷五义例三＋卷九立成：【13 日】（旧实现误作戌日）。
+#   鸣吠对日  —— 同卷：【11 日】（旧实现误作辰日）。典据正名为「鸣吠」，软件
+#                  旧名「鸣犬」本批正名（分值按用户拍板分事项，见 事项标准.py）。
+# =====================================================================================
+
+# 岁德：年干 → 应比【日干】。甲甲、乙庚、丙丙、丁壬、戊戊、己甲、庚庚、辛丙、壬壬、癸戊
+_SUIDE_DE_GAN = {
+    '甲': '甲', '乙': '庚', '丙': '丙', '丁': '壬', '戊': '戊',
+    '己': '甲', '庚': '庚', '辛': '丙', '壬': '壬', '癸': '戊',
+}
+
+# 岁德合：岁德干之五合（甲己合、乙庚合、丙辛合、丁壬合、戊癸合），亦比日干。
+# 甲己、乙乙、丙辛、丁丁、戊癸、己己、庚乙、辛辛、壬丁、癸癸
+_SUIDE_HE_GAN = {
+    '甲': '己', '乙': '乙', '丙': '辛', '丁': '丁', '戊': '癸',
+    '己': '己', '庚': '乙', '辛': '辛', '壬': '丁', '癸': '癸',
+}
+
+
+def is_suide_by_gan(year_gan, day_gan):
+    """岁德（年干之德比日干，《协纪》卷三）"""
+    return bool(year_gan) and day_gan == _SUIDE_DE_GAN.get(year_gan)
+
+
+def is_suide_he_by_gan(year_gan, day_gan):
+    """岁德合（岁德干之五合比日干，《协纪》卷三）"""
+    return bool(year_gan) and day_gan == _SUIDE_HE_GAN.get(year_gan)
+
+
+# 月空：月支三合局 → 应比【日干】
+_YUEKONG_GAN_BY_MONTH = {}
+for _yuekong_zhis, _yuekong_gan in (
+    ('寅午戌', '壬'), ('申子辰', '丙'), ('亥卯未', '庚'), ('巳酉丑', '甲'),
+):
+    for _yuekong_zhi in _yuekong_zhis:
+        _YUEKONG_GAN_BY_MONTH[_yuekong_zhi] = _yuekong_gan
+del _yuekong_zhis, _yuekong_gan, _yuekong_zhi
+
+
+def is_yuekong_by_gan(month_zhi, day_gan):
+    """月空（月神比日干，《协纪》卷五／《星历考原》）"""
+    return bool(month_zhi) and day_gan == _YUEKONG_GAN_BY_MONTH.get(month_zhi)
+
+
+# 天马：正月起午顺行六阳辰（寅午、卯申、辰戌、巳子、午寅、未辰循环），月神比日支
+_TIANMA_ZHI_BY_MONTH = {
+    '寅': '午', '卯': '申', '辰': '戌', '巳': '子', '午': '寅', '未': '辰',
+    '申': '午', '酉': '申', '戌': '戌', '亥': '子', '子': '寅', '丑': '辰',
+}
+
+
+def is_tianma_by_zhi(month_zhi, day_zhi):
+    """天马（月神比日支，《星历考原》「正月起午顺行六阳辰」）"""
+    return bool(month_zhi) and day_zhi == _TIANMA_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 天恩 15 日：甲子-戊辰、己卯-癸未、己酉-癸丑（六十甲子序 0-4、15-19、45-49）
+_TIAN_EN_PILLARS = frozenset((
+    '甲子', '乙丑', '丙寅', '丁卯', '戊辰',
+    '己卯', '庚辰', '辛巳', '壬午', '癸未',
+    '己酉', '庚戌', '辛亥', '壬子', '癸丑',
+))
+
+
+def is_tianen_by_pillar(day_pillar):
+    """天恩（15 日柱干支，《协纪》卷五「凡一十五日」）"""
+    return day_pillar in _TIAN_EN_PILLARS
+
+
+# 鸣吠日 13 日：阳干甲丙庚壬配午、申（避戊），阴干乙丁己辛癸配酉
+_MINGFEI_PILLARS = frozenset((
+    '甲午', '丙午', '庚午', '壬午',          # 阳干配午
+    '甲申', '丙申', '庚申', '壬申',          # 阳干配申
+    '乙酉', '丁酉', '己酉', '辛酉', '癸酉',  # 阴干配酉
+))
+
+# 鸣吠对日 11 日：阳干丙庚壬配子、寅，阴干乙丁辛癸配卯
+_MINGFEI_DUI_PILLARS = frozenset((
+    '丙子', '庚子', '壬子',                  # 阳干配子
+    '甲寅', '丙寅', '庚寅', '壬寅',          # 阳干配寅
+    '乙卯', '丁卯', '辛卯', '癸卯',          # 阴干配卯
+))
+
+
+def is_mingfei_by_pillar(day_pillar):
+    """鸣吠日（13 日柱干支，《协纪》卷五／卷九）"""
+    return day_pillar in _MINGFEI_PILLARS
+
+
+def is_mingfeidui_by_pillar(day_pillar):
+    """鸣吠对日（11 日柱干支，《协纪》卷九）"""
+    return day_pillar in _MINGFEI_DUI_PILLARS
+
+
+# 反支：按农历月【朔日地支】定本月首个反支日的农历日数，其后十二日一遇。
+# 戌亥朔→1，申酉朔→2，午未朔→3，辰巳朔→4，寅卯朔→5，子丑朔→6
+_FANZHI_FIRST_LUNAR_DAY = {
+    0: 6, 1: 6,    # 子、丑
+    2: 5, 3: 5,    # 寅、卯
+    4: 4, 5: 4,    # 辰、巳
+    6: 3, 7: 3,    # 午、未
+    8: 2, 9: 2,    # 申、酉
+    10: 1, 11: 1,  # 戌、亥
+}
+
+
+def is_fanzhi_by_lunar(date_or_sizhu):
+    """反支日（按农历月朔支起算，《协纪》卷九／《星历考原》卷四）
+
+    朔日地支由当日干支逆推（农历日-1）天得到，无需朔望表；
+    闰月按其自身朔日独立起算（如 2025 闰六月未朔→初三、十五、廿七）。
+    入参可为公历 date 或含 'date' 键的 sizhu；缺日期信息时返回 False
+    （同 is_yanggongji_by_lunar 范式，不吞异常）。
+    """
+    d = date_or_sizhu
+    if isinstance(d, dict):
+        d = d.get('date')
+    if d is None or not hasattr(d, 'year'):
+        return False
+    import sxtwl
+    day = sxtwl.fromSolar(d.year, d.month, d.day)
+    lunar_day = day.getLunarDay()
+    shuo_zhi = (day.getDayGZ().dz - (lunar_day - 1)) % 12
+    first = _FANZHI_FIRST_LUNAR_DAY[shuo_zhi]
+    return lunar_day >= first and (lunar_day - first) % 12 == 0
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -365,8 +507,8 @@ class ShenShaChecker:
             self._add_shensha('岁合', 12, '岁合主和合')
         if self._is_sui_lu(sizhu):
             self._add_shensha('岁禄', 15, '岁禄主财禄')
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马星动，吉')
+        # 2026-10 A1：天马为月神（《星历考原》正月起午顺行六阳辰），
+        # 注册点移至 _check_month_shensha；原年作用域谓词误作岁破，删除。
         if self._is_fuxing(sizhu):
             self._add_shensha('福星', 10, '福星主福泽，吉')
         
@@ -448,10 +590,16 @@ class ShenShaChecker:
             self._add_shensha('要安', 8, '要安主安宁')
         if self._is_bujiang(sizhu):
             self._add_shensha('不将日', 15, '不将日吉')
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日吉')
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日吉')
+        if self._is_tianma(sizhu):
+            # 天马（月神，2026-10 A1 自年/日作用域移入；分值查 SHENSHA_SCORES，
+            # 默认 +10；各子类同名重加均为死分支，已清理）
+            self._add_shensha('天马', 10, '天马星动，吉')
+        if self._is_mingfei(sizhu):
+            # 2026-10 A1 正名：典据正名为「鸣吠日」（13 日柱），旧软件名
+            # 「鸣犬日」本批全项目正名；分值按事项查 SHENSHA_SCORES。
+            self._add_shensha('鸣吠日', 12, '鸣吠日吉（金鸡鸣、玉犬吠，上下相呼）')
+        if self._is_mingfeidui(sizhu):
+            self._add_shensha('鸣吠对日', 8, '鸣吠对日吉（鸣吠之冲，宜破土斩草）')
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空主空亡')
         
@@ -502,8 +650,7 @@ class ShenShaChecker:
             self._add_shensha('将星', 12, '将星到座')
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马日吉')
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 8, '天马日吉')
+        # 2026-10 A1：天马为月神，日作用域注册已删除（见 _check_month_shensha）。
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦', 25, '天赦日百无禁忌')
         if self._is_mucang(sizhu):
@@ -516,6 +663,11 @@ class ShenShaChecker:
             self._add_shensha('上吉日', 12, '上吉日吉')
         if self._is_shengqi(sizhu):
             self._add_shensha('生气', 10, '生气吉')
+        # 2026-10 A1：天恩为《协纪》卷五日神（15 日柱），收口基类日作用域
+        # 单点注册（旧仅修造/拆舍/入宅注册，其余事项漏配）；分值查
+        # SHENSHA_SCORES，缺省 +10。动土类手抄日检查不走 super，维持原状。
+        if self._is_tianen(sizhu):
+            self._add_shensha('天恩', 10, '天恩日吉')
         month_zhi_check = sizhu.get('month_zhi', '')
         day_zhi_check = sizhu.get('day_zhi', '')
         liuhe_map = {
@@ -831,30 +983,15 @@ class ShenShaChecker:
         return day_zhi in ['丑', '辰', '未', '戌']
     
     def _is_tianma(self, sizhu):
-        """天马日
-        天马：寅午戌年/日在申子辰
-              申子辰年/日在寅午戌
-              亥卯未年/日在巳酉丑
-              巳酉丑年/日在亥卯未
+        """天马（月神比日支，《星历考原》卷三「正月起午，顺行六阳辰」）
+
+        寅月月午日、卯月申日、辰月戌日、巳月子日、午月寅日、未月辰日，
+        申月午日、酉月申日、戌月戌日、亥月子日、子月寅日、丑月辰日。
+        2026-10 A1 修复：旧实现取年支对冲（＝岁破日），比较对象（年支）与
+        星马性质全错，2026 年 31 命中含 26 误、漏 26；现委托模块级唯一
+        实现 is_tianma_by_zhi。注册点同步由年/日作用域移入月作用域。
         """
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        tianma_map = {
-            '寅': '申', '午': '申', '戌': '申',
-            '申': '寅', '子': '寅', '辰': '寅',
-            '巳': '亥', '酉': '亥', '丑': '亥',
-            '亥': '巳', '卯': '巳', '未': '巳'
-        }
-        
-        # 天马是对宫，需要看对冲
-        chong_map = {'申': '寅', '寅': '申', '子': '午', '午': '子', 
-                     '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳',
-                     '酉': '卯', '卯': '酉', '丑': '未', '未': '丑'}
-        
-        # 天马查法：年支对宫
-        duigong = chong_map.get(year_zhi, '')
-        return day_zhi == duigong
+        return is_tianma_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     # ============ 补充缺失的凶煞检查方法 ============
     
@@ -1172,35 +1309,21 @@ class ShenShaChecker:
     # ============ 年神类通用检查方法 ============
     
     def _is_suide(self, sizhu):
-        """岁德（年干之德）
-        甲年午、乙年申、丙年寅、丁年亥、戊年午、己年申、庚年寅、辛年亥、壬年午、癸年申
+        """岁德（年干之德比日干，《协纪辨方书》卷三·义例一）
+
+        2026-10 A1 修复：旧表误作"年干比日支"（甲年午、乙年申……），
+        与典据"岁德者岁干之德、取日干"相悖，2026 年 31 命中含 25 误、
+        漏 30 典载日；现委托模块级唯一实现 is_suide_by_gan。
         """
-        year_gan = sizhu.get('year_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        suide_map = {
-            '甲': '午', '乙': '申', '丙': '寅', '丁': '亥',
-            '戊': '午', '己': '申', '庚': '寅', '辛': '亥',
-            '壬': '午', '癸': '申'
-        }
-        return day_zhi == suide_map.get(year_gan)
-    
+        return is_suide_by_gan(sizhu.get('year_gan', ''), sizhu.get('day_gan', ''))
+
     def _is_suide_he(self, sizhu):
-        """岁德合（岁德的六合位）"""
-        year_gan = sizhu.get('year_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        suide_map = {
-            '甲': '午', '乙': '申', '丙': '寅', '丁': '亥',
-            '戊': '午', '己': '申', '庚': '寅', '辛': '亥',
-            '壬': '午', '癸': '申'
-        }
-        suide_zhi = suide_map.get(year_gan, '')
-        liuhe_map = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
-                     '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
-                     '巳': '申', '申': '巳', '午': '未', '未': '午'}
-        if suide_zhi:
-            suide_he = liuhe_map.get(suide_zhi, '')
-            return day_zhi == suide_he
-        return False
+        """岁德合（岁德干之五合比日干，《协纪》卷三）
+
+        2026-10 A1 修复：旧实现先按错表取岁德日支再取六合位，比较对象
+        与起例全错；现委托模块级唯一实现 is_suide_he_by_gan。
+        """
+        return is_suide_he_by_gan(sizhu.get('year_gan', ''), sizhu.get('day_gan', ''))
     
     def _is_suihe(self, sizhu):
         """岁合（年干的六合位）"""
@@ -1334,13 +1457,13 @@ class ShenShaChecker:
     # ============ 月神类通用检查方法 ============
     
     def _is_yuekong(self, sizhu):
-        """月空（对冲月）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        chong_map = {'子': '午', '丑': '未', '寅': '申', '卯': '酉',
-                     '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-                     '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'}
-        return day_zhi == chong_map.get(month_zhi)
+        """月空（月神比日干，《协纪》卷五／《星历考原》）
+
+        寅午戌月壬、申子辰月丙、亥卯未月庚、巳酉丑月甲。
+        2026-10 A1 修复：旧实现为"日支六冲月支"，与月破同谓词，2026 年
+        31 命中含 28 误、漏 34 典载日；现委托模块级唯一实现 is_yuekong_by_gan。
+        """
+        return is_yuekong_by_gan(sizhu.get('month_zhi', ''), sizhu.get('day_gan', ''))
     
     def _is_yuexu(self, sizhu):
         """月虚（对冲月前一天）"""
@@ -1515,15 +1638,24 @@ class ShenShaChecker:
     
     # ============ 日神类通用检查方法 ============
     
-    def _is_mingquan(self, sizhu):
-        """鸣犬日（戌日）"""
-        day_zhi = sizhu.get('day_zhi', '')
-        return day_zhi == '戌'
-    
-    def _is_mingquandui(self, sizhu):
-        """鸣犬对日（辰日）"""
-        day_zhi = sizhu.get('day_zhi', '')
-        return day_zhi == '辰'
+    def _is_mingfei(self, sizhu):
+        """鸣吠日（13 日柱干支，《协纪》卷五义例三＋卷九立成）
+
+        甲午丙午庚午壬午、甲申丙申庚申壬申、乙酉丁酉己酉辛酉癸酉。
+        2026-10 A1 修复：旧谓词名"鸣犬日"且误作"凡戌日"（30 命中与
+        典载 78 命中/年零交集）；典据正名为「鸣吠日」，本批全项目正名，
+        委托模块级唯一实现 is_mingfei_by_pillar。
+        """
+        return is_mingfei_by_pillar(sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
+
+    def _is_mingfeidui(self, sizhu):
+        """鸣吠对日（11 日柱干支，《协纪》卷九立成）
+
+        丙子庚子壬子、甲寅丙寅庚寅壬寅、乙卯丁卯辛卯癸卯。
+        2026-10 A1 修复：旧谓词名"鸣犬对日"且误作"凡辰日"（与典载
+        67 命中/年零交集）；委托模块级唯一实现 is_mingfeidui_by_pillar。
+        """
+        return is_mingfeidui_by_pillar(sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     
     def _is_tianshe(self, sizhu):
         """天赦日（《协纪辨方书·卷五》：春戊寅、夏甲午、秋戊申、冬甲子，百无禁忌）
@@ -1641,16 +1773,15 @@ class ShenShaChecker:
         return day_pillar in kuigang_list
     
     def _is_fanzhi(self, sizhu):
-        """反支日（地支相反）"""
-        day_zhi = sizhu.get('day_zhi', '')
-        month_zhi = sizhu.get('month_zhi', '')
-        fanzhi_map = {
-            '子': '丑', '丑': '子', '寅': '卯', '卯': '寅',
-            '辰': '巳', '巳': '辰', '午': '未', '未': '午',
-            '申': '酉', '酉': '申', '戌': '亥', '亥': '戌'
-        }
-        expected = fanzhi_map.get(month_zhi, '')
-        return day_zhi == expected
+        """反支日（按农历月朔支起算，《协纪》卷九立成／《星历考原》卷四）
+
+        「戌亥朔一日、申酉朔二日、午未朔三、辰巳朔四、寅卯朔五、子丑朔六」，
+        其后十二日一遇，每月 2-3 天（闰月按本朔独立起算）。
+        2026-10 A1 修复：旧实现"月支邻支＝日支"（月支固定、月内天天判定，
+        实为六合位），2026 年 28 命中含 23 误、漏 31；现委托模块级唯一
+        实现 is_fanzhi_by_lunar（sizhu 须带 'date' 公历日）。
+        """
+        return is_fanzhi_by_lunar(sizhu)
     
     def _is_shangshuo(self, sizhu):
         """上朔日（年干推算：阳年干+3取亥日、阴年干+4取巳日）
@@ -2139,19 +2270,17 @@ class ShenShaChecker:
         return False
     
     def _is_tianen(self, sizhu):
-        """天恩（年支前一位的六合）"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        liuhe_map = {'子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
-                     '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
-                     '巳': '申', '申': '巳', '午': '未', '未': '午'}
-        if year_zhi in zh_list:
-            idx = zh_list.index(year_zhi)
-            linshi = zh_list[(idx + 1) % 12]
-            tianen = liuhe_map.get(linshi, '')
-            return day_zhi == tianen
-        return False
+        """天恩（15 日柱固定干支，《协纪辨方书》卷五·义例三）
+
+        「常以甲子至戊辰、己卯至癸未、己酉至癸丑，凡一十五日」。
+        2026-10 A1 修复：旧实现"年支前一位之六合日支"（年神错口径，
+        2026 年 30 命中含 24 误、漏 85 典载日）；天恩是日柱固定干支日神，
+        现委托模块级唯一实现 is_tianen_by_pillar。
+        """
+        day_pillar = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
+        if not day_pillar and sizhu.get('日柱'):
+            day_pillar = sizhu['日柱']
+        return is_tianen_by_pillar(day_pillar)
     
     def _is_sui_lu(self, sizhu):
         """岁禄（年干禄位）

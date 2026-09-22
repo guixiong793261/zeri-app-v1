@@ -40,19 +40,11 @@ class TravelShenShaChecker(ShenShaChecker):
         # 太岁方位
         if self._is_taisui_fangwei(sizhu):
             self._add_shensha('太岁方位', -10, '太岁方位不宜出行')
-        
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，宜出行')
-        
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合吉星，宜出行')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马日利于远行')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）；'天马' 年作用域注册删除（典载天马为月神，
+        # 已由基类月作用域统一注册）。
+
         # 飞廉
         if self._is_flyinglian(sizhu):
             self._add_shensha('飞廉', -12, '飞廉主虚惊，不宜出行')
@@ -80,11 +72,10 @@ class TravelShenShaChecker(ShenShaChecker):
         # 往亡
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡', -20, '往亡日不宜出行')
-        
-        # 月空
-        if self._is_yuekong(sizhu):
-            self._add_shensha('月空', 10, '月空吉星，宜出行')
-        
+
+        # 2026-10 A1：'月空' 同名重加删除（基类月作用域统一注册，
+        # 月神比日干典载口径）。
+
         # 月恩
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩吉星，宜出行')
@@ -140,11 +131,11 @@ class TravelShenShaChecker(ShenShaChecker):
         # 驿马日
         if self._is_yima(sizhu):
             self._add_shensha('驿马日', 12, '驿马日利于出行')
-        
-        # 天马日
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马日', 10, '天马日利于远行')
-        
+
+        # 2026-10 A1：异名 '天马日' 重加删除——典载天马（月神）已由基类月
+        # 作用域以正名 '天马' 注册；旧日作用域 '天马日' 与其同日双扣（各 +10），
+        # ('出行','天马日') 分值键同步从 SHENSHA_SCORES 删除。
+
         # 路空日
         if self._is_lukong(sizhu):
             self._add_shensha('路空日', -15, '路空日不宜出行')
@@ -201,11 +192,10 @@ class TravelShenShaChecker(ShenShaChecker):
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日不宜出行')
-        
-        # 反支日
-        if self._is_fanzhi(sizhu):
-            self._add_shensha('反支日', -12, '反支日不宜出行')
-        
+
+        # 2026-10 A1：'反支日' 同名重加删除（基类日作用域统一注册，
+        # 谓词已修为按农历月朔支起算的典载口径）。
+
         # 上朔日
         if self._is_shangshuo(sizhu):
             self._add_shensha('上朔日', -10, '上朔日不宜出行')
@@ -325,19 +315,11 @@ class TravelShenShaChecker(ShenShaChecker):
             '亥': '巳', '卯': '巳', '未': '巳'
         }
         return day_zhi == yima.get(year_zhi)
-    
-    def _is_tianma(self, sizhu):
-        """是否天马日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 天马日
-        tianma = {
-            '寅': '午', '卯': '申', '辰': '戌', '巳': '子',
-            '午': '寅', '未': '辰', '申': '午', '酉': '申',
-            '戌': '戌', '亥': '子', '子': '寅', '丑': '辰'
-        }
-        return day_zhi == tianma.get(month_zhi)
-    
+
+    # 2026-10 A1：本类 _is_tianma override 已删除——其月支表（寅午卯申
+    # 辰戌巳子午寅未辰）与《星历考原》典载逐月一致，基类谓词修正后同表
+    # 同源，收口到 神煞基类.is_tianma_by_zhi（含年作用域旧注册一并移除）。
+
     def _is_lukong(self, sizhu):
         """是否路空日"""
         day_gan = sizhu['day_gan']

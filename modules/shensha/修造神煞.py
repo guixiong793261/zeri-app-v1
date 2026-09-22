@@ -193,11 +193,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 时德
         if self._is_shide(sizhu):
             self._add_shensha('时德', 10, '时德吉日，修造吉')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马星动，修造吉')
-        
+
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域统一注册）。
+
         # 三奇
         sanqi_result = self._is_sanqi(sizhu)
         if sanqi_result:
@@ -218,29 +216,20 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 六合
         if self._is_month_day_liuhe(sizhu):
             self._add_shensha('六合', 12, '动土吉利，主和谐')
-        
-        # 鸣吠日（破土专用）
-        if self._is_mingfei(sizhu):
-            self._add_shensha('鸣吠日', 15, '破土、启攒专用吉日')
-        
-        # 鸣吠对日
-        if self._is_mingfeidui(sizhu):
-            self._add_shensha('鸣吠对日', 10, '破土吉日')
-        
+
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 重加删除——基类月作用域已按典载
+        # 13/11 日柱统一注册（修造取 SHENSHA_SCORES 既有 15/10 键）；本类
+        # 旧 _is_mingfei/_is_mingfeidui 为 6 日错表，方法一并删除收口到基类。
+
         # 不将日
         if self._is_bujiang(sizhu):
             self._add_shensha('不将日', 15, '修造吉日')
-        
+
         # ===== 补充缺失的吉神检查 =====
-        
-        # 岁德（岁之德神，修造大吉）
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁德吉星，修造大吉')
-        
-        # 岁德合（岁德合，修造大吉）
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 12, '岁德合，修造吉')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径；此处旧 default 12 与事项标准 15 不符，本就不生效）。
+
         # 岁合（主和合）
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，修造吉')
@@ -262,14 +251,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆日修造吉')
         
-        # 天恩（天恩之神）
-        if self._is_tianen(sizhu):
-            self._add_shensha('天恩', 10, '天恩日修造吉')
-        
-        # 天马（天马星动）
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马星动，修造吉')
-        
+        # 2026-10 A1：'天恩' 同名重加删除——天恩已收口基类日作用域单点注册。
+
+        # 2026-10 A1：第二处 '天马' 同名重加删除（与上一处同为死分支，
+        # 典载天马已由基类月作用域统一注册）。
+
         # ===== 补充缺失的凶煞检查 =====
         
         # 丧门（主丧亡，忌修造）
@@ -821,30 +807,12 @@ class ConstructionShenShaChecker(ShenShaChecker):
             '午': '未', '未': '午'
         }
         return day_zhi == liuhe_map.get(month_zhi)
-    
-    def _is_mingfei(self, sizhu):
-        """是否鸣吠日
-        鸣吠日：庚午、庚子、庚申、辛酉、辛卯、辛巳
-        专用于破土、启攒
-        """
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        day_pillar = day_gan + day_zhi
-        
-        mingfei = ['庚午', '庚子', '庚申', '辛酉', '辛卯', '辛巳']
-        return day_pillar in mingfei
-    
-    def _is_mingfeidui(self, sizhu):
-        """是否鸣吠对日
-        鸣吠对日：丙子、丙午、丙寅、丁卯、丁酉、丁亥
-        """
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        day_pillar = day_gan + day_zhi
-        
-        mingfeidui = ['丙子', '丙午', '丙寅', '丁卯', '丁酉', '丁亥']
-        return day_pillar in mingfeidui
-    
+
+    # 2026-10 A1：旧 _is_mingfei（庚午庚子庚申辛酉辛卯辛巳 6 日错表）与
+    # _is_mingfeidui（丙子丙午丙寅丁卯丁酉丁亥 6 日错表）已删除——鸣吠日
+    # 13 干支、鸣吠对日 11 干支收口到 神煞基类.is_mingfei_by_pillar /
+    # is_mingfeidui_by_pillar（《协纪》卷五／卷九），注册统一走基类月作用域。
+
     def _is_bujiang(self, sizhu):
         """是否不将日
         

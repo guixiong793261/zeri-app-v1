@@ -42,15 +42,10 @@ class OpeningShenShaChecker(ShenShaChecker):
         # 都恒定 +15。财神方位是“方位”概念（日干定方位），判定吉凶须与店门/神位
         # 坐向比对，而本检查器拿不到坐向参数，无法判断，故该项不计分、予以删除。
         # （每日财神方位本身已在【今日黄历】模块按通书口径展示。）
-        
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
-        
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，大吉')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）。
+
         # 岁合
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合')
@@ -193,11 +188,9 @@ class OpeningShenShaChecker(ShenShaChecker):
         # 驿马
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马主行动')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马主行动')
-        
+
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
+
         # 天赦
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦', 25, '天赦日百事吉')

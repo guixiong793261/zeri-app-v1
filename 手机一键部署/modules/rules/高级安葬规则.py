@@ -30,6 +30,13 @@ try:
 except ImportError:
     from 规则基类 import EventRuleChecker
 
+# 鸣吠日 13 干支、鸣吠对日 11 干支（《协纪》卷五／卷九）——2026-10 A1
+# 收口到神煞基类模块级唯一实现（本类旧表为 10 日／6 日错表）。
+try:
+    from ..shensha.神煞基类 import is_mingfei_by_pillar, is_mingfeidui_by_pillar
+except ImportError:
+    from shensha.神煞基类 import is_mingfei_by_pillar, is_mingfeidui_by_pillar
+
 from datetime import date
 
 class AdvancedBurialRuleChecker(EventRuleChecker):
@@ -134,12 +141,10 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
     # 十恶大败日
     SHIE_DABAI = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
     
-    # 鸣吠日（利于安葬）
-    MINGFEI = ['庚午', '庚子', '庚申', '辛酉', '辛卯', '辛巳', '壬寅', '壬辰', '壬午', '壬申']
-    
-    # 鸣吠对日
-    MINGFEIDUI = ['丙子', '丙午', '丙寅', '丁卯', '丁酉', '丁亥']
-    
+    # 鸣吠日/鸣吠对日：2026-10 A1 起不再在本类维护干支表——典载 13 日／11 日
+    # 收口到 神煞基类.is_mingfei_by_pillar / is_mingfeidui_by_pillar（见文件头
+    # 导入；旧 MINGFEI 10 日表、MINGFEIDUI 6 日表均为错表，已删）。
+
     # 地支列表
     DI_ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
     
@@ -444,12 +449,12 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         return self._is_chong(year_zhi, day_zhi)
 
     def _is_mingfei(self, day_pillar):
-        """是否鸣吠日"""
-        return day_pillar in self.MINGFEI
-    
+        """是否鸣吠日（委托 神煞基类 典载 13 日柱，2026-10 A1）"""
+        return is_mingfei_by_pillar(day_pillar)
+
     def _is_mingfeidui(self, day_pillar):
-        """是否鸣吠对日"""
-        return day_pillar in self.MINGFEIDUI
+        """是否鸣吠对日（委托 神煞基类 典载 11 日柱，2026-10 A1）"""
+        return is_mingfeidui_by_pillar(day_pillar)
     
     def _is_chong(self, zhi1, zhi2):
         """检查两个地支是否相冲"""

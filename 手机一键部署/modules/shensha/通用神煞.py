@@ -70,8 +70,8 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_sui_lu(sizhu):
             self._add_shensha('岁禄', 15, '年干禄位，财禄双收')
 
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马驰驱，出行吉利')
+        # 2026-10 A1：'天马' 年作用域注册删除（典载天马为月神，
+        # 移入下方月作用域，谓词收口月支比日支）。
 
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩加临，恩泽深厚')
@@ -224,11 +224,16 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_bujiang(sizhu):
             self._add_shensha('不将日', 15, '不将吉日，嫁娶大吉')
 
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日吉，诸事皆宜')
+        if self._is_tianma(sizhu):
+            # 天马（月神，2026-10 A1 自年/日作用域移入本类月作用域）
+            self._add_shensha('天马', 10, '天马驰驱，出行吉利')
 
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日，次吉之日')
+        if self._is_mingfei(sizhu):
+            # 2026-10 A1 正名：旧软件名「鸣犬日」→ 典据正名「鸣吠日」
+            self._add_shensha('鸣吠日', 12, '鸣吠日吉，诸事皆宜')
+
+        if self._is_mingfeidui(sizhu):
+            self._add_shensha('鸣吠对日', 8, '鸣吠对日，次吉之日')
 
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空之日，诸煞皆空')
@@ -366,14 +371,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马驰驱，出行吉利')
 
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 8, '天马驰骋，出行顺利')
-
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日吉，诸事皆宜')
-
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日，次吉之日')
+        # 2026-10 A1：日作用域 '天马'(+8) 与月作用域 '天马'(+10) 同名，
+        # 月作用域先执行必获胜出，本块本为死分支；'鸣吠日'/'鸣吠对日'
+        # （旧名鸣犬）与月作用域同名同谓词，亦为死分支——一并删除。
 
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦日', 25, '天赦解围，诸凶皆赦')
@@ -472,6 +472,11 @@ class CommonShenShaChecker(ShenShaChecker):
 
         if self._is_kuigang(sizhu):
             self._add_shensha('魁罡日', -15, '魁罡日，刚烈之日')
+
+        # 2026-10 A1：天恩（15 日柱日神，《协纪》卷五）收口注册；本类整体
+        # 重写不走 super，故显式登记（分值查 SHENSHA_SCORES，缺省 +10）。
+        if self._is_tianen(sizhu):
+            self._add_shensha('天恩', 10, '天恩日吉')
 
     def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""

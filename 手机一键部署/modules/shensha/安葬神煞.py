@@ -46,15 +46,10 @@ class BurialShenShaChecker(ShenShaChecker):
         # 年重丧（按年支和日干查）
         if year_zhi and day_gan and self._is_nian_zhongsang(sizhu):
             self._add_shensha('年重丧', -30, '年重丧大凶，绝对不可用')
-        
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁之德神，大吉')
-        
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，吉')
-        
+
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）。
+
         # 黄幡
         if self._is_huangfan(sizhu):
             self._add_shensha('黄幡', -15, '黄幡主缠绕，凶')
@@ -126,11 +121,10 @@ class BurialShenShaChecker(ShenShaChecker):
         # 月破（已在基类中检查，但安葬需特别强调）
         if self._is_yuepo(sizhu):
             self._add_shensha('月破', -30, '月破日诸事不宜，安葬大忌')
-        
-        # 月空
-        if self._is_yuekong(sizhu):
-            self._add_shensha('月空', 10, '月空吉，利于安葬')
-        
+
+        # 2026-10 A1：'月空' 同名重加删除（基类月作用域统一注册，
+        # 月神比日干典载口径）。
+
         # 吉期
         if self._is_jiqi(sizhu):
             self._add_shensha('吉期', 10, '吉期吉日，利于安葬')
@@ -237,15 +231,11 @@ class BurialShenShaChecker(ShenShaChecker):
         # 将星
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星到座，安葬吉')
-        
-        # 鸣吠日（正确的天干地支组合）
-        if self._is_mingfei(sizhu):
-            self._add_shensha('鸣吠日', 15, '鸣吠日利于安葬，大吉')
-        
-        # 鸣吠对日
-        if self._is_mingfeidui(sizhu):
-            self._add_shensha('鸣吠对日', 10, '鸣吠对日利于安葬')
-        
+
+        # 2026-10 A1：'鸣吠日'/'鸣吠对日' 重加删除——基类月作用域已按典载
+        # 13/11 日柱统一注册（安葬取 SHENSHA_SCORES 既有 15/10 键）；本类
+        # 旧 _is_mingfei 为连续 24 日错表（2026 端到端 149 命中），方法删除。
+
         # 不将日
         if self._is_bujiang(sizhu):
             self._add_shensha('不将日', 15, '不将日安葬可用')
@@ -261,27 +251,19 @@ class BurialShenShaChecker(ShenShaChecker):
         # 驿马
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马吉日，利于安葬')
-        
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马吉日，利于安葬')
-        
+
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域
+        # 注册）；旧名「鸣犬日/对」重加删除（与基类月作用域典载鸣吠正名
+        # 同源同日，曾异名双扣）。
+
         # 天赦
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦', 25, '天赦大德，安葬大吉')
-        
+
         # 母仓
         if self._is_mucang(sizhu):
             self._add_shensha('母仓', 10, '母仓吉日，利于安葬')
-        
-        # 鸣犬日
-        if self._is_mingquan(sizhu):
-            self._add_shensha('鸣犬日', 12, '鸣犬日利于安葬')
-        
-        # 鸣犬对日
-        if self._is_mingquandui(sizhu):
-            self._add_shensha('鸣犬对日', 8, '鸣犬对日利于安葬')
-    
+
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞（与亡者相关）"""
         if not owners:
@@ -503,40 +485,14 @@ class BurialShenShaChecker(ShenShaChecker):
             '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
         }
         return day_zhi == fuduan_map.get(day_gan)
-    
+
     # ===== 吉日 =====
-    
-    def _is_mingfei(self, sizhu):
-        """
-        是否鸣吠日（完整24日）
-        鸣吠日：丙寅、丁卯、戊辰、己巳、庚午、辛未、壬申、癸酉、甲戌、乙亥、
-                丙子、丁丑、戊寅、己卯、庚辰、辛巳、壬午、癸未、甲申、乙酉、
-                丙戌、丁亥、戊子、己丑
-        按六十甲子循环，每六十日中有二十四日为鸣吠日
-        """
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        day_pillar = day_gan + day_zhi
-        # 完整24日鸣吠日列表
-        mingfei = [
-            '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未',
-            '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑',
-            '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
-            '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑'
-        ]
-        return day_pillar in mingfei
-    
-    def _is_mingfeidui(self, sizhu):
-        """
-        是否鸣吠对日
-        鸣吠对日：丙子、丙午、丙寅、丁卯、丁酉、丁亥
-        """
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        day_pillar = day_gan + day_zhi
-        mingfeidui = ['丙子', '丙午', '丙寅', '丁卯', '丁酉', '丁亥']
-        return day_pillar in mingfeidui
-    
+
+    # 2026-10 A1：旧 _is_mingfei（丙寅至己丑连续 24 日错表，2026 端到端
+    # 149 命中）与 _is_mingfeidui（6 日错表）已删除——鸣吠日 13 干支、
+    # 鸣吠对日 11 干支收口到 神煞基类.is_mingfei_by_pillar /
+    # is_mingfeidui_by_pillar（《协纪》卷五／卷九），注册统一走基类月作用域。
+
     def _is_bujiang(self, sizhu):
         """是否不将日"""
         month_zhi = sizhu.get('month_zhi', '')

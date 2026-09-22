@@ -40,13 +40,8 @@ class BedShenShaChecker(ShenShaChecker):
 
         # ===== 年神类吉神 =====
 
-        # 岁德
-        if self._is_suide(sizhu):
-            self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
-
-        # 岁德合
-        if self._is_suide_he(sizhu):
-            self._add_shensha('岁德合', 15, '岁德合，大吉')
+        # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
+        # 年干比日干典载口径）。
 
         # ===== 年神类凶煞 =====
 
@@ -81,9 +76,8 @@ class BedShenShaChecker(ShenShaChecker):
 
         # ===== 月神类吉神 =====
 
-        # 月空
-        if self._is_yuekong(sizhu):
-            self._add_shensha('月空', 10, '月空日，主空亡，安床吉')
+        # 2026-10 A1：'月空' 同名重加删除（基类月作用域统一注册，
+        # 月神比日干典载口径）。
 
         # 吉期
         if self._is_jiqi(sizhu):
@@ -174,9 +168,7 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马日利于安床')
 
-        # 天马
-        if self._is_tianma(sizhu):
-            self._add_shensha('天马', 10, '天马日利于安床')
+        # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
 
         # 天赦
         if self._is_tianshe(sizhu):
