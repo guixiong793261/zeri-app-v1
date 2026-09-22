@@ -274,10 +274,6 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_mucang(sizhu):
             self._add_shensha('母仓', 10, '母仓吉日，利于安葬')
         
-        # 生气
-        if self._is_shengqi(sizhu):
-            self._add_shensha('生气', 10, '生气吉日，利于安葬')
-        
         # 鸣犬日
         if self._is_mingquan(sizhu):
             self._add_shensha('鸣犬日', 12, '鸣犬日利于安葬')

@@ -186,10 +186,6 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_mucang(sizhu):
             self._add_shensha('母仓', 10, '母仓日安床吉')
 
-        # 生气
-        if self._is_shengqi(sizhu):
-            self._add_shensha('生气', 10, '四季长生，安床吉')
-
         # ===== 凶煞 =====
 
         # 受死日

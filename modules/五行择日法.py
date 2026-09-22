@@ -2376,22 +2376,21 @@ class WuXingZeRiFa:
     # ========== 开业择日星曜推算 ==========
     
     def get_shengqi_ri(self, year_zhi, month_zhi, day_zhi):
+        """生气日（建除十二神之"开"日）
+
+        典据《协纪辨方书》卷四·义例一，开位注「时阳、生气」：每月见
+        月支前两位地支为生气（子月戌、丑月亥、寅月子……）。
+
+        2026-09-22 起委托神煞基类 ShenShaChecker._is_shengqi 单一权威
+        实现，不再在展示层另维护一份算法，避免口径漂移。生气为月神，
+        仅取 month_zhi/day_zhi；year_zhi 参数保留以兼容旧调用签名。
         """
-        生气星推算方法：
-        子年子月——见戌日为生气
-        丑年丑月——见亥日为生气
-        寅年寅月——见子日为生气
-        ...依次类推，每月见月支前两位地支为生气
-        """
-        zh_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        
-        # 生气日为月支的前两位（子->戌, 丑->亥, 寅->子...）
-        if month_zhi in zh_order:
-            idx = zh_order.index(month_zhi)
-            shengqi_idx = (idx - 2) % 12
-            shengqi_zhi = zh_order[shengqi_idx]
-            return day_zhi == shengqi_zhi
-        return False
+        try:
+            from modules.shensha.神煞基类 import ShenShaChecker
+        except ImportError:
+            from shensha.神煞基类 import ShenShaChecker
+        return ShenShaChecker()._is_shengqi({
+            'month_zhi': month_zhi, 'day_zhi': day_zhi})
     
     def get_tianfu_ri(self, year_zhi, month_zhi, day_zhi):
         """

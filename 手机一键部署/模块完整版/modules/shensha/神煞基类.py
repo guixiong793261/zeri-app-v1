@@ -1594,17 +1594,21 @@ class ShenShaChecker:
         return day_zhi in ['子', '午', '卯', '酉']
     
     def _is_shengqi(self, sizhu):
-        """生气（四季长生）"""
+        """生气（月神·日支，即建除十二神之"开"日）
+
+        典据《协纪辨方书》卷四·义例一：开位注「时阳、生气」，生气即
+        建除开日——月建前二位（月支 index−2）：寅月子、卯月丑、辰月寅、
+        巳月卯、午月辰、未月巳、申月午、酉月未、戌月申、亥月酉、子月戌、
+        丑月亥。
+        2026-09-22 修复：原实现按四季长生（春巳、夏申、秋亥、冬寅），
+        与开日口径全年 0 天重合（旧 30 天皆误，典载约 29-30 天全漏）。
+        """
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '巳'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '申'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '亥'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '寅'
+        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+        if month_zhi in zh_list and day_zhi in zh_list:
+            kai_zhi = zh_list[(zh_list.index(month_zhi) - 2) % 12]
+            return day_zhi == kai_zhi
         return False
     
     def _is_tianyi_day(self, sizhu):

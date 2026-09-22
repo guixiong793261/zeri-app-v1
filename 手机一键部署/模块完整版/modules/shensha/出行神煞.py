@@ -190,10 +190,6 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_mucang(sizhu):
             self._add_shensha('母仓', 10, '母仓吉星，宜出行')
         
-        # 生气
-        if self._is_shengqi(sizhu):
-            self._add_shensha('生气', 10, '生气吉星，宜出行')
-        
         # 受死日
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死日不宜出行')
