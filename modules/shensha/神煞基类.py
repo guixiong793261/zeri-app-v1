@@ -130,6 +130,21 @@ def get_sun_moon_mountains(d):
     return sun, moon
 
 
+# 二十四山罗盘序（坐山 +12 即向山）：壬子癸丑艮寅甲卯乙辰巽巳丙午丁未坤申庚酉辛戌乾亥
+SHAN_24_COMPASS = (
+    '壬', '子', '癸', '丑', '艮', '寅', '甲', '卯', '乙', '辰', '巽', '巳',
+    '丙', '午', '丁', '未', '坤', '申', '庚', '酉', '辛', '戌', '乾', '亥',
+)
+
+
+def get_xiangshan_24(shan):
+    """二十四山坐山取对宫向山（罗盘序 +12）；非法山名返回 ''。"""
+    try:
+        return SHAN_24_COMPASS[(SHAN_24_COMPASS.index(shan) + 12) % 24]
+    except ValueError:
+        return ''
+
+
 class ShenShaChecker:
     """神煞检查器基类"""
     

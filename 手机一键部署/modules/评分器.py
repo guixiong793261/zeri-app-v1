@@ -5442,82 +5442,62 @@ scorer = Scorer()
 
 def calculate_sun_moon_position(sizhu, shan_xiang):
     """
-    计算太阳太阴到山到向
-    
+    太阳太阴到山到向（2026-09-22 B3 层3 收敛：统一 sxtwl 节气口径）
+
+    口径历史（跟踪项22）：
+    - 原实现按 sizhu['month'] 公历月序查 12 支山表（月1→子…月12→亥），
+      八干四维归支，与《协纪》太阳二十四节气过宫（冬至到子）不符，且月序11
+      子山实测返回戌——方向性错位；
+    - 现判定全部委托 神煞基类.get_sun_moon_mountains（sxtwl jqIndex，
+      冬至到子、节气日当天换山、24 山），与修造神煞扩展同一单点出口。
+    计分：本函数 2026-09-22 起 score 恒 0。太阳/太阴到山到向的加分唯一走
+    修造神煞扩展神煞档（太阳到山+25/到向+20、太阴到山+20/到向+15，
+    SHENSHA_SCORES 单一登记），避免同一吉神双轨计分（原 +10/+8 与 +25
+    档并存会同日双加）。本函数仅保留到山/到向布尔标志与详情文本供展示层。
+
     Args:
-        sizhu: 四柱信息
-        shan_xiang: 山向
-        
+        sizhu: 四柱信息（需含 date，回退 year/month/day）
+        shan_xiang: 山向（如 '寅山申向'）
+
     Returns:
-        dict: 太阳太阴到山到向信息
+        dict: 太阳太阴到山到向信息（score 恒 0）
     """
+    empty = {
+        'sun_position': '无山向信息',
+        'moon_position': '无山向信息',
+        'score': 0
+    }
     if not shan_xiang:
-        return {
-            'sun_position': '无山向信息',
-            'moon_position': '无山向信息',
-            'score': 0
-        }
-    
-    shan_dir = shan_xiang[0]
-    
-    shan_zhi_map = {
-        '壬': '亥', '子': '子', '癸': '丑',
-        '丑': '丑', '艮': '丑', '寅': '寅',
-        '甲': '寅', '卯': '卯', '乙': '辰',
-        '辰': '辰', '巽': '辰', '巳': '巳',
-        '丙': '巳', '午': '午', '丁': '未',
-        '未': '未', '坤': '未', '申': '申',
-        '庚': '申', '酉': '酉', '辛': '戌',
-        '戌': '戌', '乾': '亥', '亥': '亥'
-    }
-    shan_zhi = shan_zhi_map.get(shan_dir, shan_dir)
-    
-    month = sizhu['month']
-    
-    sun_mapping = {
-        1: '子', 2: '丑', 3: '寅', 4: '卯',
-        5: '辰', 6: '巳', 7: '午', 8: '未',
-        9: '申', 10: '酉', 11: '戌', 12: '亥'
-    }
-    
-    moon_mapping = {
-        1: '亥', 2: '子', 3: '丑', 4: '寅',
-        5: '卯', 6: '辰', 7: '巳', 8: '午',
-        9: '未', 10: '申', 11: '酉', 12: '戌'
-    }
-    
-    sun_position = sun_mapping.get(month, '未知')
-    moon_position = moon_mapping.get(month, '未知')
-    
-    score = 0
-    sun_to_mountain = sun_position == shan_zhi
-    moon_to_mountain = moon_position == shan_zhi
-    
-    if sun_to_mountain:
-        score += 10
-    if moon_to_mountain:
-        score += 10
-    
-    chong_zhi = {
-        '子': '午', '午': '子',
-        '丑': '未', '未': '丑',
-        '寅': '申', '申': '寅',
-        '卯': '酉', '酉': '卯',
-        '辰': '戌', '戌': '辰',
-        '巳': '亥', '亥': '巳'
-    }
-    xiang_dir = chong_zhi.get(shan_zhi, '')
-    sun_to_direction = False
-    moon_to_direction = False
-    
-    if xiang_dir:
-        sun_to_direction = sun_position == xiang_dir
-        moon_to_direction = moon_position == xiang_dir
-        if sun_to_direction:
-            score += 8
-        if moon_to_direction:
-            score += 8
-    
+        return empty
+
+    # 日期解析（与四离四绝等 sxtwl 规则同款回退）
+    dq = sizhu.get('date') if isinstance(sizhu, dict) else None
+    if dq is None or not hasattr(dq, 'year'):
+        try:
+            from datetime import date as _date
+            dq = _date(int(sizhu.get('year')), int(sizhu.get('month')),
+                       int(sizhu.get('day')))
+        except (TypeError, ValueError):
+            return {
+                'sun_position': '无日期信息',
+                'moon_position': '无日期信息',
+                'score': 0
+            }
+
+    try:
+        from .shensha.神煞基类 import get_sun_moon_mountains, get_xiangshan_24
+    except ImportError:
+        from shensha.神煞基类 import get_sun_moon_mountains, get_xiangshan_24
+
+    zuoshan = shan_xiang[0]
+    xiangshan = get_xiangshan_24(zuoshan)
+    sun_position, moon_position = get_sun_moon_mountains(dq)
+
+    sun_to_mountain = sun_position == zuoshan
+    sun_to_direction = bool(xiangshan) and sun_position == xiangshan
+    moon_to_mountain = moon_position == zuoshan
+    moon_to_direction = bool(xiangshan) and moon_position == xiangshan
+
     return {
         'sun_position': sun_position,
         'moon_position': moon_position,
@@ -5525,7 +5505,7 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
         'sun_to_direction': sun_to_direction,
         'moon_to_mountain': moon_to_mountain,
         'moon_to_direction': moon_to_direction,
-        'score': score,
+        'score': 0,  # 计分已收敛至修造神煞档（+25/+20/+20/+15），此处不再双轨加分
         'details': f"太阳在{sun_position}方，太阴在{moon_position}方"
     }
 

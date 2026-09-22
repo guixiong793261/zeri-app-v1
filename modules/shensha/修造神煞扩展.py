@@ -34,12 +34,12 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .修造神煞 import ConstructionShenShaChecker
-    from .神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains
+    from .神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
     from ..工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from ..二十四山 import ZhengTiWuXingSelectorDB
 except ImportError:
     from 修造神煞 import ConstructionShenShaChecker
-    from 神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains
+    from 神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
     from 工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from 二十四山 import ZhengTiWuXingSelectorDB
 
@@ -815,12 +815,8 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             self._add_shensha('太阴到向', 15, '太阴到向，主财禄')
 
     def _get_xiangshan(self, shan):
-        """获取向山（与坐山相对，罗盘序 +12）"""
-        try:
-            idx = self.shan_list.index(shan)
-        except ValueError:
-            return ''
-        return self.shan_list[(idx + 12) % 24]
+        """获取向山（委托神煞基类单点 helper，罗盘序 +12）"""
+        return get_xiangshan_24(shan)
     
     # ===== 扶山、相主、补龙 =====
     
