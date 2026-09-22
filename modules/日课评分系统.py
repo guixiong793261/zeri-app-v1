@@ -2505,9 +2505,10 @@ class DayScoreWindow:
                     birth_date = owner.get('birth_date', owner.get('出生日期', ''))
                     if birth_date:
                         self._insert_colored_text(f"    出生日期: {birth_date}\n")
-                        # 2026-02-26 校对：23时（晚子时交界）排盘口径说明。本软件口径：
-                        # 子时自次日0点起算，23时仍按当日亥时取时柱（与主程序扫描、
-                        # 事主四柱计算同一口径），特此标注避免"23时却排亥时柱"被误读为错误
+                        # 晚子时派口径（典据《三命通会》"子时上半属昨日"、
+                        # 《新唐书》"古历分日起于子半"）：23:00-23:59 日柱仍属
+                        # 出生当日，时支为子、时干按当日日干五鼠遁；次日 0 点后
+                        # 日柱方进次日。四柱由四柱计算器统一按此口径排出。
                         _bhm = re.search(r'(\d{1,2})\s*[时:\uff1a]', str(birth_date))
                         if _bhm and int(_bhm.group(1)) == 23:
                             _p4 = []
@@ -2515,20 +2516,14 @@ class DayScoreWindow:
                             if isinstance(_szs, str):
                                 _p4 = _szs.split()
                             if len(_p4) == 4:
-                                _dg = _p4[2][:1]
-                                _wushu = {'甲': '甲', '己': '甲', '乙': '丙', '庚': '丙',
-                                          '丙': '戊', '辛': '戊', '丁': '庚', '壬': '庚',
-                                          '戊': '壬', '癸': '壬'}
-                                _alt = (_wushu.get(_dg, '') + '子') if _dg in _wushu else ''
-                                _alt_txt = ('；若按传统晚子时派（23点起作子时），'
-                                            f'时柱应为{_alt}') if _alt else ''
                                 self._insert_colored_text(
-                                    f"    ⚠ 时辰说明：出生时间为23时，本软件按当日亥时取时柱"
-                                    f"（子时自次日0点起算），故时柱为{_p4[3]}{_alt_txt}\n")
+                                    f"    ◎ 时辰说明：23时属当晚子时（晚子时派），"
+                                    f"日柱按出生当日、时柱为{_p4[3]}"
+                                    f"（次日0点后日柱方进次日）\n")
                             else:
                                 self._insert_colored_text(
-                                    "    ⚠ 时辰说明：出生时间为23时，本软件按当日亥时取时柱"
-                                    "（子时自次日0点起算）\n")
+                                    "    ◎ 时辰说明：23时属当晚子时（晚子时派），"
+                                    "日柱按出生当日，次日0点后方进次日\n")
                     
                     sizhu = owner.get('sizhu', owner.get('四柱', ''))
                     if sizhu:

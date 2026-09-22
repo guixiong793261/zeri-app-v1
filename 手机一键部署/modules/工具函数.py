@@ -165,13 +165,14 @@ def get_shengke(wuxing1, wuxing2):
     return '无关'
 
 def get_hour_zhi_index(hour, minute=0):
-    """获取时支索引"""
-    if hour == 23 and minute >= 0:
+    """获取时支索引（晚子时派口径，与四柱计算器._calculate_hour 单点出口一致）
+
+    23:00-23:59 时支为子（索引0）；日柱换日不在此函数职责内——
+    本软件 0:00 子正换日，晚子时日柱仍属当日，由四柱计算器统一处理。
+    """
+    if hour == 23 or hour == 0:
         return 0
-    elif hour == 0:
-        return 0
-    else:
-        return ((hour + 1) // 2) % 12
+    return ((hour + 1) // 2) % 12
 
 def get_shishen(day_gan: str, target_gan: str) -> str:
     """

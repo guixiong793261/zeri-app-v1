@@ -212,13 +212,14 @@ def get_shengke(wuxing1, wuxing2):
     return '无关'
 
 def get_hour_zhi_index(hour, minute=0):
-    """获取时支索引"""
-    if hour == 23 and minute >= 0:
+    """获取时支索引（晚子时派口径，与本文件 SiZhuCalculator._calculate_hour 一致）
+
+    23:00-23:59 时支为子（索引0）；日柱换日不在此函数职责内——
+    本软件 0:00 子正换日，晚子时日柱仍属当日。
+    """
+    if hour == 23 or hour == 0:
         return 0
-    elif hour == 0:
-        return 0
-    else:
-        return ((hour + 1) // 2) % 12
+    return ((hour + 1) // 2) % 12
 
 def get_shishen(day_gan: str, target_gan: str) -> str:
     """
@@ -1149,30 +1150,35 @@ class SiZhuCalculator:
         sxtwl 使用天文算法，基于精确的节气时刻计算
         但经校验，sxtwl的日柱计算与标准八字计算有偏差，因此日柱使用修正后的计算方法
         """
-        # 处理晚子时：23:00-00:00
+        # 晚子时（23:00-23:59）口径——晚子时派：
+        # 日柱仍属当日（0:00 子正换日），时支为子，时干按【当日日干】五鼠遁。
+        # sxtwl.getHourGZ(23) 走子初派（按次日日干遁干），与本软件口径不符，
+        # 故晚子时柱不用 sxtwl，改由本模块 _calculate_hour 遁出。
         is_late_zi = (hour == 23)
-        
-        # 计算日柱的日期：使用当天的日期（晚子时的日柱与当天相同）
+
+        # 计算日柱的日期：晚子时不进次日，仍用当日
         day_calc_year = year
         day_calc_month = month
         day_calc_day = day
-        
+
         # 使用 sxtwl 计算时柱
         day_obj = sxtwl.fromSolar(year, month, day)
-        
-        # 获取时柱
-        # 对于晚子时（23:00），使用22:00的时柱（亥时）
-        if is_late_zi:
-            hour_gz = day_obj.getHourGZ(22)  # 使用22:00的时柱（亥时）
-        else:
-            hour_gz = day_obj.getHourGZ(hour)
-        
+
         # 转换为天干地支
         tg = TIAN_GAN
         dz = DI_ZHI
-        
-        hour_gan = tg[hour_gz.tg]
-        hour_zhi = dz[hour_gz.dz]
+
+        # 日柱先于晚子时时柱算出（晚子时干依当日日干五鼠遁）
+        day_gan, day_zhi = self._calculate_day(day_calc_year, day_calc_month, day_calc_day)
+
+        # 获取时柱
+        if is_late_zi:
+            # 晚子时：时支子、时干按当日日干遁
+            hour_gan, hour_zhi = self._calculate_hour(day_gan, 23, minute)
+        else:
+            hour_gz = day_obj.getHourGZ(hour)
+            hour_gan = tg[hour_gz.tg]
+            hour_zhi = dz[hour_gz.dz]
         
         # 计算年柱（根据立春时刻判断）
         # 获取当年立春时刻
@@ -1202,10 +1208,7 @@ class SiZhuCalculator:
         
         # 计算月柱（使用精确节气时间）
         month_gan, month_zhi = self._calculate_month_pillar_precise(year, month, day, hour, minute, year_gan)
-        
-        # 计算日柱
-        day_gan, day_zhi = self._calculate_day(day_calc_year, day_calc_month, day_calc_day)
-        
+
         return {
             '年柱': year_gan + year_zhi,
             '月柱': month_gan + month_zhi,
@@ -1341,34 +1344,30 @@ class SiZhuCalculator:
         当 sxtwl 计算四柱失败时使用此方法
         日柱使用基准日推算法，年柱和月柱使用sxtwl精确节气判断
         
-        特别处理晚子时（23:00-00:00）：
-        晚子时的日柱使用下一天的日期计算
+        晚子时（23:00-23:59）按晚子时派：日柱仍属当日，时支为子、
+        时干按当日日干五鼠遁（与 sxtwl 主链同一口径）。
         """
         from datetime import datetime, timedelta
-        
-        # 处理晚子时：23:00-00:00
+
+        # 晚子时标记（23:00-23:59）
         is_late_zi = (hour == 23)
-        
-        # 计算日柱的日期：使用当天的日期（晚子时的日柱与当天相同）
+
+        # 计算日柱的日期：晚子时不进次日，仍用当日
         day_calc_year = year
         day_calc_month = month
         day_calc_day = day
-        
+
         # 计算年柱（使用sxtwl精确节气判断立春）
         year_gan, year_zhi = self._calculate_year_precise(year, month, day, hour, minute, second)
-        
+
         # 计算月柱（使用sxtwl精确节气判断）
         month_gan, month_zhi = self._calculate_month_pillar_precise(year, month, day, hour, minute, year_gan)
-        
-        # 计算日柱
+
+        # 计算日柱（晚子时日柱仍属当日）
         day_gan, day_zhi = self._calculate_day(day_calc_year, day_calc_month, day_calc_day)
-        
-        # 计算时柱（使用日干五鼠遁）
-        # 对于晚子时（23:00），使用22:00的时柱（亥时）
-        if is_late_zi:
-            hour_gan, hour_zhi = self._calculate_hour(day_gan, 22, minute)  # 使用22:00的时柱（亥时）
-        else:
-            hour_gan, hour_zhi = self._calculate_hour(day_gan, hour, minute)
+
+        # 计算时柱（当日日干五鼠遁）。_calculate_hour 已按晚子时派处理 23 点，无需特判
+        hour_gan, hour_zhi = self._calculate_hour(day_gan, hour, minute)
         
         return {
             '年柱': year_gan + year_zhi,
@@ -1512,8 +1511,8 @@ class SiZhuCalculator:
         
         使用五鼠遁
         """
-        # 计算时支
-        # 子时：23:00-1:00
+        # 计算时支（晚子时派口径：23:00-23:59 与 0:00-0:59 同为子时；
+        # 晚子时日柱归属由调用方保证，时干按传入的"当日日干"五鼠遁遁出）
         if hour == 23 or hour == 0:
             hour_zhi_index = 0  # 子
         else:

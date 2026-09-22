@@ -81,13 +81,25 @@ class TestSiZhuCalculator(unittest.TestCase):
         )
 
     def test_hour_zhi_wuzidun(self):
-        """时柱地支验证：亥时、子时、午时地支（本模块子时从00:00起算，23:00仍属亥时）"""
-        # 23:00-23:59 属亥时（子时跨日，次日00:00起算）
+        """时柱地支验证：亥时、晚子时、早子时、午时（晚子时派口径）
+
+        口径：23:00-23:59 时支为子、日柱仍属当日、时干按当日日干五鼠遁；
+        次日 00:00 子正换日。典据《三命通会》《新唐书·历志》。
+        """
+        # 21:00-22:59 属亥时
+        sz_2230 = self._mod.calculate_sizhu(date(2026, 3, 15), 22, 30)
+        self.assertEqual(sz_2230['hour_zhi'], '亥', "22:30 应为亥时")
+        # 23:00-23:59 晚子时：时支子、日柱仍属当日（戊子）、戊日壬子起子时
         sz_2330 = self._mod.calculate_sizhu(date(2026, 3, 15), 23, 30)
-        self.assertEqual(sz_2330['hour_zhi'], '亥', "23:30 仍属亥时（子时次日00:00起算）")
-        # 00:00-00:59 属子时
-        sz_0030 = self._mod.calculate_sizhu(date(2026, 3, 15), 0, 30)
+        self.assertEqual(sz_2330['hour_zhi'], '子', "23:30 晚子时支应为子")
+        self.assertEqual(sz_2330['日柱'], '戊子', "晚子时日柱应仍属当日")
+        self.assertEqual(sz_2330['时柱'], '壬子', "晚子时干按当日日干戊遁，应为壬子")
+        self.assertTrue(sz_2330['is_late_zi'], "23:30 应标记 is_late_zi")
+        # 次日 00:00-00:59 早子时：日柱已进次日（己丑）、己日甲子起子时
+        sz_0030 = self._mod.calculate_sizhu(date(2026, 3, 16), 0, 30)
         self.assertEqual(sz_0030['hour_zhi'], '子', "00:30 应为子时")
+        self.assertEqual(sz_0030['日柱'], '己丑', "00:30 子正换日后日柱应为次日己丑")
+        self.assertEqual(sz_0030['时柱'], '甲子', "00:30 时干按次日日干己遁，应为甲子")
         # 11:00-12:59 属午时
         sz_noon = self._mod.calculate_sizhu(date(2026, 3, 15), 12, 0)
         self.assertEqual(sz_noon['hour_zhi'], '午', "12:00 应为午时")
