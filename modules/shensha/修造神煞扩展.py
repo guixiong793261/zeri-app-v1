@@ -34,12 +34,12 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .修造神煞 import ConstructionShenShaChecker
-    from .神煞基类 import is_yanggongji_by_lunar
+    from .神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains
     from ..工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from ..二十四山 import ZhengTiWuXingSelectorDB
 except ImportError:
     from 修造神煞 import ConstructionShenShaChecker
-    from 神煞基类 import is_yanggongji_by_lunar
+    from 神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains
     from 工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from 二十四山 import ZhengTiWuXingSelectorDB
 
@@ -86,63 +86,10 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             '癸': {'阳': '卯', '阴': '巳'}
         }
         
-        # 太阳到山表（简化版，实际应根据天文计算）
-        # 太阳每月过一个宫，约30度，对应二十四山
-        self.taiyang_daoshan = {
-            1: '子',   # 冬至前后，太阳在子
-            2: '癸',
-            3: '丑',
-            4: '艮',
-            5: '寅',
-            6: '甲',
-            7: '卯',   # 春分前后
-            8: '乙',
-            9: '辰',
-            10: '巽',
-            11: '巳',
-            12: '丙',
-            13: '午',  # 夏至前后
-            14: '丁',
-            15: '未',
-            16: '坤',
-            17: '申',
-            18: '庚',
-            19: '酉',  # 秋分前后
-            20: '辛',
-            21: '戌',
-            22: '乾',
-            23: '亥',
-            24: '壬'
-        }
-        
-        # 太阴到山表（与太阳相对，约差180度）
-        self.taiyin_daoshan = {
-            1: '午',   # 太阴与太阳相对
-            2: '丁',
-            3: '未',
-            4: '坤',
-            5: '申',
-            6: '庚',
-            7: '酉',
-            8: '辛',
-            9: '戌',
-            10: '乾',
-            11: '亥',
-            12: '壬',
-            13: '子',
-            14: '癸',
-            15: '丑',
-            16: '艮',
-            17: '寅',
-            18: '甲',
-            19: '卯',
-            20: '乙',
-            21: '辰',
-            22: '巽',
-            23: '巳',
-            24: '丙'
-        }
-        
+        # 太阳/太阴到山表已收敛至 神煞基类.TAIYANG_DAOSHAN_24SHAN
+        # （2026-09-22 B3 修复：sxtwl 节气口径单点出口 get_sun_moon_mountains；
+        # 原实例表 taiyang_daoshan/taiyin_daoshan 表值正确但取数死链恒不命中）
+
         # 杨公忌日表已收敛至 神煞基类._YANGGONGJI_LUNAR（2026-09-20，
         # 农历月日唯一口径、闰月不计），判定统一走 is_yanggongji_by_lunar
 
@@ -835,49 +782,45 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     # ===== 太阳太阴到山到向 =====
     
     def _check_taiyang_taiyin(self, sizhu):
-        """检查太阳太阴到山到向"""
+        """检查太阳太阴到山到向（2026-09-22 B3 修复：sxtwl 节气口径）
+
+        原实现两病同发（跟踪项22）：
+        1. 字段名隐性死链：取 get_lunar_date() 不存在的 'month_num'/'day_num'
+           键（实际返回中文键 month/day），position 恒 -1 → 全年 0 命中；
+        2. 口径方向性错位：农历月半月段把正月当冬至后第一段，与《协纪》太阳
+           二十四节气过宫（冬至到子）不符，365 天无一一致。
+        现统一委托 神煞基类.get_sun_moon_mountains（sxtwl jqIndex，冬至到子，
+        节气日当天换山），本方法只负责坐山/向山比对与登记，分值文案不变。
+        """
         if not self.zuoshan:
             return
-        
-        try:
-            from ..四柱计算器 import get_lunar_date
-        except ImportError:
-            from 四柱计算器 import get_lunar_date
-        
-        try:
-            if 'date' in sizhu:
-                lunar = get_lunar_date(sizhu['date'])
-                month = lunar.get('month_num', 0)
-                
-                # 计算太阳位置（简化版，每15天过一个山）
-                day = lunar.get('day_num', 1)
-                position = (month - 1) * 2 + (1 if day > 15 else 0) + 1
-                
-                taiyang_shan = self.taiyang_daoshan.get(position, '')
-                taiyin_shan = self.taiyin_daoshan.get(position, '')
-                
-                # 太阳到山
-                if taiyang_shan == self.zuoshan:
-                    self._add_shensha('太阳到山', 25, '太阳到山，诸凶回避，大吉')
-                elif taiyang_shan == self._get_xiangshan(self.zuoshan):
-                    self._add_shensha('太阳到向', 20, '太阳到向，主光明吉利')
-                
-                # 太阴到山
-                if taiyin_shan == self.zuoshan:
-                    self._add_shensha('太阴到山', 20, '太阴到山，主阴德吉利')
-                elif taiyin_shan == self._get_xiangshan(self.zuoshan):
-                    self._add_shensha('太阴到向', 15, '太阴到向，主财禄')
-        except:
-            pass
-    
+
+        dq = sizhu.get('date') if isinstance(sizhu, dict) else None
+        if dq is None or not hasattr(dq, 'year'):
+            return
+
+        taiyang_shan, taiyin_shan = get_sun_moon_mountains(dq)
+        xiangshan = self._get_xiangshan(self.zuoshan)
+
+        # 太阳到山
+        if taiyang_shan == self.zuoshan:
+            self._add_shensha('太阳到山', 25, '太阳到山，诸凶回避，大吉')
+        elif taiyang_shan == xiangshan:
+            self._add_shensha('太阳到向', 20, '太阳到向，主光明吉利')
+
+        # 太阴到山
+        if taiyin_shan == self.zuoshan:
+            self._add_shensha('太阴到山', 20, '太阴到山，主阴德吉利')
+        elif taiyin_shan == xiangshan:
+            self._add_shensha('太阴到向', 15, '太阴到向，主财禄')
+
     def _get_xiangshan(self, shan):
-        """获取向山（与坐山相对）"""
+        """获取向山（与坐山相对，罗盘序 +12）"""
         try:
             idx = self.shan_list.index(shan)
-            xiang_idx = (idx + 12) % 24
-            return self.shan_list[xiang_idx]
-        except:
+        except ValueError:
             return ''
+        return self.shan_list[(idx + 12) % 24]
     
     # ===== 扶山、相主、补龙 =====
     

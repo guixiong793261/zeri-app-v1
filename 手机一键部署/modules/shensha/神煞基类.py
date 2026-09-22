@@ -78,6 +78,58 @@ def is_yanggongji_by_lunar(date_or_sizhu):
     return days is not None and day.getLunarDay() in days
 
 
+# ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
+# 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
+# sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
+# position = jqIndex + 1，节气日当天起算新段（交节即换山）。
+# 表序与修造神煞扩展原 taiyang_daoshan 1..24 逐字一致——该表表值本正确，
+# 仅因取数死链（month_num/day_num 键不存在）恒不命中，现收敛为单点出口。
+TAIYANG_DAOSHAN_24SHAN = (
+    '子', '癸', '丑', '艮', '寅', '甲', '卯', '乙', '辰', '巽', '巳', '丙',
+    '午', '丁', '未', '坤', '申', '庚', '酉', '辛', '戌', '乾', '亥', '壬',
+)
+
+
+def get_sunmoon_jieqi_position(d):
+    """日期所属太阳过宫段 position（1..24，冬至段=1）；d 非 date 返回 None。
+
+    取相邻三年节气日（sxtwl.getJieQiByYear 单项含跨年节气，须三年并集），
+    bisect 定位 d 当日或之前最后一个节气；position = 该节气 jqIndex + 1。
+    节气日当天即属新段（与传统交节换宫口径一致）。
+    """
+    if d is None or not hasattr(d, 'year'):
+        return None
+    import bisect
+    import sxtwl
+    from datetime import datetime
+    pts = {}
+    for y in (d.year - 1, d.year, d.year + 1):
+        for item in sxtwl.getJieQiByYear(y):
+            dd = sxtwl.JD2DD(item.jd)
+            pts[datetime(int(dd.Y), int(dd.M), int(dd.D)).date()] = int(item.jqIndex)
+    anchors = sorted(pts.items())  # 相邻年重复节气 jqIndex 相同，dict 自动去重
+    dates = [a[0] for a in anchors]
+    i = bisect.bisect_right(dates, d) - 1
+    if i < 0:
+        return None
+    return int(anchors[i][1]) + 1
+
+
+def get_sun_moon_mountains(d):
+    """太阳/太阴到山判定唯一出口：返回 (太阳所在山, 太阴所在山)，24 山名。
+
+    太阴与太阳恒对冲（相差六宫十二山）：太阳在子则太阴在午，故太阴山为
+    太阳表序 +12（与修造扩展原 taiyin_daoshan 表逐字一致）。
+    d 非 date 返回 ('', '')。
+    """
+    pos = get_sunmoon_jieqi_position(d)
+    if pos is None:
+        return '', ''
+    sun = TAIYANG_DAOSHAN_24SHAN[pos - 1]
+    moon = TAIYANG_DAOSHAN_24SHAN[(pos - 1 + 12) % 24]
+    return sun, moon
+
+
 class ShenShaChecker:
     """神煞检查器基类"""
     
