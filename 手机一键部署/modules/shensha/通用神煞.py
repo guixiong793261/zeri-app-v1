@@ -396,8 +396,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_shengqi(sizhu):
             self._add_shensha('生气', 10, '生气蓬勃，利长养')
 
-        if self._is_yaoan(sizhu):
-            self._add_shensha('要安', 8, '要安之日，平稳守成')
+        # 2026-09-22：删除日作用域的 '要安' 冗余登记——月作用域已按同一
+        # 谓词 _is_yaoan 登记同名条目，_add_shensha 去重使此处永远不生效
+        # （死分支）。要安唯一生效点保留在上方月作用域。
 
         if self._is_yihou(sizhu):
             self._add_shensha('益后', 12, '益后嗣续，利子嗣')
