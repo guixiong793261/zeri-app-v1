@@ -220,6 +220,103 @@ def is_fanzhi_by_lunar(date_or_sizhu):
     return lunar_day >= first and (lunar_day - first) % 12 == 0
 
 
+# ===== A2 批·名实错 4 项（2026-10 修复）：阴德/四击/土府/地囊 =====
+# 4 项基类谓词原均误委托其他神煞（阴德→阳德、土府→天贼、地囊→土符、
+# 四击→月支+4），与典载口径全年 0 天重合。本批改为独立正确实现。
+# 典据：《协纪辨方书》卷四/卷五/卷六 + 《御定星历考原》卷四。
+
+# 阴德（《协纪》卷六·义例四）「正月起酉逆行六阴辰」
+# 酉→未→巳→卯→丑→亥（逆行六阴辰），正月酉、二月未、三月巳、四月卯、
+# 五月丑、六月亥、七月酉（循环）……与阳德"正月起戌顺行六阳辰"互为对偶。
+_YINDE_ZHI_BY_MONTH = {
+    '寅': '酉', '卯': '未', '辰': '巳', '巳': '卯',
+    '午': '丑', '未': '亥', '申': '酉', '酉': '未',
+    '戌': '巳', '亥': '卯', '子': '丑', '丑': '亥',
+}
+
+
+def is_yinde_by_zhi(month_zhi, day_zhi):
+    """阴德（月神比日支，《协纪》卷六「正月起酉逆行六阴辰」）
+
+    2026-10 A2 修复：原 _is_yinde 误委托 _is_yangde（"正月起酉"误作
+    "正月起戌顺行"），与典载"逆行六阴辰"方向相反，全年 0 天重合。
+    阳德表本身也错（应"正月起戌顺行六阳辰"，挂账 A 后批次），本批
+    只修阴德，使其独立正确。
+    """
+    return bool(month_zhi) and day_zhi == _YINDE_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 四击（《协纪》卷五·义例三）「春戌夏丑秋辰冬未」
+# 每季 3 月同支：寅卯辰→戌、巳午未→丑、申酉戌→辰、亥子丑→未
+# 与三丧同表（春戌夏丑秋辰冬未）。
+_SIJI_ZHI_BY_MONTH = {
+    '寅': '戌', '卯': '戌', '辰': '戌', '巳': '丑',
+    '午': '丑', '未': '丑', '申': '辰', '酉': '辰',
+    '戌': '辰', '亥': '未', '子': '未', '丑': '未',
+}
+
+
+def is_siji_by_zhi(month_zhi, day_zhi):
+    """四击（月神比日支，《协纪》卷五「春戌夏丑秋辰冬未」）
+
+    2026-10 A2 修复：原 _is_siji 误作"月支+4位"（如寅月午、卯月未），
+    与典载"每季 3 月同支"完全不同，全年 0 天重合。
+    注：本谓词注册名为"四忌"-12，与"四击"是不同神煞（四忌典载另条，
+    挂账待翻书）；本批保守只修查法为典载四击表，注册名/分值不动。
+    """
+    return bool(month_zhi) and day_zhi == _SIJI_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 土府（《协纪》卷四·义例二·建除同位异名）「土府者，与月建同行」
+# 日支=月支：寅月寅日、卯月卯日……与天贼/土符/地囊不同组。
+_TUFU_ZHI_BY_MONTH = {
+    m: m for m in ('寅', '卯', '辰', '巳', '午', '未',
+                  '申', '酉', '戌', '亥', '子', '丑')
+}
+
+
+def is_tufu_by_zhi(month_zhi, day_zhi):
+    """土府（月神比日支，《协纪》卷四「与月建同行」）
+
+    2026-10 A2 修复：原 _is_tufu2 误委托 _is_tianzei（"寅月辰日、
+    卯月巳日…"与天贼同表），与典载"日支=月支"完全不同，全年 0 天重合。
+    注：土府与天贼是不同神煞（《协纪》卷四土府建除同位、卷六天贼独立）。
+    """
+    return bool(month_zhi) and day_zhi == _TUFU_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 地囊（《协纪》卷六·义例四＋《御定星历考原》卷四全表）
+# 协纪卷六原文仅正月明文"庚子庚午"，御定星历考原卷四补全 12 月 24 柱。
+# 冲突点：协纪按语二月首柱"乙未"，考原作"癸未"，以考原为准（同源权威）。
+_DINANG_PILLARS_BY_MONTH = {
+    '寅': frozenset(('庚子', '庚午')),
+    '卯': frozenset(('癸未', '癸丑')),
+    '辰': frozenset(('甲子', '甲寅')),
+    '巳': frozenset(('己卯', '己丑')),
+    '午': frozenset(('戊辰', '戊午')),
+    '未': frozenset(('癸未', '癸巳')),
+    '申': frozenset(('丙寅', '丙申')),
+    '酉': frozenset(('丁卯', '丁巳')),
+    '戌': frozenset(('戊辰', '戊子')),
+    '亥': frozenset(('庚戌', '庚子')),
+    '子': frozenset(('辛未', '辛酉')),
+    '丑': frozenset(('乙未', '乙酉')),
+}
+
+
+def is_dinang_by_pillar(month_zhi, day_pillar):
+    """地囊（月神比日柱，《协纪》卷六＋《御定星历考原》卷四全表，每月 2 日柱）
+
+    2026-10 A2 修复：原 _is_dinang 误委托 _is_tufu（"寅月戌日、卯月亥日…"
+    土符表），与典载 24 日柱（按月分支查日柱）完全不同，全年 0 天重合。
+    协纪卷六原文截断仅正月明文，御定星历考原卷四补全 12 月 24 柱（同源
+    权威）；冲突点协纪按语二月首柱"乙未"、考原"癸未"，以考原为准。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar in _DINANG_PILLARS_BY_MONTH.get(month_zhi, frozenset())
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1556,8 +1653,13 @@ class ShenShaChecker:
         return day_zhi == yangde_map.get(month_zhi)
     
     def _is_yinde(self, sizhu):
-        """阴德（与阳德查法相同）"""
-        return self._is_yangde(sizhu)
+        """阴德（月神比日支，《协纪》卷六「正月起酉逆行六阴辰」）
+
+        2026-10 A2 修复：原误委托 _is_yangde（"与阳德查法相同"），
+        与典载"逆行六阴辰"方向相反，全年 0 天重合。现委托模块级
+        唯一实现 is_yinde_by_zhi。阳德表本身也错（挂账 A 后批次）。
+        """
+        return is_yinde_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_fusheng(self, sizhu):
         """福生（月神·日支）
@@ -1626,15 +1728,15 @@ class ShenShaChecker:
         return day_pillar in bazhuan_list
     
     def _is_siji(self, sizhu):
-        """四忌（月支前四位）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        if month_zhi in zh_list:
-            idx = zh_list.index(month_zhi)
-            siji = zh_list[(idx + 4) % 12]
-            return day_zhi == siji
-        return False
+        """四忌（注册名"四忌"-12，查法为典载四击表「春戌夏丑秋辰冬未」）
+
+        2026-10 A2 修复：原误作"月支+4位"（如寅月午、卯月未），与典载
+        "每季 3 月同支"完全不同，全年 0 天重合。现委托模块级唯一实现
+        is_siji_by_zhi（典载四击表）。注：注册名"四忌"与"四击"是不同
+        神煞（四忌典载另条，挂账待翻书）；本批保守只修查法，注册名/
+        分值不动，避免引入命名层面的副作用。
+        """
+        return is_siji_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     # ============ 日神类通用检查方法 ============
     
@@ -1967,13 +2069,14 @@ class ShenShaChecker:
         return day_zhi == dizei_map.get(month_zhi)
     
     def _is_tufu2(self, sizhu):
-        """土府日（依据《协纪辨方书》统一映射表）
-        寅月辰日、卯月巳日、辰月午日、巳月未日、
-        午月申日、未月酉日、申月戌日、酉月亥日、
-        戌月子日、亥月丑日、子月寅日、丑月卯日
-        注：土府与天贼映射表相同
+        """土府日（《协纪》卷四·义例二·建除同位异名「与月建同行」）
+
+        2026-10 A2 修复：原误委托 _is_tianzei（"寅月辰日、卯月巳日…"
+        与天贼同表），与典载"日支=月支"完全不同，全年 0 天重合。现
+        委托模块级唯一实现 is_tufu_by_zhi。注：土府与天贼是不同神煞
+        （《协纪》卷四土府建除同位、卷六天贼独立）。
         """
-        return self._is_tianzei(sizhu)
+        return is_tufu_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_tuwen(self, sizhu):
         """土瘟日（依据《协纪辨方书》统一映射表）
@@ -1991,10 +2094,18 @@ class ShenShaChecker:
         return day_zhi == tuwen_map.get(month_zhi)
     
     def _is_dinang(self, sizhu):
-        """地囊日（依据《协纪辨方书》统一映射表）
-        地囊日为土王用事后，映射与土符相同
+        """地囊日（《协纪》卷六·义例四＋《御定星历考原》卷四全表，每月 2 日柱）
+
+        2026-10 A2 修复：原误委托 _is_tufu（"地囊日为土王用事后，映射与
+        土符相同"），与典载 24 日柱（按月分支查日柱）完全不同，全年 0 天
+        重合。现委托模块级唯一实现 is_dinang_by_pillar。协纪卷六原文截断
+        仅正月明文"庚子庚午"，御定星历考原卷四补全 12 月 24 柱（同源权威）；
+        冲突点协纪按语二月首柱"乙未"、考原"癸未"，以考原为准。
         """
-        return self._is_tufu(sizhu)
+        return is_dinang_by_pillar(
+            sizhu.get('month_zhi', ''),
+            sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
+        )
     
     # ============ 嫁娶专用检查方法 ============
     
