@@ -47,6 +47,8 @@ from verify_fusheng import CASES as c_fusheng_cases
 from verify_shengqi import CASES as c_shengqi_cases
 # 广度扩展 A1 批（比较对象错 7 项：岁德/岁德合/月空/天马/反支/天恩/鸣吠+鸣吠对，2026-10）
 from verify_a1_bijiao import CASES as c_a1_cases
+# 广度扩展 A2 批（名实错 4 项：阴德/四击/土府/地囊，2026-10）
+from verify_a2_mingshi import CASES as c_a2_cases
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -56,7 +58,7 @@ CASES = [
     c_suisha_base, c_suisha_dongtu, c_suisha_table,
     c_yuesha_base,
 ] + c_yima_cases + c_yaoan_cases + c_wufu_cases + c_fusheng_cases + c_shengqi_cases \
-  + c_a1_cases
+  + c_a1_cases + c_a2_cases
 
 
 if __name__ == '__main__':
