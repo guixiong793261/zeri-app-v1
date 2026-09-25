@@ -49,6 +49,8 @@ from verify_shengqi import CASES as c_shengqi_cases
 from verify_a1_bijiao import CASES as c_a1_cases
 # 广度扩展 A2 批（名实错 4 项：阴德/四击/土府/地囊，2026-10）
 from verify_a2_mingshi import CASES as c_a2_cases
+# 广度扩展 A3 批（表本身错 3 项：飞廉/八专/五墓，2026-10）
+from verify_a3_biaocuo import CASES as c_a3_cases
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -58,7 +60,7 @@ CASES = [
     c_suisha_base, c_suisha_dongtu, c_suisha_table,
     c_yuesha_base,
 ] + c_yima_cases + c_yaoan_cases + c_wufu_cases + c_fusheng_cases + c_shengqi_cases \
-  + c_a1_cases + c_a2_cases
+  + c_a1_cases + c_a2_cases + c_a3_cases
 
 
 if __name__ == '__main__':
