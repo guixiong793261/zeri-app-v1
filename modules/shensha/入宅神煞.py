@@ -657,32 +657,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
             return '星'
         
         return None
-    
-    def _is_jiangxing(self, sizhu):
-        """将星日"""
-        day_zhi = sizhu['day_zhi']
-        month_zhi = sizhu['month_zhi']
-        
-        # 将星：日支三合方为将星
-        # 将星查法：日支的三合地支为将星
-        sanhe_groups = {
-            '寅': ['午', '戌'],  # 寅午戌三合
-            '午': ['寅', '戌'],
-            '戌': ['寅', '午'],
-            '亥': ['卯', '未'],  # 亥卯未三合
-            '卯': ['亥', '未'],
-            '未': ['亥', '卯'],
-            '申': ['子', '辰'],  # 申子辰三合
-            '子': ['申', '辰'],
-            '辰': ['申', '子'],
-            '巳': ['酉', '丑'],  # 巳酉丑三合
-            '酉': ['巳', '丑'],
-            '丑': ['巳', '酉']
-        }
-        
-        jiangxing_list = sanhe_groups.get(day_zhi, [])
-        return month_zhi in jiangxing_list
-    
+
     def _is_jianxing_ji(self, sizhu):
         """建星吉日（成、开、满）"""
         month_zhi = sizhu['month_zhi']

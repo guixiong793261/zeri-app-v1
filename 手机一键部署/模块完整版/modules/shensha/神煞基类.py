@@ -369,6 +369,29 @@ def is_wumu_by_pillar(month_zhi, day_pillar):
     return day_pillar == _WUMU_PILLAR_BY_MONTH.get(month_zhi)
 
 
+# ===== 将星权威表（2026-10 A4 修复，逻辑收紧）=====
+# 将星为命理神煞（《三命通会》："将星者，如大将驻扎中军中也，故以三合
+# 中位为将星"），《协纪辨方书》年神/月神义例均未收。本项目按"月神查日支"
+# 统一惯例（用户 2026-09-25 拍板 C 口径）：月支三合局取中神比日支。
+_JIANGXING_ZHI_BY_MONTH = {
+    '寅': '午', '午': '午', '戌': '午',      # 寅午戌局中神午
+    '巳': '酉', '酉': '酉', '丑': '酉',      # 巳酉丑局中神酉
+    '申': '子', '子': '子', '辰': '子',      # 申子辰局中神子
+    '亥': '卯', '卯': '卯', '未': '卯',      # 亥卯未局中神卯
+}
+
+def is_jiangxing_by_zhi(month_zhi, day_zhi):
+    """将星（月支三合中神比日支）
+
+    2026-10 A4 修复：原逻辑"日支起局、月支与日支同三合局即算"（半合也算）
+    放宽为月日半合，2025-2027 命中 274 天；典载中神专位收紧后 91 天
+    （新集为旧集真子集，旧独有 183、新独有 0）。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _JIANGXING_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1029,28 +1052,9 @@ class ShenShaChecker:
         return None
     
     def _is_jiangxing(self, sizhu):
-        """将星日"""
-        day_zhi = sizhu.get('day_zhi', '')
-        month_zhi = sizhu.get('month_zhi', '')
-        
-        # 将星：日支三合方为将星
-        sanhe_groups = {
-            '寅': ['午', '戌'],  # 寅午戌三合
-            '午': ['寅', '戌'],
-            '戌': ['寅', '午'],
-            '亥': ['卯', '未'],  # 亥卯未三合
-            '卯': ['亥', '未'],
-            '未': ['亥', '卯'],
-            '申': ['子', '辰'],  # 申子辰三合
-            '子': ['申', '辰'],
-            '辰': ['申', '子'],
-            '巳': ['酉', '丑'],  # 巳酉丑三合
-            '酉': ['巳', '丑'],
-            '丑': ['巳', '酉']
-        }
-        
-        jiangxing_list = sanhe_groups.get(day_zhi, [])
-        return month_zhi in jiangxing_list
+        """将星日（A4 收紧：月支三合中神比日支，单点委托 is_jiangxing_by_zhi）"""
+        return is_jiangxing_by_zhi(sizhu.get('month_zhi', ''),
+                                   sizhu.get('day_zhi', ''))
     
     # ============ 补充缺失的吉神检查方法 ============
     
