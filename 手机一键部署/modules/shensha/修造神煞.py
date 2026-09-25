@@ -126,9 +126,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日忌修造、动土')
 
-        # 五墓
-        if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -20, '五墓日忌修造')
+        # 2026-10 A3-2b：'五墓' 死分支删除（原 -20 死分支，基类 super 先行已注册
+        # 五墓且事项标准修造无键，有效值恒为基类兜底 -12；对齐事项标准 -12）。
     
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
