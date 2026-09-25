@@ -168,11 +168,10 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_tiande_he(sizhu):
             self._add_shensha('天德合', 15, '天德合，大吉')
         
-        # 三奇
-        sanqi_result = self._is_sanqi(sizhu)
-        if sanqi_result:
-            self._add_shensha(f'{sanqi_result}三奇', 15, f'{sanqi_result}三奇照临，百事皆宜')
-        
+        # 2026-10 A4：异名 '{日/月}三奇' 重加删除——基类 super 日块已按顺布
+        # 连珠单点注册 '三奇{日/月/星}'；旧日块异名与其同日双扣（各 +15），
+        # ('开业','日三奇')/('开业','月三奇') 分值键同步从 SHENSHA_SCORES 删除。
+
         # 将星
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星到座，吉')

@@ -155,11 +155,10 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_yuede_he(sizhu):
             self._add_shensha('月德合', 12, '月德合吉星，宜出行')
         
-        # 三奇
-        sanqi_type = self._is_sanqi(sizhu)
-        if sanqi_type:
-            self._add_shensha('三奇', 15, f'{sanqi_type}三奇吉星，宜出行')
-        
+        # 2026-10 A4：异名 '三奇' 重加删除——基类 super 日块已按顺布连珠
+        # 单点注册 '三奇{日/月/星}'；旧日块异名 '三奇' 与其同日双扣（各 +15），
+        # ('出行','三奇') 分值键同步从 SHENSHA_SCORES 删除。
+
         # 将星
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星吉星，宜出行')

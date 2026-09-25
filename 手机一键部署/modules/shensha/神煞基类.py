@@ -392,6 +392,30 @@ def is_jiangxing_by_zhi(month_zhi, day_zhi):
     return day_zhi == _JIANGXING_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 三奇权威表（2026-10 A4 修复，逻辑收紧）=====
+# 四柱天干三奇《协纪辨方书》未立义例（卷八"八节三奇"为九宫到山到方法，
+# 与此无关）；依《三命通会》卷三"论三奇"："三奇要顺布，不欲倒乱，如
+# 乙丙丁、甲戊庚，天干年月日时顺布为吉"（用户 2026-09-25 拍板顺布连珠）。
+_SANQI_SEQUENCES = (
+    ('乙', '丙', '丁'),   # 乙丙丁
+    ('甲', '戊', '庚'),   # 甲戊庚
+    ('壬', '癸', '辛'),   # 壬癸辛
+)
+
+def sanqi_by_gans(year_gan, month_gan, day_gan, hour_gan):
+    """三奇顺布连珠：奇干按序占连续三柱（年月日 或 月日时）。
+
+    返回 '日'（乙丙丁）/'月'（甲戊庚）/'星'（壬癸辛）/None。
+    2026-10 A4 修复：原"四柱含齐即算"（乱序、隔位、干重复均算）74 天/三年，
+    顺布连珠收紧后 3 天/三年（纯收紧，新集为旧集真子集）。
+    """
+    seq = (year_gan, month_gan, day_gan, hour_gan)
+    for label, q in zip(('日', '月', '星'), _SANQI_SEQUENCES):
+        if tuple(seq[0:3]) == q or tuple(seq[1:4]) == q:
+            return label
+    return None
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1021,35 +1045,14 @@ class ShenShaChecker:
         return day_gan == yuede_he
     
     def _is_sanqi(self, sizhu):
-        """三奇日（乙丙丁日奇、甲戊庚月奇、壬癸辛星奇）"""
-        year_gan = sizhu.get('year_gan', '')
-        month_gan = sizhu.get('month_gan', '')
-        day_gan = sizhu.get('day_gan', '')
-        hour_gan = sizhu.get('hour_gan', '')
-        
-        all_gans = [year_gan, month_gan, day_gan, hour_gan]
-        
-        # 日奇：乙丙丁
-        riqi = ['乙', '丙', '丁']
-        riqi_count = sum(1 for g in riqi if g in all_gans)
-        
-        # 月奇：甲戊庚
-        yueqi = ['甲', '戊', '庚']
-        yueqi_count = sum(1 for g in yueqi if g in all_gans)
-        
-        # 星奇：壬癸辛
-        xingqi = ['壬', '癸', '辛']
-        xingqi_count = sum(1 for g in xingqi if g in all_gans)
-        
-        # 三奇需齐全为吉（遵循《协纪辨方书》标准，三位齐全方为真奇）
-        if riqi_count >= 3:
-            return '日'
-        if yueqi_count >= 3:
-            return '月'
-        if xingqi_count >= 3:
-            return '星'
-        
-        return None
+        """三奇（A4 收紧：顺布连珠，单点委托 sanqi_by_gans）
+
+        返回 '日'/'月'/'星'/None。
+        """
+        return sanqi_by_gans(sizhu.get('year_gan', ''),
+                             sizhu.get('month_gan', ''),
+                             sizhu.get('day_gan', ''),
+                             sizhu.get('hour_gan', ''))
     
     def _is_jiangxing(self, sizhu):
         """将星日（A4 收紧：月支三合中神比日支，单点委托 is_jiangxing_by_zhi）"""

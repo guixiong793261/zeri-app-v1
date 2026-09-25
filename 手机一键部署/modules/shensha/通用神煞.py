@@ -361,9 +361,12 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
 
         # ===== 日神类吉神 =====
-        if self._is_sanqi(sizhu):
-            sanqi_type = self._is_sanqi(sizhu)
-            self._add_shensha(f'三奇-{sanqi_type}', 15, '三奇加临，百事皆宜')
+        # 2026-10 A4：注册名由 '三奇-{type}' 统一为 '三奇{type}'（与基类及
+        # 九事项同名）；('入学/求医/签约','三奇-日/月') 旧键同步删除，
+        # 未列管的星奇仍按调用处默认值 15（SHENSHA_SCORES 单一表决议不变）。
+        sanqi_type = self._is_sanqi(sizhu)
+        if sanqi_type:
+            self._add_shensha(f'三奇{sanqi_type}', 15, '三奇加临，百事皆宜')
 
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星镇护，权威显赫')

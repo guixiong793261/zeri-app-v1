@@ -199,15 +199,13 @@ class RuZhaiShenShaChecker(ShenShaChecker):
 
         # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
 
-        # 三奇
-        sanqi_result = self._is_sanqi(sizhu)
-        if sanqi_result:
-            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，入宅上吉')
-        
+        # 2026-10 A4：三奇同名重加删除（基类 super 日块以 '三奇{日/月/星}'
+        # 单点注册；子类同名块被 _add_shensha 去重屏蔽，从未生效）。
+
         # 将星
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星到座，入宅吉')
-        
+
         # 驿马
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马星动，迁居顺利')
@@ -626,37 +624,6 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         yuede_he = he_map.get(yuede, '')
         return day_gan == yuede_he
-    
-    def _is_sanqi(self, sizhu):
-        """三奇日（乙丙丁日奇、甲戊庚月奇、壬癸辛星奇）"""
-        year_gan = sizhu.get('year_gan', '')
-        month_gan = sizhu.get('month_gan', '')
-        day_gan = sizhu.get('day_gan', '')
-        hour_gan = sizhu.get('hour_gan', '')
-        
-        all_gans = [year_gan, month_gan, day_gan, hour_gan]
-        
-        # 日奇：乙丙丁
-        riqi = ['乙', '丙', '丁']
-        riqi_count = sum(1 for g in riqi if g in all_gans)
-        
-        # 月奇：甲戊庚
-        yueqi = ['甲', '戊', '庚']
-        yueqi_count = sum(1 for g in yueqi if g in all_gans)
-        
-        # 星奇：壬癸辛
-        xingqi = ['壬', '癸', '辛']
-        xingqi_count = sum(1 for g in xingqi if g in all_gans)
-        
-        # 三奇需齐全为吉（遵循《协纪辨方书》标准，三位齐全方为真奇）
-        if riqi_count >= 3:
-            return '日'
-        if yueqi_count >= 3:
-            return '月'
-        if xingqi_count >= 3:
-            return '星'
-        
-        return None
 
     def _is_jianxing_ji(self, sizhu):
         """建星吉日（成、开、满）"""

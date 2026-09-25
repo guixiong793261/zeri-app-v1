@@ -223,11 +223,8 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_yuede_he(sizhu):
             self._add_shensha('月德合', 12, '月德合，安葬吉')
         
-        # 三奇
-        sanqi_result = self._is_sanqi(sizhu)
-        if sanqi_result:
-            self._add_shensha(f'三奇{sanqi_result}', 15, f'{sanqi_result}三奇照临，安葬上吉')
-        
+        # 2026-10 A4：三奇同名重加删除（基类 super 日块单点注册，此块从未生效）。
+
         # 将星
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星到座，安葬吉')
