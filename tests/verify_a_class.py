@@ -51,6 +51,8 @@ from verify_a1_bijiao import CASES as c_a1_cases
 from verify_a2_mingshi import CASES as c_a2_cases
 # 广度扩展 A3 批（表本身错 3 项：飞廉/八专/五墓，2026-10）
 from verify_a3_biaocuo import CASES as c_a3_cases
+# 广度扩展 A4 批（逻辑错 2 项：将星中神专位/三奇顺布连珠，2026-10）
+from verify_a4_luoji import CASES as c_a4_cases
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -60,7 +62,7 @@ CASES = [
     c_suisha_base, c_suisha_dongtu, c_suisha_table,
     c_yuesha_base,
 ] + c_yima_cases + c_yaoan_cases + c_wufu_cases + c_fusheng_cases + c_shengqi_cases \
-  + c_a1_cases + c_a2_cases + c_a3_cases
+  + c_a1_cases + c_a2_cases + c_a3_cases + c_a4_cases
 
 
 if __name__ == '__main__':
