@@ -125,7 +125,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 四废
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日忌修造、动土')
-        
+
         # 五墓
         if self._is_wumu(sizhu):
             self._add_shensha('五墓', -20, '五墓日忌修造')
@@ -317,10 +317,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 山曜
         if self._is_shanyao(sizhu):
             self._add_shensha('山曜', -15, '山曜忌修造')
-        
-        # 飞廉（主虚惊）
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉日主虚惊，忌修造')
+
+        # 2026-10 A3：'飞廉' 日作用域注册删除（典载飞廉为月神，
+        # 已由基类月作用域统一注册）。
     
     def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""

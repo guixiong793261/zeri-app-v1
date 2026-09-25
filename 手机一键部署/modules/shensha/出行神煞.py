@@ -45,9 +45,8 @@ class TravelShenShaChecker(ShenShaChecker):
         # 年干比日干典载口径）；'天马' 年作用域注册删除（典载天马为月神，
         # 已由基类月作用域统一注册）。
 
-        # 飞廉
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉主虚惊，不宜出行')
+        # 2026-10 A3：'飞廉' 年作用域注册删除（典载飞廉为月神，
+        # 已由基类月作用域统一注册）。
         
         # 亡神（伏兵）
         if self._is_fubing(sizhu):

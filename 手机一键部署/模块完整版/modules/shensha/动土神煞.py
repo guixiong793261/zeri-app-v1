@@ -75,10 +75,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 豹尾
         if self._is_baowei(sizhu):
             self._add_shensha('豹尾', -12, '豹尾日，忌动土修造')
-        
-        # 飞廉
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉日，忌动土修造')
+
+        # 2026-10 A3：'飞廉' 年作用域注册删除（典载飞廉为月神，
+        # 已由基类月作用域统一注册）。
         
         # 丧门
         if self._is_sangmen(sizhu):

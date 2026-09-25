@@ -317,6 +317,58 @@ def is_dinang_by_pillar(month_zhi, day_pillar):
     return day_pillar in _DINANG_PILLARS_BY_MONTH.get(month_zhi, frozenset())
 
 
+# ===== 飞廉/八专/五墓权威表（2026-10 A3 修复，表本身错）=====
+_FEILIAN_ZHI_BY_MONTH = {
+    '寅': '戌', '卯': '巳', '辰': '午', '巳': '未',
+    '午': '寅', '未': '卯', '申': '辰', '酉': '亥',
+    '戌': '子', '亥': '丑', '子': '申', '丑': '酉',
+}
+
+def is_feilian_by_zhi(month_zhi, day_zhi):
+    """飞廉（月神比日支，《协纪辨方书》卷四·月神）
+
+    2026-10 A3 修复：原"正五行查"（月支五行=日支五行）与典载全年 0 天重合，
+    属表本身错。典载：寅月戌、卯月巳、辰月午、巳月未、午月寅、未月卯、
+    申月辰、酉月亥、戌月子、亥月丑、子月申、丑月酉。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _FEILIAN_ZHI_BY_MONTH.get(month_zhi)
+
+
+_BAZHUAN_PILLARS = frozenset(('丁未', '己未', '庚申', '甲寅', '癸丑'))
+
+def is_bazhuan_by_pillar(day_pillar):
+    """八专（日柱，《历例》B5 版）
+
+    2026-10 A3 修复：原 12 柱错表（含丙午、戊申、己酉等伪柱），与典载
+    5 柱全年仅 24 天重合。拍板采用《历例》B5 版（丁未、己未、庚申、
+    甲寅、癸丑），废弃《协纪》A8 版 8 柱。
+    """
+    if not day_pillar:
+        return False
+    return day_pillar in _BAZHUAN_PILLARS
+
+
+_WUMU_PILLAR_BY_MONTH = {
+    '寅': '乙未', '卯': '乙未', '辰': '戊辰',
+    '巳': '丙戌', '午': '丙戌', '未': '戊辰',
+    '申': '辛丑', '酉': '辛丑', '戌': '戊辰',
+    '亥': '壬辰', '子': '壬辰', '丑': '戊辰',
+}
+
+def is_wumu_by_pillar(month_zhi, day_pillar):
+    """五墓（月神比日柱，《协纪辨方书》卷四·月神）
+
+    2026-10 A3 修复：原"春未夏戌秋丑冬辰"纯地支判断过宽，且月分组错
+    （辰月入春 vs 典载入四季），与典载全年仅 5 天重合。典载：寅卯月乙未、
+    巳午月丙戌、申酉月辛丑、亥子月壬辰、辰戌丑未月戊辰。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar == _WUMU_PILLAR_BY_MONTH.get(month_zhi)
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -620,8 +672,6 @@ class ShenShaChecker:
             self._add_shensha('黄幡', -15, '黄幡主缠绕')
         if self._is_baowei(sizhu):
             self._add_shensha('豹尾', -12, '豹尾主损伤')
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉主虚惊')
         if self._is_fubing(sizhu):
             self._add_shensha('亡神', -12, '亡神主暗害')
         if self._is_dahuo(sizhu):
@@ -719,6 +769,8 @@ class ShenShaChecker:
             self._add_shensha('天吏', -15, '天吏主致死')
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日凶')
+        if self._is_flyinglian(sizhu):
+            self._add_shensha('飞廉', -12, '飞廉主虚惊')
         if self._is_wumu(sizhu):
             self._add_shensha('五墓', -12, '五墓主死丧')
         if self._is_fuduan(sizhu):
@@ -1217,22 +1269,17 @@ class ShenShaChecker:
         return False
     
     def _is_wumu(self, sizhu):
-        """五墓日
-        五墓：春在未、夏在戌、秋在丑、冬在辰
-        即四季的墓库位
+        """五墓（月神比日柱，《协纪辨方书》卷四·月神）
+
+        2026-10 A3 修复：原"春未夏戌秋丑冬辰"纯地支判断过宽，且月分组错
+        （辰月入春 vs 典载入四季），现委托模块级唯一实现
+        is_wumu_by_pillar（寅卯月乙未、巳午月丙戌、申酉月辛丑、
+        亥子月壬辰、辰戌丑未月戊辰）。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '未'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '戌'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '丑'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '辰'
-        return False
+        return is_wumu_by_pillar(
+            sizhu.get('month_zhi', ''),
+            sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
+        )
     
     # ============ 通用凶煞检查方法（子类通用） ============
     
@@ -1717,15 +1764,16 @@ class ShenShaChecker:
         return day_zhi == guanri_map.get(month_zhi)
     
     def _is_bazhuan(self, sizhu):
-        """八专（天干重复，如甲寅、乙卯、丙午、丁未、戊申、己酉、庚申、辛酉、壬子、癸丑、丙寅、丁卯）"""
+        """八专（日柱，《历例》B5 版：丁未、己未、庚申、甲寅、癸丑）
+
+        2026-10 A3 修复：原 12 柱错表，现委托模块级唯一实现
+        is_bazhuan_by_pillar（B5 版 5 柱）。
+        """
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         if not day_gan or not day_zhi:
             return False
-        bazhuan_list = ['甲寅', '乙卯', '丙午', '丁未', '戊申', '己酉', 
-                        '庚申', '辛酉', '壬子', '癸丑', '丙寅', '丁卯']
-        day_pillar = day_gan + day_zhi
-        return day_pillar in bazhuan_list
+        return is_bazhuan_by_pillar(day_gan + day_zhi)
     
     def _is_siji(self, sizhu):
         """四忌（注册名"四忌"-12，查法为典载四击表「春戌夏丑秋辰冬未」）
@@ -2209,24 +2257,14 @@ class ShenShaChecker:
         return huangsha_map.get(month_zhi) == day_zhi
     
     def _is_flyinglian(self, sizhu):
-        """飞廉（正五行查）
-        木飞廉寅卯日、火飞廉巳午日、土飞廉辰戌丑未日、金飞廉申酉日、水飞廉亥子日
+        """飞廉（月神比日支，《协纪辨方书》卷四·月神）
+
+        2026-10 A3 修复：原"正五行查"（月支五行=日支五行）与典载全年 0 天重合，
+        属表本身错。现委托模块级唯一实现 is_feilian_by_zhi（寅月戌、卯月巳、
+        辰月午、巳月未、午月寅、未月卯、申月辰、酉月亥、戌月子、亥月丑、
+        子月申、丑月酉）。
         """
-        day_zhi = sizhu.get('day_zhi', '')
-        month_zhi = sizhu.get('month_zhi', '')
-        
-        # 判断五行
-        if month_zhi in ['寅', '卯']:
-            return day_zhi in ['寅', '卯']
-        elif month_zhi in ['巳', '午']:
-            return day_zhi in ['巳', '午']
-        elif month_zhi in ['辰', '戌', '丑', '未']:
-            return day_zhi in ['辰', '戌', '丑', '未']
-        elif month_zhi in ['申', '酉']:
-            return day_zhi in ['申', '酉']
-        elif month_zhi in ['亥', '子']:
-            return day_zhi in ['亥', '子']
-        return False
+        return is_feilian_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_fubing(self, sizhu):
         """伏兵（三合局墓库后一位）

@@ -95,9 +95,6 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_baowei(sizhu):
             self._add_shensha('豹尾', -12, '豹尾为害，主有损失')
 
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉作祟，口舌是非')
-
         if self._is_fubing(sizhu):
             self._add_shensha('亡神', -12, '亡神临身，虚耗破财')
 
@@ -198,8 +195,8 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_guanri(sizhu):
             self._add_shensha('官日', 8, '官日当令，利见贵人')
 
-        if self._is_bazhuan(sizhu):
-            self._add_shensha('守日', 8, '守日吉庆，诸事皆宜')
+        # 2026-10 A3：守日误用八专访词断开（同日 +8 与 -15 并挂）。
+        # 守日归批次 D「王官守相民」体系，待翻《协纪》原诀后另行注册。
 
         if self._is_fusheng(sizhu):
             self._add_shensha('福生', 10, '福生临日，百福骈臻')
@@ -274,6 +271,9 @@ class CommonShenShaChecker(ShenShaChecker):
 
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日，百事不宜')
+
+        if self._is_flyinglian(sizhu):
+            self._add_shensha('飞廉', -12, '飞廉作祟，口舌是非')
 
         if self._is_wumu(sizhu):
             self._add_shensha('五墓', -12, '五墓之日，忌埋葬')
