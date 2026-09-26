@@ -469,24 +469,10 @@ class BurialShenShaChecker(ShenShaChecker):
     # 鸣吠对日 11 干支收口到 神煞基类.is_mingfei_by_pillar /
     # is_mingfeidui_by_pillar（《协纪》卷五／卷九），注册统一走基类月作用域。
 
-    def _is_bujiang(self, sizhu):
-        """是否不将日"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        yang_month = ['寅', '辰', '午', '申', '戌', '子']
-        yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
-        yang_gan = ['甲', '丙', '戊', '庚', '壬']
-        yin_gan = ['乙', '丁', '己', '辛', '癸']
-        yang_zhi = ['子', '寅', '辰', '午', '申', '戌']
-        yin_zhi = ['丑', '卯', '巳', '未', '酉', '亥']
-        
-        if month_zhi in yang_month:
-            return day_gan in yin_gan and day_zhi in yin_zhi
-        else:
-            return day_gan in yang_gan and day_zhi in yang_zhi
-    
+    # 2026-10 A6-4 批B：旧 _is_bujiang（干支阴阳法，与嫁娶神煞旧实现逐字同一副本
+    # A'）已删除，统一继承基类 _is_bujiang（委托 is_bujiang_by_ganzhi，查唯一权威表
+    # _BUJIANG_TABLE），与评分/规则层 marriage_shensha.is_bujiang_day 同表同口径。
+
     # ===== 亡者相关检查 =====
     
     def _is_dihu(self, sizhu, owner_zodiac):

@@ -1014,24 +1014,10 @@ class MarriageShenShaChecker(ShenShaChecker):
     
     # ===== 吉日 =====
     
-    def _is_bujiang(self, sizhu):
-        """是否不将日"""
-        month_zhi = sizhu['month_zhi']
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        
-        yang_month = ['寅', '辰', '午', '申', '戌', '子']
-        yin_month = ['卯', '巳', '未', '酉', '亥', '丑']
-        yang_gan = ['甲', '丙', '戊', '庚', '壬']
-        yin_gan = ['乙', '丁', '己', '辛', '癸']
-        yang_zhi = ['子', '寅', '辰', '午', '申', '戌']
-        yin_zhi = ['丑', '卯', '巳', '未', '酉', '亥']
-        
-        if month_zhi in yang_month:
-            return day_gan in yin_gan and day_zhi in yin_zhi
-        else:
-            return day_gan in yang_gan and day_zhi in yang_zhi
-    
+    # 2026-10 A6-4 批B：旧 _is_bujiang（干支阴阳法 A 实现）已删除，统一继承
+    # 基类 _is_bujiang（委托 is_bujiang_by_ganzhi，查唯一权威表 _BUJIANG_TABLE），
+    # 与评分/规则层 marriage_shensha.is_bujiang_day 同表同口径。
+
     def _is_zhoutang(self, sizhu):
         """是否周堂吉日"""
         month_zhi = sizhu['month_zhi']

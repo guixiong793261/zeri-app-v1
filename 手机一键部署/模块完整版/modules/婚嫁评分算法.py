@@ -877,8 +877,18 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         
         # 吉神加分
         if is_bujiang_day(date_obj):
-            score += 25  # 不将日
-            details.append(('不将日', 25))
+            # 2026-10 A6-4 批B：布尔从 D 取（is_bujiang_day → 神煞基类唯一表），
+            # 分值改查 事项标准.SHENSHA_SCORES 单一表（('嫁娶','不将日')=15），
+            # 替代原硬编码 +25 —— 该 25 为全项目唯一离群值（神煞层各注册点与
+            # 12 事项 SHENSHA_SCORES 均为 15），本处硬编码使嫁娶总分相对其它
+            # 事项漂移 10 分。
+            try:
+                from .事项标准 import shensha_score as _shensha_score
+            except ImportError:
+                from 事项标准 import shensha_score as _shensha_score
+            _bujiang_score = _shensha_score('嫁娶', '不将日', 15)
+            score += _bujiang_score
+            details.append(('不将日', _bujiang_score))
         
         if is_tiande_day(date_obj):
             score += 15  # 天德
