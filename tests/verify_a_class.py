@@ -61,6 +61,8 @@ from verify_tianli import CASES as c_a7_tianli_cases
 from verify_minri import CASES as c_a7_minri_cases
 # 广度扩展 A6-1 批（放宽口径 1 项：四废，2026-10）
 from verify_sifei import CASES as c_a6_sifei_cases
+# 广度扩展 A6-2 批（表本身错 1 项：往亡，2026-10）
+from verify_wangwang import CASES as c_a6_wangwang_cases
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -72,7 +74,7 @@ CASES = [
 ] + c_yima_cases + c_yaoan_cases + c_wufu_cases + c_fusheng_cases + c_shengqi_cases \
   + c_a1_cases + c_a2_cases + c_a3_cases + c_a4_cases + c_a5_cases \
   + c_a7_dashi_cases + c_a7_tianli_cases + c_a7_minri_cases \
-  + c_a6_sifei_cases
+  + c_a6_sifei_cases + c_a6_wangwang_cases
 
 
 if __name__ == '__main__':

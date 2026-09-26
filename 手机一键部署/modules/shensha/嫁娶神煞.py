@@ -31,7 +31,7 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
+    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_wangwang_by_zhi
     try:
         from ..工具函数 import DI_ZHI, TIAN_GAN
     except ImportError:
@@ -58,7 +58,7 @@ except ImportError:
     shensha_dir = os.path.dirname(os.path.abspath(__file__))
     if shensha_dir not in sys.path:
         sys.path.insert(0, shensha_dir)
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
     from 工具函数 import DI_ZHI, TIAN_GAN
 
 
@@ -753,16 +753,12 @@ class MarriageShenShaChecker(ShenShaChecker):
         return day_zhi == shousi_map.get(month_zhi)
     
     def _is_wangwang(self, sizhu):
-        """是否往亡日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        wangwang_map = {
-            '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
-            '午': '卯', '未': '午', '申': '酉', '酉': '子',
-            '戌': '辰', '亥': '未', '子': '戌', '丑': '丑'
-        }
-        return day_zhi == wangwang_map.get(month_zhi)
+        """是否往亡日（《协纪》口诀"正寅二巳三申四亥五卯六午七酉八子
+        九辰十未十一戌十二丑"，月支查日支；委托单点出口
+        is_wangwang_by_zhi）。
+        """
+        return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
+                                  sizhu.get('day_zhi', ''))
     
     def _get_date_from_sizhu(self, sizhu):
         """从sizhu中获取date对象"""

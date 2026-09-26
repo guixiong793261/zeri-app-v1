@@ -26,10 +26,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_wangwang_by_zhi
     from ..工具函数 import SANSHA_MAP, DI_ZHI
 except ImportError:
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
     from 工具函数 import SANSHA_MAP, DI_ZHI
 
 class RuZhaiShenShaChecker(ShenShaChecker):
@@ -389,15 +389,12 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     # 出口（《协纪·历例》），基类旧"月支前七位"偏移错已同步修复。
 
     def _is_wangwang(self, sizhu):
-        """往亡日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        wangwang_map = {
-            '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
-            '午': '卯', '未': '午', '申': '酉', '酉': '子',
-            '戌': '辰', '亥': '未', '子': '戌', '丑': '丑'
-        }
-        return day_zhi == wangwang_map.get(month_zhi)
+        """往亡日（《协纪》口诀"正寅二巳三申四亥五卯六午七酉八子
+        九辰十未十一戌十二丑"，月支查日支；委托单点出口
+        is_wangwang_by_zhi）。
+        """
+        return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
+                                  sizhu.get('day_zhi', ''))
     
     def _is_hongzui_zhuque(self, sizhu):
         """红嘴朱雀日（入宅大忌）"""

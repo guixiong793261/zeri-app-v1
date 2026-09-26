@@ -552,6 +552,30 @@ def is_sifei_by_pillar(month_zhi, day_pillar):
     return day_pillar in _SIFEI_PILLARS_BY_SEASON.get(month_zhi, ())
 
 
+# ===== 往亡权威表（2026-10 A6-2 修复：4 月循环错表 → 口诀表）=====
+# 权威口径：《协纪辨方书》往亡口诀"正寅二巳三申四亥五卯六午七酉八子
+#   九辰十未十一戌十二丑"（按节气月支查日支）：
+#   寅月寅、卯月巳、辰月申、巳月亥、午月卯、未月午、申月酉、酉月子、
+#   戌月辰、亥月未、子月戌、丑月丑。
+# 旧实现为"寅巳申亥每 4 月循环"变体：2026 实测 29 天（19 天假命中 + 20 天漏判，
+# 与口诀交集仅 10）；出行神煞另有与口诀零交集的错表，另开挂账诊断，本批不动。
+_WANGWANG_ZHI_BY_MONTH = {
+    '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
+    '午': '卯', '未': '午', '申': '酉', '酉': '子',
+    '戌': '辰', '亥': '未', '子': '戌', '丑': '丑',
+}
+
+
+def is_wangwang_by_zhi(month_zhi, day_zhi):
+    """往亡（《协纪》口诀"正寅二巳三申四亥…"，月支查日支）。
+
+    单点出口：基类 _is_wangwang 及安葬/嫁娶/入宅检查器统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _WANGWANG_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -2691,15 +2715,12 @@ class ShenShaChecker:
         return False
 
     def _is_wangwang(self, sizhu):
-        """往亡日（正月寅、二月巳、三月申、四月亥循环）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        wangwang_map = {
-            '寅': '寅', '卯': '巳', '辰': '申', '巳': '亥',
-            '午': '寅', '未': '巳', '申': '申', '酉': '亥',
-            '戌': '寅', '亥': '巳', '子': '申', '丑': '亥'
-        }
-        return day_zhi == wangwang_map.get(month_zhi)
+        """往亡日（《协纪》口诀"正寅二巳三申四亥五卯六午七酉八子
+        九辰十未十一戌十二丑"，月支查日支；委托单点出口
+        is_wangwang_by_zhi）。
+        """
+        return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
+                                  sizhu.get('day_zhi', ''))
 
     def _is_bujiang(self, sizhu):
         """不将日（阳将阴将之日）"""
