@@ -110,9 +110,10 @@ class BurialShenShaChecker(ShenShaChecker):
         if month_zhi and day_zhi and self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日忌安葬、出行')
         
-        # 天吏日
-        if month_zhi and day_gan and self._is_tianli(sizhu):
-            self._add_shensha('天吏日', -15, '天吏日不宜安葬')
+        # 2026-10 A7：'天吏日' 异名分支删除（原私有 _is_tianli override 用
+        # "正卯二寅三丑…"非典载表）。基类月作用域已按典载《协纪》卷六
+        # "正月起酉，逆行四仲"（三合死气位）注册 '天吏' -15，保留异名分支
+        # 会在同日双扣 -30。事项标准中 ('安葬','天吏日') 条目转无用，留待收口。
         
         # 致死日
         if self._is_zhisi(sizhu):
@@ -395,21 +396,6 @@ class BurialShenShaChecker(ShenShaChecker):
             '戌': '辰', '亥': '未', '子': '戌', '丑': '丑'
         }
         return day_zhi == wangwang_map.get(month_zhi)
-    
-    def _is_tianli(self, sizhu):
-        """
-        是否天吏日
-        口诀：正卯二寅三丑四子五亥六戌七酉八申九未十午十一巳十二辰
-        """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        tianli_map = {
-            '寅': '卯', '卯': '寅', '辰': '丑', '巳': '子',
-            '午': '亥', '未': '戌', '申': '酉', '酉': '申',
-            '戌': '未', '亥': '午', '子': '巳', '丑': '辰'
-        }
-        return day_zhi == tianli_map.get(month_zhi)
     
     def _is_zhisi(self, sizhu):
         """

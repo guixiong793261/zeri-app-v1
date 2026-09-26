@@ -470,6 +470,32 @@ def is_dashi_by_zhi(month_zhi, day_zhi):
     return day_zhi == _DASHI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 天吏权威表（2026-10 A7 修复，季节归并错）=====
+# 权威口径：《协纪辨方书》卷六·义例四"天吏（致死）"条——
+#   《历例》曰："天吏者，正月起酉，逆行四仲。"
+#   曹震圭曰："天吏者，三合五行死气之位，五行至此死而无气。"
+# 即寅午戌月酉、亥卯未月午、申子辰月卯、巳酉丑月子（月建三合局死气位）。
+# 旧实现按四季划月（春午夏酉秋子冬卯，＝典载"民日"表），12 月中仅仲月
+# （卯午酉子）与典载巧合；2025-2026 共 730 天穷举：误命中 39、漏命中 43。
+_TIANLI_ZHI_BY_MONTH = {
+    '寅': '酉', '午': '酉', '戌': '酉',      # 寅午戌火局死气在酉
+    '亥': '午', '卯': '午', '未': '午',      # 亥卯未木局死气在午
+    '申': '卯', '子': '卯', '辰': '卯',      # 申子辰水局死气在卯
+    '巳': '子', '酉': '子', '丑': '子',      # 巳酉丑金局死气在子
+}
+
+
+def is_tianli_by_zhi(month_zhi, day_zhi):
+    """天吏（致死）（《协纪·历例》"正月起酉，逆行四仲"，月支查日支）。
+
+    单点出口：基类 _is_tianli 及各事项检查器统一委托本函数。安葬原私有
+    override（正卯二寅三丑…）与异名"天吏日"注册已同批删除，避免双扣。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _TIANLI_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1287,20 +1313,12 @@ class ShenShaChecker:
     
     def _is_tianli(self, sizhu):
         """天吏（致死）
-        天吏：春在午、夏在酉、秋在子、冬在卯
+
+        2026-10 A7 修复：原按四季划月（春午夏酉秋子冬卯，恰为典载"民日"
+        表），与典载月建三合五行死气位口径不符（12 月中仅仲月巧合）。
+        现委托模块级唯一实现 is_tianli_by_zhi。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '午'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '酉'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '子'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '卯'
-        return False
+        return is_tianli_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_sifei(self, sizhu):
         """四废日
