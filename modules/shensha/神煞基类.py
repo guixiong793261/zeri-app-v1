@@ -1572,13 +1572,14 @@ class ShenShaChecker:
         return False
     
     def _is_bingfu(self, sizhu):
-        """病符（年支前九位）"""
+        """病符（《协纪·历例》："太岁后一辰也"，曹震圭注"是旧岁建也"，
+        即年支前一位=旧岁年支；旧"年支前九位"系偏移错，A5 修复）"""
         year_zhi = sizhu.get('year_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
         zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
         if year_zhi in zh_list:
             idx = zh_list.index(year_zhi)
-            bingfu = zh_list[(idx + 9) % 12]
+            bingfu = zh_list[(idx - 1) % 12]
             return day_zhi == bingfu
         return False
     
