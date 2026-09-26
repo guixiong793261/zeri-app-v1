@@ -166,7 +166,7 @@ def adapter_e2e(d):
         sz = calculate_sizhu(d, 12, 0)
         sz['date'] = d
         items = [x for x in BurialShenShaChecker().check(sz, owners=[])
-                 if x.get('name') == '往亡日']
+                 if x.get('name') == '往亡']
         if not items:
             return None
         if len(items) == 1 and items[0].get('score') == -20:
@@ -223,15 +223,16 @@ CASES = [case_pred, case_e2e, case_golden]
 
 
 def _assert_single_entry_checkers():
-    """安葬/入宅/嫁娶：2026 命中日恰好单条往亡 -20（名字随事项而异）。"""
+    """安葬/入宅/嫁娶：2026 命中日恰好单条往亡 -20（2026-10 A6-3 异名收口后
+    全事项统一典载正名 '往亡'）。"""
     from modules.四柱计算器 import calculate_sizhu
     from modules.shensha.安葬神煞 import BurialShenShaChecker
     from modules.shensha.入宅神煞 import RuZhaiShenShaChecker
     from modules.shensha.嫁娶神煞 import MarriageShenShaChecker
     hit_days = [gd for gd, _ in GOLDEN_HIT]
-    for cls, name in ((BurialShenShaChecker, '往亡日'),
+    for cls, name in ((BurialShenShaChecker, '往亡'),
                       (RuZhaiShenShaChecker, '往亡'),
-                      (MarriageShenShaChecker, '往亡日')):
+                      (MarriageShenShaChecker, '往亡')):
         c = cls()
         for d in hit_days:
             sz = calculate_sizhu(d, 12, 0)
