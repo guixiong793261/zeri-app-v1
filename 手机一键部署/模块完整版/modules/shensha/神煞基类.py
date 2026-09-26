@@ -443,6 +443,33 @@ def is_guiji_by_zhi(month_zhi, day_zhi):
     return False
 
 
+# ===== 大时权威表（2026-10 A7 修复，季节归并错）=====
+# 权威口径：《协纪辨方书》卷六·义例四"大时（大败、咸池）"条——
+#   《历例》曰："大时者，正月起卯，逆行四仲。"
+#   曹震圭曰："大时者，乃月建三合五行沐浴之辰也，盖五行至此则败绝，
+#   是最凶之辰也。"
+# 即寅午戌月卯、申子辰月酉、巳酉丑月午、亥卯未月子（月建三合局沐浴位），
+# 四仲各占一局，非按四季归并。
+# 旧实现按四季划月（春酉夏子秋卯冬午，＝典载"守日"表），12 月中仅季月
+# （辰未戌丑）与典载巧合；2025-2026 共 730 天穷举：误命中 42、漏命中 39。
+_DASHI_ZHI_BY_MONTH = {
+    '寅': '卯', '午': '卯', '戌': '卯',      # 寅午戌火局沐浴在卯
+    '申': '酉', '子': '酉', '辰': '酉',      # 申子辰水局沐浴在酉
+    '巳': '午', '酉': '午', '丑': '午',      # 巳酉丑金局沐浴在午
+    '亥': '子', '卯': '子', '未': '子',      # 亥卯未木局沐浴在子
+}
+
+
+def is_dashi_by_zhi(month_zhi, day_zhi):
+    """大时（《协纪·历例》"正月起卯，逆行四仲"，月支查日支）。
+
+    单点出口：基类 _is_dashi 及各事项检查器（经基类管线）统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _DASHI_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1250,22 +1277,13 @@ class ShenShaChecker:
         return day_zhi == yueyan_map.get(month_zhi)
     
     def _is_dashi(self, sizhu):
-        """大时（咸池）
-        大时：春在酉、夏在子、秋在卯、冬在午
-        即四季的仲月对冲位
+        """大时（大败、咸池）
+
+        2026-10 A7 修复：原按四季划月（春酉夏子秋卯冬午，恰为典载"守日"
+        表），与典载月建三合五行沐浴位口径不符（12 月中仅季月巧合）。
+        现委托模块级唯一实现 is_dashi_by_zhi。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '酉'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '子'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '卯'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '午'
-        return False
+        return is_dashi_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_tianli(self, sizhu):
         """天吏（致死）
