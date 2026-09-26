@@ -31,10 +31,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
+    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_sifei_by_pillar
     from ..工具函数 import TIANDE, YUEDE, DI_ZHI
 except ImportError:
-    from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar
+    from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_sifei_by_pillar
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
 class CommonShenShaChecker(ShenShaChecker):
@@ -552,27 +552,11 @@ class CommonShenShaChecker(ShenShaChecker):
         return day_zhi == hai_map.get(month_zhi)
 
     def _is_sifei(self, sizhu):
-        """是否四废日"""
-        day_gan = sizhu['day_gan']
-        day_zhi = sizhu['day_zhi']
-        month_zhi = sizhu['month_zhi']
-        day_pillar = day_gan + day_zhi
-
-        sifei_map = {
-            '寅': ['庚申', '辛酉'],
-            '卯': ['庚申', '辛酉'],
-            '辰': ['庚申', '辛酉'],
-            '巳': ['壬子', '癸亥'],
-            '午': ['壬子', '癸亥'],
-            '未': ['壬子', '癸亥'],
-            '申': ['甲寅', '乙卯'],
-            '酉': ['甲寅', '乙卯'],
-            '戌': ['甲寅', '乙卯'],
-            '亥': ['丙午', '丁巳'],
-            '子': ['丙午', '丁巳'],
-            '丑': ['丙午', '丁巳']
-        }
-        return day_pillar in sifei_map.get(month_zhi, [])
+        """是否四废日（《协纪》四季衰废：春庚申辛酉、夏壬子癸亥、
+        秋甲寅乙卯、冬丙午丁巳；委托单点出口 is_sifei_by_pillar）。
+        """
+        return is_sifei_by_pillar(sizhu['month_zhi'],
+                                  sizhu['day_gan'] + sizhu['day_zhi'])
 
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败"""

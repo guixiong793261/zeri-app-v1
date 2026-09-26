@@ -525,6 +525,33 @@ def is_minri_by_zhi(month_zhi, day_zhi):
     return day_zhi == _MINRI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 四废权威表（2026-10 A6-1 修复：放宽口径 → 典载干支型）=====
+# 权威口径：《协纪辨方书》四废为四时衰废之气，被当令旺气所克：
+#   春（寅卯辰月）木旺金废 → 庚申、辛酉
+#   夏（巳午未月）火旺水废 → 壬子、癸亥
+#   秋（申酉戌月）金旺木废 → 甲寅、乙卯
+#   冬（亥子丑月）水旺火废 → 丙午、丁巳
+# 旧实现只比日干（春见庚日、夏见壬日…），属放宽口径：2026 实测命中 39 天，
+# 而典载仅 14 天——多出 31 天假四废，且漏判 6 天阴干支日（辛酉/癸亥/乙卯/丁巳）。
+# 现收敛为单点出口，基类与通用事项检查器统一委托本函数。
+_SIFEI_PILLARS_BY_SEASON = {
+    '寅': ('庚申', '辛酉'), '卯': ('庚申', '辛酉'), '辰': ('庚申', '辛酉'),
+    '巳': ('壬子', '癸亥'), '午': ('壬子', '癸亥'), '未': ('壬子', '癸亥'),
+    '申': ('甲寅', '乙卯'), '酉': ('甲寅', '乙卯'), '戌': ('甲寅', '乙卯'),
+    '亥': ('丙午', '丁巳'), '子': ('丙午', '丁巳'), '丑': ('丙午', '丁巳'),
+}
+
+
+def is_sifei_by_pillar(month_zhi, day_pillar):
+    """四废（《协纪》四季衰废之气，月支查日柱干支）。
+
+    单点出口：基类 _is_sifei 与通用事项检查器统一委托本函数。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar in _SIFEI_PILLARS_BY_SEASON.get(month_zhi, ())
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -1352,22 +1379,12 @@ class ShenShaChecker:
         return is_tianli_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_sifei(self, sizhu):
-        """四废日
-        四废：春在庚申、夏在壬子、秋在甲寅、冬在丙午
-        即春月见庚日、夏月见壬日、秋月见甲日、冬月见丙日
+        """四废日（《协纪》四季衰废之气：春庚申辛酉、夏壬子癸亥、
+        秋甲寅乙卯、冬丙午丁巳；月支查日柱干支，委托单点出口
+        is_sifei_by_pillar）。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_gan = sizhu.get('day_gan', '')
-        
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_gan == '庚'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_gan == '壬'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_gan == '甲'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_gan == '丙'
-        return False
+        return is_sifei_by_pillar(sizhu.get('month_zhi', ''),
+                                  sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     
     def _is_wumu(self, sizhu):
         """五墓（月神比日柱，《协纪辨方书》卷四·月神）
