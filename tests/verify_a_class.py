@@ -57,6 +57,7 @@ from verify_a4_luoji import CASES as c_a4_cases
 from verify_a5_pianyi import CASES as c_a5_cases
 # 广度扩展 A7 批（季节归并错 3 项：大时/天吏/民日，2026-10）
 from verify_dashi import CASES as c_a7_dashi_cases
+from verify_tianli import CASES as c_a7_tianli_cases
 
 CASES = [
     c_wubuyushi, c_tianyi, c_lushen, c_yangren, c_wenchang,
@@ -66,7 +67,8 @@ CASES = [
     c_suisha_base, c_suisha_dongtu, c_suisha_table,
     c_yuesha_base,
 ] + c_yima_cases + c_yaoan_cases + c_wufu_cases + c_fusheng_cases + c_shengqi_cases \
-  + c_a1_cases + c_a2_cases + c_a3_cases + c_a4_cases + c_a5_cases + c_a7_dashi_cases
+  + c_a1_cases + c_a2_cases + c_a3_cases + c_a4_cases + c_a5_cases \
+  + c_a7_dashi_cases + c_a7_tianli_cases
 
 
 if __name__ == '__main__':
