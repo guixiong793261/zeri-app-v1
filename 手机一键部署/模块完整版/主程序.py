@@ -2383,6 +2383,24 @@ class ZeriApp:
         _toast_dir = ('（' + _sxr + '）') if _sxr else ''
         messagebox.showinfo("加载成功",
                             f"方案「{plan_data.get('plan_name', '')}」已加载{_toast_dir}")
+        # 2026-09-23 晚子时派兼容提示（ea447a4 起 23:00-23:59 时柱按子时、日柱仍取当日）：
+        # 加载含 23 时出生事主的历史方案时弹一次/会话；只提示、不改写记录，
+        # 由用户决定是否重新点「计算四柱」按新口径重排。
+        if not getattr(self, '_night_zishi_hint_shown', False):
+            def _is_hour_23(v):
+                try:
+                    return int(float(str(v).strip())) == 23
+                except (TypeError, ValueError, OverflowError):
+                    return False
+            if any(isinstance(o, dict) and _is_hour_23(o.get('hour', ''))
+                   for o in load_data):
+                self._night_zishi_hint_shown = True
+                messagebox.showinfo(
+                    "晚子时派口径说明",
+                    "本软件已升级为「晚子时派」：23:00-23:59 出生者时柱按子时计、"
+                    "日柱仍按当日。\n"
+                    "本方案含出生于 23 时的事主，若其四柱为旧口径（亥时/次日早子时）"
+                    "所排，\n请重新点击「计算四柱」更新。历史记录不会被自动修改。")
 
     def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var, 
                               gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var, 
