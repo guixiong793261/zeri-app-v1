@@ -417,6 +417,32 @@ def sanqi_by_gans(year_gan, month_gan, day_gan, hour_gan):
     return None
 
 
+# ===== 归忌权威表（2026-10 A5 修复，偏移错）=====
+# 权威口径：《协纪辨方书》卷四引《历例》："归忌者，孟月以丑、仲月以寅、
+# 季月以子。"（忌移徙、嫁娶、出行等）。旧"月支前七位"（月支+7，即月支
+# 三合局墓库位）系偏移错：12 月中仅辰月与典载巧合，其余 11 月全错。
+# 入宅神煞 override 原本即为典载口径（A5 收口：删除 override 回归本表）。
+_GUIJI_MENG_ZHI = frozenset({'寅', '申', '巳', '亥'})   # 孟月：寅/巳/申/亥月
+_GUIJI_ZHONG_ZHI = frozenset({'子', '午', '卯', '酉'})  # 仲月：子/午/卯/酉月
+_GUIJI_JI_ZHI = frozenset({'辰', '戌', '丑', '未'})     # 季月：辰/戌/丑/未月
+
+
+def is_guiji_by_zhi(month_zhi, day_zhi):
+    """归忌（《协纪·历例》：孟月丑日、仲月寅日、季月子日），月支查日支。
+
+    单点出口：基类 _is_guiji / 通用神煞 / 入宅神煞均委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    if month_zhi in _GUIJI_MENG_ZHI:
+        return day_zhi == '丑'
+    if month_zhi in _GUIJI_ZHONG_ZHI:
+        return day_zhi == '寅'
+    if month_zhi in _GUIJI_JI_ZHI:
+        return day_zhi == '子'
+    return False
+
+
 # ===== 太阳/太阴到山二十四山表（2026-09-22 B3 收敛：全项目唯一实现）=====
 # 权威口径：太阳二十四节气过宫，冬至到子山，其后逐节气顺行一山。
 # sxtwl jqIndex 编号冬至=0、小寒=1……大雪=23（与 Day.getJieQi() 同体系），
@@ -2679,12 +2705,7 @@ class ShenShaChecker:
         return day_zhi == chong_map.get(month_zhi)
     
     def _is_guiji(self, sizhu):
-        """归忌（月支前七位）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        if month_zhi in zh_list:
-            idx = zh_list.index(month_zhi)
-            guiji = zh_list[(idx + 7) % 12]
-            return day_zhi == guiji
-        return False
+        """归忌（《协纪·历例》：孟月丑、仲月寅、季月子，单点委托 is_guiji_by_zhi；
+        旧"月支前七位"系偏移错，A5 修复）"""
+        return is_guiji_by_zhi(sizhu.get('month_zhi', ''),
+                               sizhu.get('day_zhi', ''))

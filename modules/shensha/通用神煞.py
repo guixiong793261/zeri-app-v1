@@ -767,16 +767,8 @@ class CommonShenShaChecker(ShenShaChecker):
         }
         return day_zhi == chong_map.get(month_zhi)
 
-    def _is_guiji(self, sizhu):
-        """归忌（月支前七位）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = DI_ZHI
-        if month_zhi in zh_list:
-            idx = zh_list.index(month_zhi)
-            guiji = zh_list[(idx + 7) % 12]
-            return day_zhi == guiji
-        return False
+    # 归忌 _is_guiji 已删除（2026-10 A5 收口）：旧"月支前七位"系偏移错，
+    # 回归基类 is_guiji_by_zhi（《协纪·历例》孟月丑/仲月寅/季月子）。
 
     def _is_hongzui_zhuque(self, sizhu):
         """红嘴朱雀（月支对冲前两位）"""

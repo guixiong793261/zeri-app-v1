@@ -383,27 +383,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         idx = zh_list.index(month_zhi)
         yuepo = zh_list[(idx + 6) % 12]
         return day_zhi == yuepo
-    
-    def _is_guiji(self, sizhu):
-        """
-        归忌日：孟月忌丑日，仲月忌寅日，季月忌子日
-        孟月：寅、申、巳、亥
-        仲月：子、午、卯、酉
-        季月：辰、戌、丑、未
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        meng = ['寅', '申', '巳', '亥']
-        zhong = ['子', '午', '卯', '酉']
-        ji = ['辰', '戌', '丑', '未']
-        if month_zhi in meng and day_zhi == '丑':
-            return True
-        if month_zhi in zhong and day_zhi == '寅':
-            return True
-        if month_zhi in ji and day_zhi == '子':
-            return True
-        return False
-    
+
+    # 归忌 _is_guiji 已删除（2026-10 A5 收口）：本 override 口径（孟月丑/
+    # 仲月寅/季月子）与典载一致且正确，收敛回归基类 is_guiji_by_zhi 单点
+    # 出口（《协纪·历例》），基类旧"月支前七位"偏移错已同步修复。
+
     def _is_wangwang(self, sizhu):
         """往亡日"""
         month_zhi = sizhu['month_zhi']
