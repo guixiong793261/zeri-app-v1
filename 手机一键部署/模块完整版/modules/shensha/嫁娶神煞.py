@@ -254,14 +254,17 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_jiangxing(sizhu):
             self._add_shensha('将星', 12, '将星到座，婚嫁吉')
         
-        # 三合日
-        if self._is_sanhe(sizhu):
-            self._add_shensha('三合日', 8, '三合日婚嫁吉')
-        
-        # 六合日
-        if self._is_liuhe(sizhu):
-            self._add_shensha('六合日', 8, '六合日婚嫁吉')
-        
+        # 2026-10 A6-4：异名 '三合日'/'六合日' 重加删除——基类 super 日块已按
+        # 典载正名 '三合'(+10)/'六合'(+12) 单点注册，本类 _is_sanhe/_is_liuhe
+        # 与基类内联 sanhe_sets/liuhe_map 谓词逐字等价（同局/同合且月≠日），属
+        # 同一谓词的异名双注册，异名无独立语义。
+        # 分值影响：嫁娶总分由 婚嫁评分算法.score_marriage_day 独立计算（三合局/
+        # 六合在 L216/L222 另有 15/10 计分），**不**按本 shensha_list 求和；故旧
+        # 异名在本事项内仅造成**展示列表重复**（2026 审计 14 日 Δscore 全为 0，
+        # 且均为否决日），无分值漂移。删除仍必要：消除同名重复条目，并防止任何
+        # 按 shensha_list 求和的消费者双计。('嫁娶','三合日')/('嫁娶','六合日')
+        # 两条异名分值键同步从 SHENSHA_SCORES 删除。
+
         # 五合日
         if self._is_wuhe(sizhu):
             self._add_shensha('五合日', 8, '五合日婚嫁吉')

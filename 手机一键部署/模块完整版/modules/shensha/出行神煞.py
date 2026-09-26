@@ -127,9 +127,10 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_chuxing_jiri(sizhu):
             self._add_shensha('出行吉日', 15, '适合出行的吉日')
         
-        # 驿马日
-        if self._is_yima(sizhu):
-            self._add_shensha('驿马日', 12, '驿马日利于出行')
+        # 2026-10 A6-4：异名 '驿马日' 重加删除——基类 super 日块已按正名 '驿马'
+        # (+10) 单点注册（同一 self._is_yima；本类 override 为仅年支），旧异名与其
+        # 同日**双扣**（10+12=22）、且异名键 ('出行','驿马日') 只此一处注册。
+        # ('出行','驿马日') 分值键同步从 SHENSHA_SCORES 删除。
 
         # 2026-10 A1：异名 '天马日' 重加删除——典载天马（月神）已由基类月
         # 作用域以正名 '天马' 注册；旧日作用域 '天马日' 与其同日双扣（各 +10），
