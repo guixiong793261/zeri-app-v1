@@ -302,18 +302,8 @@ class TravelShenShaChecker(ShenShaChecker):
         chuxing_jiri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in chuxing_jiri
     
-    def _is_yima(self, sizhu):
-        """是否驿马日"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 驿马日
-        yima = {
-            '申': '寅', '子': '寅', '辰': '寅',
-            '寅': '申', '午': '申', '戌': '申',
-            '巳': '亥', '酉': '亥', '丑': '亥',
-            '亥': '巳', '卯': '巳', '未': '巳'
-        }
-        return day_zhi == yima.get(year_zhi)
+    # 2026-10 A6-4 D 批次：原 _is_yima override（仅年支）已删除，改继承
+    # 基类仅月支口径（《协纪》卷六：驿马为月神，正月起申逆行四孟）。
 
     # 2026-10 A1：本类 _is_tianma override 已删除——其月支表（寅午卯申
     # 辰戌巳子午寅未辰）与《星历考原》典载逐月一致，基类谓词修正后同表

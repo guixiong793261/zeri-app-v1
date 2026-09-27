@@ -2780,8 +2780,9 @@ class ShenShaChecker:
         return False
 
     def _is_yima(self, sizhu):
-        """驿马（年支或月支查驿马日）"""
-        year_zhi = sizhu.get('year_zhi', '')
+        """驿马（日辰层=仅月支；《协纪辨方书》卷六·义例四：驿马为月神，
+        正月起申逆行四孟。年支驿马为年家方位神「岁马到山」，已另行实现于
+        修造神煞扩展._is_sui_ma_daoshan，不参日辰吉凶判断）"""
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
         yima_map = {
@@ -2790,11 +2791,7 @@ class ShenShaChecker:
             '亥': '巳', '卯': '巳', '未': '巳',
             '巳': '亥', '酉': '亥', '丑': '亥'
         }
-        if day_zhi == yima_map.get(year_zhi):
-            return True
-        if day_zhi == yima_map.get(month_zhi):
-            return True
-        return False
+        return day_zhi == yima_map.get(month_zhi)
 
     def _is_shousi_day(self, sizhu):
         """受死日（春戌、夏丑、秋辰、冬未）"""
