@@ -525,6 +525,31 @@ def is_minri_by_zhi(month_zhi, day_zhi):
     return day_zhi == _MINRI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 官日权威表（2026-10 A8 修复，值域错——与 A7 民日同款）=====
+# 权威口径：《协纪辨方书》卷五·义例三"王官守相民日"条——
+#   《历例》曰："……官日者春卯夏午秋酉冬子……"
+# 即寅卯辰月卯、巳午未月午、申酉戌月酉、亥子丑月子（四季表），月神查日支。
+# 旧实现按三合局取"三合中神"（寅午戌月午、申子辰月子、亥卯未月卯、
+# 巳酉丑月酉），仅四个仲月（卯午酉子月）巧合一致，孟月/季月 8 个月全错；
+# 2026 年穷举：旧 30 天 vs 典载 32 天，交集仅 11 天（仲月巧合）。
+_GUANRI_ZHI_BY_MONTH = {
+    '寅': '卯', '卯': '卯', '辰': '卯',      # 春（寅卯辰月）取卯
+    '巳': '午', '午': '午', '未': '午',      # 夏（巳午未月）取午
+    '申': '酉', '酉': '酉', '戌': '酉',      # 秋（申酉戌月）取酉
+    '亥': '子', '子': '子', '丑': '子',      # 冬（亥子丑月）取子
+}
+
+
+def is_guanri_by_zhi(month_zhi, day_zhi):
+    """官日（《协纪·历例》"官日者春卯夏午秋酉冬子"，月支查日支）。
+
+    单点出口：基类 _is_guanri 及开业/通用检查器（经基类管线）统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _GUANRI_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 四废权威表（2026-10 A6-1 修复：放宽口径 → 典载干支型）=====
 # 权威口径：《协纪辨方书》四废为四时衰废之气，被当令旺气所克：
 #   春（寅卯辰月）木旺金废 → 庚申、辛酉
@@ -1991,16 +2016,10 @@ class ShenShaChecker:
         return False
     
     def _is_guanri(self, sizhu):
-        """官日（寅午戌月午、申子辰月子、亥卯未月卯、巳酉丑月酉）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        guanri_map = {
-            '寅': '午', '午': '午', '戌': '午',
-            '申': '子', '子': '子', '辰': '子',
-            '亥': '卯', '卯': '卯', '未': '卯',
-            '巳': '酉', '酉': '酉', '丑': '酉'
-        }
-        return day_zhi == guanri_map.get(month_zhi)
+        """官日（2026-10 A8 修复：原"三合中神"值域错，仅仲月巧合；
+        现委托模块级唯一实现 is_guanri_by_zhi——《历例》春卯夏午秋酉冬子）。"""
+        return is_guanri_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
     
     def _is_bazhuan(self, sizhu):
         """八专（日柱，《历例》B5 版：丁未、己未、庚申、甲寅、癸丑）
