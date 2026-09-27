@@ -240,10 +240,33 @@ def is_yinde_by_zhi(month_zhi, day_zhi):
 
     2026-10 A2 修复：原 _is_yinde 误委托 _is_yangde（"正月起酉"误作
     "正月起戌顺行"），与典载"逆行六阴辰"方向相反，全年 0 天重合。
-    阳德表本身也错（应"正月起戌顺行六阳辰"，挂账 A 后批次），本批
-    只修阴德，使其独立正确。
     """
     return bool(month_zhi) and day_zhi == _YINDE_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 阳德（《协纪》卷三·月事吉神 / 《御定星历考原》卷三）「正月起戌顺行六阳辰」
+# 六阳辰=子寅辰午申戌，从戌起顺行：戌→子→寅→辰→午→申，正月戌、二月子、
+# 三月寅、四月辰、五月午、六月申、七月戌（循环）……与阴德"正月起酉逆行
+# 六阴辰"互为对偶，同月阳德/阴德日支必不同。
+# 2026-10 A8 修复：旧表起点作"酉"（阴支），序列 酉辰亥午卯戌 阴阳交错，
+# 与"六阳辰"名义内部矛盾；穷举新旧命中零交集。曹震圭"五月一阴生即配于午，
+# 六阳月居于寅午戌"可互证本表（午月午、寅月戌、戌月寅）。
+_YANGDE_ZHI_BY_MONTH = {
+    '寅': '戌', '卯': '子', '辰': '寅',
+    '巳': '辰', '午': '午', '未': '申',
+    '申': '戌', '酉': '子', '戌': '寅',
+    '亥': '辰', '子': '午', '丑': '申',
+}
+
+
+def is_yangde_by_zhi(month_zhi, day_zhi):
+    """阳德（月神比日支，《协纪》卷三《历例》「正月起戌顺行六阳辰」）。
+
+    单点出口：基类 _is_yangde 及各事项检查器（经基类管线）统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _YANGDE_ZHI_BY_MONTH.get(month_zhi)
 
 
 # 四击（《协纪》卷五·义例三）「春戌夏丑秋辰冬未」
@@ -525,6 +548,31 @@ def is_minri_by_zhi(month_zhi, day_zhi):
     return day_zhi == _MINRI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 官日权威表（2026-10 A8 修复，值域错——与 A7 民日同款）=====
+# 权威口径：《协纪辨方书》卷五·义例三"王官守相民日"条——
+#   《历例》曰："……官日者春卯夏午秋酉冬子……"
+# 即寅卯辰月卯、巳午未月午、申酉戌月酉、亥子丑月子（四季表），月神查日支。
+# 旧实现按三合局取"三合中神"（寅午戌月午、申子辰月子、亥卯未月卯、
+# 巳酉丑月酉），仅四个仲月（卯午酉子月）巧合一致，孟月/季月 8 个月全错；
+# 2026 年穷举：旧 30 天 vs 典载 32 天，交集仅 11 天（仲月巧合）。
+_GUANRI_ZHI_BY_MONTH = {
+    '寅': '卯', '卯': '卯', '辰': '卯',      # 春（寅卯辰月）取卯
+    '巳': '午', '午': '午', '未': '午',      # 夏（巳午未月）取午
+    '申': '酉', '酉': '酉', '戌': '酉',      # 秋（申酉戌月）取酉
+    '亥': '子', '子': '子', '丑': '子',      # 冬（亥子丑月）取子
+}
+
+
+def is_guanri_by_zhi(month_zhi, day_zhi):
+    """官日（《协纪·历例》"官日者春卯夏午秋酉冬子"，月支查日支）。
+
+    单点出口：基类 _is_guanri 及开业/通用检查器（经基类管线）统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _GUANRI_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 四废权威表（2026-10 A6-1 修复：放宽口径 → 典载干支型）=====
 # 权威口径：《协纪辨方书》四废为四时衰废之气，被当令旺气所克：
 #   春（寅卯辰月）木旺金废 → 庚申、辛酉
@@ -550,6 +598,46 @@ def is_sifei_by_pillar(month_zhi, day_pillar):
     if not month_zhi or not day_pillar:
         return False
     return day_pillar in _SIFEI_PILLARS_BY_SEASON.get(month_zhi, ())
+
+
+_YANGCUO_PILLARS_BY_MONTH = {
+    '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
+    '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
+    '申': ('庚申',), '酉': ('辛酉',), '戌': ('庚戌',),
+    '亥': ('癸亥',), '丑': ('癸丑',),
+}
+
+
+def is_yangcuo_by_pillar(month_zhi, day_pillar):
+    """阳错（月神，《协纪辨方书》卷四义例二引《堪舆经》逐月立成）。
+
+    月支查日柱干支：寅甲寅、卯乙卯、辰甲辰、巳丁巳己巳、未丁未己未、
+    申庚申、酉辛酉、戌庚戌、亥癸亥、丑癸丑；五月（午）十一月（子）
+    阴阳二建会于子午，无阳错。
+    单点出口：基类 _is_yangcuo 与婚嫁评分算法 D 统一委托本函数。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar in _YANGCUO_PILLARS_BY_MONTH.get(month_zhi, ())
+
+
+_YANDUI_ZHI_BY_MONTH = {
+    '寅': '辰', '卯': '卯', '辰': '寅', '巳': '丑', '午': '子',
+    '未': '亥', '申': '戌', '酉': '酉', '戌': '申', '亥': '未',
+    '子': '午', '丑': '巳',
+}
+
+
+def is_yandui_by_zhi(month_zhi, day_zhi):
+    """厌对（月神，《协纪辨方书》卷五义例三引《天宝历》，月厌所冲之辰）。
+
+    《历例》「正月起辰，逆行十二辰」：寅辰、卯卯、辰寅、巳丑、午子、
+    未亥、申戌、酉酉、戌申、亥未、子午、丑巳。其日忌嫁娶。
+    单点出口：基类 _is_yandui 与婚嫁评分算法 D 统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _YANDUI_ZHI_BY_MONTH.get(month_zhi, '')
 
 
 # ===== 往亡权威表（2026-10 A6-2 修复：4 月循环错表 → 口诀表）=====
@@ -1983,7 +2071,7 @@ class ShenShaChecker:
         return sizhu.get('day_zhi', '') in ('巳', '亥')
 
     def _is_yangcuo(self, sizhu):
-        """阳错（月神·日干支，2026-10 α2-C 接线）
+        """阳错（月神·日干支，2026-10 α2-C 接线；I1 批下沉单点出口）
 
         典据《协纪辨方书》卷四·义例二引《堪舆经》：「以阳建之支配当方之干，
         阴阳自相配合为日，以值所冲之宿为阳错。如正月阳建在寅，近于甲，支干
@@ -1994,19 +2082,14 @@ class ShenShaChecker:
         酉辛酉、戌庚戌、亥癸亥、（子无）、丑癸丑。与《蠡海集》"阴错阳差十二
         日"（固定干支不随月建）为两个体系，勿混用。事项标准配
         ('嫁娶','阳错'):-15（嫁娶专属，用户拍板⑤A）。发射分=0 防 fallback。
+        2026-10 I1：判定下沉为模块级 is_yangcuo_by_pillar，D（婚嫁评分算法）
+        同源委托，本表为唯一规则源。
         """
-        month_zhi = sizhu.get('month_zhi', '')
         day_gz = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
-        yangcuo_map = {
-            '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
-            '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
-            '申': ('庚申',), '酉': ('辛酉',), '戌': ('庚戌',),
-            '亥': ('癸亥',), '丑': ('癸丑',),
-        }
-        return day_gz in yangcuo_map.get(month_zhi, ())
+        return is_yangcuo_by_pillar(sizhu.get('month_zhi', ''), day_gz)
 
     def _is_yandui(self, sizhu):
-        """厌对（月神·日支，2026-10 α2-C 接线）
+        """厌对（月神·日支，2026-10 α2-C 接线；I1 批下沉单点出口）
 
         典据《协纪辨方书》卷五·义例三引《天宝历》：「厌对者，月厌所冲之
         辰也，其日忌嫁娶，又为招摇，忌乘船渡水。」《历例》：「厌对者正月
@@ -2014,14 +2097,11 @@ class ShenShaChecker:
         未亥、申戌、酉酉、戌申、亥未、子午、丑巳。六仪同起例但宜视事临官
         （卷四按语裁断，不另实现）。事项标准配 ('嫁娶','厌对'):-10
         （嫁娶专属，用户拍板⑥）。发射分=0 防 fallback。
+        2026-10 I1：判定下沉为模块级 is_yandui_by_zhi，D（婚嫁评分算法）
+        同源委托，本表为唯一规则源。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        yandui_map = {
-            '寅': '辰', '卯': '卯', '辰': '寅', '巳': '丑', '午': '子',
-            '未': '亥', '申': '戌', '酉': '酉', '戌': '申', '亥': '未',
-            '子': '午', '丑': '巳',
-        }
-        return sizhu.get('day_zhi', '') == yandui_map.get(month_zhi, '')
+        return is_yandui_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
 
     def _is_xushi(self, sizhu):
         """续世（与益后查法相同）"""
@@ -2077,22 +2157,19 @@ class ShenShaChecker:
         return day_zhi == simeng[month_order.index(month_zhi) % 4]
     
     def _is_yangde(self, sizhu):
-        """阳德（正月酉、二月辰、三月亥、四月午、五月卯、六月戌、七月酉、八月辰、九月亥、十月午、十一月卯、十二月戌）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        yangde_map = {
-            '寅': '酉', '卯': '辰', '辰': '亥', '巳': '午',
-            '午': '卯', '未': '戌', '申': '酉', '酉': '辰',
-            '戌': '亥', '亥': '午', '子': '卯', '丑': '戌'
-        }
-        return day_zhi == yangde_map.get(month_zhi)
+        """阳德（2026-10 A8 修复：原内联表起点作酉、含阴支，与"六阳辰"
+        内部矛盾且与典载零重合；现委托模块级唯一实现 is_yangde_by_zhi
+        ——《历例》正月起戌顺行六阳辰：寅月戌、卯月子、辰月寅、巳月辰、
+        午月午、未月申、申月戌、酉月子、戌月寅、亥月辰、子月午、丑月申）。"""
+        return is_yangde_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
     
     def _is_yinde(self, sizhu):
         """阴德（月神比日支，《协纪》卷六「正月起酉逆行六阴辰」）
 
         2026-10 A2 修复：原误委托 _is_yangde（"与阳德查法相同"），
         与典载"逆行六阴辰"方向相反，全年 0 天重合。现委托模块级
-        唯一实现 is_yinde_by_zhi。阳德表本身也错（挂账 A 后批次）。
+        唯一实现 is_yinde_by_zhi。阳德表已于 A8 同步修正（顺行六阳辰）。
         """
         return is_yinde_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
@@ -2140,16 +2217,10 @@ class ShenShaChecker:
         return False
     
     def _is_guanri(self, sizhu):
-        """官日（寅午戌月午、申子辰月子、亥卯未月卯、巳酉丑月酉）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        guanri_map = {
-            '寅': '午', '午': '午', '戌': '午',
-            '申': '子', '子': '子', '辰': '子',
-            '亥': '卯', '卯': '卯', '未': '卯',
-            '巳': '酉', '酉': '酉', '丑': '酉'
-        }
-        return day_zhi == guanri_map.get(month_zhi)
+        """官日（2026-10 A8 修复：原"三合中神"值域错，仅仲月巧合；
+        现委托模块级唯一实现 is_guanri_by_zhi——《历例》春卯夏午秋酉冬子）。"""
+        return is_guanri_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
     
     def _is_bazhuan(self, sizhu):
         """八专（日柱，《历例》B5 版：丁未、己未、庚申、甲寅、癸丑）
@@ -2929,8 +3000,9 @@ class ShenShaChecker:
         return False
 
     def _is_yima(self, sizhu):
-        """驿马（年支或月支查驿马日）"""
-        year_zhi = sizhu.get('year_zhi', '')
+        """驿马（日辰层=仅月支；《协纪辨方书》卷六·义例四：驿马为月神，
+        正月起申逆行四孟。年支驿马为年家方位神「岁马到山」，已另行实现于
+        修造神煞扩展._is_sui_ma_daoshan，不参日辰吉凶判断）"""
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
         yima_map = {
@@ -2939,11 +3011,7 @@ class ShenShaChecker:
             '亥': '巳', '卯': '巳', '未': '巳',
             '巳': '亥', '酉': '亥', '丑': '亥'
         }
-        if day_zhi == yima_map.get(year_zhi):
-            return True
-        if day_zhi == yima_map.get(month_zhi):
-            return True
-        return False
+        return day_zhi == yima_map.get(month_zhi)
 
     def _is_shousi_day(self, sizhu):
         """受死日（春戌、夏丑、秋辰、冬未）"""

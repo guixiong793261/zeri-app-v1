@@ -122,7 +122,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # 月破（婚嫁大忌）
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -30, '月破日诸事不宜，婚嫁大忌')
+            self._add_shensha('月破', -40, '月破日诸事不宜，婚嫁大忌')
         
         # 大利月（需女命年支）
         # 【D3 分值统一】大利月分值从+20统一为+30，与婚嫁评分算法(score_marriage_day)
@@ -234,11 +234,12 @@ class MarriageShenShaChecker(ShenShaChecker):
             self._add_shensha('周堂吉日', 12, '周堂吉日婚嫁可用')
 
         # 天罡日/河魁日（妨翁姑日）
-        # 天罡妨翁、河魁妨姑为嫁娶大忌，扣分提高至-25
+        # 天罡妨翁、河魁妨姑为嫁娶大忌；2026-10 α 与 D（婚嫁评分算法 -40）
+        # 及 SHENSHA_SCORES('嫁娶') 对齐，原 -25 为漂移值
         if self._is_tiangang(sizhu):
-            self._add_shensha('天罡日', -25, '天罡日妨翁，不利新郎父亲')
+            self._add_shensha('天罡日', -40, '天罡日妨翁，不利新郎父亲')
         if self._is_hekui(sizhu):
-            self._add_shensha('河魁日', -25, '河魁日妨姑，不利新郎母亲')
+            self._add_shensha('河魁日', -40, '河魁日妨姑，不利新郎母亲')
 
         # 天德合
         if self._is_tiande_he(sizhu):

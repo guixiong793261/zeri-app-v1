@@ -26,9 +26,9 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_wangwang_by_zhi
 except ImportError:
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
 
 class TravelShenShaChecker(ShenShaChecker):
     """出行神煞检查器"""
@@ -284,17 +284,13 @@ class TravelShenShaChecker(ShenShaChecker):
         }
         return day_zhi == hai_map.get(month_zhi)
     
+    # 2026-10 出行往亡修复（方案A）：原内嵌错表已删除（巳寅亥申 4 位周期，
+    # 与《协纪》口诀零交集、与全部已知神煞无重合、无典据），
+    # 改为委托基类 is_wangwang_by_zhi（与安葬/嫁娶/入宅/动土/拆舍/通用一致）。
     def _is_wangwang(self, sizhu):
-        """是否往亡日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 往亡日
-        wangwang_days = {
-            '寅': '巳', '卯': '寅', '辰': '亥', '巳': '申',
-            '午': '巳', '未': '寅', '申': '亥', '酉': '申',
-            '戌': '巳', '亥': '寅', '子': '亥', '丑': '申'
-        }
-        return day_zhi == wangwang_days.get(month_zhi)
+        """往亡（《协纪》口诀"正寅二巳三申四亥…"，月支查日支）"""
+        return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
+                                  sizhu.get('day_zhi', ''))
     
     def _is_chuxing_jiri(self, sizhu):
         """是否出行吉日"""
@@ -302,18 +298,8 @@ class TravelShenShaChecker(ShenShaChecker):
         chuxing_jiri = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in chuxing_jiri
     
-    def _is_yima(self, sizhu):
-        """是否驿马日"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 驿马日
-        yima = {
-            '申': '寅', '子': '寅', '辰': '寅',
-            '寅': '申', '午': '申', '戌': '申',
-            '巳': '亥', '酉': '亥', '丑': '亥',
-            '亥': '巳', '卯': '巳', '未': '巳'
-        }
-        return day_zhi == yima.get(year_zhi)
+    # 2026-10 A6-4 D 批次：原 _is_yima override（仅年支）已删除，改继承
+    # 基类仅月支口径（《协纪》卷六：驿马为月神，正月起申逆行四孟）。
 
     # 2026-10 A1：本类 _is_tianma override 已删除——其月支表（寅午卯申
     # 辰戌巳子午寅未辰）与《星历考原》典载逐月一致，基类谓词修正后同表

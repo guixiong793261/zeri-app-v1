@@ -750,22 +750,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         }
         return day_gan == yuedehe_map.get(month_zhi)
     
-    def _is_yima(self, sizhu):
-        """是否驿马
-        驿马：按年支或日支推算
-        申子辰年/日：寅，寅午戌年/日：申
-        巳酉丑年/日：亥，亥卯未年/日：巳
-        """
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        yima_map = {
-            '申': '寅', '子': '寅', '辰': '寅',
-            '寅': '申', '午': '申', '戌': '申',
-            '巳': '亥', '酉': '亥', '丑': '亥',
-            '亥': '巳', '卯': '巳', '未': '巳'
-        }
-        return day_zhi == yima_map.get(year_zhi)
+    # 2026-10 A6-4 D 批次：原 _is_yima override（仅年支）已删除，改继承
+    # 基类仅月支口径（《协纪》卷六：驿马为月神，正月起申逆行四孟）。
+    # 年支驿马为年家方位神「岁马到山」，见修造神煞扩展._is_sui_ma_daoshan。
     
     def _is_sanhe(self, sizhu):
         """是否三合

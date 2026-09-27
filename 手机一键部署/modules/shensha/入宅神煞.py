@@ -540,19 +540,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
     
     # _is_yuede 内嵌表已删除：原表与基类/工具函数 YUEDE 权威表逐字一致（纯表副本），
     # 2026-09-18 拍板方案A改继承基类统一表（与天赦/岁煞收口同手法），行为零变化。
-    def _is_yima(self, sizhu):
-        """驿马日"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        yima_map = {
-            '寅': '申', '午': '申', '戌': '申',
-            '申': '寅', '子': '寅', '辰': '寅',
-            '巳': '亥', '酉': '亥', '丑': '亥',
-            '亥': '巳', '卯': '巳', '未': '巳'
-        }
-        
-        return day_zhi == yima_map.get(year_zhi)
+    # 2026-10 A6-4 D 批次：原 _is_yima override（仅年支）已删除，改继承
+    # 基类仅月支口径（《协纪》卷六：驿马为月神，正月起申逆行四孟）。
     
     def _is_tiande_he(self, sizhu):
         """天德合日"""
