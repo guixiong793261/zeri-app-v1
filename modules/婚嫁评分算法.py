@@ -691,6 +691,20 @@ def is_yangcuo(date_obj, sizhu):
     day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     return is_yangcuo_by_pillar(sizhu.get('month_zhi', ''), day_gz)
 
+def is_yandui(date_obj, sizhu):
+    """厌对（嫁娶专属凶神，2026-10 I1 第一批接入 D）
+
+    委托 shensha 层唯一实现 神煞基类.is_yandui_by_zhi（《协纪辨方书》
+    卷五义例三引《天宝历》，月厌所冲之辰），D 与 checker 层共用同一
+    规则源，不再各写一份月支→日支表。
+    """
+    try:
+        from .shensha.神煞基类 import is_yandui_by_zhi
+    except ImportError:
+        from modules.shensha.神煞基类 import is_yandui_by_zhi
+    day_zhi = sizhu.get('day_zhi', '') or (sizhu.get('日柱', '') or ['', ''])[1]
+    return is_yandui_by_zhi(sizhu.get('month_zhi', ''), day_zhi)
+
 def is_sansang(date_obj):
     """重丧日（按规则判断）
 
@@ -1107,6 +1121,15 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         score += _yangcuo_score
         details.append(('阳错', _yangcuo_score))
         result['warnings'].append('阳错：阴阳错乱之日，忌嫁娶')
+
+    # 厌对（2026-10 I1 第一批接入）：《协纪》卷五义例三《天宝历》月厌所冲
+    # 之辰，典载"其日忌嫁娶"。谓词委托神煞基类.is_yandui_by_zhi 单点出口，
+    # 分值查 ('嫁娶','厌对')=-10（非嫁娶事项无键、不接入）。
+    if is_yandui(date_obj, sizhu):
+        _yandui_score = _shensha_score('嫁娶', '厌对', -10)
+        score += _yandui_score
+        details.append(('厌对', _yandui_score))
+        result['warnings'].append('厌对：月厌所冲之日，忌嫁娶')
 
     # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):

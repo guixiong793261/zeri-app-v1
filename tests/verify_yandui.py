@@ -15,6 +15,13 @@
    非嫁娶事项不得为 -10（发射分 0 防 fallback）。
 另含 12 个黄金日（2026 各月建首个厌对日）日柱干支硬锁
 （探针 C:\\Temp\\_golden_yandui.py 推算，2026 命中 31 天）。
+
+I1 第一批（2026-10）增补 D 端到端入口：
+③ 婚嫁评分算法.is_yandui 委托模块级 is_yandui_by_zhi（单点出口），
+   与基类谓词 1095 天逐日一致；
+④ score_marriage_day details 端到端：命中日含 ('厌对',-10) 且追加
+   warning；monkeypatch 反事实（关闭厌对分支）验证总分差精确等于
+   -10 经 max(0) 截断后的理论差值，非命中日总分零变化。
 """
 import sys
 import datetime
@@ -164,12 +171,54 @@ case_golden = ShenShaCase(
     inputs=[gd for gd, _ in GOLDEN],
     expected=expected_golden, adapter=adapter_golden, compare='eq')
 
-CASES = [case_pred, case_score, case_golden]
+# ===== 入口③：婚嫁评分算法.is_yandui 委托（单点出口一致性） =====
+from modules.婚嫁评分算法 import is_yandui as _d_is_yandui
+from modules.四柱计算器 import calculate_sizhu as _calc_sizhu
+
+
+def adapter_d_pred(d):
+    try:
+        sz = _calc_sizhu(d, 12, 0)
+        sz['month_zhi'] = sz['月柱'][1]
+        sz['day_zhi'] = sz['日柱'][1]
+        return bool(_d_is_yandui(d, sz))
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_pred = ShenShaCase(
+    name='厌对-D引擎委托一致性', category='A',
+    description='婚嫁评分算法.is_yandui 委托 is_yandui_by_zhi，'
+                '2025-2027共1095天与权威月厌所冲表逐日一致',
+    inputs=DAYS, expected=expected_pred, adapter=adapter_d_pred, compare='bool')
+
+# ===== 入口④：score_marriage_day details 端到端 =====
+from modules.婚嫁评分算法 import score_marriage_day
+
+
+def adapter_d_details(d):
+    try:
+        r = score_marriage_day(d)
+        return [x for x in r.get('details', []) if x[0] == '厌对'] == [('厌对', -10)]
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_details = ShenShaCase(
+    name='厌对-D端到端details(-10)', category='A',
+    description='命中日 score_marriage_day details 恰含(厌对,-10)，'
+                '非命中日不含；2025-2027共1095天穷举',
+    inputs=DAYS, expected=expected_pred, adapter=adapter_d_details, compare='bool')
+
+CASES = [case_pred, case_score, case_golden, case_d_pred, case_d_details]
 
 
 def _assert_extra():
     """反向断言：1) 月厌本位月支不命中（对冲自检：卯月厌对=卯，月厌=酉，
-    逐一验证表值为月厌之冲）；2) 非嫁娶事项不为 -10（无通配键）。"""
+    逐一验证表值为月厌之冲）；2) 非嫁娶事项不为 -10（无通配键）；
+    3) D 端到端反事实：monkeypatch 关闭厌对分支后，命中日总分差精确等于
+       -10 经 max(0) 截断理论差值，非命中日零变化，关闭分支后 details
+       不含厌对。"""
     # 月厌逐月表（月建序）：正月起戌逆行十二辰——寅戌、卯酉、辰申、巳未、
     # 午午、未巳、申辰、酉卯、戌寅、亥丑、子子、丑亥——厌对表值应=月厌六冲
     YUE_YAN = {
@@ -187,6 +236,38 @@ def _assert_extra():
     for ev in ('修造', '安葬', '出行', '入学', '开业', '动土', '安床', '移徙'):
         v = shensha_score(ev, '厌对', None)
         assert v != -10, f'{ev} 厌对不应为 -10（嫁娶专属，无通配键）: {v}'
+
+    import modules.婚嫁评分算法 as _H
+    _orig = _H.is_yandui
+    hit_days = [d for d in DAYS if expected_pred(d)]
+    miss_sample = DAYS[::47]
+    n_delta = 0
+    try:
+        for d in hit_days:
+            r_on = _H.score_marriage_day(d)
+            _H.is_yandui = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_yandui = _orig
+            delta = r_on['score'] - r_off['score']
+            expect_delta = -(max(0, r_off['score']) - max(0, r_off['score'] - 10))
+            assert delta == expect_delta, \
+                f'{d} 厌对总分差 {delta} ≠ 截断公式 {expect_delta}（off={r_off["score"]}）'
+            assert -10 <= delta <= 0
+            assert not any(x[0] == '厌对' for x in r_off['details']), \
+                f'{d} 关闭分支后 details 仍含厌对'
+            if delta == -10:
+                n_delta += 1
+        for d in miss_sample:
+            if expected_pred(d):
+                continue
+            _H.is_yandui = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_yandui = _orig
+            assert r_off['score'] == _H.score_marriage_day(d)['score'], \
+                f'{d} 非命中日关闭分支后总分变化'
+        assert n_delta >= 1, '至少 1 个命中日应观察到 -10 总分差（未截断）'
+    finally:
+        _H.is_yandui = _orig
 
 
 if __name__ == '__main__':

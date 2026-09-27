@@ -621,6 +621,25 @@ def is_yangcuo_by_pillar(month_zhi, day_pillar):
     return day_pillar in _YANGCUO_PILLARS_BY_MONTH.get(month_zhi, ())
 
 
+_YANDUI_ZHI_BY_MONTH = {
+    '寅': '辰', '卯': '卯', '辰': '寅', '巳': '丑', '午': '子',
+    '未': '亥', '申': '戌', '酉': '酉', '戌': '申', '亥': '未',
+    '子': '午', '丑': '巳',
+}
+
+
+def is_yandui_by_zhi(month_zhi, day_zhi):
+    """厌对（月神，《协纪辨方书》卷五义例三引《天宝历》，月厌所冲之辰）。
+
+    《历例》「正月起辰，逆行十二辰」：寅辰、卯卯、辰寅、巳丑、午子、
+    未亥、申戌、酉酉、戌申、亥未、子午、丑巳。其日忌嫁娶。
+    单点出口：基类 _is_yandui 与婚嫁评分算法 D 统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _YANDUI_ZHI_BY_MONTH.get(month_zhi, '')
+
+
 # ===== 往亡权威表（2026-10 A6-2 修复：4 月循环错表 → 口诀表）=====
 # 权威口径：《协纪辨方书》往亡口诀"正寅二巳三申四亥五卯六午七酉八子
 #   九辰十未十一戌十二丑"（按节气月支查日支）：
@@ -2070,7 +2089,7 @@ class ShenShaChecker:
         return is_yangcuo_by_pillar(sizhu.get('month_zhi', ''), day_gz)
 
     def _is_yandui(self, sizhu):
-        """厌对（月神·日支，2026-10 α2-C 接线）
+        """厌对（月神·日支，2026-10 α2-C 接线；I1 批下沉单点出口）
 
         典据《协纪辨方书》卷五·义例三引《天宝历》：「厌对者，月厌所冲之
         辰也，其日忌嫁娶，又为招摇，忌乘船渡水。」《历例》：「厌对者正月
@@ -2078,14 +2097,11 @@ class ShenShaChecker:
         未亥、申戌、酉酉、戌申、亥未、子午、丑巳。六仪同起例但宜视事临官
         （卷四按语裁断，不另实现）。事项标准配 ('嫁娶','厌对'):-10
         （嫁娶专属，用户拍板⑥）。发射分=0 防 fallback。
+        2026-10 I1：判定下沉为模块级 is_yandui_by_zhi，D（婚嫁评分算法）
+        同源委托，本表为唯一规则源。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        yandui_map = {
-            '寅': '辰', '卯': '卯', '辰': '寅', '巳': '丑', '午': '子',
-            '未': '亥', '申': '戌', '酉': '酉', '戌': '申', '亥': '未',
-            '子': '午', '丑': '巳',
-        }
-        return sizhu.get('day_zhi', '') == yandui_map.get(month_zhi, '')
+        return is_yandui_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
 
     def _is_xushi(self, sizhu):
         """续世（与益后查法相同）"""
