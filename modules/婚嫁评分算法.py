@@ -677,6 +677,20 @@ def is_sili_sijue(date_obj):
         from modules.shensha.marriage_shensha import is_sili_sijue as _impl
     return _impl(date_obj)
 
+def is_yangcuo(date_obj, sizhu):
+    """阳错（嫁娶专属凶神，2026-10 I1 第一批接入 D）
+
+    委托 shensha 层唯一实现 神煞基类.is_yangcuo_by_pillar（《协纪辨方书》
+    卷四义例二引《堪舆经》逐月立成），D 与 checker 层共用同一规则源，
+    不再各写一份月支→干支表。
+    """
+    try:
+        from .shensha.神煞基类 import is_yangcuo_by_pillar
+    except ImportError:
+        from modules.shensha.神煞基类 import is_yangcuo_by_pillar
+    day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
+    return is_yangcuo_by_pillar(sizhu.get('month_zhi', ''), day_gz)
+
 def is_sansang(date_obj):
     """重丧日（按规则判断）
 
@@ -1059,6 +1073,13 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         logger.warning(f"神煞计算异常: {e}")
     
     # 4.5 传统凶煞扣分（原为一票否决，现改为高扣分项）
+    # 2026-10 I1：本批接入的嫁娶专属凶神分值一律查 SHENSHA_SCORES 单一表，
+    # 谓词全部委托 modules/shensha/神煞基类.py 模块级单点出口。
+    try:
+        from .事项标准 import shensha_score as _shensha_score
+    except ImportError:
+        from 事项标准 import shensha_score as _shensha_score
+
     # 月破（-40分）
     if is_month_break(date_obj, sizhu):
         score -= 40
@@ -1077,7 +1098,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         score -= 35
         details.append(('四离四绝', -35))
         result['warnings'].append('四离四绝：节气转换期，慎用')
-    
+
+    # 阳错（2026-10 I1 第一批接入）：《协纪》卷四义例二《堪舆经》逐月立成，
+    # 典载嫁娶忌。谓词委托神煞基类.is_yangcuo_by_pillar 单点出口，
+    # 分值查 ('嫁娶','阳错')=-15（非嫁娶事项无键、不接入）。
+    if is_yangcuo(date_obj, sizhu):
+        _yangcuo_score = _shensha_score('嫁娶', '阳错', -15)
+        score += _yangcuo_score
+        details.append(('阳错', _yangcuo_score))
+        result['warnings'].append('阳错：阴阳错乱之日，忌嫁娶')
+
     # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):
         fuxing_ke_score, fuxing_ke_reason = check_fuxing_being_ke(bride_bazi, sizhu)

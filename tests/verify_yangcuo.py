@@ -20,6 +20,14 @@
    专项宜忌表引用）；非嫁娶事项不得为 -15（发射分 0 防 fallback）。
 另含 12 个黄金日（2025-2027 全部实测阳错日）日柱干支硬锁
 （探针 C:\\Temp\\_golden_yangcuo.py 推算，独立推导与软件谓词 3 年全等）。
+
+I1 第一批（2026-10）增补 D 端到端入口：
+③ 婚嫁评分算法.is_yangcuo 委托模块级 is_yangcuo_by_pillar（单点出口），
+   与基类谓词 1095 天逐日一致；
+④ score_marriage_day details 端到端：命中日含 ('阳错',-15) 且追加 warning；
+   monkeypatch 反事实（关闭阳错分支）验证总分差精确等于 -15 经 max(0)
+   截断后的理论差值（未截断日 -15、截断过渡区 0~-15、零分日 0），
+   非命中日总分零变化。
 """
 import sys
 import datetime
@@ -172,12 +180,53 @@ case_golden = ShenShaCase(
     inputs=[gd for gd, _ in GOLDEN],
     expected=expected_golden, adapter=adapter_golden, compare='eq')
 
-CASES = [case_pred, case_score, case_golden]
+# ===== 入口③：婚嫁评分算法.is_yangcuo 委托（单点出口一致性） =====
+from modules.婚嫁评分算法 import is_yangcuo as _d_is_yangcuo
+from modules.四柱计算器 import calculate_sizhu as _calc_sizhu
+
+
+def adapter_d_pred(d):
+    try:
+        sz = _calc_sizhu(d, 12, 0)
+        sz['month_zhi'] = sz['月柱'][1]
+        return bool(_d_is_yangcuo(d, sz))
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_pred = ShenShaCase(
+    name='阳错-D引擎委托一致性', category='A',
+    description='婚嫁评分算法.is_yangcuo 委托 is_yangcuo_by_pillar，'
+                '2025-2027共1095天与权威月建立成逐日一致',
+    inputs=DAYS, expected=expected_pred, adapter=adapter_d_pred, compare='bool')
+
+# ===== 入口④：score_marriage_day details 端到端 =====
+from modules.婚嫁评分算法 import score_marriage_day
+
+
+def adapter_d_details(d):
+    try:
+        r = score_marriage_day(d)
+        return [x for x in r.get('details', []) if x[0] == '阳错'] == [('阳错', -15)]
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_details = ShenShaCase(
+    name='阳错-D端到端details(-15)', category='A',
+    description='命中日 score_marriage_day details 恰含(阳错,-15)，'
+                '非命中日不含；2025-2027共1095天穷举',
+    inputs=DAYS, expected=expected_pred, adapter=adapter_d_details, compare='bool')
+
+CASES = [case_pred, case_score, case_golden, case_d_pred, case_d_details]
 
 
 def _assert_extra():
     """反向断言：1) 午/子月恒 miss（典载五月十一月无阳错）；
-    2) 非嫁娶事项不为 -15（无通配键）。"""
+    2) 非嫁娶事项不为 -15（无通配键）；
+    3) D 端到端反事实：monkeypatch 关闭阳错分支后，命中日总分差精确等于
+       -15 经 max(0) 截断理论差值（未截断日 -15、过渡区 0~-15、零分日 0），
+       非命中日零变化，关闭分支后 details 不含阳错。"""
     from modules.shensha.神煞基类 import ShenShaChecker
     c = ShenShaChecker()
     all_gz = [g for tup in YANGCUO_CLASSICAL.values() for g in tup]
@@ -190,6 +239,40 @@ def _assert_extra():
     for ev in ('修造', '安葬', '出行', '入学', '开业', '动土', '安床', '移徙'):
         v = shensha_score(ev, '阳错', None)
         assert v != -15, f'{ev} 阳错不应为 -15（嫁娶专属，无通配键）: {v}'
+
+    import modules.婚嫁评分算法 as _H
+    _orig = _H.is_yangcuo
+    hit_days = [d for d in DAYS if expected_pred(d)]
+    miss_sample = DAYS[::47]  # 24 个非命中抽样（含未截断日）
+    n_delta = 0
+    try:
+        for d in hit_days:
+            r_on = _H.score_marriage_day(d)
+            _H.is_yangcuo = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_yangcuo = _orig
+            delta = r_on['score'] - r_off['score']
+            # D 最终分 max(0, raw)：-15 经截断后精确差值
+            # = max(0,off)-max(0,off-15)，取值区间 [0,15]
+            expect_delta = -(max(0, r_off['score']) - max(0, r_off['score'] - 15))
+            assert delta == expect_delta, \
+                f'{d} 阳错总分差 {delta} ≠ 截断公式 {expect_delta}（off={r_off["score"]}）'
+            assert -15 <= delta <= 0
+            assert not any(x[0] == '阳错' for x in r_off['details']), \
+                f'{d} 关闭分支后 details 仍含阳错'
+            if delta == -15:
+                n_delta += 1
+        for d in miss_sample:
+            if expected_pred(d):
+                continue
+            _H.is_yangcuo = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_yangcuo = _orig
+            assert r_off['score'] == _H.score_marriage_day(d)['score'], \
+                f'{d} 非命中日关闭分支后总分变化'
+        assert n_delta >= 1, '至少 1 个命中日应观察到 -15 总分差（未截断）'
+    finally:
+        _H.is_yangcuo = _orig
 
 
 if __name__ == '__main__':

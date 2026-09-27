@@ -600,6 +600,27 @@ def is_sifei_by_pillar(month_zhi, day_pillar):
     return day_pillar in _SIFEI_PILLARS_BY_SEASON.get(month_zhi, ())
 
 
+_YANGCUO_PILLARS_BY_MONTH = {
+    '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
+    '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
+    '申': ('庚申',), '酉': ('辛酉',), '戌': ('庚戌',),
+    '亥': ('癸亥',), '丑': ('癸丑',),
+}
+
+
+def is_yangcuo_by_pillar(month_zhi, day_pillar):
+    """阳错（月神，《协纪辨方书》卷四义例二引《堪舆经》逐月立成）。
+
+    月支查日柱干支：寅甲寅、卯乙卯、辰甲辰、巳丁巳己巳、未丁未己未、
+    申庚申、酉辛酉、戌庚戌、亥癸亥、丑癸丑；五月（午）十一月（子）
+    阴阳二建会于子午，无阳错。
+    单点出口：基类 _is_yangcuo 与婚嫁评分算法 D 统一委托本函数。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar in _YANGCUO_PILLARS_BY_MONTH.get(month_zhi, ())
+
+
 # ===== 往亡权威表（2026-10 A6-2 修复：4 月循环错表 → 口诀表）=====
 # 权威口径：《协纪辨方书》往亡口诀"正寅二巳三申四亥五卯六午七酉八子
 #   九辰十未十一戌十二丑"（按节气月支查日支）：
@@ -2031,7 +2052,7 @@ class ShenShaChecker:
         return sizhu.get('day_zhi', '') in ('巳', '亥')
 
     def _is_yangcuo(self, sizhu):
-        """阳错（月神·日干支，2026-10 α2-C 接线）
+        """阳错（月神·日干支，2026-10 α2-C 接线；I1 批下沉单点出口）
 
         典据《协纪辨方书》卷四·义例二引《堪舆经》：「以阳建之支配当方之干，
         阴阳自相配合为日，以值所冲之宿为阳错。如正月阳建在寅，近于甲，支干
@@ -2042,16 +2063,11 @@ class ShenShaChecker:
         酉辛酉、戌庚戌、亥癸亥、（子无）、丑癸丑。与《蠡海集》"阴错阳差十二
         日"（固定干支不随月建）为两个体系，勿混用。事项标准配
         ('嫁娶','阳错'):-15（嫁娶专属，用户拍板⑤A）。发射分=0 防 fallback。
+        2026-10 I1：判定下沉为模块级 is_yangcuo_by_pillar，D（婚嫁评分算法）
+        同源委托，本表为唯一规则源。
         """
-        month_zhi = sizhu.get('month_zhi', '')
         day_gz = sizhu.get('day_gan', '') + sizhu.get('day_zhi', '')
-        yangcuo_map = {
-            '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
-            '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
-            '申': ('庚申',), '酉': ('辛酉',), '戌': ('庚戌',),
-            '亥': ('癸亥',), '丑': ('癸丑',),
-        }
-        return day_gz in yangcuo_map.get(month_zhi, ())
+        return is_yangcuo_by_pillar(sizhu.get('month_zhi', ''), day_gz)
 
     def _is_yandui(self, sizhu):
         """厌对（月神·日支，2026-10 α2-C 接线）
