@@ -21,6 +21,15 @@
 旧实现（git HEAD 神煞基类.py）只比日干（春见庚日、夏见壬日、秋见甲日、
 冬见丙日），属放宽口径：2026 实测命中 39 天，典载仅 14 天——多出 31 天
 假四废，且漏判 6 天阴干支日（辛酉/癸亥/乙卯/丁巳）。
+
+I1 第一批（2026-10）增补 D 端到端入口（2025-2027 共 1095 天段）：
+③ 婚嫁评分算法.is_sifei 委托模块级 is_sifei_by_pillar（单点出口），
+   与基类谓词逐日一致；
+④ score_marriage_day details 端到端：命中日含 ('四废',-15) 且追加
+   warning；monkeypatch 反事实（关闭四废分支）验证总分差精确等于
+   -15 经 max(0) 截断后的理论差值，非命中日总分零变化。
+   四废有 15 个事项键（无通配），非嫁娶路径由 checker 基类统一注册，
+   本批仅补 D 引擎，不动 checker。
 """
 import sys
 import datetime
@@ -118,6 +127,7 @@ def _all_days(*years):
 
 
 DAYS = list(_all_days(2026))
+DAYS_3Y = list(_all_days(2025, 2026, 2027))
 
 # 加载即断言：四季连续三月同表、四季各 2 柱、共 8 个不同日柱干支
 _SEASON_GROUPS = (('寅', '卯', '辰'), ('巳', '午', '未'), ('申', '酉', '戌'), ('亥', '子', '丑'))
@@ -226,7 +236,47 @@ case_golden = ShenShaCase(
     inputs=sorted({gd for gd, _ in GOLDEN_HIT} | set(OLD_FALSE_POS) | set(NEW_ONLY)),
     expected=expected_golden, adapter=adapter_golden, compare='eq')
 
-CASES = [case_pred, case_e2e, case_golden]
+# ===== I1：入口③ D 引擎委托（2025-2027 三年段） =====
+from modules.婚嫁评分算法 import is_sifei as _d_is_sifei
+from modules.四柱计算器 import calculate_sizhu as _calc_sizhu
+
+
+def adapter_d_pred(d):
+    try:
+        sz = _calc_sizhu(d, 12, 0)
+        sz['month_zhi'] = sz['月柱'][1]
+        return bool(_d_is_sifei(d, sz))
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_pred = ShenShaCase(
+    name='四废-D引擎委托一致性', category='A',
+    description='婚嫁评分算法.is_sifei 委托 is_sifei_by_pillar，'
+                '2025-2027共1095天与典载四季衰废表逐日一致',
+    inputs=DAYS_3Y, expected=expected_pred, adapter=adapter_d_pred,
+    compare='bool')
+
+# ===== 入口④ score_marriage_day details =====
+from modules.婚嫁评分算法 import score_marriage_day
+
+
+def adapter_d_details(d):
+    try:
+        r = score_marriage_day(d)
+        return [x for x in r.get('details', []) if x[0] == '四废'] == [('四废', -15)]
+    except Exception:
+        return _UNAVAILABLE
+
+
+case_d_details = ShenShaCase(
+    name='四废-D端到端details(-15)', category='A',
+    description='命中日 details 恰含(四废,-15)，非命中日不含；'
+                '2025-2027共1095天穷举',
+    inputs=DAYS_3Y, expected=expected_pred, adapter=adapter_d_details,
+    compare='bool')
+
+CASES = [case_pred, case_e2e, case_golden, case_d_pred, case_d_details]
 
 
 def _assert_single_entry_base_checkers():
@@ -250,9 +300,54 @@ def _assert_single_entry_base_checkers():
         assert sz['日柱'] == gz, f'{gd} 日柱期望{gz} 实际{sz["日柱"]}'
 
 
+def _assert_d_endtoend():
+    """I1 D 端到端反事实：2025-2027 命中日关闭四废分支后总分差精确符合
+    -15 经 max(0) 截断公式；非命中日零变化；分值表现状锁（15 事项 -15、
+    无通配）；至少 1 日观察到满额 -15。"""
+    from modules.事项标准 import shensha_score
+    for ev in ('嫁娶', '修造', '动土', '拆舍', '入宅', '开业', '出行', '安床',
+               '作灶', '移徙', '入学', '求医', '签约', '安葬'):
+        assert shensha_score(ev, '四废', None) == -15, \
+            f'{ev} 四废应 -15: {shensha_score(ev, "四废", None)}'
+    assert shensha_score('*', '四废', None) != -15, '四废无通配键，需人工确认'
+
+    import modules.婚嫁评分算法 as _H
+    _orig = _H.is_sifei
+    hit_days = [d for d in DAYS_3Y if expected_pred(d)]
+    miss_sample = DAYS_3Y[::47]
+    n_delta = 0
+    try:
+        for d in hit_days:
+            r_on = _H.score_marriage_day(d)
+            _H.is_sifei = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_sifei = _orig
+            delta = r_on['score'] - r_off['score']
+            expect_delta = -(max(0, r_off['score']) - max(0, r_off['score'] - 15))
+            assert delta == expect_delta, \
+                f'{d} 四废总分差 {delta} ≠ 截断公式 {expect_delta}（off={r_off["score"]}）'
+            assert -15 <= delta <= 0
+            assert not any(x[0] == '四废' for x in r_off['details']), \
+                f'{d} 关闭分支后 details 仍含四废'
+            if delta == -15:
+                n_delta += 1
+        for d in miss_sample:
+            if expected_pred(d):
+                continue
+            _H.is_sifei = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_sifei = _orig
+            assert r_off['score'] == _H.score_marriage_day(d)['score'], \
+                f'{d} 非命中日关闭分支后总分变化'
+        assert n_delta >= 1, '至少 1 个命中日应观察到 -15 总分差（未截断）'
+    finally:
+        _H.is_sifei = _orig
+
+
 if __name__ == '__main__':
     try:
         _assert_single_entry_base_checkers()
+        _assert_d_endtoend()
     except AssertionError as e:
         print(f'❌ 反向断言失败: {e}')
         sys.exit(1)

@@ -720,6 +720,21 @@ def is_bazhuan(date_obj, sizhu):
     day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     return is_bazhuan_by_pillar(day_gz)
 
+def is_sifei(date_obj, sizhu):
+    """四废（凶神，2026-10 I1 第一批接入 D）
+
+    委托 shensha 层唯一实现 神煞基类.is_sifei_by_pillar（《协纪辨方书》
+    四时衰废之气：春庚申辛酉、夏壬子癸亥、秋甲寅乙卯、冬丙午丁巳，
+    月支查日柱干支）。卷十嫁娶忌；四废事项键覆盖 15 个事项（无通配，
+    checker 基类统一注册），D 按 ('嫁娶','四废') 取分。
+    """
+    try:
+        from .shensha.神煞基类 import is_sifei_by_pillar
+    except ImportError:
+        from modules.shensha.神煞基类 import is_sifei_by_pillar
+    day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
+    return is_sifei_by_pillar(sizhu.get('month_zhi', ''), day_gz)
+
 def is_sansang(date_obj):
     """重丧日（按规则判断）
 
@@ -1155,6 +1170,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         score += _bazhuan_score
         details.append(('八专', _bazhuan_score))
         result['warnings'].append('八专：阴阳不备之日，忌嫁娶')
+
+    # 四废（2026-10 I1 第一批接入）：《协纪》四时衰废之气，春庚申辛酉、
+    # 夏壬子癸亥、秋甲寅乙卯、冬丙午丁巳（月支查日柱），卷十嫁娶忌。
+    # 谓词委托神煞基类.is_sifei_by_pillar 单点出口，
+    # 分值查 ('嫁娶','四废')=-15。
+    if is_sifei(date_obj, sizhu):
+        _sifei_score = _shensha_score('嫁娶', '四废', -15)
+        score += _sifei_score
+        details.append(('四废', _sifei_score))
+        result['warnings'].append('四废：四时衰废之气，忌嫁娶')
 
     # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):
