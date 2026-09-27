@@ -240,10 +240,33 @@ def is_yinde_by_zhi(month_zhi, day_zhi):
 
     2026-10 A2 修复：原 _is_yinde 误委托 _is_yangde（"正月起酉"误作
     "正月起戌顺行"），与典载"逆行六阴辰"方向相反，全年 0 天重合。
-    阳德表本身也错（应"正月起戌顺行六阳辰"，挂账 A 后批次），本批
-    只修阴德，使其独立正确。
     """
     return bool(month_zhi) and day_zhi == _YINDE_ZHI_BY_MONTH.get(month_zhi)
+
+
+# 阳德（《协纪》卷三·月事吉神 / 《御定星历考原》卷三）「正月起戌顺行六阳辰」
+# 六阳辰=子寅辰午申戌，从戌起顺行：戌→子→寅→辰→午→申，正月戌、二月子、
+# 三月寅、四月辰、五月午、六月申、七月戌（循环）……与阴德"正月起酉逆行
+# 六阴辰"互为对偶，同月阳德/阴德日支必不同。
+# 2026-10 A8 修复：旧表起点作"酉"（阴支），序列 酉辰亥午卯戌 阴阳交错，
+# 与"六阳辰"名义内部矛盾；穷举新旧命中零交集。曹震圭"五月一阴生即配于午，
+# 六阳月居于寅午戌"可互证本表（午月午、寅月戌、戌月寅）。
+_YANGDE_ZHI_BY_MONTH = {
+    '寅': '戌', '卯': '子', '辰': '寅',
+    '巳': '辰', '午': '午', '未': '申',
+    '申': '戌', '酉': '子', '戌': '寅',
+    '亥': '辰', '子': '午', '丑': '申',
+}
+
+
+def is_yangde_by_zhi(month_zhi, day_zhi):
+    """阳德（月神比日支，《协纪》卷三《历例》「正月起戌顺行六阳辰」）。
+
+    单点出口：基类 _is_yangde 及各事项检查器（经基类管线）统一委托本函数。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _YANGDE_ZHI_BY_MONTH.get(month_zhi)
 
 
 # 四击（《协纪》卷五·义例三）「春戌夏丑秋辰冬未」
@@ -1953,22 +1976,19 @@ class ShenShaChecker:
         return day_zhi == simeng[month_order.index(month_zhi) % 4]
     
     def _is_yangde(self, sizhu):
-        """阳德（正月酉、二月辰、三月亥、四月午、五月卯、六月戌、七月酉、八月辰、九月亥、十月午、十一月卯、十二月戌）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        yangde_map = {
-            '寅': '酉', '卯': '辰', '辰': '亥', '巳': '午',
-            '午': '卯', '未': '戌', '申': '酉', '酉': '辰',
-            '戌': '亥', '亥': '午', '子': '卯', '丑': '戌'
-        }
-        return day_zhi == yangde_map.get(month_zhi)
+        """阳德（2026-10 A8 修复：原内联表起点作酉、含阴支，与"六阳辰"
+        内部矛盾且与典载零重合；现委托模块级唯一实现 is_yangde_by_zhi
+        ——《历例》正月起戌顺行六阳辰：寅月戌、卯月子、辰月寅、巳月辰、
+        午月午、未月申、申月戌、酉月子、戌月寅、亥月辰、子月午、丑月申）。"""
+        return is_yangde_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
     
     def _is_yinde(self, sizhu):
         """阴德（月神比日支，《协纪》卷六「正月起酉逆行六阴辰」）
 
         2026-10 A2 修复：原误委托 _is_yangde（"与阳德查法相同"），
         与典载"逆行六阴辰"方向相反，全年 0 天重合。现委托模块级
-        唯一实现 is_yinde_by_zhi。阳德表本身也错（挂账 A 后批次）。
+        唯一实现 is_yinde_by_zhi。阳德表已于 A8 同步修正（顺行六阳辰）。
         """
         return is_yinde_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
