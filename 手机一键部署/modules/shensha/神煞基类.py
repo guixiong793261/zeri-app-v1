@@ -1032,6 +1032,15 @@ class ShenShaChecker:
             self._add_shensha('官日', 8, '官日主官禄')
         if self._is_fusheng(sizhu):
             self._add_shensha('福生', 10, '福生主福生')
+        if self._is_shengxin(sizhu):
+            # 2026-10 α2 接线：圣心（《协纪辨方书》卷六·义例四引《枢要历》
+            # 「月中福神，其日宜上表章、行恩泽、营百事」）；分值通配 +8
+            # （shensha_score '*' 回退）。
+            self._add_shensha('圣心', 8, '圣心主福泽，宜上表章、行恩泽')
+        if self._is_jieshen(sizhu):
+            # 2026-10 α2 接线：解神（《协纪辨方书》卷五·义例三引《总要历》
+            # 「月中善神，所直之日宜上词章、雪冤枉」）；分值通配 +8。
+            self._add_shensha('解神', 8, '解神主化解，宜上词章、雪冤枉')
         if self._is_jiqing(sizhu):
             self._add_shensha('吉庆', 10, '吉庆主吉庆')
         if self._is_yihou(sizhu):
@@ -1884,6 +1893,41 @@ class ShenShaChecker:
         }
         return day_zhi == yihou_map.get(month_zhi)
     
+    def _is_shengxin(self, sizhu):
+        """圣心（月神·日支，2026-10 α2 接线）
+
+        典据《协纪辨方书》卷六·义例四引《枢要历》：「圣心者，月中福神也。
+        其日宜上表章，行恩泽，营百事。」《历例》：「正月亥，二月巳，三月子，
+        四月午，五月丑，六月未，七月寅，八月申，九月卯，十月酉，十一月辰，
+        十二月戌。」（《星历考原》卷三同载）原仅五行择日法月表+getter
+        （全库 0 调用方），本批补月作用域谓词+注册，表值逐月对典一致。
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        shengxin_map = {
+            '寅': '亥', '卯': '巳', '辰': '子', '巳': '午',
+            '午': '丑', '未': '未', '申': '寅', '酉': '申',
+            '戌': '卯', '亥': '酉', '子': '辰', '丑': '戌'
+        }
+        return day_zhi == shengxin_map.get(month_zhi)
+
+    def _is_jieshen(self, sizhu):
+        """解神（月神·日支，2026-10 α2 接线）
+
+        典据《协纪辨方书》卷五·义例三引《总要历》：「解神者，月中善神也。
+        所直之日，宜上词章，雪冤枉。」《历例》：「正二月申，三四月戌，
+        五六月子，七八月寅，九十月辰，十一月十二月午。」（《星历考原》
+        卷三同载；《神煞赋》「两月行一位，正二居申」互证）表值逐月对典一致。
+        """
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        jieshen_map = {
+            '寅': '申', '卯': '申', '辰': '戌', '巳': '戌',
+            '午': '子', '未': '子', '申': '寅', '酉': '寅',
+            '戌': '辰', '亥': '辰', '子': '午', '丑': '午'
+        }
+        return day_zhi == jieshen_map.get(month_zhi)
+
     def _is_xushi(self, sizhu):
         """续世（与益后查法相同）"""
         return self._is_yihou(sizhu)
