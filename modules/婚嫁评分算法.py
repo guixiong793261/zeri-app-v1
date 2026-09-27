@@ -705,6 +705,21 @@ def is_yandui(date_obj, sizhu):
     day_zhi = sizhu.get('day_zhi', '') or (sizhu.get('日柱', '') or ['', ''])[1]
     return is_yandui_by_zhi(sizhu.get('month_zhi', ''), day_zhi)
 
+def is_bazhuan(date_obj, sizhu):
+    """八专（凶神，2026-10 I1 第一批接入 D）
+
+    委托 shensha 层唯一实现 神煞基类.is_bazhuan_by_pillar（《历例》
+    B5 版 5 柱：丁未、己未、庚申、甲寅、癸丑；不随月建）。卷十嫁娶
+    忌之列；八专另有通配键与 9 个非嫁娶事项键（checker 子类自注册），
+    D 仅按 ('嫁娶','八专') 取分。
+    """
+    try:
+        from .shensha.神煞基类 import is_bazhuan_by_pillar
+    except ImportError:
+        from modules.shensha.神煞基类 import is_bazhuan_by_pillar
+    day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
+    return is_bazhuan_by_pillar(day_gz)
+
 def is_sansang(date_obj):
     """重丧日（按规则判断）
 
@@ -1130,6 +1145,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         score += _yandui_score
         details.append(('厌对', _yandui_score))
         result['warnings'].append('厌对：月厌所冲之日，忌嫁娶')
+
+    # 八专（2026-10 I1 第一批接入）：《历例》B5 版 5 柱
+    # （丁未、己未、庚申、甲寅、癸丑），《协纪》卷十嫁娶忌。
+    # 谓词委托神煞基类.is_bazhuan_by_pillar 单点出口（不随月建），
+    # 分值查 ('嫁娶','八专')=-15。
+    if is_bazhuan(date_obj, sizhu):
+        _bazhuan_score = _shensha_score('嫁娶', '八专', -15)
+        score += _bazhuan_score
+        details.append(('八专', _bazhuan_score))
+        result['warnings'].append('八专：阴阳不备之日，忌嫁娶')
 
     # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):
