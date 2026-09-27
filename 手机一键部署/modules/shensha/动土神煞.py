@@ -239,10 +239,12 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 2026-10 A1：'鸣吠日'/'鸣吠对日' 重加删除（继承修造错表谓词，
         # 基类月作用域已按 13/11 典载日柱统一注册，动土取 15/10 分值键）。
 
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '修造吉日')
-        
+        # 2026-10 A6-4 死代码清理：'不将日' 注册块删除。本类继承修造神煞
+        # _is_bujiang（恒 False——不将日为嫁娶专用吉日，修造系刻意禁用，
+        # 见 修造神煞.py 同名方法 docstring），本守卫恒假、365 天完整 check()
+        # 链路零命中；动土不将宜项文案由 rules 层 marriage_shensha
+        # .is_bujiang_day 独立供给（2026 全年 77 天与基类 D 表全等）。
+
         # 天赦（动土大吉）
         if self._is_tianshe(sizhu):
             self._add_shensha('天赦', 25, '天赦吉日，动土百无禁忌')
