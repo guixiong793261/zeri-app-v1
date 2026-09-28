@@ -100,11 +100,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 天狗
         if self._is_tiangou(sizhu):
             self._add_shensha('天狗', -12, '天狗日入宅不吉')
-        
-        # 伏断日
-        if self._is_fuduan(sizhu):
-            self._add_shensha('伏断日', -15, '伏断日忌入宅')
-        
+
+        # 伏断日由基类月作用域统一注册（A6-3 死桩与同名分支删除：
+        # 旧 return False 经 self 分派屏蔽基类注册，致入宅/移徙 0 命中）
+
         # 受死日
         if self._is_shousi(sizhu):
             self._add_shensha('受死日', -22, '受死日不宜入宅')
@@ -428,14 +427,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
                 return offset == 2
         return False
     
-    def _is_fuduan(self, sizhu):
-        """伏断日
-        注：传统伏断日指"建除十二神"中的"危"日，并非按天干查地支。
-        当前实现无权威依据，已禁用。
-        如需使用，请使用建除十二神判断。
-        """
-        return False
-    
+    # _is_fuduan 死桩已删除（2026-10 A6-3）：旧"return False（伏断即危日，
+    # 无权威依据已禁用）"经 self 分派屏蔽基类月作用域注册，致入宅/移徙
+    # 伏断 0 命中；现继承基类 _is_fuduan（is_fuduan_by_zhi，六害口径）。
+
     def _is_shousi(self, sizhu):
         """受死日"""
         month_zhi = sizhu['month_zhi']

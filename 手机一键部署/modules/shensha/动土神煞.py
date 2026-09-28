@@ -170,11 +170,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '忌动土修造，犯之主败')
-        
-        # 伏断日
-        if self._is_fuduan(sizhu):
-            self._add_shensha('伏断日', -15, '忌动土修造')
-        
+
+        # 伏断日由基类月作用域统一注册（A6-3 同名分支删除，super 先注册必被去重）
+
         # 将军箭
         if self._is_jiangjunjian(sizhu):
             self._add_shensha('将军箭', -20, '忌修造，犯之主伤')

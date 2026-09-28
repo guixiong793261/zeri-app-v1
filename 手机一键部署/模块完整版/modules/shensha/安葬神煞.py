@@ -191,11 +191,9 @@ class BurialShenShaChecker(ShenShaChecker):
         # 十恶大败日
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败日，诸事不宜，安葬大忌')
-        
-        # 伏断日
-        if self._is_fuduan(sizhu):
-            self._add_shensha('伏断日', -15, '伏断日不宜安葬')
-        
+
+        # 伏断日由基类月作用域统一注册（A6-3 同名分支删除，super 先注册必被去重）
+
         # ===== 凶煞 =====
         
         # 土瘟
@@ -452,15 +450,9 @@ class BurialShenShaChecker(ShenShaChecker):
         shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
         return day_pillar in shie_dabai
     
-    def _is_fuduan(self, sizhu):
-        """是否伏断日"""
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        fuduan_map = {
-            '甲': '戌', '乙': '酉', '丙': '申', '丁': '未', '戊': '午',
-            '己': '巳', '庚': '辰', '辛': '卯', '壬': '寅', '癸': '丑'
-        }
-        return day_zhi == fuduan_map.get(day_gan)
+    # _is_fuduan 已删除（2026-10 A6-3）：旧为"日干查日支"异表
+    # （甲戌/乙酉/丙申/丁未/戊午/己巳/庚辰/辛卯/壬寅/癸丑，2025-2027 共 182
+    # 命中，与典载六害口径无关）；统一继承基类 _is_fuduan（月支相害日支）。
 
     # ===== 吉日 =====
 

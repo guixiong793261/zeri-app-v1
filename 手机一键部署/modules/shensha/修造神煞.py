@@ -150,11 +150,10 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 十恶大败
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '忌动土修造，犯之主败')
-        
-        # 伏断日
-        if self._is_fuduan(sizhu):
-            self._add_shensha('伏断日', -15, '忌动土修造')
-        
+
+        # 伏断日由基类月作用域统一注册（A6-3 死桩与同名分支删除：
+        # 旧 return False 经 self 分派屏蔽基类注册，致修造系 0 命中）
+
         # 将军箭
         if self._is_jiangjunjian(sizhu):
             self._add_shensha('将军箭', -20, '忌修造，犯之主伤')
@@ -562,15 +561,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         shie_dabai = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
         return day_pillar in shie_dabai
-    
-    def _is_fuduan(self, sizhu):
-        """是否伏断日
-        注意：传统伏断日指"建除十二神"中的"危"日，并非按天干查地支。
-        当前实现无权威依据，已禁用。
-        如需使用，请使用建除十二神判断。
-        """
-        return False
-    
+
+    # _is_fuduan 死桩已删除（2026-10 A6-3）：旧"return False（伏断即危日，
+    # 无权威依据已禁用）"经 self 分派屏蔽基类月作用域注册，致修造/动土/拆舍
+    # 伏断 0 命中；现继承基类 _is_fuduan（is_fuduan_by_zhi，六害口径）。
+
     def _is_jiangjunjian(self, sizhu):
         """是否将军箭
         注：将军箭有多个版本，此处为简化版本，仅供参考。

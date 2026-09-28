@@ -740,16 +740,8 @@ class CommonShenShaChecker(ShenShaChecker):
             return day_zhi == xiaohao
         return False
 
-    def _is_fuduan(self, sizhu):
-        """伏断日（月支冲日支）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong_map.get(month_zhi)
+    # _is_fuduan 已删除（2026-10 A6-3）：旧为"月支冲日支"副本（与月破同表），
+    # 统一继承基类 _is_fuduan（委托 is_fuduan_by_zhi，月支相害日支六害口径）。
 
     # 归忌 _is_guiji 已删除（2026-10 A5 收口）：旧"月支前七位"系偏移错，
     # 回归基类 is_guiji_by_zhi（《协纪·历例》孟月丑/仲月寅/季月子）。

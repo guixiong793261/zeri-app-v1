@@ -640,6 +640,40 @@ def is_yandui_by_zhi(month_zhi, day_zhi):
     return day_zhi == _YANDUI_ZHI_BY_MONTH.get(month_zhi, '')
 
 
+# ===== 六害关系表（关系判定层，月支 ↔ 日支）=====
+# 子未、丑午、寅巳、卯辰、申亥、酉戌（六对互为相害）。
+# 月害与伏断（A6-3 拍板口径，见 docs/待翻书清单.md §一）皆以此关系为起例，
+# 全项目六害判定统一查本表，禁止在各 checker 内另抄映射。
+_LIUHAI_PARTNER = {
+    '子': '未', '未': '子',
+    '丑': '午', '午': '丑',
+    '寅': '巳', '巳': '寅',
+    '卯': '辰', '辰': '卯',
+    '申': '亥', '亥': '申',
+    '酉': '戌', '戌': '酉',
+}
+
+
+def is_liuhai_by_zhi(month_zhi, day_zhi):
+    """六害关系：月支与日支相害。关系判定单点出口。"""
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _LIUHAI_PARTNER.get(month_zhi, '')
+
+
+def is_fuduan_by_zhi(month_zhi, day_zhi):
+    """伏断日（月神，按拍板口径＝月支相害日支，委托六害关系层）。
+
+    口径冻结：docs/待翻书清单.md §一、docs/协纪辨方书神煞对照表.md
+    「伏断日＝日支与月支相害（六害）」。旧实现取月支冲日支，与月破同表
+    （2025-2027 实测 94 命中全部与月破同格双扣）；安葬另有日干查日支异表
+    （182 命中）、修造/入宅为 return False 死桩（经 self 分派屏蔽基类注册，
+    致修造/动土/拆舍/入宅/移徙 5 事项 0 命中）。2026-10 A6-3 统一收口。
+    单点出口：基类 _is_fuduan 与通用事项检查器统一委托本函数。
+    """
+    return is_liuhai_by_zhi(month_zhi, day_zhi)
+
+
 # ===== 往亡权威表（2026-10 A6-2 修复：4 月循环错表 → 口诀表）=====
 # 权威口径：《协纪辨方书》往亡口诀"正寅二巳三申四亥五卯六午七酉八子
 #   九辰十未十一戌十二丑"（按节气月支查日支）：
@@ -3099,29 +3133,16 @@ class ShenShaChecker:
         return day_zhi == xing_map.get(month_zhi)
 
     def _is_yuehai(self, sizhu):
-        """月害：月支害日支"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        hai_map = {
-            '子': '未', '未': '子',
-            '丑': '午', '午': '丑',
-            '寅': '巳', '巳': '寅',
-            '卯': '辰', '辰': '卯',
-            '申': '亥', '亥': '申',
-            '酉': '戌', '戌': '酉'
-        }
-        return day_zhi == hai_map.get(month_zhi)
-    
+        """月害：月支害日支（2026-10 A6-3 起委托六害关系层 is_liuhai_by_zhi，
+        与伏断同表同源；表逐字搬运，判定零变化）。"""
+        return is_liuhai_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
+
     def _is_fuduan(self, sizhu):
-        """伏断日（月支冲日支）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong_map.get(month_zhi)
+        """伏断日（2026-10 A6-3：月支冲日支错表 → 月支相害日支，
+        单点委托 is_fuduan_by_zhi；典据与旧口径数据见模块函数 docstring）。"""
+        return is_fuduan_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
     
     def _is_guiji(self, sizhu):
         """归忌（《协纪·历例》：孟月丑、仲月寅、季月子，单点委托 is_guiji_by_zhi；
