@@ -291,6 +291,28 @@ def is_siji_by_zhi(month_zhi, day_zhi):
     return bool(month_zhi) and day_zhi == _SIJI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# 真四忌（《协纪》卷五·义例三「四忌 四穷」连条引《历例》）
+# 「春甲子、夏丙子、秋庚子、冬壬子」——干支并论，按节气四季每季 3 月同一柱。
+# 与四击（同卷相邻独立条目「春戌夏丑秋辰冬未」，纯日支）是两个独立神煞，
+# 2025-2027 共 1095 天实测两集交集为 0。2026-10 A6-5 新建。
+_SIJI_JI_PILLAR_BY_MONTH = {
+    '寅': '甲子', '卯': '甲子', '辰': '甲子', '巳': '丙子',
+    '午': '丙子', '未': '丙子', '申': '庚子', '酉': '庚子',
+    '戌': '庚子', '亥': '壬子', '子': '壬子', '丑': '壬子',
+}
+
+
+def is_siji_ji_by_pillar(month_zhi, day_pillar):
+    """真四忌（月支查日柱干支，《历例》「春甲子、夏丙子、秋庚子、冬壬子」）
+
+    典载忌出师兵事、结婚姻、嫁娶、安葬；本软件无兵事事项，故仅
+    嫁娶/安葬两 checker 注册。2026-10 A6-5 新建，与四击谓词分立。
+    """
+    if not month_zhi or not day_pillar:
+        return False
+    return day_pillar == _SIJI_JI_PILLAR_BY_MONTH.get(month_zhi)
+
+
 # 土府（《协纪》卷四·义例二·建除同位异名）「土府者，与月建同行」
 # 日支=月支：寅月寅日、卯月卯日……与天贼/土符/地囊不同组。
 _TUFU_ZHI_BY_MONTH = {
@@ -2279,6 +2301,17 @@ class ShenShaChecker:
         分值/事项范围不变；真四忌另立 _is_siji_ji 注册（仅嫁娶/安葬）。
         """
         return is_siji_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
+
+    def _is_siji_ji(self, sizhu):
+        """真四忌（《历例》「春甲子、夏丙子、秋庚子、冬壬子」，月支查日柱）
+
+        委托模块级唯一实现 is_siji_ji_by_pillar。典载忌兵事/婚姻/嫁娶/安葬，
+        本软件仅嫁娶/安葬注册（2026-10 A6-5 新建）。与 _is_siji（四击，
+        纯日支「春戌夏丑秋辰冬未」）为两个独立神煞。
+        """
+        return is_siji_ji_by_pillar(
+            sizhu.get('month_zhi', ''),
+            sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     
     # ============ 日神类通用检查方法 ============
     

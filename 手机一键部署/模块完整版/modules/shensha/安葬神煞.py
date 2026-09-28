@@ -169,6 +169,12 @@ class BurialShenShaChecker(ShenShaChecker):
         # 四废
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废凶日，不宜安葬')
+
+        # 真四忌（《历例》「春甲子、夏丙子、秋庚子、冬壬子」，干支并论；
+        # 2026-10 A6-5 新建补注册：典载四忌忌安葬；本软件仅嫁娶/安葬注册，
+        # 与四击（春戌夏丑秋辰冬未）为两个独立神煞）
+        if self._is_siji_ji(sizhu):
+            self._add_shensha('四忌', -12, '四忌日忌安葬（春甲子夏丙子秋庚子冬壬子）')
         
         # 五墓
         if self._is_wumu(sizhu):

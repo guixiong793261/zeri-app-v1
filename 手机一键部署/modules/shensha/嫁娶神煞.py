@@ -354,6 +354,11 @@ class MarriageShenShaChecker(ShenShaChecker):
         # 2026-10 A6-5 由注册名「四忌」改名归宗为典载正名「四击」）
         if self._is_siji(sizhu):
             self._add_shensha('四击', -12, '四击日忌婚嫁')
+
+        # 真四忌（《历例》「春甲子、夏丙子、秋庚子、冬壬子」，干支并论；
+        # 2026-10 A6-5 新建，典载忌结婚姻嫁娶——与四击为两个独立神煞）
+        if self._is_siji_ji(sizhu):
+            self._add_shensha('四忌', -12, '四忌日忌婚嫁（春甲子夏丙子秋庚子冬壬子）')
         
         # 魁罡日（主聪明但婚姻不顺）
         if self._is_kuigang(sizhu):
