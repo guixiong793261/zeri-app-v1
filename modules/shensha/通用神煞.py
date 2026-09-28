@@ -242,8 +242,10 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_bazhuan(sizhu):
             self._add_shensha('八专', -15, '八专日，阴阳失衡')
 
+        # 四击（《协纪》卷五「春戌夏丑秋辰冬未」，月神比日支；
+        # 2026-10 A6-5 由注册名「四忌」改名归宗为典载正名「四击」）
         if self._is_siji(sizhu):
-            self._add_shensha('四忌', -12, '四忌之辰，当避')
+            self._add_shensha('四击', -12, '四击之辰，当避')
 
         if self._is_tufu(sizhu):
             self._add_shensha('土符', -15, '土符之日，忌动土')
