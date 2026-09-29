@@ -63,18 +63,29 @@ class HighPrecisionLunar:
         zodiac = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
         return zodiac[(lunar_year - 4) % 12]
 
-    def _get_eight_char_sxtwl(self, day_obj, hour: int) -> Dict[str, str]:
-        """从 sxtwl 的 Day 对象提取八字"""
-        year_gz = day_obj.getYearGZ()
-        month_gz = day_obj.getMonthGZ()
-        day_gz = day_obj.getDayGZ()
-        hour_gz = day_obj.getHourGZ(hour)
-        
+    def _get_eight_char_sxtwl(self, day_obj, year: int, month: int, day: int,
+                              hour: int, minute: int = 0) -> Dict[str, str]:
+        """八字提取（2026-09-29 拍板④：统一委托主链四柱计算器，001 §43/§44）
+
+        历史实现：直接取 sxtwl 原生四法（getHourGZ 为子初派、getDayGZ 无
+        修正），与主链 modules/四柱计算器.py 的晚子时派口径（23 点日柱不进
+        次日、时干按当日日干五鼠遁、日柱用 1900-01-01 甲戌基准自算）存在
+        分叉，导致同一 23 点日课在评分（链路甲）与玄空四盘/事主八字分析
+        （本链路乙）中出现不同四柱。现全软件统一到链路甲：八字一律由
+        主链 calculate_sizhu 遁出；day_obj 形参仅为兼容旧签名保留。
+        方法名中的 "sxtwl" 为历史名，实际不再经 sxtwl 取八字。
+        """
+        del day_obj  # 八字不再依赖 sxtwl Day 对象（农历日期/节气仍由 sxtwl 提供）
+        try:
+            from .四柱计算器 import calculate_sizhu
+        except ImportError:
+            from 四柱计算器 import calculate_sizhu
+        sz = calculate_sizhu(date(year, month, day), hour, minute)
         return {
-            'year': self._tiangan(year_gz.tg) + self._dizhi(year_gz.dz),
-            'month': self._tiangan(month_gz.tg) + self._dizhi(month_gz.dz),
-            'day': self._tiangan(day_gz.tg) + self._dizhi(day_gz.dz),
-            'hour': self._tiangan(hour_gz.tg) + self._dizhi(hour_gz.dz)
+            'year': sz['年柱'],
+            'month': sz['月柱'],
+            'day': sz['日柱'],
+            'hour': sz['时柱'],
         }
 
     @staticmethod
@@ -112,7 +123,7 @@ class HighPrecisionLunar:
             'is_leap': is_leap,
             'leap_month': sxtwl.getRunMonth(year),
             'year_zodiac': self._get_zodiac(lunar_year),
-            'eight_char': self._get_eight_char_sxtwl(day_obj, hour),
+            'eight_char': self._get_eight_char_sxtwl(day_obj, year, month, day, hour, minute),
             'jie_qi': jie_qi
         }
 
