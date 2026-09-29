@@ -235,6 +235,22 @@ class HighPrecisionLunar:
             '_check_details': diffs if not consistent else []
         }
 
+    @staticmethod
+    def _verify_lunar_roundtrip(solar_y: int, solar_m: int, solar_d: int,
+                                lunar_y: int, lunar_m_abs: int, lunar_d: int,
+                                is_leap: bool) -> None:
+        """往返校验（2026-09-29 加固，001 §45）：转出的公历反查农历必须等于
+        输入三元组。sxtwl.fromLunar 对越界日（如正月 99 日）会静默归一化到
+        后续公历日期而不抛错，属静默错误数据，此处显式拒绝。"""
+        back = sxtwl.fromSolar(solar_y, solar_m, solar_d)
+        got = (back.getLunarYear(), back.getLunarMonth(),
+               back.getLunarDay(), back.isLunarLeap())
+        if got != (lunar_y, lunar_m_abs, lunar_d, is_leap):
+            raise ValueError(
+                f"非法农历日期：农历{lunar_y}年{'闰' if is_leap else ''}"
+                f"{lunar_m_abs}月{lunar_d}日不存在（库静默归一化为公历 "
+                f"{solar_y}-{solar_m:02d}-{solar_d:02d}，已拒绝）")
+
     def lunar_to_solar(self, lunar_year: int, lunar_month: int, lunar_day: int,
                        hour: int = 0, minute: int = 0, second: int = 0) -> Dict:
         """
@@ -255,7 +271,9 @@ class HighPrecisionLunar:
             solar_year = day_obj.getSolarYear()
             solar_month = day_obj.getSolarMonth()
             solar_day = day_obj.getSolarDay()
-            
+            self._verify_lunar_roundtrip(solar_year, solar_month, solar_day,
+                                         lunar_year, lunar_month_abs, lunar_day, is_leap)
+
             return {
                 'year': solar_year,
                 'month': solar_month,
@@ -264,6 +282,9 @@ class HighPrecisionLunar:
                 'minute': minute,
                 'second': second
             }
+        except ValueError:
+            # 往返校验拒绝=用户输入了不存在的农历日期：显式上抛，不做跨库兜底
+            raise
         except Exception as e:
             logger.error(f"sxtwl 农历转公历失败: {e}")
             # 尝试使用 lunar-python
@@ -271,6 +292,8 @@ class HighPrecisionLunar:
                 from lunar_python import Lunar
                 lunar = Lunar.fromYmd(lunar_year, lunar_month, lunar_day)
                 solar = lunar.getSolar()
+                self._verify_lunar_roundtrip(solar.getYear(), solar.getMonth(), solar.getDay(),
+                                             lunar_year, lunar_month_abs, lunar_day, is_leap)
                 return {
                     'year': solar.getYear(),
                     'month': solar.getMonth(),

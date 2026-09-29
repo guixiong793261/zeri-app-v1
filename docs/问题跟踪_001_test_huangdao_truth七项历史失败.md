@@ -3449,6 +3449,70 @@ D5-①（晚子时流派）拍板后统一，不在本批处理。
 
 - 单 commit：modules/高精度农历转换.py 委托改造 + 本节记账。
 
+## §45 P1 修复记账：L7632 坏 import 致农历输入静默按公历（2026-09-29）
+
+### 45.1 缺陷（§44.4 顺带发现项）
+
+主程序.py 择日贴导出闭包 `_parse_owner`（原 L7630-7643，三端主程序同坏）：
+
+```python
+from modules.高精度农历转换 import lunar_to_solar   # 模块级无此函数 → ImportError
+rr = lunar_to_solar(yy, mo, dd)
+if rr and isinstance(rr, tuple): ...                  # 实际类方法返回 dict，即使
+                                                       # import 成功也永不命中
+except Exception: pass                                # 静默吞掉 → 农历输入按公历排盘
+```
+
+三重错叠加：①模块级 `lunar_to_solar` 不存在（仅
+`HighPrecisionLunar.lunar_to_solar` 类方法）；②类方法返回 dict 非 tuple；
+③except:pass 静默。净效果：事主在 UI 选"农历"输入生日、四柱尚未预算时
+（sizhu_var 为空走兜底现场算），加入择日贴的四柱是**把农历数字当公历直算**
+的错误四柱。
+
+### 45.2 修复
+
+- **主程序.py ×3 端**（根 / 手机一键部署 / 手机一键部署\模块完整版）：
+  改走与主入口 `calculate_owner_sizhu`（L2438-2446）同一已验证路径
+  `get_lunar_converter().lunar_to_solar(yy,mo,dd,hh,mm,0)` 并按 dict 解包；
+  删除内层 try/except:pass；外层 `except:pass` 改为
+  `raise ValueError("事主 X 四柱现场计算失败: ...")`，由本函数既有的
+  L7784 `messagebox.showerror` 统一显式提示（None 上游 L7721 已有防护）。
+- **modules/高精度农历转换.py 加固**：新增 `_verify_lunar_roundtrip`
+  静态方法，`lunar_to_solar` 两库（sxtwl / lunar_python 兜底）返回前均做
+  公历反查农历的往返校验，三元组+闰标志不一致即抛 ValueError；sxtwl 分支
+  增加 `except ValueError: raise`，输入错误不做跨库静默兜底。
+  必要性实证：`sxtwl.fromLunar(2026,1,99,False)` 不报错，静默归一化为
+  公历 2026-05-26——与本次缺陷同族的"静默错误数据"。
+- 闰月约定不变（农历月负数表闰月）；UI 无闰月输入控件，不在本次范围。
+
+### 45.3 影响面审计（探针 C:\Temp\verify_lunar_import_fix.py，全过）
+
+- A 往返：公历 2026-02-17=农历正月初一（sxtwl 正查）；农历 2026-01-01
+  →公历 2026-02-17（反查）；农历 2026-08-15（中秋）→2026-09-25；
+  返回类型 dict。
+- B 正向断言：修复后农历输入排盘 `丙午 庚寅 壬戌 丙午` = 公历 02-17 真值。
+- **C 反向断言**：修复结果 ≠ 旧 bug 把农历数字当公历 2026-01-01 直算的
+  `乙巳 戊子 乙亥 壬午`——年/月/日/时四柱全错，证实静默 bug 的实际危害。
+- D 非法日（正月 99）显式 ValueError，不静默。
+- E 三端主程序：死 import 清零、新路径就位、py_compile 通过。
+- F 修复点与主入口共用 converter.lunar_to_solar，口径单一。
+- 闰月边界烟测（C:\Temp\smoke_leap.py）：2025 六月初一=06-25、
+  闰六月初一=07-25（大小月差正确）、六月廿九=07-23；2025 腊月小建
+  无三十 → 显式拒绝（当年除夕确为腊月廿九）；2026 腊月廿九=2027-02-05。
+
+### 45.4 影响面与回归
+
+- 受益面：主入口 calculate_owner_sizhu（L2438）农历转换同步获得非法日期
+  往返校验；solar_to_lunar_with_check（公历→农历方向）不涉及，未改。
+- 回归：unittest **106 OK**、系统自检见提交时记录；审计探针 17 项全 PASS
+  （含 1 反向断言）、闰月烟测 5 例行为正确。
+- 单文件版（未跟踪）未同步，遵循"单文件版勿提交"约束。
+
+### 45.5 提交
+
+- 单 commit：三端主程序修复 + modules/高精度农历转换.py 往返校验加固
+  + 本节记账。
+
 
 
 

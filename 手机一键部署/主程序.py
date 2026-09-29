@@ -7628,19 +7628,23 @@ class ZeriApp:
                             mm = int(mis) if mis else 0
                             ct_var = info.get('calendar_type_var')
                             if ct_var and hasattr(ct_var, 'get') and ct_var.get() == 'lunar':
-                                try:
-                                    from modules.高精度农历转换 import lunar_to_solar
-                                    rr = lunar_to_solar(yy, mo, dd)
-                                    if rr and isinstance(rr, tuple):
-                                        yy, mo, dd = rr[0], rr[1], rr[2]
-                                except Exception:
-                                    pass
+                                # 农历→公历（2026-09-29 修复，001 §45）：
+                                # 原写法 import 不存在的模块级 lunar_to_solar 且期待
+                                # tuple（实际为 converter 类方法、返回 dict），ImportError
+                                # 被 except:pass 吞掉 → 农历输入静默按公历排盘。
+                                # 改走与 calculate_owner_sizhu L2438 同一路径，失败显式
+                                # 上抛（由本函数外层 messagebox.showerror 提示）。
+                                from modules.高精度农历转换 import get_lunar_converter
+                                _sd = get_lunar_converter().lunar_to_solar(yy, mo, dd, hh, mm, 0)
+                                yy, mo, dd = _sd['year'], _sd['month'], _sd['day']
                             r = calculate_sizhu((yy, mo, dd), hh, mm)
                             sz_list = [r.get(k, '') for k in ('年柱', '月柱', '日柱', '时柱')]
                             if all(sz_list):
                                 sizhu = ' '.join(sz_list)
-                        except Exception:
-                            pass
+                        except Exception as _e:
+                            # 不再 except:pass 静默吞错：坏日期/转换失败须显式报错，
+                            # 避免错误四柱静默进入择日贴（外层 showerror 统一提示）
+                            raise ValueError(f"事主 {name or ''} 四柱现场计算失败: {_e}") from _e
 
                 year_gz = ''
                 year_sx = ''
