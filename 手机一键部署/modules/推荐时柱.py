@@ -50,7 +50,8 @@ def _owner_nian_ganzhi(owner):
             from modules.四柱计算器 import calculate_sizhu
             bh = owner.get('birth_hour', 12) or 12
             bm = owner.get('birth_minute', 0) or 0
-            osz = calculate_sizhu(bd, int(bh), int(bm))
+            osz = calculate_sizhu(bd, int(bh), int(bm),
+                                  longitude=owner.get('birth_longitude'))
             return _gz(osz.get('年柱', ''))
         except Exception:
             return '', ''
@@ -71,7 +72,8 @@ def _owner_yue_ganzhi(owner):
             from modules.四柱计算器 import calculate_sizhu
             bh = owner.get('birth_hour', 12) or 12
             bm = owner.get('birth_minute', 0) or 0
-            osz = calculate_sizhu(bd, int(bh), int(bm))
+            osz = calculate_sizhu(bd, int(bh), int(bm),
+                                  longitude=owner.get('birth_longitude'))
             return _gz(osz.get('月柱', ''))
         except Exception:
             return '', ''

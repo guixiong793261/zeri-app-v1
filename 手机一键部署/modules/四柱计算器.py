@@ -60,6 +60,12 @@ except ImportError:
     HAS_SXTWL = False
     logger.warning("sxtwl 库未安装，使用备用计算方法")
 
+# 真太阳时修正（纯函数模块，零依赖；2026-09-29 立项，001 §43.9/§48）
+try:
+    from .真太阳时 import apply_true_solar, TRUE_SOLAR_BASE_LONGITUDE
+except ImportError:
+    from 真太阳时 import apply_true_solar, TRUE_SOLAR_BASE_LONGITUDE
+
 
 def _parse_chinese_date_string(s):
     """
@@ -136,30 +142,42 @@ class SiZhuCalculator:
         self.sect = sect
         logger.info(f"使用精确四柱计算方法 (sect={sect})")
     
-    def calculate(self, target_date, hour=12, minute=0, second=0):
+    def calculate(self, target_date, hour=12, minute=0, second=0, longitude=None):
         """
         计算完整四柱
-        
+
         Args:
             target_date: datetime.date对象
             hour: 小时(0-23)
             minute: 分钟(0-59)
             second: 秒(0-59)
-            
+            longitude: 出生地东经度（可选）。None 或 120.0 = 不启用真太阳时
+                （北京时间基准，与现状逐字节一致）；其余值按拍板①②修正为
+                真太阳时（经度修正 4min/° + NOAA 均时差 EoT）后再排四柱，
+                修正后时刻流入晚子时判定与交节比较（先修正后判 23 点边界）。
+
         Returns:
             dict: 包含年柱、月柱、日柱、时柱的字典
         """
         year = target_date.year
         month = target_date.month
         day = target_date.day
-        
+
+        # 真太阳时修正（2026-09-29 真太阳时立项，001 §43.9 拍板①②③⑤、§48）
+        if longitude is not None and longitude != TRUE_SOLAR_BASE_LONGITUDE:
+            # 经度=120 等价于不启用（北京时间基准）
+            year, month, day, hour, minute = apply_true_solar(
+                year, month, day, hour, minute, longitude)
+            target_date = date(year, month, day)
+            second = 0  # 真太阳时精度为分钟粒度（D4 口径），秒归零防误用
+
         # 使用 sxtwl 计算四柱
         if HAS_SXTWL:
             try:
                 return self._calculate_with_sxtwl(year, month, day, hour, minute, second)
             except Exception as e:
                 logger.warning(f"sxtwl 计算失败，使用备用方法: {e}")
-        
+
         # 备用计算方法
         return self._calculate_fallback(year, month, day, hour, minute, second)
     
@@ -565,20 +583,24 @@ class SiZhuCalculator:
 calculator = SiZhuCalculator()
 
 
-def calculate_sizhu(target_date, hour=12, minute=0, second=0):
+def calculate_sizhu(target_date, hour=12, minute=0, second=0, longitude=None):
     """
     计算四柱的便捷函数（统一入口）
-    
+
     【重要说明】
     这是计算四柱的唯一入口函数，使用精确的农历计算方法
-    
+
     Args:
         target_date: datetime.date对象、datetime对象，或(year, month, day)元组，
                      或常见日期字符串（支持 "YYYY年MM月DD日 HH时MM分" / "YYYY-MM-DD HH:MM:SS" 等）
         hour: 小时(0-23)
         minute: 分钟(0-59)
         second: 秒(0-59)
-        
+        longitude: 出生地东经度（可选）。None 或 120.0 = 不启用真太阳时
+            （北京时间基准）；其余值按拍板①②修正为真太阳时（经度+EoT）。
+            修正跨日时，返回的 year/month/day/date 字段为修正后日期
+            （与四柱所属日一致，供下游神煞/消费方对齐口径）。
+
     Returns:
         dict: 包含年柱、月柱、日柱、时柱的字典，同时包含year, month, day字段
     """
@@ -629,8 +651,17 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
         month = target_date.month
         day = target_date.day
     
-    # 计算四柱
-    result = calculator.calculate(target_date, hour, minute, second)
+    # 计算四柱（longitude 传入，calculate() 内部完成真太阳时修正后排盘）
+    result = calculator.calculate(target_date, hour, minute, second, longitude=longitude)
+
+    # 真太阳时修正跨日时，报告字段（year/month/day/date）对齐修正后日期，
+    # 与四柱所属日口径一致（不影响上方排盘调用，此处仅改返回字段；
+    # 经度=120 等价于不启用（北京时间基准））
+    if longitude is not None and longitude != TRUE_SOLAR_BASE_LONGITUDE \
+            and year is not None:
+        year, month, day, _, _ = apply_true_solar(
+            year, month, day, hour, minute, longitude)
+        target_date = date(year, month, day)
     
     # 添加日期字段
     if year is not None:

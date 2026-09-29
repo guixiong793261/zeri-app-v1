@@ -290,7 +290,8 @@ class MarriageRuleChecker(EventRuleChecker):
                 birth_sizhu = calculate_sizhu(
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -319,7 +320,8 @@ class MarriageRuleChecker(EventRuleChecker):
                 birth_sizhu = calculate_sizhu(
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -334,7 +336,8 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner.get('birth_month', 1),
                     owner.get('birth_day', 1),
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -363,7 +366,8 @@ class MarriageRuleChecker(EventRuleChecker):
                 birth_sizhu = calculate_sizhu(
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 yue_zhu = birth_sizhu.get('月柱', '')
                 if len(yue_zhu) >= 2:
@@ -392,7 +396,8 @@ class MarriageRuleChecker(EventRuleChecker):
                 birth_sizhu = calculate_sizhu(
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 return birth_sizhu['日柱'][1]
             except:
@@ -407,7 +412,8 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner.get('birth_month', 1),
                     owner.get('birth_day', 1),
                     owner.get('birth_hour', 12),
-                    owner.get('birth_minute', 0)
+                    owner.get('birth_minute', 0),
+                    owner.get('birth_longitude')
                 )
                 return birth_sizhu['日柱'][1]
             except:

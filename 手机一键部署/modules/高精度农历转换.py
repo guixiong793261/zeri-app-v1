@@ -63,18 +63,34 @@ class HighPrecisionLunar:
         zodiac = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
         return zodiac[(lunar_year - 4) % 12]
 
-    def _get_eight_char_sxtwl(self, day_obj, hour: int) -> Dict[str, str]:
-        """从 sxtwl 的 Day 对象提取八字"""
-        year_gz = day_obj.getYearGZ()
-        month_gz = day_obj.getMonthGZ()
-        day_gz = day_obj.getDayGZ()
-        hour_gz = day_obj.getHourGZ(hour)
-        
+    def _get_eight_char_sxtwl(self, day_obj, year: int, month: int, day: int,
+                              hour: int, minute: int = 0,
+                              longitude: float = None) -> Dict[str, str]:
+        """八字提取（2026-09-29 拍板④：统一委托主链四柱计算器，001 §43/§44）
+
+        历史实现：直接取 sxtwl 原生四法（getHourGZ 为子初派、getDayGZ 无
+        修正），与主链 modules/四柱计算器.py 的晚子时派口径（23 点日柱不进
+        次日、时干按当日日干五鼠遁、日柱用 1900-01-01 甲戌基准自算）存在
+        分叉，导致同一 23 点日课在评分（链路甲）与玄空四盘/事主八字分析
+        （本链路乙）中出现不同四柱。现全软件统一到链路甲：八字一律由
+        主链 calculate_sizhu 遁出；day_obj 形参仅为兼容旧签名保留。
+        方法名中的 "sxtwl" 为历史名，实际不再经 sxtwl 取八字。
+
+        longitude: 出生地东经度（可选，真太阳时立项 §48）——None/120.0 不启用，
+        其余值透传主链按拍板①②修正（经度+EoT）。
+        """
+        del day_obj  # 八字不再依赖 sxtwl Day 对象（农历日期/节气仍由 sxtwl 提供）
+        try:
+            from .四柱计算器 import calculate_sizhu
+        except ImportError:
+            from 四柱计算器 import calculate_sizhu
+        sz = calculate_sizhu(date(year, month, day), hour, minute,
+                             longitude=longitude)
         return {
-            'year': self._tiangan(year_gz.tg) + self._dizhi(year_gz.dz),
-            'month': self._tiangan(month_gz.tg) + self._dizhi(month_gz.dz),
-            'day': self._tiangan(day_gz.tg) + self._dizhi(day_gz.dz),
-            'hour': self._tiangan(hour_gz.tg) + self._dizhi(hour_gz.dz)
+            'year': sz['年柱'],
+            'month': sz['月柱'],
+            'day': sz['日柱'],
+            'hour': sz['时柱'],
         }
 
     @staticmethod
@@ -112,7 +128,7 @@ class HighPrecisionLunar:
             'is_leap': is_leap,
             'leap_month': sxtwl.getRunMonth(year),
             'year_zodiac': self._get_zodiac(lunar_year),
-            'eight_char': self._get_eight_char_sxtwl(day_obj, hour),
+            'eight_char': self._get_eight_char_sxtwl(day_obj, year, month, day, hour, minute),
             'jie_qi': jie_qi
         }
 
@@ -224,6 +240,22 @@ class HighPrecisionLunar:
             '_check_details': diffs if not consistent else []
         }
 
+    @staticmethod
+    def _verify_lunar_roundtrip(solar_y: int, solar_m: int, solar_d: int,
+                                lunar_y: int, lunar_m_abs: int, lunar_d: int,
+                                is_leap: bool) -> None:
+        """往返校验（2026-09-29 加固，001 §45）：转出的公历反查农历必须等于
+        输入三元组。sxtwl.fromLunar 对越界日（如正月 99 日）会静默归一化到
+        后续公历日期而不抛错，属静默错误数据，此处显式拒绝。"""
+        back = sxtwl.fromSolar(solar_y, solar_m, solar_d)
+        got = (back.getLunarYear(), back.getLunarMonth(),
+               back.getLunarDay(), back.isLunarLeap())
+        if got != (lunar_y, lunar_m_abs, lunar_d, is_leap):
+            raise ValueError(
+                f"非法农历日期：农历{lunar_y}年{'闰' if is_leap else ''}"
+                f"{lunar_m_abs}月{lunar_d}日不存在（库静默归一化为公历 "
+                f"{solar_y}-{solar_m:02d}-{solar_d:02d}，已拒绝）")
+
     def lunar_to_solar(self, lunar_year: int, lunar_month: int, lunar_day: int,
                        hour: int = 0, minute: int = 0, second: int = 0) -> Dict:
         """
@@ -244,7 +276,9 @@ class HighPrecisionLunar:
             solar_year = day_obj.getSolarYear()
             solar_month = day_obj.getSolarMonth()
             solar_day = day_obj.getSolarDay()
-            
+            self._verify_lunar_roundtrip(solar_year, solar_month, solar_day,
+                                         lunar_year, lunar_month_abs, lunar_day, is_leap)
+
             return {
                 'year': solar_year,
                 'month': solar_month,
@@ -253,6 +287,9 @@ class HighPrecisionLunar:
                 'minute': minute,
                 'second': second
             }
+        except ValueError:
+            # 往返校验拒绝=用户输入了不存在的农历日期：显式上抛，不做跨库兜底
+            raise
         except Exception as e:
             logger.error(f"sxtwl 农历转公历失败: {e}")
             # 尝试使用 lunar-python
@@ -260,6 +297,8 @@ class HighPrecisionLunar:
                 from lunar_python import Lunar
                 lunar = Lunar.fromYmd(lunar_year, lunar_month, lunar_day)
                 solar = lunar.getSolar()
+                self._verify_lunar_roundtrip(solar.getYear(), solar.getMonth(), solar.getDay(),
+                                             lunar_year, lunar_month_abs, lunar_day, is_leap)
                 return {
                     'year': solar.getYear(),
                     'month': solar.getMonth(),
