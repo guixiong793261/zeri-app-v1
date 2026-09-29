@@ -147,13 +147,15 @@ class BaZiPanPan:
     提供完整的八字排盘和分析功能
     """
     
-    def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, gender: str = '男'):
+    def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, gender: str = '男', longitude: float = None):
         """
         初始化八字排盘
 
-        【时间口径】当前版本统一使用平太阳时（北京时间 UTC+8，东经120°标准时），
-        不做真太阳时经度修正与均时差校正。真太阳时（出生地经度+均时差）已单独立项，
-        见 docs/001 开发记账，落地前禁止在此添加未经接线的伪参数。
+        【时间口径】默认使用平太阳时（北京时间 UTC+8，东经120°标准时）。
+        传入非 120 的 longitude 时启用真太阳时修正（拍板①②：经度修正
+        4min/° + NOAA 均时差 EoT，先修正时刻再判晚子时/交节）；经度=120
+        等价于不启用（北京时间基准）。海外（非 UTC+8）用户需自行换算墙钟
+        （拍板⑤文档声明限制）。见 docs/001 §43.9 拍板、§46 量化、§48 记账。
 
         Args:
             year: 出生年
@@ -162,6 +164,7 @@ class BaZiPanPan:
             hour: 出生时（0-23）
             minute: 出生分（0-59）
             gender: 性别，'男'或'女'
+            longitude: 出生地东经度（可选），None/120.0 = 不启用真太阳时
         """
         self.year = year
         self.month = month
@@ -169,6 +172,7 @@ class BaZiPanPan:
         self.hour = hour
         self.minute = minute
         self.gender = gender
+        self.longitude = longitude
         
         # 四柱信息
         self.sizhu = {}
@@ -201,12 +205,13 @@ class BaZiPanPan:
                 from 四柱计算器 import calculate_sizhu
             
             target_date = date(self.year, self.month, self.day)
-            # 调用四柱计算器
+            # 调用四柱计算器（longitude 透传：None/120.0 不启用真太阳时）
             self.sizhu = calculate_sizhu(
-                target_date, 
-                self.hour, 
-                self.minute, 
-                0
+                target_date,
+                self.hour,
+                self.minute,
+                0,
+                longitude=self.longitude
             )
             
             # 确保返回值是有效的

@@ -282,7 +282,8 @@ class BedRuleChecker(EventRuleChecker):
                     birth_sizhu = calculate_sizhu(
                         owner['birth_date'],
                         owner.get('birth_hour', 12),
-                        owner.get('birth_minute', 0)
+                        owner.get('birth_minute', 0),
+                        owner.get('birth_longitude')
                     )
                     owner_zhi = birth_sizhu['年柱'][1]
                 except Exception:

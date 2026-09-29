@@ -64,7 +64,8 @@ class HighPrecisionLunar:
         return zodiac[(lunar_year - 4) % 12]
 
     def _get_eight_char_sxtwl(self, day_obj, year: int, month: int, day: int,
-                              hour: int, minute: int = 0) -> Dict[str, str]:
+                              hour: int, minute: int = 0,
+                              longitude: float = None) -> Dict[str, str]:
         """八字提取（2026-09-29 拍板④：统一委托主链四柱计算器，001 §43/§44）
 
         历史实现：直接取 sxtwl 原生四法（getHourGZ 为子初派、getDayGZ 无
@@ -74,13 +75,17 @@ class HighPrecisionLunar:
         （本链路乙）中出现不同四柱。现全软件统一到链路甲：八字一律由
         主链 calculate_sizhu 遁出；day_obj 形参仅为兼容旧签名保留。
         方法名中的 "sxtwl" 为历史名，实际不再经 sxtwl 取八字。
+
+        longitude: 出生地东经度（可选，真太阳时立项 §48）——None/120.0 不启用，
+        其余值透传主链按拍板①②修正（经度+EoT）。
         """
         del day_obj  # 八字不再依赖 sxtwl Day 对象（农历日期/节气仍由 sxtwl 提供）
         try:
             from .四柱计算器 import calculate_sizhu
         except ImportError:
             from 四柱计算器 import calculate_sizhu
-        sz = calculate_sizhu(date(year, month, day), hour, minute)
+        sz = calculate_sizhu(date(year, month, day), hour, minute,
+                             longitude=longitude)
         return {
             'year': sz['年柱'],
             'month': sz['月柱'],

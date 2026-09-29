@@ -150,6 +150,38 @@ def _fmt_score(v, empty='-'):
             return str(v)
     return '0' if num == 0 else f"{num:+d}"
 
+def _parse_owner_longitude(longitude_var, show_warning=True):
+    """事主经度输入解析（真太阳时立项，2026-09-29，001 §43.9 拍板③/§48）。
+
+    字符串→float 明确处理：None/空串/缺键 → 120.0（北京时间基准，不启用）；
+    合法浮点 → 原值返回；非法字符串或越界 → 弹窗警告并回退 120.0
+    （不静默吞错——静默失败家族防御，与 §45 同口径）。
+    经度=120 等价于不启用（北京时间基准）。
+
+    show_warning=False：扫日/导出/详情等下游批处理回路不重复弹窗——
+    输入入口 calculate_owner_sizhu 已显式警告过一次，回路中非法值
+    静默回退 120.0 属明示设计（与入口提示配套），非吞错。
+    """
+    raw = longitude_var.get() if hasattr(longitude_var, 'get') else longitude_var
+    if raw is None or str(raw).strip() == '':
+        return 120.0
+    try:
+        longitude = float(str(raw).strip())
+    except (TypeError, ValueError):
+        if show_warning:
+            messagebox.showwarning(
+                "经度格式", f"经度「{raw}」无法解析为数字，已按 120°E（北京时间）处理。\n"
+                "请填写出生地东经度数（如 成都 104.1、乌鲁木齐 87.6）。")
+        return 120.0
+    # 与 modules/真太阳时.py 有效域一致：[60, 150]°E
+    if not (60.0 <= longitude <= 150.0):
+        if show_warning:
+            messagebox.showwarning(
+                "经度越界", f"经度 {longitude}°E 超出有效域 [60, 150]，已按 120°E（北京时间）处理。\n"
+                "本软件仅支持 UTC+8 时区，海外用户请先换算为北京时间。")
+        return 120.0
+    return longitude
+
 def _fmt_tree_date_sizhu(date, sizhu):
     """结果表首列：日期一行、四柱一行（Treeview 加大行高后单元格内 \\n 可多行渲染）。
     2026-09-03 用户要求：四柱并入"日期/四柱"列，与列标题对应。"""
@@ -1448,6 +1480,17 @@ class ZeriApp:
             minute_entry = ttk.Entry(date_row, textvariable=minute_var, width=4)
             minute_entry.pack(side=tk.LEFT, padx=2)
             all_entries.append(minute_entry)
+
+            # 出生地经度（真太阳时立项，2026-09-29，001 §43.9 拍板③/§48）：
+            # 标签文案即提示（项目无 tooltip 工具类，按 §48 计划用灰色静态标签）：
+            # "默认 120=北京时间；填实际经度启用真太阳时（含均时差）"
+            longitude_var = tk.StringVar(value="120")
+            ttk.Label(date_row, text="经度:").pack(side=tk.LEFT, padx=(10, 0))
+            longitude_entry = ttk.Entry(date_row, textvariable=longitude_var, width=6)
+            longitude_entry.pack(side=tk.LEFT, padx=2)
+            all_entries.append(longitude_entry)
+            ttk.Label(date_row, text="(120=北京;填实际经度启用真太阳时)",
+                      foreground="gray").pack(side=tk.LEFT)
             
             # 四柱显示行
             sizhu_row = ttk.Frame(owner_frame)
@@ -1455,8 +1498,13 @@ class ZeriApp:
             
             ttk.Label(sizhu_row, text="四柱:", width=10).pack(side=tk.LEFT, padx=5)
             sizhu_var = tk.StringVar(value="未计算")
-            ttk.Label(sizhu_row, textvariable=sizhu_var, 
+            ttk.Label(sizhu_row, textvariable=sizhu_var,
                      font=("微软雅黑", 10, "bold")).pack(side=tk.LEFT, padx=5)
+            # 真太阳时口径标注（§48）：独立于 sizhu_var 文本，避免污染下游
+            # _parse_owner 对四柱串的 split() 解析（长度==4 检查）
+            true_solar_flag_var = tk.StringVar(value="")
+            ttk.Label(sizhu_row, textvariable=true_solar_flag_var,
+                      foreground="darkgreen").pack(side=tk.LEFT, padx=2)
             
             # 生肖显示
             zodiac_var = tk.StringVar(value="")
@@ -1519,21 +1567,23 @@ class ZeriApp:
                     self.yangqi_var = yangqi_var
             
             # 计算按钮
-            calc_btn = ttk.Button(owner_frame, text="计算四柱", 
-                                 command=lambda y=year_var, m=month_var, d=day_var, 
-                                 h=hour_var, mi=minute_var, g=gender_var, o=owner, s=sizhu_var, 
+            calc_btn = ttk.Button(owner_frame, text="计算四柱",
+                                 command=lambda y=year_var, m=month_var, d=day_var,
+                                 h=hour_var, mi=minute_var, g=gender_var, o=owner, s=sizhu_var,
                                  x=xishen_var, yg=yongshen_var, fz=fuzi_var, yt=yintai_var, yq=yangqi_var,
-                                 ct=calendar_type_var, z=zodiac_var, fx=fu_xing_var, zx=zi_xing_var: 
-                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fz, yt, yq, ct, z, fx, zx))
+                                 ct=calendar_type_var, z=zodiac_var, fx=fu_xing_var, zx=zi_xing_var,
+                                 lo=longitude_var, tsf=true_solar_flag_var:
+                                 self.calculate_owner_sizhu(y, m, d, h, mi, g, o, s, x, yg, fz, yt, yq, ct, z, fx, zx, lo, tsf))
             calc_btn.pack(side=tk.LEFT, padx=5, pady=2)
-             
+
              # 八字排盘详情按钮
-            detail_btn = ttk.Button(owner_frame, text="八字排盘详情", 
-                                   command=lambda y=year_var, m=month_var, d=day_var, 
-                                   h=hour_var, mi=minute_var, g=gender_var, o=owner: 
-                                   self.show_owner_bazi_detail(y, m, d, h, mi, g, o))
+            detail_btn = ttk.Button(owner_frame, text="八字排盘详情",
+                                   command=lambda y=year_var, m=month_var, d=day_var,
+                                   h=hour_var, mi=minute_var, g=gender_var, o=owner,
+                                   lo=longitude_var:
+                                   self.show_owner_bazi_detail(y, m, d, h, mi, g, o, lo))
             detail_btn.pack(side=tk.LEFT, padx=5, pady=2)
-            
+
             # 保存事主信息
             owner_info = {
                 'name': name_var,
@@ -1543,6 +1593,8 @@ class ZeriApp:
                 'day': day_var,
                 'hour': hour_var,
                 'minute': minute_var,
+                'longitude': longitude_var,
+                'true_solar_flag_var': true_solar_flag_var,
                 'gender': gender_var,
                 'sizhu_var': sizhu_var,
                 'xishen_var': xishen_var,
@@ -1594,11 +1646,13 @@ class ZeriApp:
                     day = int(day_str)
                     hour = int(hour_str)
                     minute = int(minute_str)
-                    
+                    # 出生地经度（真太阳时 §48）：缺键/空/120 → 不启用
+                    birth_longitude = _parse_owner_longitude(owner_info.get('longitude'))
+
                     name_var = owner_info.get('name')
                     name = name_var.get() if name_var and hasattr(name_var, 'get') else str(name_var) if name_var else ''
                     role = str(owner_info.get('role', ''))
-                    
+
                     # 检查日期有效性
                     try:
                         birth_date = date(year, month, day)
@@ -1607,13 +1661,14 @@ class ZeriApp:
                         import calendar
                         last_day = calendar.monthrange(year, month)[1]
                         birth_date = date(year, month, last_day)
-                    
+
                     owner = {
                         'name': name,
                         'role': role,
                         'birth_date': birth_date,
                         'birth_hour': hour,
                         'birth_minute': minute,
+                        'birth_longitude': birth_longitude,
                         '性别': gender
                     }
                     owners.append(owner)
@@ -1794,11 +1849,13 @@ class ZeriApp:
                     day = int(day_str)
                     hour = int(hour_str)
                     minute = int(minute_str)
-                    
+                    # 出生地经度（真太阳时 §48）：缺键/空/120 → 不启用
+                    birth_longitude = _parse_owner_longitude(owner_info.get('longitude'))
+
                     name_var = owner_info.get('name')
                     name = name_var.get() if name_var and hasattr(name_var, 'get') else str(name_var) if name_var else ''
                     role = str(owner_info.get('role', ''))
-                    
+
                     # 检查日期有效性
                     try:
                         birth_date = date(year, month, day)
@@ -1807,13 +1864,14 @@ class ZeriApp:
                         import calendar
                         last_day = calendar.monthrange(year, month)[1]
                         birth_date = date(year, month, last_day)
-                    
+
                     owner = {
                         'name': name,
                         'role': role,
                         'birth_date': birth_date,
                         'birth_hour': hour,
                         'birth_minute': minute,
+                        'birth_longitude': birth_longitude,
                         '性别': gender
                     }
                     owners.append(owner)
@@ -2118,6 +2176,9 @@ class ZeriApp:
             hour = owner_info['hour'].get() if hasattr(owner_info['hour'], 'get') else owner_info.get('hour', '')
             minute = owner_info['minute'].get() if hasattr(owner_info['minute'], 'get') else owner_info.get('minute', '')
             gender = owner_info['gender'].get() if hasattr(owner_info['gender'], 'get') else owner_info.get('gender', '')
+            # 真太阳时立项 §48：持久化经度（字符串原样保存，与其他字段一致；缺键默认 '120'）
+            _lng_raw = owner_info.get('longitude')
+            longitude = _lng_raw.get() if hasattr(_lng_raw, 'get') else (_lng_raw or '120')
             sizhu = owner_info['sizhu_var'].get() if hasattr(owner_info['sizhu_var'], 'get') else owner_info.get('sizhu_var', '')
             xishen = owner_info['xishen_var'].get() if hasattr(owner_info['xishen_var'], 'get') else owner_info.get('xishen_var', '')
             yongshen = owner_info['yongshen_var'].get() if hasattr(owner_info['yongshen_var'], 'get') else owner_info.get('yongshen_var', '')
@@ -2131,6 +2192,7 @@ class ZeriApp:
                 'day': day,
                 'hour': hour,
                 'minute': minute,
+                'longitude': longitude,
                 'gender': gender,
                 'sizhu': sizhu,
                 'xishen': xishen,
@@ -2345,6 +2407,9 @@ class ZeriApp:
                 owner_info['day'].set(owner_data.get('day', ''))
                 owner_info['hour'].set(owner_data.get('hour', ''))
                 owner_info['minute'].set(owner_data.get('minute', ''))
+                # 真太阳时立项 §48：恢复经度；旧方案无此键 → 默认 '120'（不启用，向后兼容）
+                if 'longitude' in owner_info:
+                    owner_info['longitude'].set(owner_data.get('longitude', '120'))
                 owner_info['gender'].set(owner_data.get('gender', '男'))
                 owner_info['sizhu_var'].set(owner_data.get('sizhu', '未计算'))
                 owner_info['xishen_var'].set(owner_data.get('xishen', ''))
@@ -2402,11 +2467,13 @@ class ZeriApp:
                     "本方案含出生于 23 时的事主，若其四柱为旧口径（亥时/次日早子时）"
                     "所排，\n请重新点击「计算四柱」更新。历史记录不会被自动修改。")
 
-    def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var, 
-                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var, 
+    def calculate_owner_sizhu(self, year_var, month_var, day_var, hour_var, minute_var,
+                              gender_var, owner, sizhu_var, xishen_var, yongshen_var, fuzi_var,
                               yintai_var=None, yangqi_var=None, calendar_type_var=None, zodiac_var=None,
-                              fu_xing_var=None, zi_xing_var=None):
-        """计算事主四柱"""
+                              fu_xing_var=None, zi_xing_var=None,
+                              longitude_var=None, true_solar_flag_var=None):
+        """计算事主四柱（longitude_var：出生地经度，真太阳时立项 §48；
+        120/空 = 北京时间基准不启用，非 120 按拍板①②经度+EoT 修正）"""
         try:
             # 获取输入值，添加防御性检查
             year_str = year_var.get() if hasattr(year_var, 'get') else str(year_var)
@@ -2415,17 +2482,19 @@ class ZeriApp:
             hour_str = hour_var.get() if hasattr(hour_var, 'get') else str(hour_var)
             minute_str = minute_var.get() if hasattr(minute_var, 'get') else str(minute_var)
             gender = gender_var.get() if hasattr(gender_var, 'get') else str(gender_var)
-            
+
             # 验证输入值
             if not year_str or not month_str or not day_str:
                 messagebox.showwarning("提示", "请填写完整的年月日信息")
                 return
-            
+
             year = int(year_str)
             month = int(month_str)
             day = int(day_str)
             hour = int(hour_str) if hour_str else 12
             minute = int(minute_str) if minute_str else 0
+            # 出生地经度（字符串→float 明确处理，非法/越界弹窗回退 120）
+            longitude = _parse_owner_longitude(longitude_var)
             
             # 判断是公历还是农历
             calendar_type = 'solar'
@@ -2445,19 +2514,22 @@ class ZeriApp:
                     messagebox.showwarning("提示", f"农历转换失败: {e}")
                     return
             
-            # 使用八字排盘模块获取详细信息
-            panpan = BaZiPanPan(year, month, day, hour, minute, gender)
+            # 使用八字排盘模块获取详细信息（经度透传：120=北京时间不修正）
+            panpan = BaZiPanPan(year, month, day, hour, minute, gender, longitude=longitude)
             panpan_result = panpan.get_panpan_result()
-            
+
             # 检查四柱是否有效
             sizhu_info = panpan_result.get('四柱', {})
             if not sizhu_info or not sizhu_info.get('年柱'):
                 messagebox.showwarning("提示", "四柱计算失败，请检查输入日期是否正确")
                 return
-            
-            # 显示四柱
+
+            # 显示四柱（经度≠120 启用真太阳时时在独立标签标注口径，
+            # 不改 sizhu_var 文本本体——下游 _parse_owner 按 split()==4 解析）
             sizhu_text = f"{sizhu_info['年柱']} {sizhu_info['月柱']} {sizhu_info['日柱']} {sizhu_info['时柱']}"
             sizhu_var.set(sizhu_text)
+            if true_solar_flag_var is not None and hasattr(true_solar_flag_var, 'set'):
+                true_solar_flag_var.set("(真太阳时)" if longitude != 120.0 else "")
             
             # 显示生肖
             if zodiac_var and hasattr(zodiac_var, 'set'):
@@ -2615,7 +2687,7 @@ class ZeriApp:
         except Exception as e:
             messagebox.showwarning("警告", f"日期转换失败: {e}")
     
-    def show_owner_bazi_detail(self, year_var, month_var, day_var, hour_var, minute_var, gender_var, owner):
+    def show_owner_bazi_detail(self, year_var, month_var, day_var, hour_var, minute_var, gender_var, owner, longitude_var=None):
         """显示事主八字排盘详情"""
         try:
             year = int(year_var.get())
@@ -2624,9 +2696,10 @@ class ZeriApp:
             hour = int(hour_var.get())
             minute = int(minute_var.get())
             gender = gender_var.get()
-            
+            longitude = _parse_owner_longitude(longitude_var)
+
             # 使用八字排盘模块获取详细信息
-            panpan = BaZiPanPan(year, month, day, hour, minute, gender)
+            panpan = BaZiPanPan(year, month, day, hour, minute, gender, longitude=longitude)
             panpan_result = panpan.get_panpan_result()
             
             # 显示八字排盘详情对话框
@@ -3588,7 +3661,9 @@ class ZeriApp:
                         birth_date = date(year, month, last_day)
                         messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
                     
-                    owner_sizhu = calculate_sizhu(birth_date, hour, minute)
+                    # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
+                    birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
+                    owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
                     year_gan = owner_sizhu.get('year_gan', '')
                     year_zhi = owner_sizhu.get('year_zhi', '')
                     
@@ -3604,6 +3679,7 @@ class ZeriApp:
                         'birth_date': birth_date,
                         'birth_hour': hour,
                         'birth_minute': minute,
+                        'birth_longitude': birth_longitude,
                         '性别': gender,
                         '年干': year_gan,
                         '年支': year_zhi,
@@ -4389,8 +4465,10 @@ class ZeriApp:
                         import calendar
                         last_day = calendar.monthrange(year, month)[1]
                         birth_date = date(year, month, last_day)
-                    
-                    owner_sizhu = calculate_sizhu(birth_date, hour, minute)
+
+                    # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
+                    birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
+                    owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
                     year_gan = owner_sizhu.get('year_gan', '')
                     year_zhi = owner_sizhu.get('year_zhi', '')
                     day_gan = owner_sizhu.get('day_gan', '')
@@ -4403,6 +4481,7 @@ class ZeriApp:
                         'birth_date': birth_date,
                         'birth_hour': hour,
                         'birth_minute': minute,
+                        'birth_longitude': birth_longitude,
                         '性别': gender,
                         '年干': year_gan,
                         '年支': year_zhi,
@@ -5152,6 +5231,7 @@ class ZeriApp:
                                                      int(_gv2(oi, 'day')))
                             od['birth_hour'] = int(_gv2(oi, 'hour') or 12)
                             od['birth_minute'] = int(_gv2(oi, 'minute') or 0)
+                            od['birth_longitude'] = _parse_owner_longitude(oi.get('longitude'), show_warning=False)
                         except Exception:
                             pass
                         _owners_std.append(od)
@@ -6257,7 +6337,8 @@ class ZeriApp:
                                 int(month_val),
                                 int(day_val)
                             )
-                            owner_sizhu = calculate_sizhu(birth_date, int(hour_val), int(minute_val))
+                            _lng = _parse_owner_longitude(owner_info.get('longitude'), show_warning=False)
+                            owner_sizhu = calculate_sizhu(birth_date, int(hour_val), int(minute_val), longitude=_lng)
                             zhuming = owner_sizhu.get('年柱', '')
                     except (ValueError, AttributeError):
                         pass
@@ -6509,7 +6590,8 @@ class ZeriApp:
                                     if hasattr(birth_date, 'year'):
                                         owner_sizhu = calculate_sizhu(birth_date,
                                             owner.get('birth_hour', 12),
-                                            owner.get('birth_minute', 0))
+                                            owner.get('birth_minute', 0),
+                                            owner.get('birth_longitude'))
                                         bride_gan = owner_sizhu.get('年柱', '')[:1]
                                         bride_zhi = owner_sizhu.get('年柱', '')[1:]
                                         bride_m_gan = owner_sizhu.get('月柱', '')[:1]
@@ -6530,7 +6612,8 @@ class ZeriApp:
                                     if hasattr(birth_date, 'year'):
                                         owner_sizhu = calculate_sizhu(birth_date,
                                             owner.get('birth_hour', 12),
-                                            owner.get('birth_minute', 0))
+                                            owner.get('birth_minute', 0),
+                                            owner.get('birth_longitude'))
                                         groom_gan = owner_sizhu.get('年柱', '')[:1]
                                         groom_zhi = owner_sizhu.get('年柱', '')[1:]
                                         groom_m_gan = owner_sizhu.get('月柱', '')[:1]
@@ -7637,7 +7720,8 @@ class ZeriApp:
                                 from modules.高精度农历转换 import get_lunar_converter
                                 _sd = get_lunar_converter().lunar_to_solar(yy, mo, dd, hh, mm, 0)
                                 yy, mo, dd = _sd['year'], _sd['month'], _sd['day']
-                            r = calculate_sizhu((yy, mo, dd), hh, mm)
+                            r = calculate_sizhu((yy, mo, dd), hh, mm,
+                                                longitude=_parse_owner_longitude(info.get('longitude'), show_warning=False))
                             sz_list = [r.get(k, '') for k in ('年柱', '月柱', '日柱', '时柱')]
                             if all(sz_list):
                                 sizhu = ' '.join(sz_list)
