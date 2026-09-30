@@ -4240,3 +4240,34 @@ A1 只清死代码＋建除函数就位（不接产出）；B（是否产出/计
 - 主仓：`dd10bfb` `fix(bazi): 八字排盘对接 get_panpan_result+修复输入框重复填充`（7 文件）。
 - 统一版仓：`5bba681` `fix(bazi): 排盘对齐主源`（6 文件）。
 - 本节 docs 独立 commit。
+
+---
+
+## §55 P1-③·J1：大黄道吉时筛选改调时辰级接口（只修名实，2026-09-30）
+
+### 背景
+
+条件筛选中"大黄道吉时"调 [黄道.py 旧接口](file:///d:/自编择日软件/专业级正五行择日软件/modules/黄道.py#L344) `_calculate_da_huang_dao`——其忽略时支、内部走值日级（月支+日支），同一日 12 时辰结果全同，"吉时筛选"名存实亡。
+
+### 改动清单
+
+- [主程序.py _run_conditional_calculation#L5025](file:///d:/自编择日软件/专业级正五行择日软件/主程序.py#L5025)：改调 [`_calculate_da_huangdao_shichen(day_zhi, hour_zhi)`](file:///d:/自编择日软件/专业级正五行择日软件/modules/黄道.py#L319)，按日支＋时支查时辰十二神；代码内标注 **J1 只修名实，表值起例待 J2 按《协纪》典据校正，J1 不动表值**。
+
+### 边界与遗留
+
+- 时辰接口 docstring 示例"卯日午时为司命"经核查为误写（活表客观值：卯日午时＝金匮、卯日子时＝司命）。按守边界**未改 docstring**，verify 以客观表值为准并在此记账。
+- 另一方法 `conditional_calculation` 文本中提及"大黄道吉时"但无相关调用，未触及。
+
+### 验证
+
+- [tests/verify_j1_huangdao_shichen.py](file:///d:/自编择日软件/专业级正五行择日软件/tests/verify_j1_huangdao_shichen.py)：**FAIL 0**。
+  旧接口忽略时支反向坐实；时辰接口 **12日×12时 144 点**名/type/score 与活表逐字一致；
+  12 日支时辰值神随时支变化；非法地支兜底不抛异常。
+- **六副本 SHA**：主程序 `6279c5aaed3b`，6/6。
+- **回归四件套全绿**。
+
+### commit
+
+- 主仓：`ad08ef5` `fix(huangdao): J1 大黄道吉时筛选改调时辰级接口`（4 文件）。
+- 统一版仓：`fbaf70c` `fix(huangdao): J1 大黄道吉时对齐主源`（3 文件）。
+- 本节 docs 独立 commit。
