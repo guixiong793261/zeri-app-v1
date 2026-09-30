@@ -5023,10 +5023,14 @@ class ZeriApp:
                                     found_hour = True
                                     break
                             elif hour_type == "大黄道吉时":
-                                # 使用黄道计算器按日支+时支查表
+                                # J1（2026-09-30）只修名实：改调时辰级接口，按
+                                # 日支+时支查《协纪》时辰十二神；旧 _calculate_da_huang_dao
+                                # 为值日级（忽略时支），"吉时筛选"名实不符。
+                                # 局限：时辰表 DA_HUANG_DAO_TABLE 起例值待 J2 按《协纪》
+                                # 典据校正——J1 不改表值，只让筛选真正按时支走表。
                                 if day_zhi_for_hour and hour_zhi:
-                                    da_result = huangdao_calc._calculate_da_huang_dao(
-                                        day_zhi_for_hour, month_zhi_for_hour, hour_zhi)
+                                    da_result = huangdao_calc._calculate_da_huangdao_shichen(
+                                        day_zhi_for_hour, hour_zhi)
                                     if da_result.get('type') == '吉':
                                         found_hour = True
                                         break
