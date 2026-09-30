@@ -122,6 +122,7 @@ from modules.二十四山择吉天机 import (
     calculate_xingyao_sha, get_yinfu_config, get_mountain_wuxing
 )
 from modules.电子罗盘 import CompassFrame, CompassDialog, show_compass_dialog
+from modules.城市经度 import CITY_NAMES, get_longitude, filter_cities
 
 # 导入节气计算模块
 try:
@@ -1391,6 +1392,36 @@ class ZeriApp:
                                    foreground="gray", font=("微软雅黑", 9, "italic"))
             hint_label.pack(anchor=tk.W, pady=(0, 5))
         
+        # 城市选择绑定工厂（必须在 for 循环外定义：循环内闭包晚绑定会让所有
+        # 卡片处理器共享循环结束后的最后一组变量）
+        def bind_city_selector(city_combo, city_v, longitude_v):
+            def apply():
+                lng = get_longitude(city_v.get())
+                if lng is not None:
+                    longitude_v.set(str(lng))
+                    return True
+                return False
+
+            def on_selected(_event=None):
+                apply()
+
+            def on_type(event):
+                if event.keysym in ('Return', 'Tab'):
+                    apply()
+                    return
+                text = city_v.get()
+                if get_longitude(text) is not None:
+                    apply()
+                else:
+                    city_combo['values'] = filter_cities(text)
+
+            def on_focusout(_event=None):
+                apply()
+
+            city_combo.bind('<<ComboboxSelected>>', on_selected)
+            city_combo.bind('<KeyRelease>', on_type)
+            city_combo.bind('<FocusOut>', on_focusout)
+
         # 根据事项类型确定事主
         if event_type == "嫁娶":
             owners = ["新娘", "新郎"]
@@ -1482,16 +1513,27 @@ class ZeriApp:
             all_entries.append(minute_entry)
 
             # 出生地经度（真太阳时立项，2026-09-29，001 §43.9 拍板③/§48）：
-            # 标签文案即提示（项目无 tooltip 工具类，按 §48 计划用灰色静态标签）：
-            # "默认 120=北京时间；填实际经度启用真太阳时（含均时差）"
+            # 默认 120=北京时间；普通用户经下方「城市」下拉自动填经度（001 §51）
             longitude_var = tk.StringVar(value="120")
             ttk.Label(date_row, text="经度:").pack(side=tk.LEFT, padx=(10, 0))
             longitude_entry = ttk.Entry(date_row, textvariable=longitude_var, width=6)
             longitude_entry.pack(side=tk.LEFT, padx=2)
             all_entries.append(longitude_entry)
-            ttk.Label(date_row, text="(120=北京;填实际经度启用真太阳时)",
+            ttk.Label(date_row, text="(120=北京时间;可直接改)",
                       foreground="gray").pack(side=tk.LEFT)
-            
+
+            # 城市选择（主入口）：选城市 → 经度自动填入；支持打字过滤
+            city_row = ttk.Frame(owner_frame)
+            city_row.pack(fill=tk.X, pady=1)
+            city_var = tk.StringVar(value="")
+            ttk.Label(city_row, text="城市:").pack(side=tk.LEFT, padx=(10, 0))
+            city_combo = ttk.Combobox(city_row, textvariable=city_var,
+                                      values=CITY_NAMES, width=18)
+            city_combo.pack(side=tk.LEFT, padx=2)
+            bind_city_selector(city_combo, city_var, longitude_var)
+            ttk.Label(city_row, text="(选城市自动填经度;可输入字过滤)",
+                      foreground="gray").pack(side=tk.LEFT)
+
             # 四柱显示行
             sizhu_row = ttk.Frame(owner_frame)
             sizhu_row.pack(fill=tk.X, pady=2)
@@ -1594,6 +1636,7 @@ class ZeriApp:
                 'hour': hour_var,
                 'minute': minute_var,
                 'longitude': longitude_var,
+                'birth_city': city_var,
                 'true_solar_flag_var': true_solar_flag_var,
                 'gender': gender_var,
                 'sizhu_var': sizhu_var,
@@ -2179,6 +2222,9 @@ class ZeriApp:
             # 真太阳时立项 §48：持久化经度（字符串原样保存，与其他字段一致；缺键默认 '120'）
             _lng_raw = owner_info.get('longitude')
             longitude = _lng_raw.get() if hasattr(_lng_raw, 'get') else (_lng_raw or '120')
+            # 001 §51：城市名仅显示/回填用（数值口径仍以经度为准），缺键默认 ''
+            _city_raw = owner_info.get('birth_city')
+            birth_city = _city_raw.get() if hasattr(_city_raw, 'get') else (_city_raw or '')
             sizhu = owner_info['sizhu_var'].get() if hasattr(owner_info['sizhu_var'], 'get') else owner_info.get('sizhu_var', '')
             xishen = owner_info['xishen_var'].get() if hasattr(owner_info['xishen_var'], 'get') else owner_info.get('xishen_var', '')
             yongshen = owner_info['yongshen_var'].get() if hasattr(owner_info['yongshen_var'], 'get') else owner_info.get('yongshen_var', '')
@@ -2193,6 +2239,7 @@ class ZeriApp:
                 'hour': hour,
                 'minute': minute,
                 'longitude': longitude,
+                'birth_city': birth_city,
                 'gender': gender,
                 'sizhu': sizhu,
                 'xishen': xishen,
@@ -2410,6 +2457,9 @@ class ZeriApp:
                 # 真太阳时立项 §48：恢复经度；旧方案无此键 → 默认 '120'（不启用，向后兼容）
                 if 'longitude' in owner_info:
                     owner_info['longitude'].set(owner_data.get('longitude', '120'))
+                # 001 §51：恢复城市（旧方案无此键 → ''），不改经度数值
+                if 'birth_city' in owner_info:
+                    owner_info['birth_city'].set(owner_data.get('birth_city', ''))
                 owner_info['gender'].set(owner_data.get('gender', '男'))
                 owner_info['sizhu_var'].set(owner_data.get('sizhu', '未计算'))
                 owner_info['xishen_var'].set(owner_data.get('xishen', ''))
