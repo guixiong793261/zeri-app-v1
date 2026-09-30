@@ -69,16 +69,24 @@ class TravelRuleChecker(EventRuleChecker):
     MINGQUAN_YI = ['除', '满', '成', '开']
     MINGQUAN_JI = ['破', '危', '闭']
 
-    def __init__(self):
-        super().__init__()
-        self.has_marriage_shensha = self._check_dependencies()
+    def _calc_jianchu_value(self, sizhu):
+        """[A1·2026-09-30] 建除十二神就地取值（函数就位，不接入产出）。
 
-    def _check_dependencies(self):
-        try:
-            from ..黄历宜忌 import get_huangli_info
-            return True
-        except ImportError:
-            return False
+        仅依据 sizhu 的月支/日支，调 modules.今日黄历.calc_jianchu（通书"以月建起建，
+        顺推至日支"掌诀，全软件唯一建除源），返回 建/除/满/平/定/执/破/危/成/收/开/闭；
+        sizhu 非字典或月支/日支缺失时返回 None。
+
+        A1 硬边界：本方法不接入 _check_rules 的 yi_list/ji_list，也不计分；
+        是否启用并计入出行评分，挂 P1（B）拍板后另批。
+        """
+        if not isinstance(sizhu, dict):
+            return None
+        month_zhi = sizhu.get('month_zhi', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not month_zhi or not day_zhi:
+            return None
+        from ..今日黄历 import calc_jianchu
+        return calc_jianchu(month_zhi, day_zhi)
 
     def _check_rules(self, sizhu, owners=None, **kwargs):
         """检查出行规则 - 参考《协纪辨方书》"""
