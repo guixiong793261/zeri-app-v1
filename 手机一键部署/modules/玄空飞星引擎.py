@@ -157,6 +157,8 @@ def _day_segment_info(dt):
     各段以六个中气后的【第一个甲子日】为界（冬至/雨水/谷雨为阳三元：
     1白/7赤/4绿顺飞；夏至/处暑/霜降为阴三元：9紫/3碧/6白逆飞）。
     中气与段首甲子日之间的日子仍归上一元。
+    两段首同日（同一甲子日恰为两中气之界，仅霜降→冬至间距59天可现）时，
+    取中气时序靠后者之元。
     """
     if not _HAS_SXTWL:
         return None
@@ -173,15 +175,17 @@ def _day_segment_info(dt):
                     continue
                 off = (-gz0) % 60   # 中气后第一个甲子日距中气天数（0=当日即甲子）
                 jiazi_day = (seg_dt + timedelta(days=off)).date()
-                cands.append((jiazi_day, base, dr))
+                cands.append((jiazi_day, seg_dt, base, dr))
         except Exception:
             continue
-    cands.sort(key=lambda c: c[0])
+    # 段首同日冲突决胜：排序键含中气时刻，同日时中气靠后者排末位，
+    # 末位覆盖即取靠后中气之元（无冲突时行为与旧逻辑完全一致）
+    cands.sort(key=lambda c: (c[0], c[1]))
     prev = None
     cur_date = dt.date()
     for c in cands:
         if c[0] <= cur_date:
-            prev = c
+            prev = (c[0], c[2], c[3])
         else:
             break
     return prev

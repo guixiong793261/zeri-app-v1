@@ -212,10 +212,10 @@ def get_shengke(wuxing1, wuxing2):
     return '无关'
 
 def get_hour_zhi_index(hour, minute=0):
-    """获取时支索引（晚子时派口径，与本文件 SiZhuCalculator._calculate_hour 一致）
+    """获取时支索引（晚子时派口径，与四柱计算器._calculate_hour 单点出口一致）
 
     23:00-23:59 时支为子（索引0）；日柱换日不在此函数职责内——
-    本软件 0:00 子正换日，晚子时日柱仍属当日。
+    本软件 0:00 子正换日，晚子时日柱仍属当日，由四柱计算器统一处理。
     """
     if hour == 23 or hour == 0:
         return 0
@@ -638,18 +638,34 @@ class HighPrecisionLunar:
         zodiac = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
         return zodiac[(lunar_year - 4) % 12]
 
-    def _get_eight_char_sxtwl(self, day_obj, hour: int) -> Dict[str, str]:
-        """从 sxtwl 的 Day 对象提取八字"""
-        year_gz = day_obj.getYearGZ()
-        month_gz = day_obj.getMonthGZ()
-        day_gz = day_obj.getDayGZ()
-        hour_gz = day_obj.getHourGZ(hour)
-        
+    def _get_eight_char_sxtwl(self, day_obj, year: int, month: int, day: int,
+                              hour: int, minute: int = 0,
+                              longitude: float = None) -> Dict[str, str]:
+        """八字提取（2026-09-29 拍板④：统一委托主链四柱计算器，001 §43/§44）
+
+        历史实现：直接取 sxtwl 原生四法（getHourGZ 为子初派、getDayGZ 无
+        修正），与主链 modules/四柱计算器.py 的晚子时派口径（23 点日柱不进
+        次日、时干按当日日干五鼠遁、日柱用 1900-01-01 甲戌基准自算）存在
+        分叉，导致同一 23 点日课在评分（链路甲）与玄空四盘/事主八字分析
+        （本链路乙）中出现不同四柱。现全软件统一到链路甲：八字一律由
+        主链 calculate_sizhu 遁出；day_obj 形参仅为兼容旧签名保留。
+        方法名中的 "sxtwl" 为历史名，实际不再经 sxtwl 取八字。
+
+        longitude: 出生地东经度（可选，真太阳时立项 §48）——None/120.0 不启用，
+        其余值透传主链按拍板①②修正（经度+EoT）。
+        """
+        del day_obj  # 八字不再依赖 sxtwl Day 对象（农历日期/节气仍由 sxtwl 提供）
+        try:
+            from .四柱计算器 import calculate_sizhu
+        except ImportError:
+            from 四柱计算器 import calculate_sizhu
+        sz = calculate_sizhu(date(year, month, day), hour, minute,
+                             longitude=longitude)
         return {
-            'year': self._tiangan(year_gz.tg) + self._dizhi(year_gz.dz),
-            'month': self._tiangan(month_gz.tg) + self._dizhi(month_gz.dz),
-            'day': self._tiangan(day_gz.tg) + self._dizhi(day_gz.dz),
-            'hour': self._tiangan(hour_gz.tg) + self._dizhi(hour_gz.dz)
+            'year': sz['年柱'],
+            'month': sz['月柱'],
+            'day': sz['日柱'],
+            'hour': sz['时柱'],
         }
 
     @staticmethod
@@ -687,7 +703,7 @@ class HighPrecisionLunar:
             'is_leap': is_leap,
             'leap_month': sxtwl.getRunMonth(year),
             'year_zodiac': self._get_zodiac(lunar_year),
-            'eight_char': self._get_eight_char_sxtwl(day_obj, hour),
+            'eight_char': self._get_eight_char_sxtwl(day_obj, year, month, day, hour, minute),
             'jie_qi': jie_qi
         }
 
@@ -799,6 +815,22 @@ class HighPrecisionLunar:
             '_check_details': diffs if not consistent else []
         }
 
+    @staticmethod
+    def _verify_lunar_roundtrip(solar_y: int, solar_m: int, solar_d: int,
+                                lunar_y: int, lunar_m_abs: int, lunar_d: int,
+                                is_leap: bool) -> None:
+        """往返校验（2026-09-29 加固，001 §45）：转出的公历反查农历必须等于
+        输入三元组。sxtwl.fromLunar 对越界日（如正月 99 日）会静默归一化到
+        后续公历日期而不抛错，属静默错误数据，此处显式拒绝。"""
+        back = sxtwl.fromSolar(solar_y, solar_m, solar_d)
+        got = (back.getLunarYear(), back.getLunarMonth(),
+               back.getLunarDay(), back.isLunarLeap())
+        if got != (lunar_y, lunar_m_abs, lunar_d, is_leap):
+            raise ValueError(
+                f"非法农历日期：农历{lunar_y}年{'闰' if is_leap else ''}"
+                f"{lunar_m_abs}月{lunar_d}日不存在（库静默归一化为公历 "
+                f"{solar_y}-{solar_m:02d}-{solar_d:02d}，已拒绝）")
+
     def lunar_to_solar(self, lunar_year: int, lunar_month: int, lunar_day: int,
                        hour: int = 0, minute: int = 0, second: int = 0) -> Dict:
         """
@@ -819,7 +851,9 @@ class HighPrecisionLunar:
             solar_year = day_obj.getSolarYear()
             solar_month = day_obj.getSolarMonth()
             solar_day = day_obj.getSolarDay()
-            
+            self._verify_lunar_roundtrip(solar_year, solar_month, solar_day,
+                                         lunar_year, lunar_month_abs, lunar_day, is_leap)
+
             return {
                 'year': solar_year,
                 'month': solar_month,
@@ -828,6 +862,9 @@ class HighPrecisionLunar:
                 'minute': minute,
                 'second': second
             }
+        except ValueError:
+            # 往返校验拒绝=用户输入了不存在的农历日期：显式上抛，不做跨库兜底
+            raise
         except Exception as e:
             logger.error(f"sxtwl 农历转公历失败: {e}")
             # 尝试使用 lunar-python
@@ -835,6 +872,8 @@ class HighPrecisionLunar:
                 from lunar_python import Lunar
                 lunar = Lunar.fromYmd(lunar_year, lunar_month, lunar_day)
                 solar = lunar.getSolar()
+                self._verify_lunar_roundtrip(solar.getYear(), solar.getMonth(), solar.getDay(),
+                                             lunar_year, lunar_month_abs, lunar_day, is_leap)
                 return {
                     'year': solar.getYear(),
                     'month': solar.getMonth(),
@@ -1040,6 +1079,12 @@ except ImportError:
     HAS_SXTWL = False
     logger.warning("sxtwl 库未安装，使用备用计算方法")
 
+# 真太阳时修正（纯函数模块，零依赖；2026-09-29 立项，001 §43.9/§48）
+try:
+    from .真太阳时 import apply_true_solar, TRUE_SOLAR_BASE_LONGITUDE
+except ImportError:
+    from 真太阳时 import apply_true_solar, TRUE_SOLAR_BASE_LONGITUDE
+
 
 def _parse_chinese_date_string(s):
     """
@@ -1116,30 +1161,42 @@ class SiZhuCalculator:
         self.sect = sect
         logger.info(f"使用精确四柱计算方法 (sect={sect})")
     
-    def calculate(self, target_date, hour=12, minute=0, second=0):
+    def calculate(self, target_date, hour=12, minute=0, second=0, longitude=None):
         """
         计算完整四柱
-        
+
         Args:
             target_date: datetime.date对象
             hour: 小时(0-23)
             minute: 分钟(0-59)
             second: 秒(0-59)
-            
+            longitude: 出生地东经度（可选）。None 或 120.0 = 不启用真太阳时
+                （北京时间基准，与现状逐字节一致）；其余值按拍板①②修正为
+                真太阳时（经度修正 4min/° + NOAA 均时差 EoT）后再排四柱，
+                修正后时刻流入晚子时判定与交节比较（先修正后判 23 点边界）。
+
         Returns:
             dict: 包含年柱、月柱、日柱、时柱的字典
         """
         year = target_date.year
         month = target_date.month
         day = target_date.day
-        
+
+        # 真太阳时修正（2026-09-29 真太阳时立项，001 §43.9 拍板①②③⑤、§48）
+        if longitude is not None and longitude != TRUE_SOLAR_BASE_LONGITUDE:
+            # 经度=120 等价于不启用（北京时间基准）
+            year, month, day, hour, minute = apply_true_solar(
+                year, month, day, hour, minute, longitude)
+            target_date = date(year, month, day)
+            second = 0  # 真太阳时精度为分钟粒度（D4 口径），秒归零防误用
+
         # 使用 sxtwl 计算四柱
         if HAS_SXTWL:
             try:
                 return self._calculate_with_sxtwl(year, month, day, hour, minute, second)
             except Exception as e:
                 logger.warning(f"sxtwl 计算失败，使用备用方法: {e}")
-        
+
         # 备用计算方法
         return self._calculate_fallback(year, month, day, hour, minute, second)
     
@@ -1151,9 +1208,12 @@ class SiZhuCalculator:
         但经校验，sxtwl的日柱计算与标准八字计算有偏差，因此日柱使用修正后的计算方法
         """
         # 晚子时（23:00-23:59）口径——晚子时派：
-        # 日柱仍属当日（0:00 子正换日），时支为子，时干按【当日日干】五鼠遁。
-        # sxtwl.getHourGZ(23) 走子初派（按次日日干遁干），与本软件口径不符，
-        # 故晚子时柱不用 sxtwl，改由本模块 _calculate_hour 遁出。
+        # 典据《三命通会》"子时上半属昨日、下半属今日"，《新唐书·历志》
+        # "古历分日起于子半"，《协纪辨方书》同此义。
+        # 即：日柱仍属当日（0:00 子正换日），时支为子，时干按【当日日干】
+        # 五鼠遁（与次日 0 点早子按次日日干遁干不同）。
+        # 注意：sxtwl.getHourGZ(23) 走子初派（23 点即换次日日干遁干），
+        # 与本软件口径不符，故晚子时柱不用 sxtwl，改由本模块五鼠遁遁出。
         is_late_zi = (hour == 23)
 
         # 计算日柱的日期：晚子时不进次日，仍用当日
@@ -1366,7 +1426,8 @@ class SiZhuCalculator:
         # 计算日柱（晚子时日柱仍属当日）
         day_gan, day_zhi = self._calculate_day(day_calc_year, day_calc_month, day_calc_day)
 
-        # 计算时柱（当日日干五鼠遁）。_calculate_hour 已按晚子时派处理 23 点，无需特判
+        # 计算时柱（当日日干五鼠遁）。_calculate_hour 已按晚子时派处理
+        # 23 点（时支子、时干按当日日干遁），无需在此特判
         hour_gan, hour_zhi = self._calculate_hour(day_gan, hour, minute)
         
         return {
@@ -1541,20 +1602,24 @@ class SiZhuCalculator:
 calculator = SiZhuCalculator()
 
 
-def calculate_sizhu(target_date, hour=12, minute=0, second=0):
+def calculate_sizhu(target_date, hour=12, minute=0, second=0, longitude=None):
     """
     计算四柱的便捷函数（统一入口）
-    
+
     【重要说明】
     这是计算四柱的唯一入口函数，使用精确的农历计算方法
-    
+
     Args:
         target_date: datetime.date对象、datetime对象，或(year, month, day)元组，
                      或常见日期字符串（支持 "YYYY年MM月DD日 HH时MM分" / "YYYY-MM-DD HH:MM:SS" 等）
         hour: 小时(0-23)
         minute: 分钟(0-59)
         second: 秒(0-59)
-        
+        longitude: 出生地东经度（可选）。None 或 120.0 = 不启用真太阳时
+            （北京时间基准）；其余值按拍板①②修正为真太阳时（经度+EoT）。
+            修正跨日时，返回的 year/month/day/date 字段为修正后日期
+            （与四柱所属日一致，供下游神煞/消费方对齐口径）。
+
     Returns:
         dict: 包含年柱、月柱、日柱、时柱的字典，同时包含year, month, day字段
     """
@@ -1605,8 +1670,17 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0):
         month = target_date.month
         day = target_date.day
     
-    # 计算四柱
-    result = calculator.calculate(target_date, hour, minute, second)
+    # 计算四柱（longitude 传入，calculate() 内部完成真太阳时修正后排盘）
+    result = calculator.calculate(target_date, hour, minute, second, longitude=longitude)
+
+    # 真太阳时修正跨日时，报告字段（year/month/day/date）对齐修正后日期，
+    # 与四柱所属日口径一致（不影响上方排盘调用，此处仅改返回字段；
+    # 经度=120 等价于不启用（北京时间基准））
+    if longitude is not None and longitude != TRUE_SOLAR_BASE_LONGITUDE \
+            and year is not None:
+        year, month, day, _, _ = apply_true_solar(
+            year, month, day, hour, minute, longitude)
+        target_date = date(year, month, day)
     
     # 添加日期字段
     if year is not None:
@@ -2068,6 +2142,8 @@ def _day_segment_info(dt):
     各段以六个中气后的【第一个甲子日】为界（冬至/雨水/谷雨为阳三元：
     1白/7赤/4绿顺飞；夏至/处暑/霜降为阴三元：9紫/3碧/6白逆飞）。
     中气与段首甲子日之间的日子仍归上一元。
+    两段首同日（同一甲子日恰为两中气之界，仅霜降→冬至间距59天可现）时，
+    取中气时序靠后者之元。
     """
     if not _HAS_SXTWL:
         return None
@@ -2084,15 +2160,17 @@ def _day_segment_info(dt):
                     continue
                 off = (-gz0) % 60   # 中气后第一个甲子日距中气天数（0=当日即甲子）
                 jiazi_day = (seg_dt + timedelta(days=off)).date()
-                cands.append((jiazi_day, base, dr))
+                cands.append((jiazi_day, seg_dt, base, dr))
         except Exception:
             continue
-    cands.sort(key=lambda c: c[0])
+    # 段首同日冲突决胜：排序键含中气时刻，同日时中气靠后者排末位，
+    # 末位覆盖即取靠后中气之元（无冲突时行为与旧逻辑完全一致）
+    cands.sort(key=lambda c: (c[0], c[1]))
     prev = None
     cur_date = dt.date()
     for c in cands:
         if c[0] <= cur_date:
-            prev = c
+            prev = (c[0], c[2], c[3])
         else:
             break
     return prev
