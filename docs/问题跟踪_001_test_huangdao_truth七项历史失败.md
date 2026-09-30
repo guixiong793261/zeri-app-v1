@@ -4164,3 +4164,45 @@ shensha（13 件，6/6）：marriage_shensha `26eb878d27c7`、作灶 `282b07c6c2
 - 主仓（main）：本节 docs 独立 commit。
 
 至此**统一版与主源在 modules 层完全对齐**；P0-B（出行规则）转入下一步只读诊断。
+
+---
+
+## §53 P0-B（方案甲·A1）：出行规则清死代码＋建除函数就位（2026-09-30）
+
+### 背景与定位
+
+§52 D2 诊断后，Step3 只读验收修正了原结论：`黄历宜忌.py` 缺失**零实际影响**，
+真正缺失的能力仅"按当日建除判宜/忌出行"。用户拍板**方案甲**并做 **A/B 拆分**：
+A1 只清死代码＋建除函数就位（不接产出）；B（是否产出/计分）挂 P1 裁决。
+
+### 改动清单（[出行规则.py](file:///d:/自编择日软件/专业级正五行择日软件/modules/rules/出行规则.py)）
+
+1. **删死探测**：`__init__` 中 `self.has_marriage_shensha` 与 `_check_dependencies` 整体删除。
+   - `get_huangli_info` 全仓无定义无他用；其赋值属性在 TravelRuleChecker 从未被读取。
+2. **建除函数就位**：新增 `_calc_jianchu_value(sizhu)`——仅取 `month_zhi/day_zhi`，
+   调 [今日黄历.calc_jianchu](file:///d:/自编择日软件/专业级正五行择日软件/modules/今日黄历.py#L470)（通书"以月建起建顺推"掌诀，全软件唯一建除源）。
+   - 缺支/非字典 → None；非法地支 → '未知'（沿用 calc_jianchu 契约）。
+3. **未接入**：`_check_rules` 不调用该方法，不产 yi/ji、不计分。
+
+### 陷阱与边界
+
+- "函数就位"与"接入产出"是两个动作；A1 只做前者。verify 设静态守门：
+  `_check_rules` 源码不得出现 `_calc_jianchu_value`，防误接。
+- 模块 docstring 等无关注释一律不动。
+
+### 验证
+
+- [tests/verify_lvxing_jianchu.py](file:///d:/自编择日软件/专业级正五行择日软件/tests/verify_lvxing_jianchu.py)：**FAIL 0，退出 0**；
+  48 点掌诀黄金值（子/卯/午/酉四月×12日，真值独立硬编码）＋非法输入反向断言＋边界静态守门。
+- **行为零变化硬证据**：改前抓取、改后复算的 **242 例** `check()` 产出快照
+  （60甲子×4位置＋12生肖事主）**零差异、零多余键**。
+- **六副本 SHA：`1cb018555f75` 逐字一致**（check_six_copies，FAIL 0）。
+- **回归四件套全绿**：test_core / test_business_logic / test_integration / test_huangdao_truth 均退出 0。
+
+### commit
+
+- 主仓（main）：`d41f3f6` `refactor(rules): A1 出行规则清理死代码+建除函数就位（不接产出）`（4 文件）。
+- 统一版仓（master）：`c643793` `refactor(rules): A1 出行规则对齐主源`（3 文件）。
+- 本节 docs 独立 commit。
+
+**B（建除是否接入产出/计分）随 P1 双族口径（H1）一并裁决，不在本批。**
