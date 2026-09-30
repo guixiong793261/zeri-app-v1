@@ -95,21 +95,18 @@ class BaZiInputDialog:
         self.year_var = tk.StringVar(value=str(1990))
         year_entry = ttk.Entry(date_row1, textvariable=self.year_var, width=8)
         year_entry.pack(side=tk.LEFT, padx=5)
-        year_entry.insert(0, "1990")
         ttk.Label(date_row1, text="(1900-2100)", font=("微软雅黑", 8, "italic")).pack(side=tk.LEFT, padx=5)
         
         ttk.Label(date_row1, text="月:").pack(side=tk.LEFT, padx=(20, 10))
         self.month_var = tk.StringVar(value="5")
         month_entry = ttk.Entry(date_row1, textvariable=self.month_var, width=5)
         month_entry.pack(side=tk.LEFT, padx=5)
-        month_entry.insert(0, "5")
         ttk.Label(date_row1, text="(1-12)", font=("微软雅黑", 8, "italic")).pack(side=tk.LEFT, padx=5)
         
         ttk.Label(date_row1, text="日:").pack(side=tk.LEFT, padx=(20, 10))
         self.day_var = tk.StringVar(value="15")
         day_entry = ttk.Entry(date_row1, textvariable=self.day_var, width=5)
         day_entry.pack(side=tk.LEFT, padx=5)
-        day_entry.insert(0, "15")
         ttk.Label(date_row1, text="(1-31)", font=("微软雅黑", 8, "italic")).pack(side=tk.LEFT, padx=5)
         
         # 时分
@@ -120,14 +117,12 @@ class BaZiInputDialog:
         self.hour_var = tk.StringVar(value="10")
         hour_entry = ttk.Entry(date_row2, textvariable=self.hour_var, width=5)
         hour_entry.pack(side=tk.LEFT, padx=5)
-        hour_entry.insert(0, "10")
         ttk.Label(date_row2, text="(0-23)", font=("微软雅黑", 8, "italic")).pack(side=tk.LEFT, padx=5)
         
         ttk.Label(date_row2, text="分:").pack(side=tk.LEFT, padx=(20, 10))
         self.minute_var = tk.StringVar(value="30")
         minute_entry = ttk.Entry(date_row2, textvariable=self.minute_var, width=5)
         minute_entry.pack(side=tk.LEFT, padx=5)
-        minute_entry.insert(0, "30")
         ttk.Label(date_row2, text="(0-59)", font=('微软雅黑', 8, 'italic')).pack(side=tk.LEFT, padx=5)
         
         # 提示信息
@@ -177,7 +172,7 @@ class BaZiInputDialog:
             bazi = BaZiPanPan(
                 year, month, day, hour, minute, gender
             )
-            panpan_data = bazi.calculate()
+            panpan_data = bazi.get_panpan_result()
             
             # 关闭输入对话框
             self.dialog.destroy()

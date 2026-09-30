@@ -7968,12 +7968,8 @@ class ZeriApp:
     def open_bazi_panpan(self):
         """打开八字排盘"""
         try:
-            # 测试show_bazi_input_dialog是否存在
-            print("开始调用show_bazi_input_dialog")
             show_bazi_input_dialog(self.root)
-            print("show_bazi_input_dialog调用成功")
         except Exception as e:
-            print(f"错误：{str(e)}")
             messagebox.showerror("错误", f"打开八字排盘失败：{str(e)}")
     
     def show_help(self):
