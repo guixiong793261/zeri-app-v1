@@ -4413,4 +4413,45 @@ tests/test_business_logic.py 的一致性断言。原时辰评分链已删除
 ### 57.7 commit
 
 - 产品代码 4 文件×3 层 + tests（verify_j2_shichen_qili.py、两处断言/黄金值）
-  + J2 方案文档 + §57 本节，独立 commit。
+  + J2 方案文档 + §57 本节，独立 commit。主仓 commit `a6c7e92`。
+
+## §58 K1：今日黄历 GUI 值日复用月家接口（2026-10-01 拍板执行）
+
+### 58.1 拍板与典据
+
+K 方案用户选 **K1**。值日大黄道《协纪》唯「月建起」一口：
+`modules/黄道.py` `_calculate_da_huangdao_zhiri` 公式
+`(日支序号−2×月支序号+4)%12` 与月建口诀逐点等价；
+`modules/今日黄历.py` 原 `SHI_ER_SHEN`（日支固定映射）使月份项消失，
+在年家/月家/日起时三家中均无出处，判定为误把日支当固定索引的简化实现。
+
+### 58.2 改动清单（仅 modules/今日黄历.py × 3 层）
+
+- 删除 `SHI_ER_SHEN` 固定映射（防未来误用），保留说明注释。
+- 顶部新增 `from .黄道 import huangdao_calculator`。
+- 取值点改调月家接口：`_calculate_da_huangdao_zhiri(day_zhi, month_zhi)`，
+  展示格式与旧法逐字一致（「青龙（吉）」）；展示段变量名/版式不动。
+- 产品代码 diff 经 git 证实**仅**今日黄历.py × 3 层；评分链模块零 diff。
+
+### 58.3 verify 与真实 GUI 抽样
+
+- tests/verify_k_zhiri_koujing.py：SHI_ER_SHEN 已移除（反向）；全日期
+  GUI 口径 == 月家值日（0 错）；**寅月、申月与旧固定法逐日一致**
+  （反向无漂移），FAIL 0。
+- 真实 GUI 渲染探针（TodayHuangLiDialog 实例化 → query() → 读
+  result_text 控件真实内容）：全量复核不一致 **1826/2191 = 83.3%**；
+  12 个变化日渲染行 == 月家接口且 ≠ 旧法；寅月/申月各 3 个渲染行 ==
+  旧固定法（反向），FAIL 0。
+
+### 58.4 评分链零改动（反向断言）
+
+- 评分器/事项标准/神煞/黄道/四柱模块本批零 diff；评分链不 import
+  今日黄历（全模块扫描仅择日贴.py 引用，且不涉已删符号，
+  `import modules.择日贴` 运行时通过）。
+- unittest discover **106 OK**；系统自检整体通过、**0 失败**。
+
+### 58.5 三层 SHA 与 commit
+
+- modules/今日黄历.py 三层字节一致（SHA256 前 16 位）：`3c43df26d36c532b`。
+- 产品代码×3 层 + tests/verify_k_zhiri_koujing.py + K 方案文档 + §58 本节，
+  独立 commit（与 J2 可独立回滚）。

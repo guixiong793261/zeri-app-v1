@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, date, timedelta
 from .四柱计算器 import get_lunar_date, calculate_sizhu
+from .黄道 import huangdao_calculator
 
 # 尝试导入 sxtwl 进行精确节气判断
 try:
@@ -158,13 +159,11 @@ PENG_ZU = {
 
 
 # ============================================================
-# 七、十二神（大黄道）
+# 七、十二神（大黄道值日）
 # ============================================================
-SHI_ER_SHEN = {
-    "子": "青龙（吉）", "丑": "明堂（吉）", "寅": "天刑（凶）", "卯": "朱雀（凶）",
-    "辰": "金匮（吉）", "巳": "天德（吉）", "午": "白虎（凶）", "未": "玉堂（吉）",
-    "申": "天牢（凶）", "酉": "玄武（凶）", "戌": "司命（吉）", "亥": "勾陈（凶）"
-}
+# K1（2026-10-01，001 §58）：原 SHI_ER_SHEN 日支固定映射无典据，
+# 已删除——值日《协纪》唯「月建起」，一律取黄道.py 月家接口
+# _calculate_da_huangdao_zhiri（日支、月支），本模块不再保留固定表。
 
 
 # ============================================================
@@ -829,8 +828,12 @@ class TodayHuangLiDialog:
         if not peng_str:
             peng_str = "无"
 
-        # ---- 11. 十二神 ----
-        shi_er = SHI_ER_SHEN.get(day_zhi, "未知")
+        # ---- 11. 十二神（值日大黄道，月建起：复用黄道.py 月家接口） ----
+        if day_zhi and month_zhi:
+            _zr = huangdao_calculator._calculate_da_huangdao_zhiri(day_zhi, month_zhi)
+            shi_er = f"{_zr['name']}（{_zr['type']}）"
+        else:
+            shi_er = "未知"
 
         # ---- 12. 宜忌 ----
         yi_list, ji_list = get_yi_ji(day_gan, day_zhi)
