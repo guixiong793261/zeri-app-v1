@@ -781,7 +781,8 @@ class Scorer:
                             yueling_analysis = self._generate_yueling_analysis(sizhu)
                             _veto_tail = self._build_marriage_reason_tail(
                                 wu_xing_result, yueling_analysis,
-                                yueling_score, xishen_score, self.shensha_list)
+                                yueling_score, xishen_score, self.shensha_list,
+                                marriage_details=marriage_result.get('details'))
                             if _veto_tail:
                                 reason_parts.append(_veto_tail)
 
@@ -1117,7 +1118,8 @@ class Scorer:
                         yueling_analysis = self._generate_yueling_analysis(sizhu)
                         _mrg_tail = self._build_marriage_reason_tail(
                             wu_xing_result, yueling_analysis,
-                            yueling_score, xishen_score, shensha_list)
+                            yueling_score, xishen_score, shensha_list,
+                            marriage_details=marriage_result.get('details'))
                         if _mrg_tail:
                             reason_parts.append(_mrg_tail)
                         
@@ -5360,7 +5362,8 @@ class Scorer:
         return '；'.join(reason)
 
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
-                                   yueling_score, xishen_score, shensha_list=None):
+                                   yueling_score, xishen_score, shensha_list=None,
+                                   marriage_details=None):
         """
         嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
 
@@ -5451,13 +5454,18 @@ class Scorer:
 
         # 伏吟加重提示（2026-10-02）：月时/年时伏吟会放大该柱五行力度，
         # 若夫星已受耗，则在评语中提示"X气加重，夫星更受耗"。
+        # 夫星受耗判定取 marriage_details 负分项（self.ji_list 在嫁娶路径
+        # 只含规则忌项，夫星耗分在 marriage_details，勿混用数据源）。
+        _md_neg = [str(_d[0]) for _d in (marriage_details or [])
+                   if isinstance(_d, (list, tuple)) and len(_d) >= 2
+                   and isinstance(_d[1], (int, float)) and _d[1] < 0]
+        _has_fuxing_hao = any('夫星' in _t for _t in _md_neg)
         _zhi_wuxing = {'子': '水', '丑': '土', '寅': '木', '卯': '木',
                        '辰': '土', '巳': '火', '午': '火', '未': '土',
                        '申': '金', '酉': '金', '戌': '土', '亥': '水'}
         _fuyin_lines = [str(r) for r in (details.get('地支关系') or [])
                         if '伏吟' in str(r)]
         if _fuyin_lines:
-            _has_fuxing_hao = any('夫星' in str(j) for j in (self.ji_list or []))
             for _fl in _fuyin_lines:
                 # 提取伏吟地支（如"月柱戊戌 与 时柱戊戌 伏吟"）
                 _z = None
@@ -5475,9 +5483,12 @@ class Scorer:
         # 宜忌冲突提示（2026-10-02）：夫星受耗时嫁娶仍标"宜嫁娶"且给高星，
         # 评语须加"虽有吉神支撑，然夫星受耗，嫁娶须有制化或另择吉时"，
         # 避免"宜嫁娶"与"忌夫星受耗"并列而无折中说明。
-        if any('夫星' in str(j) for j in (self.ji_list or [])):
-            _has_jixing = any(s.get('score', 0) > 0 for s in _ss_all)
-            if _has_jixing or good_shensha:
+        if _has_fuxing_hao:
+            _md_pos = any(isinstance(_d, (list, tuple)) and len(_d) >= 2
+                          and isinstance(_d[1], (int, float)) and _d[1] > 0
+                          and '基础分' not in str(_d[0])
+                          for _d in (marriage_details or []))
+            if _md_pos or good_shensha:
                 seg.append('虽有天德月德等吉神支撑，然夫星受耗，嫁娶须有制化或另择吉时')
 
         # 宜（与综合评语末句保持一致，取本次 yi_list）
