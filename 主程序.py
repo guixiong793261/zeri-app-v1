@@ -6645,7 +6645,7 @@ class ZeriApp:
                                         owner_sizhu = calculate_sizhu(birth_date,
                                             owner.get('birth_hour', 12),
                                             owner.get('birth_minute', 0),
-                                            owner.get('birth_longitude'))
+                                            longitude=owner.get('birth_longitude'))
                                         bride_gan = owner_sizhu.get('年柱', '')[:1]
                                         bride_zhi = owner_sizhu.get('年柱', '')[1:]
                                         bride_m_gan = owner_sizhu.get('月柱', '')[:1]
@@ -6667,7 +6667,7 @@ class ZeriApp:
                                         owner_sizhu = calculate_sizhu(birth_date,
                                             owner.get('birth_hour', 12),
                                             owner.get('birth_minute', 0),
-                                            owner.get('birth_longitude'))
+                                            longitude=owner.get('birth_longitude'))
                                         groom_gan = owner_sizhu.get('年柱', '')[:1]
                                         groom_zhi = owner_sizhu.get('年柱', '')[1:]
                                         groom_m_gan = owner_sizhu.get('月柱', '')[:1]

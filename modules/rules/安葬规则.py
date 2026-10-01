@@ -192,7 +192,7 @@ class BurialRuleChecker(EventRuleChecker):
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:

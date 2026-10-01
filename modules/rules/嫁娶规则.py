@@ -291,7 +291,7 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -321,7 +321,7 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -331,13 +331,16 @@ class MarriageRuleChecker(EventRuleChecker):
         if 'birth_year' in owner:
             try:
                 from ..四柱计算器 import calculate_sizhu
+                # 2026-10-01 修复：原调用传6个位置参数（年/月/日/时/分/经度），
+                # 与签名 (target_date, hour, minute, second, longitude) 完全错位，
+                # 任何输入必抛异常、此块常年失效。改为日期元组+longitude关键字。
                 birth_sizhu = calculate_sizhu(
-                    owner['birth_year'],
-                    owner.get('birth_month', 1),
-                    owner.get('birth_day', 1),
+                    (owner['birth_year'],
+                     owner.get('birth_month', 1),
+                     owner.get('birth_day', 1)),
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['年柱'][1]
             except:
@@ -367,7 +370,7 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 yue_zhu = birth_sizhu.get('月柱', '')
                 if len(yue_zhu) >= 2:
@@ -397,7 +400,7 @@ class MarriageRuleChecker(EventRuleChecker):
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['日柱'][1]
             except:
@@ -407,13 +410,15 @@ class MarriageRuleChecker(EventRuleChecker):
         if 'birth_year' in owner:
             try:
                 from ..四柱计算器 import calculate_sizhu
+                # 2026-10-01 修复：同 _get_owner_year_zhi 的6位置参数错位，
+                # 改为日期元组+longitude关键字（原块常年失效）。
                 birth_sizhu = calculate_sizhu(
-                    owner['birth_year'],
-                    owner.get('birth_month', 1),
-                    owner.get('birth_day', 1),
+                    (owner['birth_year'],
+                     owner.get('birth_month', 1),
+                     owner.get('birth_day', 1)),
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 return birth_sizhu['日柱'][1]
             except:
