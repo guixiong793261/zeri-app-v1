@@ -1184,6 +1184,28 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         details.append(('四废', _sifei_score))
         result['warnings'].append('四废：四时衰废之气，忌嫁娶')
 
+    # 羊刃（2026-10-02 修复漏计）：冠带派日干查地支（甲卯乙辰丙午丁未戊午己未
+    # 庚酉辛戌壬子癸丑，与评分器._YANGREN_MAP 同表）。此前羊刃仅由评分器加入
+    # shensha_list 供【神煞信息】展示，从未计入 marriage score，导致"凶煞区
+    # 显示羊刃-15 而总分公式不含该项"（如日课丙午见丙日应为 85+5+3=93，却出
+    # 100+5+3=108）。分值查 SHENSHA_SCORES 单一表（('*','羊刃')=-15）；
+    # 两见以上 -25（刃喜一位忌重见，取劫煞/灾煞单犯分量，口径同评分器）。
+    _YANGREN_MAP_MRG = {
+        '甲': '卯', '乙': '辰', '丙': '午', '丁': '未',
+        '戊': '午', '己': '未', '庚': '酉', '辛': '戌',
+        '壬': '子', '癸': '丑',
+    }
+    _day_gan_yr = sizhu.get('日柱', '')[:1]
+    _yr_target = _YANGREN_MAP_MRG.get(_day_gan_yr)
+    if _yr_target:
+        _yr_hits = [f'{pn}{sizhu[pn][1]}' for pn in ('年柱', '月柱', '日柱', '时柱')
+                    if len(sizhu.get(pn, '')) >= 2 and sizhu[pn][1] == _yr_target]
+        if _yr_hits:
+            _yr_score = (_shensha_score('嫁娶', '羊刃', -15)
+                         if len(_yr_hits) == 1 else -25)
+            score += _yr_score
+            details.append((f"羊刃（日干{_day_gan_yr}见{'、'.join(_yr_hits)}）", _yr_score))
+
     # 4.6 夫星受克检查
     if bride_bazi and bride_bazi.get('ri_gan'):
         fuxing_ke_score, fuxing_ke_reason = check_fuxing_being_ke(bride_bazi, sizhu)
