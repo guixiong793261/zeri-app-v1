@@ -152,7 +152,9 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
 
             if self._is_wubuyu(hour_gan, day_gan):
                 hour_score -= 15
-                reasons.append('五不遇时')
+                # 2026-10-02：五不遇时即使综合评分为正，也须提示"用课须再权衡"，
+                # 避免"五不遇时"与"★吉时"并列而无风险提示。
+                reasons.append('五不遇时（用课须再权衡）')
 
             if self.bride_zhi:
                 if self._is_chong_zhi(self.bride_zhi, zhi):

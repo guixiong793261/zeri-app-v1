@@ -1028,7 +1028,19 @@ class Scorer:
                             )
                             if _has_ji_jiaqu and '嫁娶' in self.yi_list:
                                 self.yi_list.remove('嫁娶')
-                        
+
+                        # 2026-10-02：小黄道"忌出行"补入嫁娶忌项
+                        # 定日黄道信息已显示"宜嫁娶、立约，忌出行"，但【宜忌信息】
+                        # 漏列"忌出行"；现补入 ji_list，与黄道描述口径一致。
+                        _xo = (self.huangdao_info.get('xiao_huang_dao')
+                               if isinstance(self.huangdao_info, dict) else {}) or {}
+                        _xo_desc = _xo.get('description', '')
+                        _xo_name = _xo.get('name', '')
+                        if '忌出行' in _xo_desc and _xo_name:
+                            _ji_travel = f'小黄道{_xo_name}日忌出行'
+                            if _ji_travel not in self.ji_list:
+                                self.ji_list.append(_ji_travel)
+
                         # 检查大利月/小利月
                         shensha_list = []
                         if owners:
@@ -5436,6 +5448,37 @@ class Scorer:
                               key=lambda s: s.get('score', 0), reverse=True)
         if good_shensha:
             seg.append('吉神：' + '、'.join([s['name'] for s in good_shensha]))
+
+        # 伏吟加重提示（2026-10-02）：月时/年时伏吟会放大该柱五行力度，
+        # 若夫星已受耗，则在评语中提示"X气加重，夫星更受耗"。
+        _zhi_wuxing = {'子': '水', '丑': '土', '寅': '木', '卯': '木',
+                       '辰': '土', '巳': '火', '午': '火', '未': '土',
+                       '申': '金', '酉': '金', '戌': '土', '亥': '水'}
+        _fuyin_lines = [str(r) for r in (details.get('地支关系') or [])
+                        if '伏吟' in str(r)]
+        if _fuyin_lines:
+            _has_fuxing_hao = any('夫星' in str(j) for j in (self.ji_list or []))
+            for _fl in _fuyin_lines:
+                # 提取伏吟地支（如"月柱戊戌 与 时柱戊戌 伏吟"）
+                _z = None
+                for _c in list(_zhi_wuxing.keys()):
+                    if _c in _fl:
+                        _z = _c
+                        break
+                if _z and _has_fuxing_hao:
+                    seg.append(f"伏吟：{_fl.replace('（示例时柱，不计分）', '').strip()}，"
+                               f"{_zhi_wuxing.get(_z, '')}气加重，夫星更受耗")
+                elif _z:
+                    seg.append(f"伏吟：{_fl.replace('（示例时柱，不计分）', '').strip()}，"
+                               f"{_zhi_wuxing.get(_z, '')}气加重")
+
+        # 宜忌冲突提示（2026-10-02）：夫星受耗时嫁娶仍标"宜嫁娶"且给高星，
+        # 评语须加"虽有吉神支撑，然夫星受耗，嫁娶须有制化或另择吉时"，
+        # 避免"宜嫁娶"与"忌夫星受耗"并列而无折中说明。
+        if any('夫星' in str(j) for j in (self.ji_list or [])):
+            _has_jixing = any(s.get('score', 0) > 0 for s in _ss_all)
+            if _has_jixing or good_shensha:
+                seg.append('虽有天德月德等吉神支撑，然夫星受耗，嫁娶须有制化或另择吉时')
 
         # 宜（与综合评语末句保持一致，取本次 yi_list）
         if self.yi_list:

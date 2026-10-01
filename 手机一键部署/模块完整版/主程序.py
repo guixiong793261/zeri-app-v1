@@ -6150,14 +6150,24 @@ class ZeriApp:
                         _ev = self.event_var.get()
                     except Exception:
                         _ev = ''
+                    _is_mrg_ev = _ev in MARRIAGE_EVENTS
                     _hour_suffix = ('（推荐时柱，冲合刑害不计入日课总分，详见十二时辰吉凶）'
-                                    if _ev in MARRIAGE_EVENTS else '（推荐时柱，已计入五行评分·地支关系得分，不重复累加）')
+                                    if _is_mrg_ev else '（推荐时柱，已计入五行评分·地支关系得分，不重复累加）')
+                    # 2026-10-02 口径修复：含时柱的合局（三合/六合/半合）本身已由
+                    # 年月日三柱计入总分（婚嫁算法 get_zhiju_score），时柱只是
+                    # 参与助局不另计分；原统一后缀"冲合刑害不计入日课总分"挂在
+                    # 合局行上，与评分详情"三合局+15"自相矛盾。
+                    _heju_suffix = ('（合局已计入日课总分；时柱参与助局不另计分，详见十二时辰吉凶）'
+                                    if _is_mrg_ev else _hour_suffix)
                     _new_dz = []
                     for ln in _nd.get('地支关系', []):
                         if '示例时柱' in ln:
                             ln = ln.replace('（示例时柱，不计分）', _hour_suffix)
                         elif '时柱' in ln:
-                            ln = ln + _hour_suffix
+                            if _is_mrg_ev and any(_k in ln for _k in ('三合', '六合', '半合')):
+                                ln = ln + _heju_suffix
+                            else:
+                                ln = ln + _hour_suffix
                         _new_dz.append(ln)
                     _nd['地支关系'] = _new_dz
                     wu_xing_result['details'] = _nd
