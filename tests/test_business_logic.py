@@ -186,16 +186,27 @@ class TestHuangDaoAlgorithm(unittest.TestCase):
         )
 
     def test_da_huangdao_qinglong_start_verse(self):
-        """十二神起青龙口诀：子午青龙起在子 → 子/午日 DA_HUANG_DAO_TABLE[0]='青龙'"""
-        for dz in ['子', '午']:
-            first = self._calc.DA_HUANG_DAO_TABLE.get(dz, [''])[0]
-            self.assertEqual(first, '青龙',
-                             "%s日第一个时辰(子时)应为青龙（口诀：子午青龙起在子）" % dz)
-        for dz in ['丑', '未']:
-            # 丑未青龙起在寅 → 寅(2)索引位应为青龙
-            third = self._calc.DA_HUANG_DAO_TABLE.get(dz, [''])[2]
-            self.assertEqual(third, '青龙',
-                             "%s日寅时应为青龙（口诀：丑未青龙起在寅）" % dz)
+        """J2（001 §57）：十二神起青龙按《协纪辨方书·卷七》引《考原》——
+        寅申起子、卯酉起寅、辰戌起辰、巳亥起午、子午起申、丑未起戌，顺行十二辰。"""
+        ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+        # (日支组, 正确青龙时支, 旧错表青龙位；None=该组本就正确不做反向)
+        cases = [
+            (['子','午'], '申', 0),
+            (['丑','未'], '戌', 2),
+            (['寅','申'], '子', 10),
+            (['卯','酉'], '寅', None),
+            (['辰','戌'], '辰', None),
+            (['巳','亥'], '午', 5),
+        ]
+        for dzz, qz, old_idx in cases:
+            for dz in dzz:
+                got = self._calc.DA_HUANG_DAO_TABLE.get(dz, [''])[ZHI.index(qz)]
+                self.assertEqual(got, '青龙',
+                    "%s日%s时应为青龙（J2正确起例）" % (dz, qz))
+            # 反向：错组旧青龙位必须不再是青龙（旧错表锁死口）
+            if old_idx is not None:
+                self.assertNotEqual(self._calc.DA_HUANG_DAO_TABLE.get(dzz[0], [''])[old_idx], '青龙',
+                    "%s日旧错表青龙位不应再为青龙" % dzz[0])
 
     # -------- 小黄道（建除十二神） --------
     def test_xiao_huangdao_yin_month_jian_position(self):
