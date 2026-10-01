@@ -524,21 +524,22 @@ GOLD_XIUZAO_20211203_SIZHU = {
 # 忌事 -150 十项不变：月三煞(日柱)/时灾煞(无制化)/正阴府(无制化)/年柱丑冲事主2与4（含扶山
 # 不论1项）/兼山山家三煞×2/正阴府忌乙日干/克山运（已带"有制化：天德到山，不禁用"，仅忌项
 # 不否决）。
-GOLD_XIUZAO_20211203_SCORE = 36  # A1 鸣吠日乙酉典载 +15（20→30）；α2 圣心接线 +8（亥月乙酉=圣心日，30→36）
-GOLD_XIUZAO_20211203_LEVEL = '❌ 凶'  # 真实 level 文案（凶煞仍在但未达否决线；36 分仍在凶档）
-GOLD_XIUZAO_20211203_WUXING_SCORE = 75  # 五行评分（生气+10：42→52；A1 鸣吠+15：52→67；α2 圣心接线+8：67→75，分项锁见 test_03）
-# 五行分项锁（键名与 wu_xing_result.score_breakdown 精确一致；七项之和必须=75）
+GOLD_XIUZAO_20211203_SCORE = 29  # H1 建除开日停规则侧-10×0.7（36→29）；α2 圣心+8（30→36）；A1 鸣吠+15（20→30）
+GOLD_XIUZAO_20211203_LEVEL = '❌ 凶'  # 真实 level 文案（凶煞仍在但未达否决线；29 分仍在凶档）
+GOLD_XIUZAO_20211203_WUXING_SCORE = 65  # 五行评分（H1 停开日宜-10：75→65；α2 圣心+8：67→75；A1 鸣吠+15：52→67；生气+10：42→52，分项锁见 test_03）
+# 五行分项锁（键名与 wu_xing_result.score_breakdown 精确一致；七项之和必须=65）
 GOLD_XIUZAO_20211203_WUXING_BREAKDOWN = {
-    '基础分': 100, '神煞得分': 94, '宜事得分': 30, '忌事得分': -150,
+    '基础分': 100, '神煞得分': 94, '宜事得分': 20, '忌事得分': -150,
     '十二长生得分': -7, '地支关系得分': 0, '纳音匹配得分': 8,
 }
 # 正五行总分/飞星：无否决路径输出这两键。B3 后太阳太阴计分下线（+10→0），
 # 正五行曾 16→6；生气归宗 +10 后回到 16（内涵为生气，非太阳太阴）；
-# A1 鸣吠 +15 后 16→31；α2 圣心接线 +8（亥月乙酉圣心日）后 31→39。
-# 加权公式 39×0.7+(50-20)×0.3=36.3→36。
-GOLD_XIUZAO_20211203_ZHENGWU = 39
+# A1 鸣吠 +15 后 16→31；α2 圣心接线 +8（亥月乙酉圣心日）后 31→39；
+# H1 停建除开日宜（3 宜→2 宜，-10 经相主链传导）后 39→29。
+# 加权公式 29×0.7+(50-20)×0.3=29.3→29。
+GOLD_XIUZAO_20211203_ZHENGWU = 29
 GOLD_XIUZAO_20211203_FEIXING = -20
-# 否决锁（2026-09-21 红纱《协纪》正解；2026-10 A1 鸣吠+15 后五行 67 仍放宽通过无否决）
+# 否决锁（2026-09-21 红纱《协纪》正解；H1 后五行 65 仍放宽通过无否决）
 GOLD_XIUZAO_20211203_VETO_HAS = None
 GOLD_XIUZAO_20211203_VETO_SCORE_IN = None
 GOLD_XIUZAO_20211203_VETO_NOTE = None
@@ -629,17 +630,18 @@ class TestXiuZao20211203(unittest.TestCase):
                 % (k, exp, self.sizhu.get(k)))
 
     def test_02_score_and_components_feixing_weighted_20(self):
-        """I-02 总分 36（2026-10 α2 圣心接线 +8 后真值：神煞94、五行75；
-        前值 30 为 2026-10 A1 鸣吠日乙酉典载 +15 后基线（神煞86、五行67）；
+        """I-02 总分 29（H1 双族去重：建除开日'建除开日宜修造'规则侧停分，
+        3 宜→2 宜，五行75→65，经加权36→29；前值 36＝α2 圣心接线+8 后真值：
+        神煞94、五行75；30 为 A1 鸣吠日乙酉典载+15 后基线（神煞86、五行67）；
         2026-09-22 生气归宗《协纪》开日补 +10 后曾为 20：亥月乙酉日
         生气在酉 +10，神煞71、五行52；B3 太阳太阴错口径仍下线、红砂不命中、无否决）。
         level ❌ 凶（凶煞仍在未达否决线）。
-        正五行39 × 0.7 + (50+飞星-20) × 0.3 = 36.3 → 36。"""
+        正五行29 × 0.7 + (50+飞星-20) × 0.3 = 29.3 → 29。"""
         self.assertIsInstance(self.result, dict, "calculate_score 应返回 dict，实际 %r" % type(self.result))
-        # 否决锁（2026-09-21 红纱《协纪》正解）：否决链 0 条（红砂不命中，五行75放宽通过）
+        # 否决锁（2026-09-21 红纱《协纪》正解）：否决链 0 条（红砂不命中，五行65放宽通过）
         _veto = self.result.get('veto_reasons') or []
         self.assertEqual(len(_veto), 0,
-            "2021 黄金课否决链应为 0 条（红砂不命中，五行75放宽通过），实际=%r" % (_veto,))
+            "2021 黄金课否决链应为 0 条（红砂不命中，五行65放宽通过），实际=%r" % (_veto,))
         s_raw = self.result.get('score')
         self.assertIsNotNone(s_raw, "result 缺 score 字段")
         s = int(s_raw) if isinstance(s_raw, (str, int, float)) else None
@@ -652,12 +654,12 @@ class TestXiuZao20211203(unittest.TestCase):
         if total_raw is not None:
             self.assertEqual(int(total_raw), GOLD_XIUZAO_20211203_SCORE,
                 "score_details.总分 与 result.score 不一致：detail=%r score_raw=%r" % (total_raw, s_raw))
-        # 方案B加权公式锁：正五行×0.7 + (50+飞星)×0.3 → 36（α2 圣心接线 +8：正五行31→39）
+        # 方案B加权公式锁：正五行×0.7 + (50+飞星)×0.3 → 29（H1 停开日宜：正五行39→29）
         _zw = sd.get('正五行总分')
         _fx = sd.get('飞星评分')
         if _zw is not None and _fx is not None:
             self.assertEqual(int(_zw), GOLD_XIUZAO_20211203_ZHENGWU,
-                "正五行总分（加权前）应为 31，实际=%r" % (_zw,))
+                "正五行总分（加权前）应为 29，实际=%r" % (_zw,))
             self.assertEqual(int(_fx), GOLD_XIUZAO_20211203_FEIXING,
                 "飞星评分应为 -20，实际=%r" % (_fx,))
             self.assertEqual(
@@ -670,13 +672,16 @@ class TestXiuZao20211203(unittest.TestCase):
             "level 文案错：基准=%r 实际=%r" % (GOLD_XIUZAO_20211203_LEVEL, lv))
 
     def test_03_wuxing_base_67(self):
-        """I-03 五行评分 75（2026-10 α2 圣心接线 +8 后真值；前值 67 为 A1 鸣吠+15 后基线，
-        生气归宗 +10 后曾为 52）= 基础100 + 神煞94 + 宜事30 + 忌事-150 + 十二长生-7 +
+        """I-03 五行评分 65（H1 双族去重：'建除开日宜修造'规则侧停分，宜事30→20；
+        前值 75＝α2 圣心接线 +8 后真值；67 为 A1 鸣吠+15 后基线，
+        生气归宗 +10 后曾为 52）= 基础100 + 神煞94 + 宜事20 + 忌事-150 + 十二长生-7 +
         地支关系0 + 纳音8（七项分项锁）。
         神煞 94 = 生气 +10（亥月生气在酉，乙酉日命中）+ 鸣吠日 +15（乙酉 ∈ 鸣吠13柱
         乙丁己辛癸+酉，修造分值15）+ 圣心 +8（α2 接线：亥月酉日=圣心日），
         无红砂日扣分（农历十月廿九乙酉，
         孟月见酉，《协纪》正解孟月见巳方犯红砂，此日不犯）。
+        停分锚点：3 宜中'建除开日宜修造'与神煞族'建除十二神-开'同日共存，
+        规则侧 +10 停计（神煞侧开日 +5 保留）；'天德日宜修造'神煞侧无同名注册仍计。
         忌事 -150 十项不变（三煞/阴府/冲主/山家三煞/克山运），
         wu_xing_result.score 精确一致。"""
         sd = self.result.get('score_details', {})
@@ -692,7 +697,7 @@ class TestXiuZao20211203(unittest.TestCase):
         if wxs is not None:
             self.assertEqual(int(wxs), GOLD_XIUZAO_20211203_WUXING_SCORE,
                 "wu_xing_result.score 应为%r 实际=%r" % (GOLD_XIUZAO_20211203_WUXING_SCORE, wxs))
-        # 分项锁：score_breakdown 七项（键名/值精确，和必须=67）
+        # 分项锁：score_breakdown 七项（键名/值精确，和必须=65）
         brk = wxr.get('score_breakdown') if isinstance(wxr, dict) else None
         if brk is None and wxr is not None and hasattr(wxr, 'score_breakdown'):
             brk = wxr.score_breakdown
@@ -703,7 +708,7 @@ class TestXiuZao20211203(unittest.TestCase):
                     "score_breakdown %s 应为%d（实际=%r）" % (key, exp_v, brk.get(key)))
                 _part_sum += exp_v
             self.assertEqual(_part_sum, GOLD_XIUZAO_20211203_WUXING_SCORE,
-                "七项分项之和 %d 应闭合为五行评分 52" % _part_sum)
+                "七项分项之和 %d 应闭合为五行评分 65" % _part_sum)
 
     def test_04_huangdao_da_xiao_shichen_sum(self):
         """I-04 大黄道=朱雀凶-15 / 小黄道=开吉+5 / 时辰=金匮吉+10 / 综合-10"""

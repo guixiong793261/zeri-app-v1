@@ -121,6 +121,99 @@ except ImportError:
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
     )
 
+# H1 双族去重映射表（2026-10-01 用户拍板：Q1=甲 Q2=修造建除停 Q3=veto附文停 Q4=交集停/分歧挂账）
+# 语义：规则文本精确命中 tx 且当日 shensha_list 含 ss 名 → 该条仅展示、不计分。
+H1_ANCHOR_MAP = {
+    '嫁娶': [            # 9 族
+        ('不将日', '不将日'),
+        ('月德', '月德日'),
+        ('黄沙', '黄沙日'),
+        ('月破', '月破日'),
+        ('杨公忌日', '杨公忌'),
+        ('神号', '神号日'),
+        ('天德', '天德日'),
+        ('鬼哭', '鬼哭日'),
+        ('红砂日', '红纱日'),
+    ],
+    '修造': [            # 13 族（建除12＋月破1）
+        ('建除十二神-建', '建除建日忌修造'),
+        ('建除十二神-除', '建除除日宜修造'),
+        ('建除十二神-满', '建除满日忌修造'),
+        ('建除十二神-平', '建除平日忌修造'),
+        ('建除十二神-定', '建除定日宜修造'),
+        ('建除十二神-执', '建除执日宜修造'),
+        ('建除十二神-破', '建除破日忌修造'),
+        ('建除十二神-危', '建除危日宜修造'),
+        ('建除十二神-成', '建除成日宜修造'),
+        ('建除十二神-收', '建除收日忌修造'),
+        ('建除十二神-开', '建除开日宜修造'),
+        ('建除十二神-闭', '建除闭日忌修造'),
+        ('月破', '月破日忌修造'),
+    ],
+    '动土': [            # 2 族
+        ('岁破', '岁破日忌动土'),
+        ('月破', '月破日忌动土'),
+    ],
+    '拆舍': [            # 2 族
+        ('岁破', '岁破日忌拆舍'),
+        ('月破', '月破日忌拆舍'),
+    ],
+    '入宅': [            # 3 族
+        ('不将日', '不将日宜修造'),
+        ('岁破', '岁破日忌入宅'),
+        ('月破', '月破日忌入宅'),
+    ],
+    '作灶': [            # 5 族
+        ('不将日', '不将日宜作灶'),
+        ('丙丁日', '丙丁日火旺宜作灶'),
+        ('天火日', '天火日忌作灶'),
+        ('灶君朝天', '灶君朝天日忌作灶'),
+        ('月破', '月破日忌作灶'),
+    ],
+    '开业': [            # 3 族
+        ('不将日', '不将日宜开业'),
+        ('月破', '月破日忌开业'),
+        ('破日', '建除破日忌开业'),
+    ],
+    '出行': [            # 1 族（12 个参数变体精确串）
+        ('月破', '月破日(子月午日)忌出行'),
+        ('月破', '月破日(丑月未日)忌出行'),
+        ('月破', '月破日(寅月申日)忌出行'),
+        ('月破', '月破日(卯月酉日)忌出行'),
+        ('月破', '月破日(辰月戌日)忌出行'),
+        ('月破', '月破日(巳月亥日)忌出行'),
+        ('月破', '月破日(午月子日)忌出行'),
+        ('月破', '月破日(未月丑日)忌出行'),
+        ('月破', '月破日(申月寅日)忌出行'),
+        ('月破', '月破日(酉月卯日)忌出行'),
+        ('月破', '月破日(戌月辰日)忌出行'),
+        ('月破', '月破日(亥月巳日)忌出行'),
+    ],
+    '安葬': [            # 9 族
+        ('不将日', '不将日宜安葬'),
+        ('鸣吠日', '鸣吠日宜安葬'),
+        ('鸣吠对日', '鸣吠对日宜安葬'),
+        ('往亡', '往亡日忌安葬'),
+        ('重丧', '重丧日忌安葬'),
+        ('年重丧', '年重丧忌安葬'),
+        ('复日', '复日忌安葬'),
+        ('十恶大败', '十恶大败日忌安葬'),
+        ('月破', '月破日忌安葬'),
+    ],
+    '安床': [            # 2 族
+        ('不将日', '不将日宜安床'),
+        ('月破', '月破日忌安床'),
+    ],
+    '签约': [            # 2 族
+        ('岁破', '岁破日忌签约'),
+        ('月破', '月破日忌签约'),
+    ],
+}
+
+def _h1_is_veto_reason(text):
+    """Q3：规则 veto 理由文本（'岁破日：日支X冲太岁Y，大事忌用'）只展示、不计分。"""
+    return isinstance(text, str) and text.startswith('岁破日：日支') and text.endswith('，大事忌用')
+
 class Scorer:
     """评分器"""
 
@@ -3843,11 +3936,13 @@ class Scorer:
 
         return total_score, details
     
-    def _build_wu_xing_breakdown(self, sizhu, owners):
+    def _build_wu_xing_breakdown(self, sizhu, owners, event_type=None):
         """构建五行评分明细构成 + 五行分（供一票否决路径也能展示完整基础分构成）。
         2026-09-08：原否决路径只返回空score_breakdown，导致【评分详情】五行评分只显示
         "基础分：100"而缺神煞/宜事/忌事等分项。明细与score解耦：否决仅把score置0，
-        构成仍如实展示。返回 (score_breakdown, wu_xing_score)。"""
+        构成仍如实展示。返回 (score_breakdown, wu_xing_score)。
+        2026-10-01 H1：event_type 传入后，规则 yi/ji 文本命中 H1_ANCHOR_MAP 且当日
+        神煞族已注册同名锚点（或属 veto 理由文案）时，该条仅展示不计分。"""
         bd = {
             '基础分': self.base_score,
             '神煞得分': 0,
@@ -3862,10 +3957,25 @@ class Scorer:
             s = shensha.get('score', 0) if isinstance(shensha, dict) else 0
             bd['神煞得分'] += s
             sc += s
-        for _ in self.yi_list:
+        # H1：当日神煞族已注册自身分的锚点规则文本 → 仅展示、不计分
+        _h1_skip = set()
+        if event_type:
+            _ss_names = {_s.get('name') for _s in self.shensha_list if isinstance(_s, dict)}
+            for _ss_name, _tx in H1_ANCHOR_MAP.get(_canonical_event(event_type), []):
+                if _ss_name in _ss_names:
+                    _h1_skip.add(_tx)
+        for _yi in self.yi_list:
+            _t = _yi.get('name', '') if isinstance(_yi, dict) else (
+                _yi if isinstance(_yi, str) else str(_yi))
+            if _t in _h1_skip:
+                continue
             bd['宜事得分'] += 10
             sc += 10
-        for _ in self.ji_list:
+        for _ji in self.ji_list:
+            _t = _ji.get('name', '') if isinstance(_ji, dict) else (
+                _ji if isinstance(_ji, str) else str(_ji))
+            if _t in _h1_skip or _h1_is_veto_reason(_t):
+                continue
             bd['忌事得分'] -= 15
             sc -= 15
         if self.ji_list:
@@ -4029,7 +4139,7 @@ class Scorer:
         if veto:
             details = self._generate_wu_xing_details(sizhu, owners)
             details['ji_list'] = self.ji_list
-            _bd, _ = self._build_wu_xing_breakdown(sizhu, owners)
+            _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
             return {
                 'he_ge': False,
                 'score': 0,
@@ -4056,7 +4166,7 @@ class Scorer:
                 # 生成完整的五行分析信息
                 details = self._generate_wu_xing_details(sizhu, owners)
                 details['ji_list'] = self.ji_list
-                _bd, _ = self._build_wu_xing_breakdown(sizhu, owners)
+                _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
                 return {
                     'he_ge': False,
                     'score': 0,
@@ -4084,7 +4194,7 @@ class Scorer:
                     # 2026-09-10 否决文案只列真实触发项（同月份不宜口径）
                     _ya_info = set(year_analysis.get('info_reasons') or [])
                     _ya_rs = [r for r in year_analysis['reasons'] if r not in _ya_info]
-                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners)
+                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
                     return {
                         'he_ge': False,
                         'score': 0,
@@ -4126,7 +4236,7 @@ class Scorer:
                     _ma_rs = [r for r in month_analysis['reasons']
                               if r not in _ma_info
                               and not any(_k in r for _k in ('六合', '三合'))]
-                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners)
+                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
                     return {
                         'he_ge': False,
                         'score': 0,
@@ -4189,7 +4299,7 @@ class Scorer:
                             })
         
         # 统一构建五行评分明细与五行分（含神煞/宜事/忌事/十二长生/地支/纳音；相主仅入明细键，不计入五行分）
-        score_breakdown, wu_xing_score = self._build_wu_xing_breakdown(sizhu, owners)
+        score_breakdown, wu_xing_score = self._build_wu_xing_breakdown(sizhu, owners, event_type)
         
         # 判断五行是否合格
         he_ge = wu_xing_score >= 60  # 五行评分低于60分为不合格
