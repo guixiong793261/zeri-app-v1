@@ -2665,7 +2665,8 @@ class ZeriApp:
                                             gyear, gmonth, gday = sd['year'], sd['month'], sd['day']
                                         except Exception:
                                             pass
-                                    pan_g = BaZiPanPan(gyear, gmonth, gday, ghour, gminute, ggender)
+                                    pan_g = BaZiPanPan(gyear, gmonth, gday, ghour, gminute, ggender,
+                                                       longitude=_parse_owner_longitude(owner_info.get('longitude'), show_warning=False))
                                     pan_g_r = pan_g.get_panpan_result()
                                     g_sizhu = pan_g_r.get('四柱', {})
                                     if g_sizhu and g_sizhu.get('月柱'):
@@ -5424,7 +5425,8 @@ class ZeriApp:
                             
                             # 使用原来的八字排盘模块计算四柱
                             from modules.八字排盘 import BaZiPanPan
-                            panpan = BaZiPanPan(birth_date.year, birth_date.month, birth_date.day, birth_hour, birth_minute, gender)
+                            panpan = BaZiPanPan(birth_date.year, birth_date.month, birth_date.day, birth_hour, birth_minute, gender,
+                                                longitude=_parse_owner_longitude(owner_info.get('longitude'), show_warning=False))
                             panpan_result = panpan.get_panpan_result()
                             
                             # 获取四柱信息
@@ -7407,7 +7409,8 @@ class ZeriApp:
                         'month': int(month_str),
                         'day': int(day_str),
                         'hour': int(hour_str),
-                        'minute': int(minute_str)
+                        'minute': int(minute_str),
+                        'longitude': _parse_owner_longitude(owner.get('longitude'), show_warning=False)
                     })
                 except:
                     pass
@@ -7458,7 +7461,8 @@ class ZeriApp:
                         'month': int(month_str),
                         'day': int(day_str),
                         'hour': int(hour_str),
-                        'minute': int(minute_str)
+                        'minute': int(minute_str),
+                        'longitude': _parse_owner_longitude(owner.get('longitude'), show_warning=False)
                     })
                 except:
                     pass

@@ -89,7 +89,8 @@ class BaZiPanPan:
     """
     
     def __init__(self, birth_year: int, birth_month: int, birth_day: int, 
-                 birth_hour: int, birth_minute: int, gender: str = '男'):
+                 birth_hour: int, birth_minute: int, gender: str = '男',
+                 longitude: float = None):
         """
         初始化八字排盘
         
@@ -100,6 +101,7 @@ class BaZiPanPan:
             birth_hour: 出生小时（0-23）
             birth_minute: 出生分钟（0-59）
             gender: 性别，'男'或'女'
+            longitude: 出生地经度（可选，None/120=北京时间不修正）
         """
         self.birth_year = birth_year
         self.birth_month = birth_month
@@ -107,6 +109,7 @@ class BaZiPanPan:
         self.birth_hour = birth_hour
         self.birth_minute = birth_minute
         self.gender = gender
+        self.longitude = longitude
         self.sizhu = None
         self.panpan_result = None
         
@@ -150,7 +153,8 @@ class BaZiPanPan:
             target_date, 
             self.birth_hour, 
             self.birth_minute, 
-            0
+            0,
+            longitude=self.longitude
         )
         
         return sizhu

@@ -849,7 +849,8 @@ class BaZiPanPan:
 
 # 便捷函数
 def create_bazi_panpan(year: int, month: int, day: int, 
-                       hour: int, minute: int = 0, gender: str = '男') -> BaZiPanPan:
+                       hour: int, minute: int = 0, gender: str = '男',
+                       longitude: float = None) -> BaZiPanPan:
     """
     创建八字排盘对象
     
@@ -860,15 +861,16 @@ def create_bazi_panpan(year: int, month: int, day: int,
         hour: 出生时
         minute: 出生分
         gender: 性别
+        longitude: 出生地经度（可选，None/120=北京时间不修正）
         
     Returns:
         BaZiPanPan: 八字排盘对象
     """
-    return BaZiPanPan(year, month, day, hour, minute, gender)
+    return BaZiPanPan(year, month, day, hour, minute, gender, longitude=longitude)
 
 
 def quick_panpan(year: int, month: int, day: int, 
-                 hour: int, gender: str = '男') -> Dict:
+                 hour: int, gender: str = '男', longitude: float = None) -> Dict:
     """
     快速排盘，返回完整结果
     
@@ -878,11 +880,12 @@ def quick_panpan(year: int, month: int, day: int,
         day: 出生日
         hour: 出生时
         gender: 性别
+        longitude: 出生地经度（可选，None/120=北京时间不修正）
         
     Returns:
         Dict: 排盘结果字典
     """
-    panpan = BaZiPanPan(year, month, day, hour, 0, gender)
+    panpan = BaZiPanPan(year, month, day, hour, 0, gender, longitude=longitude)
     return panpan.get_panpan_result()
 
 
