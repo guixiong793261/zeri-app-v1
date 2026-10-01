@@ -613,7 +613,7 @@ class TestXiuZao20211203(unittest.TestCase):
         from modules.喜用神计算器 import calculate_xishen_yongshen
         for _o in cls.owners:
             _xy = calculate_xishen_yongshen(
-                calculate_sizhu(_o['birth_date'], _o.get('birth_hour', 12), _o.get('birth_minute', 0)))
+                calculate_sizhu(_o['birth_date'], _o.get('birth_hour', 12), _o.get('birth_minute', 0), longitude=_o.get('birth_longitude')))
             _o['xishen'], _o['yongshen'] = _xy[0], _xy[1]
         cls.result = calculate_score(sizhu=sz, event_type='修造',
                                      owners=cls.owners,
