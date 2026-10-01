@@ -485,7 +485,7 @@ class Scorer:
                             owner['birth_date'],
                             owner.get('birth_hour', 12),
                             owner.get('birth_minute', 0),
-                            owner.get('birth_longitude')
+                            longitude=owner.get('birth_longitude')
                         )
                         bride_bazi['year_gan'] = birth_sizhu['年柱'][0]
                         bride_bazi['year_zhi'] = birth_sizhu['年柱'][1]
@@ -514,7 +514,7 @@ class Scorer:
                             owner['birth_date'],
                             owner.get('birth_hour', 12),
                             owner.get('birth_minute', 0),
-                            owner.get('birth_longitude')
+                            longitude=owner.get('birth_longitude')
                         )
                         groom_bazi['yue_gan'] = birth_sizhu['月柱'][0]
                         groom_bazi['yue_zhi'] = birth_sizhu['月柱'][1]
@@ -1040,7 +1040,7 @@ class Scorer:
                                             owner_sizhu = calculate_sizhu(owner['birth_date'],
                                                                          owner.get('birth_hour', 12),
                                                                          owner.get('birth_minute', 0),
-                                                                         owner.get('birth_longitude'))
+                                                                         longitude=owner.get('birth_longitude'))
                                             bride_year_zhi = owner_sizhu.get('year_zhi', '')
                                             if bride_year_zhi:
                                                 # 2026-09-03 利月一致性修复：以实际农历月份
@@ -1889,7 +1889,7 @@ class Scorer:
                     owner_sizhu = calculate_sizhu(owner['birth_date'], 
                                                owner.get('birth_hour', 12), 
                                                owner.get('birth_minute', 0),
-                                               owner.get('birth_longitude'))
+                                               longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
                     
                     # 2026-09 作灶主事人模式：辅助者（半权重）年命六冲不降否决，冲刑破害/合化半权重
@@ -2241,7 +2241,7 @@ class Scorer:
                     owner_sizhu = calculate_sizhu(owner['birth_date'], 
                                                owner.get('birth_hour', 12), 
                                                owner.get('birth_minute', 0),
-                                               owner.get('birth_longitude'))
+                                               longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
                     
                     # 2026-09 作灶主事人模式：辅助者（半权重）月支六冲不降否决，冲刑破害/合化半权重
@@ -2668,7 +2668,7 @@ class Scorer:
                         owner_sizhu = calculate_sizhu(owner['birth_date'], 
                                                    owner.get('birth_hour', 12), 
                                                    owner.get('birth_minute', 0),
-                                                   owner.get('birth_longitude'))
+                                                   longitude=owner.get('birth_longitude'))
                         bride_year_zhi = owner_sizhu.get('year_zhi', '')
                         
                         # 检查该月份包含的所有农历月份
@@ -2941,7 +2941,7 @@ class Scorer:
                     owner['birth_date'],
                     owner.get('birth_hour', 12),
                     owner.get('birth_minute', 0),
-                    owner.get('birth_longitude')
+                    longitude=owner.get('birth_longitude')
                 )
                 owner_year_zhi = owner_sizhu.get('year_zhi', '')
                 owner_day_zhi = owner_sizhu.get('day_zhi', '')
@@ -3049,7 +3049,7 @@ class Scorer:
                             owner['birth_date'],
                             owner.get('birth_hour', 12),
                             owner.get('birth_minute', 0),
-                            owner.get('birth_longitude')
+                            longitude=owner.get('birth_longitude')
                         )
                         owner_year_zhi = owner_sizhu.get('year_zhi', '')
                         day_zhi = sizhu.get('day_zhi', '')
@@ -3727,7 +3727,7 @@ class Scorer:
             elif owner.get('birth_date'):
                 try:
                     from .四柱计算器 import calculate_sizhu as _calc_sz
-                    _osz = _calc_sz(owner.get('birth_date'), owner.get('birth_hour', 12), owner.get('birth_minute', 0), owner.get('birth_longitude'))
+                    _osz = _calc_sz(owner.get('birth_date'), owner.get('birth_hour', 12), owner.get('birth_minute', 0), longitude=owner.get('birth_longitude'))
                     owner_day_zhi = _osz.get('day_zhi', '')
                 except Exception:
                     owner_day_zhi = ''
@@ -3796,7 +3796,7 @@ class Scorer:
                         owner['birth_date'], 
                         owner.get('birth_hour', 12), 
                         owner.get('birth_minute', 0),
-                        owner.get('birth_longitude')
+                        longitude=owner.get('birth_longitude')
                     )
                     owner_day_zhi = owner_sizhu.get('day_zhi', '')
                     if not owner_year_zhi:
@@ -4038,7 +4038,7 @@ class Scorer:
                             owner_sizhu = calculate_sizhu(owner['birth_date'],
                                                          owner.get('birth_hour', 12),
                                                          owner.get('birth_minute', 0),
-                                                         owner.get('birth_longitude'))
+                                                         longitude=owner.get('birth_longitude'))
                             zhuming = owner_sizhu.get('年柱', '')
                     except:
                         pass
@@ -4263,7 +4263,7 @@ class Scorer:
                         owner_sizhu = calculate_sizhu(owner['birth_date'], 
                                                    owner.get('birth_hour', 12), 
                                                    owner.get('birth_minute', 0),
-                                                   owner.get('birth_longitude'))
+                                                   longitude=owner.get('birth_longitude'))
                         bride_year_zhi = owner_sizhu.get('year_zhi', '')
                         
                         # 2026-02-05 修正：当前农历月份以具体日期高精度农历转换为准，
