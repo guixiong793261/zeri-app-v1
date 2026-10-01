@@ -5192,6 +5192,37 @@ class Scorer:
         else:
             return '❌ 凶'
     
+    def _yueling_phrase(self, wangshuai_text, yueling_score):
+        """月令评语（2026-10-02 口径修复）：强弱以旺衰判定（与"日主旺衰"段同源）
+        为准，帮扶程度以月令得分为准。旧实现仅按分数档位（>0 即"日主得力"），
+        会与旺衰段"日主丙在月令戌中休囚"并存成"休囚却又得力"的自相矛盾。
+        """
+        ws = str(wangshuai_text or '')
+        if '得令而旺' in ws or '得生而相' in ws:
+            if yueling_score > 0:
+                return '月令：得令得助，日主旺相'
+            return '月令：得令，日主旺相'
+        if '休囚' in ws:
+            if yueling_score > 0:
+                return '月令：休囚泄气，得生扶有根不弱'
+            if yueling_score == 0:
+                return '月令：休囚泄气，生扶平平'
+            return '月令：休囚泄气，日主乏力'
+        if '受克而囚' in ws or '受克而死' in ws:
+            if yueling_score > 0:
+                return '月令：失令受克，赖生扶支撑'
+            return '月令：失令受克，日主乏力'
+        # 旺衰未明/状态一般：退回分数档位
+        if yueling_score > 5:
+            return '月令：得助偏旺'
+        if yueling_score > 0:
+            return '月令：有生扶'
+        if yueling_score == 0:
+            return '月令：平平，无明显助力'
+        if yueling_score > -5:
+            return '月令：气弱，需后天补救'
+        return '月令：失令，日主乏力'
+
     def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None, sun_moon_info=None):
         """
         生成评分理由
@@ -5234,25 +5265,18 @@ class Scorer:
             if jishen:
                 reason.append(f"命局吉神：{'；'.join(jishen)}")
 
-        # 月令评语
-        if yueling_score > 5:
-            reason.append(f"月令：得令助，日主旺相")
-        elif yueling_score > 0:
-            reason.append(f"月令：有生扶，日主得力")
-        elif yueling_score == 0:
-            reason.append(f"月令：平平，无明显助力")
-        elif yueling_score > -5:
-            reason.append(f"月令：气弱，需后天补救")
-        else:
-            reason.append(f"月令：失令，日主乏力")
+        # 月令评语（口径统一走 _yueling_phrase：强弱随旺衰段，帮扶随得分）
+        reason.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
         # 喜用神匹配评语
         if xishen_score > 20:
             reason.append(f"喜用神：日课大喜事主用神，能量共振极佳")
         elif xishen_score > 10:
             reason.append(f"喜用神：日课补益事主用神，有利催吉")
-        elif xishen_score > 0:
+        elif xishen_score > 5:
             reason.append(f"喜用神：日课对事主有一定补益")
+        elif xishen_score > 0:
+            reason.append(f"喜用神：日课对事主补益有限")
         elif xishen_score == 0:
             reason.append(f"喜用神：日课与事主八字无明显冲突")
         
@@ -5379,25 +5403,18 @@ class Scorer:
             if jishen:
                 seg.append(f"命局吉神：{'；'.join(jishen)}")
 
-        # 月令评语（口径同 _generate_reason）
-        if yueling_score > 5:
-            seg.append('月令：得令助，日主旺相')
-        elif yueling_score > 0:
-            seg.append('月令：有生扶，日主得力')
-        elif yueling_score == 0:
-            seg.append('月令：平平，无明显助力')
-        elif yueling_score > -5:
-            seg.append('月令：气弱，需后天补救')
-        else:
-            seg.append('月令：失令，日主乏力')
+        # 月令评语（口径同 _generate_reason，统一走 _yueling_phrase）
+        seg.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
         # 喜用神评语（口径同 _generate_reason）
         if xishen_score > 20:
             seg.append('喜用神：日课大喜事主用神，能量共振极佳')
         elif xishen_score > 10:
             seg.append('喜用神：日课补益事主用神，有利催吉')
-        elif xishen_score > 0:
+        elif xishen_score > 5:
             seg.append('喜用神：日课对事主有一定补益')
+        elif xishen_score > 0:
+            seg.append('喜用神：日课对事主补益有限')
         elif xishen_score == 0:
             seg.append('喜用神：日课与事主八字无明显冲突')
 

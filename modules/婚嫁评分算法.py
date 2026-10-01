@@ -527,11 +527,13 @@ def check_fuxing_being_ke(bride_bazi, sizhu):
             score = -15
             reason = f'夫星稍受克（{ke_fuxing_wuxing}较旺{ke_fuxing_count:.1f}）'
     
-    # 情况3：日主太旺耗夫星
+    # 情况3：新娘年命五行在日课中过旺耗夫星
+    # （day_wuxing 为新娘年干五行，非日课日主；2026-10-02 修正文案，
+    #   旧写"日主较旺耗夫星"与月令分析"日课日主休囚"并读时自相矛盾）
     if not reason:
         if day_wuxing_count > 3.0 and fuxing_count < 1.0:
             score = -20
-            reason = (f'日主较旺耗夫星（日课{day_wuxing}元素强度{day_wuxing_count:.1f}，'
+            reason = (f'新娘年命{day_wuxing}气偏旺耗夫星（日课{day_wuxing}元素强度{day_wuxing_count:.1f}，'
                       f'夫星{fuxing_wuxing}偏弱仅{fuxing_count:.1f}，'
                       f'{day_wuxing}过旺则{fuxing_wuxing}夫星不得力）')
     
