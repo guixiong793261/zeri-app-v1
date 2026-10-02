@@ -7075,6 +7075,23 @@ class ZeriApp:
                 rendered_content=content,
                 bride_year_zhi=locals().get('bride_zhi'))
             content += _lint.format_text()
+            # ===== 阶段三：LLM 语义兜底审查 =====
+            # 只在有 API Key 时启用；WARN/INFO 级，不阻断报告。
+            try:
+                import os as _os
+                if _os.environ.get('OPENAI_API_KEY') or _os.environ.get('DASHSCOPE_API_KEY'):
+                    from modules.日课校验器 import llm_review as _llm_review
+                    _llm_issues = _llm_review(detail, content, cache={})
+                    if _llm_issues:
+                        _llm_lines = ['\n\n【语义审查（LLM 辅助）】',
+                                      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']
+                        for _li in _llm_issues:
+                            _llm_lines.append(f"  {_li.rule_id} [{_li.severity}] {_li.message}")
+                            if _li.suggestion:
+                                _llm_lines.append(f"      建议：{_li.suggestion}")
+                        content += '\n'.join(_llm_lines)
+            except Exception:
+                pass  # LLM 审查失败不影响主报告
             if _lint.has_error:
                 content = (
                     '⛔ 本报告未通过日课校验（ERROR 项见文末），不应直接交付\n'

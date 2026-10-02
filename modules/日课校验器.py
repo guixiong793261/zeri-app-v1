@@ -1026,3 +1026,156 @@ def _main_cli(argv):
 if __name__ == '__main__':
     import sys
     sys.exit(_main_cli(sys.argv[1:]))
+
+
+# ==================== 阶段三：LLM 语义兜底审查 ====================
+# 定位：只抓硬规则（E001-E105）覆盖不到的语义级矛盾。
+# 边界：不做算术、不做命理判定；只输出 WARN/INFO，不阻断报告。
+
+LLM_SYSTEM_PROMPT = """你是择日报告的独立审查员，只做语义级审查，不做算术、不做命理判定。
+你会收到一份结构化日课数据 + 渲染后的报告文本。
+请按以下 8 个维度审查，只输出问题列表，不输出通过项。
+
+【审查维度】
+L001 等级与综合判断语气是否一致（等级"慎用"却写"可用"等）
+L002 日主旺衰在不同段落是否前后矛盾
+L003 喜用神评语是否与得分档位匹配（+3 分不宜写"补益较大"）
+L004 综合判断句是否包含明确结论（可用/慎用/不可用）
+L005 术语使用是否地道，有无生僻或误用
+L006 有扣分/吉神但报告中无对应解释
+L007 有忌项但结论直接"可用"，无制化说明
+L008 文本是否有明显笔误或复制痕迹（日期、干支、姓名串台）
+
+【输出格式】严格 JSON 数组，每个元素：
+{"rule_id": "L001", "level": "WARN"|"INFO", "message": "一句话描述",
+ "field": "出问题的字段或段落", "expected": "期望表述",
+ "actual": "实际表述", "suggestion": "修复建议"}
+
+【约束】
+- 不要输出通过项；无法判断返回 []
+- 不做算术/命理判定（由硬规则 E001-E105 负责）
+- 只输出 JSON，不要任何解释性文字"""
+
+LLM_USER_TEMPLATE = """【结构化数据】
+{data_json}
+
+【渲染报告】
+{report_text}
+
+请按 8 个维度审查，输出 JSON 数组。"""
+
+
+def _llm_result_to_issues(items):
+    """LLM JSON 数组 → Issue 列表（统一 WARN/INFO，标记来源）。"""
+    issues = []
+    for it in items if isinstance(items, list) else []:
+        if not isinstance(it, dict):
+            continue
+        rid = str(it.get('rule_id') or 'L000')
+        lvl = str(it.get('level') or 'WARN').upper()
+        if lvl not in ('WARN', 'INFO'):
+            lvl = 'WARN'
+        msg = str(it.get('message') or '')
+        if not msg:
+            continue
+        src = str(it.get('field') or 'LLM')
+        sug = str(it.get('suggestion') or '')
+        issues.append(Issue(rid, lvl, f'[LLM] {msg}', source=src, suggestion=sug))
+    return issues
+
+
+def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
+    """LLM 语义兜底审查。
+
+    Args:
+        detail: Scorer.score() 返回的完整 dict
+        report_text: 渲染后的完整报告文本
+        api_func: 可选，自定义 LLM 调用函数 (prompt) -> str。
+                  None 则尝试内置的 OpenAI/通义兼容调用。
+        timeout: 秒，硬超时
+        cache: dict，可选缓存 {(date_str, event, score): issues}。
+
+    Returns:
+        list[Issue]：LLM 产出的问题列表（WARN/INFO），失败返回 []。
+    """
+    import json, logging
+    logger = logging.getLogger(__name__)
+
+    # 缓存键：日期 + 事项 + 总分（报告内容实质等价）
+    _cache_key = None
+    if cache is not None and isinstance(cache, dict):
+        _sd = detail.get('score_details') or {}
+        _cache_key = (
+            str(detail.get('date') or ''),
+            str(detail.get('event_type') or ''),
+            int(_sd.get('总分') or detail.get('score') or 0),
+        )
+        if _cache_key in cache:
+            return cache[_cache_key]
+
+    # 1) 构造 prompt
+    try:
+        data_json = json.dumps(detail, ensure_ascii=False, default=str)
+    except Exception:
+        data_json = str(detail)
+    prompt = LLM_USER_TEMPLATE.format(data_json=data_json, report_text=report_text or '')
+
+    # 2) 调用 LLM
+    raw = ''
+    try:
+        if api_func:
+            raw = api_func(prompt)
+        else:
+            # 内置：尝试 OpenAI 兼容接口（无 key 则静默跳过）
+            import os
+            api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('DASHSCOPE_API_KEY')
+            if not api_key:
+                logger.info('LLM 审查未配置 API Key，跳过语义审查')
+                if cache is not None and _cache_key:
+                    cache[_cache_key] = []
+                return []
+            base_url = os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+            model = os.environ.get('LLM_REVIEW_MODEL', 'gpt-4o-mini')
+            import urllib.request
+            req = urllib.request.Request(
+                f'{base_url}/chat/completions',
+                data=json.dumps({
+                    'model': model,
+                    'messages': [
+                        {'role': 'system', 'content': LLM_SYSTEM_PROMPT},
+                        {'role': 'user', 'content': prompt},
+                    ],
+                    'temperature': 0.1,
+                    'max_tokens': 2000,
+                }, ensure_ascii=False).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {api_key}',
+                },
+                method='POST',
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                body = json.loads(resp.read().decode('utf-8'))
+                raw = body['choices'][0]['message']['content']
+    except Exception as e:
+        logger.warning('LLM 审查调用失败，降级为纯硬规则模式：%s', e)
+        if cache is not None and _cache_key:
+            cache[_cache_key] = []
+        return []
+
+    # 3) 解析 JSON（容错剥离 markdown 围栏）
+    raw = raw.strip()
+    if raw.startswith('```'):
+        raw = raw.strip('`').lstrip('json').strip()
+    try:
+        items = json.loads(raw)
+    except Exception as e:
+        logger.warning('LLM 返回非 JSON，降级：%s | raw=%s', e, raw[:200])
+        if cache is not None and _cache_key:
+            cache[_cache_key] = []
+        return []
+
+    issues = _llm_result_to_issues(items)
+    if cache is not None and _cache_key:
+        cache[_cache_key] = issues
+    return issues
