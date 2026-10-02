@@ -3321,12 +3321,27 @@ class ZeriApp:
                             if not isinstance(_sz_for_yl, dict):
                                 _sz_for_yl = {}
                             _yl_new = _rds._generate_yueling_analysis(_sz_for_yl)
+                            # 2026-10-02 修复：签名第5位是 shensha_list（原调用正确），
+                            #   原调用缺失第6/7/8位：marriage_details（嫁娶分项）、
+                            #   veto_reason（否决项）、ji_jiaqu_capped（按最终等级判定）
+                            #   ——末者恒为默认 False，导致"平/犯忌慎用"日写出"嫁娶可用"。
+                            _md_real = _sd.get('marriage_details')
+                            if not isinstance(_md_real, list):
+                                _md_real = _sd.get('嫁娶明细(分项)') or []
+                            _vrs = score_result.get('veto_reasons') or []
+                            _veto_real = ('、'.join(str(_v) for _v in _vrs[:3])
+                                          if _vrs else None)
+                            _capped_real = '犯忌嫁娶' in str(
+                                score_result.get('level') or '')
                             _tail_new = _rds._build_marriage_reason_tail(
                                 _wr3 if isinstance(_wr3, dict) else {},
                                 _yl_new,
                                 _sd.get('月令得分', 0) or 0,
                                 _sd.get('喜用神得分', 0) or 0,
-                                score_result.get('shensha_list') or [])
+                                score_result.get('shensha_list') or [],
+                                _md_real,
+                                _veto_real,
+                                _capped_real)
                             _new_parts = [p for p in _head_parts if p]
                             if _tail_new:
                                 _new_parts.append(_tail_new)
@@ -6342,6 +6357,13 @@ class ZeriApp:
             content += f"  黄道综合分: {_hd_total:+d} 分\n"
             if huangdao_info.get('description'):
                 content += f"  综合说明: {huangdao_info['description']}\n"
+            # 2026-10-02 修8：嫁娶场景黄道等级"大吉"但总等级被降平时，须说明降级原因，
+            # 避免用户困惑"黄道大吉为何总等级平"。
+            if _cur_ev in _mrg_evts and _xn in ('除', '危', '执'):
+                content += (
+                    "  注：黄道虽大吉，然小黄道执/除/危日忌嫁娶，"
+                    "嫁娶场景整体降格，须慎用并择吉时。\n"
+                )
             content += "\n"
         
         # 宜忌信息
@@ -7042,6 +7064,30 @@ class ZeriApp:
             except Exception as e:
                 content += f"\n\n【二十四山分析】\n分析出错：{str(e)}\n"
         
+        # ===== 日课校验器（独立第三方只读通道，2026-10-02 接入）=====
+        # 报告渲染完成后自动执行全部已注册规则：ERROR 显著打标，
+        # 校验器自身异常明示——不静默吞错，也不阻断详情窗口。
+        try:
+            from modules.日课校验器 import lint_lesson
+            _lint = lint_lesson(
+                detail,
+                lucky_hours=locals().get('lucky_hours'),
+                rendered_content=content,
+                bride_year_zhi=locals().get('bride_zhi'))
+            content += _lint.format_text()
+            if _lint.has_error:
+                content = (
+                    '⛔ 本报告未通过日课校验（ERROR 项见文末），不应直接交付\n'
+                    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+                    + content)
+                detail_window.title(detail_window.title() + ' [校验未通过]')
+        except Exception as _lint_err:
+            content += (
+                '\n\n【日课校验】\n'
+                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  校验器自身执行异常：{type(_lint_err).__name__}: {_lint_err}\n'
+                '  （校验通道故障，不影响报告内容，但须排查校验器）')
+
         text.insert(tk.END, content)
         # 全文标记：★金色 / ✗红色（content中出现的符号一并着色）
         try:
