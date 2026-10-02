@@ -1228,6 +1228,70 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         details.append(('黄沙日', _huangsha_score))
         result['warnings'].append('黄沙日：黄砂飞扬之日，忌嫁娶')
 
+    # ==== 2026-10-03 E008 修复：忌项与评分明细同步 ====
+    # 阴阳差错日/女命忌嫁日/红纱日/神号日/鬼哭日 此前仅由嫁娶规则加入
+    # ji_list（报告忌项），从未计入 marriage score，导致校验器 E008 报
+    # "忌项无评分出处"（365 天抽查 112 例，占 30%）。此处补齐扣分，
+    # 判定表复用 MarriageRuleChecker 类常量，分值查 SHENSHA_SCORES 单一表。
+    try:
+        from .rules.嫁娶规则 import MarriageRuleChecker as _MRC
+    except ImportError:
+        from modules.rules.嫁娶规则 import MarriageRuleChecker as _MRC
+
+    # 农历月/日/闰月（红纱/神号/鬼哭按农历月；闰月不计红纱）
+    _lunar_month_num = 0
+    _is_leap_m = False
+    try:
+        import sxtwl as _sxtwl
+        _lunar = _sxtwl.fromSolar(date_obj.year, date_obj.month, date_obj.day)
+        _lm = _lunar.getLunarMonth()
+        _is_leap_m = _lm < 0
+        _lunar_month_num = abs(_lm)
+    except Exception:
+        _lunar_month_num = 0
+    _day_gan_m, _day_zhi_m = get_day_ganzhi(date_obj)
+    _day_gz_m = _day_gan_m + _day_zhi_m
+
+    # 阴阳差错日（12 特定干支日，《协纪》嫁娶忌）
+    if _day_gz_m in _MRC.YINYANG_CHACUO:
+        _sc = _shensha_score('嫁娶', '阴阳差错日', -15)
+        score += _sc
+        details.append(('阴阳差错日', _sc))
+        result['warnings'].append('阴阳差错日：阴阳不交之日，忌嫁娶')
+
+    # 女命忌嫁日（当梁勾绞：新娘生肖 -> 忌日支）
+    if bride_bazi and bride_bazi.get('year_zhi'):
+        _bride_zx = str(bride_bazi['year_zhi'])
+        if _bride_zx in _MRC.NV_MING_JI_JIA and _day_zhi_m in _MRC.NV_MING_JI_JIA[_bride_zx]:
+            _sc = _shensha_score('嫁娶', '女命忌嫁日', -15)
+            score += _sc
+            details.append((f'女命忌嫁日（{_bride_zx}相忌{_day_zhi_m}日）', _sc))
+            result['warnings'].append(f'女命忌嫁日：{_bride_zx}相忌{_day_zhi_m}日，忌嫁娶')
+
+    # 红纱日（《协纪》辨讹正解：孟巳仲酉季丑；闰月不计）
+    if not _is_leap_m and _lunar_month_num in _MRC.HONGSHA:
+        if _day_zhi_m in _MRC.HONGSHA[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '红纱日', -20)
+            score += _sc
+            details.append(('红纱日', _sc))
+            result['warnings'].append('红纱日：婚嫁大忌')
+
+    # 神号日（农历月 -> 日支）
+    if _lunar_month_num in _MRC.SHENHAO:
+        if _day_zhi_m in _MRC.SHENHAO[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '神号', -15)
+            score += _sc
+            details.append(('神号日', _sc))
+            result['warnings'].append('神号日：忌嫁娶')
+
+    # 鬼哭日（农历月 -> 日支）
+    if _lunar_month_num in _MRC.GUIRU:
+        if _day_zhi_m in _MRC.GUIRU[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '鬼哭', -15)
+            score += _sc
+            details.append(('鬼哭日', _sc))
+            result['warnings'].append('鬼哭日：忌嫁娶')
+
     # 羊刃（2026-10-02 修复漏计）：冠带派日干查地支（甲卯乙辰丙午丁未戊午己未
     # 庚酉辛戌壬子癸丑，与评分器._YANGREN_MAP 同表）。此前羊刃仅由评分器加入
     # shensha_list 供【神煞信息】展示，从未计入 marriage score，导致"凶煞区

@@ -596,17 +596,19 @@ def rule_e006(ctx):
                     f'等级为「{level}」但综合判断缺制化/择吉说明：{sentence}',
                     source='detail[level] vs reason 综合判断句',
                     suggestion='凶（慎用）日须写"不宜嫁娶；如确需使用，须严格制化并择吉时"')
-    elif '平' in level or '犯忌嫁娶' in level:
+    elif '犯忌嫁娶' in level:
+        # 仅针对"平（犯忌嫁娶，慎用）"封顶日——
+        # 纯平级（★ 平，无犯忌后缀）吉神到位时写"嫁娶可用"是允许的（score>=60）
         if '慎用' not in sentence:
             ctx.issue(
                 'E006',
-                f'等级为平（慎用）而综合判断未写「慎用」：{sentence}',
+                f'等级为「{level}」而综合判断未写「慎用」：{sentence}',
                 source='detail[level] vs reason 综合判断句',
                 suggestion='口径统一为「嫁娶须慎用，宜择吉时」')
-        if '嫁娶可用' in sentence:
+        if '嫁娶可用' in sentence and '须慎用' not in sentence:
             ctx.issue(
                 'E006',
-                f'等级为平（慎用）而综合判断写「嫁娶可用」：{sentence}',
+                f'等级为「{level}」而综合判断写「嫁娶可用」：{sentence}',
                 source='detail[level] vs reason 综合判断句',
                 suggestion='删除「嫁娶可用」措辞，与等级口径一致')
     return None
@@ -884,6 +886,8 @@ def rule_e104(ctx):
     """评分中的三合/半合/拱合/六合吉项，评语「地支合局」句均须列出。"""
     if not ctx.is_marriage:
         return '非嫁娶路径'
+    if ctx.detail.get('veto_reasons'):
+        return '一票否决日，reason 为否决词，无评语段'
 
     good_terms = []
     for d in ctx.marriage_details:
@@ -897,9 +901,14 @@ def rule_e104(ctx):
     if not good_terms:
         return '评分无合局项'
 
+    # 按行提取，截取"地支合局"到"地支冲害"之间的全部内容——
+    # 2026-10-03 修复：原按"；"截断，"地支合局：A；B"中 B 丢失致误报
     heju_sentence = ''
-    for seg in ctx.reason.replace('\n', '；').split('；'):
-        if '地支合局' in seg:
+    for line in ctx.reason.split('\n'):
+        if '地支合局' in line:
+            seg = line[line.index('地支合局'):]
+            if '地支冲害' in seg:
+                seg = seg[:seg.index('地支冲害')]
             heju_sentence = seg
             break
     if not heju_sentence:

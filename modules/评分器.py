@@ -5444,15 +5444,29 @@ class Scorer:
             seg.append(f"日主：{details['日主旺衰']}")
 
         # 地支关系（合局 / 冲害）
+        # 2026-10-03 E104修复：评分明细里的合局项（如"六合(子丑)"）须与
+        # 地支关系中的描述合并；且即使 details['地支关系'] 缺失/无合局，
+        # 只要评分明细有合局加分就必须生成地支合局句（否则 E104 报遗漏）。
+        good = []
+        bad = []
         if details.get('地支关系'):
             rels = details['地支关系']
             if isinstance(rels, (list, tuple)):
                 good = [_clean(r) for r in rels if ('三合' in str(r) or '六合' in str(r) or '半合' in str(r) or '拱合' in str(r)) and _clean(r)]
                 bad = [_clean(r) for r in rels if ('冲' in str(r) or '害' in str(r) or '刑' in str(r)) and _clean(r)]
-                if good:
-                    seg.append(f"地支合局：{'；'.join(good)}")
-                if bad:
-                    seg.append(f"地支冲害：{'；'.join(bad)}")
+        if marriage_details:
+            md_heju = [str(d[0]) for d in marriage_details
+                       if isinstance(d, (list, tuple)) and len(d) >= 2
+                       and isinstance(d[1], (int, float)) and d[1] > 0
+                       and any(k in str(d[0]) for k in ('三合', '半合', '拱合', '六合'))]
+            for mh in md_heju:
+                _zhis_in_mh = [c for c in mh if c in '子丑寅卯辰巳午未申酉戌亥']
+                if _zhis_in_mh and not any(all(z in g for z in _zhis_in_mh[:2]) for g in good):
+                    good.append(f"评分合局：{mh}")
+        if good:
+            seg.append(f"地支合局：{'；'.join(good)}")
+        if bad:
+            seg.append(f"地支冲害：{'；'.join(bad)}")
 
         # 命局吉神（天德贵人、禄神等）
         if details.get('吉神'):
