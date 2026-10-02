@@ -1031,8 +1031,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                             and ke_map[GAN_WX[sd_gan]] == GAN_WX[ny_gan])
                 if zhen:
                     penalty = -25
-                    label = (f"真三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}克年干{ny_gan}（"
+                    label = (f"真三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}克年干{ny_gan}（"
                              f"{GAN_WX.get(sd_gan,'?')}克{GAN_WX.get(ny_gan,'?')}），大凶宜避")
                 elif is_tiande_day(date_obj) or is_yuede_day(date_obj):
                     penalty = -10
@@ -1044,13 +1044,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                                if ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX and
                                   ke_map[GAN_WX[sd_gan]] != GAN_WX[ny_gan]
                                else f"日干{sd_gan}不克年干{ny_gan or '未知'}")
-                    label = (f"假三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}；判为'假'的两项依据："
-                             f"①{_ke_rel}（真三煞需日干克年干），②得{_jie}化解。属有吉神解厄，可酌情")
+                    label = (f"假三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位；判为'假'的依据："
+                             f"①{_ke_rel}（真三煞以三煞日天干克新娘年干为据），②得{_jie}化解。"
+                             f"不构成否决，但须谨慎择时，建议避开犯煞时辰")
                 else:
                     penalty = -25
-                    label = (f"本命三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
+                    label = (f"本命三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
                 score += penalty
                 details.append((label, penalty))
         

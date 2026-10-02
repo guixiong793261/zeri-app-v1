@@ -6763,6 +6763,9 @@ class ZeriApp:
                     tag = f"{name}（{score:+.0f}分）: {desc}"
                     
                     if '大利月' in name or '小利月' in name:
+                        # 2026-10-02 修02-05问题5：利月分值已计入五行评分，
+                        # 神煞信息区重复展示易误导重复加分，加"已计入"标注。
+                        tag = f"{name}（{score:+.0f}分，已计入五行评分）: {desc}"
                         liyue_items.append(tag)
                     elif '日' in name and '吉' in desc:
                         jiri_items.append(tag)
