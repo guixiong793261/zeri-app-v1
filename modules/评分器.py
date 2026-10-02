@@ -1151,7 +1151,8 @@ class Scorer:
                             wu_xing_result, yueling_analysis,
                             yueling_score, xishen_score, shensha_list,
                             marriage_details=marriage_result.get('details'),
-                            ji_jiaqu_capped=_was_capped_for_jijiaqu)
+                            ji_jiaqu_capped=_was_capped_for_jijiaqu,
+                            level_str=level)
                         if _mrg_tail:
                             reason_parts.append(_mrg_tail)
                         
@@ -5404,7 +5405,7 @@ class Scorer:
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
                                    marriage_details=None, veto_reason=None,
-                                   ji_jiaqu_capped=False):
+                                   ji_jiaqu_capped=False, level_str=None):
         """
         嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
 
@@ -5572,7 +5573,19 @@ class Scorer:
             _tail = ''
             if yueling_score < 0 and xishen_score > 0:
                 _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
-            if ji_jiaqu_capped:
+            # 2026-10-03 凶级分级（校验器E006真阳性修复）：
+            # 凶级必须写"不宜"，且区分 纯凶 / 凶（慎用） 两种子类——
+            # 纯凶绝对禁用；凶（慎用）有制化空间，须附"如确需使用"说明。
+            _lv = str(level_str if level_str is not None
+                      else getattr(self, 'level', '') or '')
+            _is_xiong = '凶' in _lv
+            if _is_xiong and not ji_jiaqu_capped:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}等凶煞并见，'
+                           f'不宜嫁娶，另择吉日{_tail}')
+            elif _is_xiong and ji_jiaqu_capped:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                           f'不宜嫁娶；如确需使用，须严格制化并择吉时{_tail}')
+            elif ji_jiaqu_capped:
                 seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
                            f'嫁娶须慎用，宜择吉时{_tail}')
             else:

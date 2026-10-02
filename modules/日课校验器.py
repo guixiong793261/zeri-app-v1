@@ -554,12 +554,15 @@ def rule_e006(ctx):
     """平（慎用）→ 综合判断须含慎用且不得写嫁娶可用；凶→须含不宜。"""
     if not ctx.is_marriage:
         return '非嫁娶路径'
+    if ctx.detail.get('veto_reasons'):
+        return '一票否决日，reason 为否决词，无综合判断段'
     level = str(ctx.detail.get('level') or '')
-    # 提取综合判断句
+    # 提取综合判断句（按行取，行内"；"皆属该句成分，不得截断——
+    # 2026-10-03 修复：凶慎用句"不宜嫁娶；如确需使用…"被截断致误报）
     sentence = ''
-    for seg in ctx.reason.replace('\n', '；').split('；'):
-        if '综合判断' in seg:
-            sentence = seg.strip()
+    for line in ctx.reason.split('\n'):
+        if '综合判断' in line:
+            sentence = line.strip()
             break
 
     if not sentence:
@@ -570,13 +573,29 @@ def rule_e006(ctx):
             suggestion='嫁娶评语末尾必须给出 可用/慎用/不宜 明确结论')
         return None
 
+    # 禁用/凶级（含 ❌ 前缀）
     if '❌' in level or ctx.veto:
+        # 统一底线：凶级不得写"嫁娶可用"（无论带不带制化说明）
+        if '嫁娶可用' in sentence:
+            ctx.issue(
+                'E006',
+                f'等级为「{level}」但综合判断写「嫁娶可用」：{sentence}',
+                source='detail[level] vs reason 综合判断句',
+                suggestion='凶级禁用日应写「不宜嫁娶」')
         if '不宜' not in sentence:
             ctx.issue(
                 'E006',
-                f'等级为凶而综合判断未写「不宜」：{sentence}',
+                f'等级为「{level}」但综合判断未写「不宜」：{sentence}',
                 source='detail[level] vs reason 综合判断句',
-                suggestion='凶日结论统一为「本日不宜嫁娶」')
+                suggestion='凶日结论须含「不宜嫁娶」')
+        # 区分：凶（慎用）须同时有"不宜"和"制化/择吉"；纯凶只须"不宜"
+        if '慎用' in level and '不宜' in sentence:
+            if not ('制化' in sentence or '择吉' in sentence or '另择' in sentence):
+                ctx.issue(
+                    'E006',
+                    f'等级为「{level}」但综合判断缺制化/择吉说明：{sentence}',
+                    source='detail[level] vs reason 综合判断句',
+                    suggestion='凶（慎用）日须写"不宜嫁娶；如确需使用，须严格制化并择吉时"')
     elif '平' in level or '犯忌嫁娶' in level:
         if '慎用' not in sentence:
             ctx.issue(
@@ -806,6 +825,8 @@ def rule_e102(ctx):
 @register_rule('E103', SEVERITY_ERROR, '月令评语与日主旺衰段同源')
 def rule_e103(ctx):
     """旺衰句 得令而旺/得生而相 ↔ 评语月令句 得令/得生 必须一致。"""
+    if ctx.detail.get('veto_reasons'):
+        return '一票否决日，reason 为否决词，无月令段'
     wxr = ctx.detail.get('wu_xing_result')
     wang = ''
     if isinstance(wxr, dict):
@@ -1039,6 +1060,8 @@ def rule_e201(ctx):
     _md = ctx.detail.get('marriage_details')
     if not (isinstance(_md, list) and _md) and '嫁娶' not in str(_yi):
         return '非嫁娶路径'
+    if ctx.detail.get('veto_reasons'):
+        return '一票否决日，reason 为否决词，无综合判断段'
     reason = ctx.reason
     if '综合判断' not in reason:
         ctx.issue('E201', '嫁娶路径缺少「综合判断」结论句',
@@ -1191,6 +1214,8 @@ def rule_e204(ctx):
 @register_rule('E205', SEVERITY_WARN, '评分明细吉神凶煞须在评语中解释')
 def rule_e205(ctx):
     """评分明细中 |value|>=10 的吉神/凶煞，综合评语必须提及（简写匹配）。"""
+    if ctx.detail.get('veto_reasons'):
+        return '一票否决日，reason 为否决词，无综合评语段'
     sd = ctx.sd
     text = ctx.reason
 
@@ -1214,9 +1239,17 @@ def rule_e205(ctx):
             if abs(value) >= 10:
                 explainable.append((name, value))
 
-    # 白名单：基础项/结构性项不要求解释
+    # 白名单1：基础项/结构性项不要求解释
     WHITELIST = {'基础分', '月令得分', '旺衰得分', '支支关系得分', '五行评分', '月令', '喜用神'}
-    explainable = [x for x in explainable if x[0] not in WHITELIST]
+    # 白名单2：已入专属段落的结构性神煞（利月/黄道/夫星等在独立段落输出，
+    # 综合评语不必重复提及；2026-10-03 真基线误报暴露）
+    STRUCT_EXEMPT = ('大利月', '小利月', '利月', '大黄道', '小黄道', '黄道吉日',
+                     '黑道凶日', '夫星', '子星', '阳气', '阴胎')
+    explainable = [
+        x for x in explainable
+        if x[0] not in WHITELIST
+        and not any(ex in x[0] for ex in STRUCT_EXEMPT)
+    ]
 
     reported = set()  # 同名只报一次
     for name, value in explainable:

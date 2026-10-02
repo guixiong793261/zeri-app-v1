@@ -3341,7 +3341,8 @@ class ZeriApp:
                                 score_result.get('shensha_list') or [],
                                 _md_real,
                                 _veto_real,
-                                _capped_real)
+                                _capped_real,
+                                level_str=score_result.get('level'))
                             _new_parts = [p for p in _head_parts if p]
                             if _tail_new:
                                 _new_parts.append(_tail_new)
