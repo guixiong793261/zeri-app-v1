@@ -7076,10 +7076,16 @@ class ZeriApp:
                 bride_year_zhi=locals().get('bride_zhi'))
             content += _lint.format_text()
             # ===== 阶段三：LLM 语义兜底审查 =====
-            # 只在有 API Key 时启用；WARN/INFO 级，不阻断报告。
+            # 默认关闭；须同时满足：配置 enable_llm_review + 有 API Key。
+            # WARN/INFO 级，不阻断报告。失败自动静默降级。
             try:
                 import os as _os
-                if _os.environ.get('OPENAI_API_KEY') or _os.environ.get('DASHSCOPE_API_KEY'):
+                _enable_llm = (
+                    _os.environ.get('ENABLE_LLM_REVIEW', '').lower() in ('1', 'true', 'yes')
+                    and (_os.environ.get('OPENAI_API_KEY')
+                         or _os.environ.get('DASHSCOPE_API_KEY'))
+                )
+                if _enable_llm:
                     from modules.日课校验器 import llm_review as _llm_review
                     _llm_issues = _llm_review(detail, content, cache={})
                     if _llm_issues:

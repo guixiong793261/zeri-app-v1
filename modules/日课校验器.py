@@ -1128,6 +1128,66 @@ def rule_e203(ctx):
     return None
 
 
+@register_rule('E204', SEVERITY_WARN, '日主旺衰描述跨段落一致性')
+def rule_e204(ctx):
+    """月令分析/日主旺衰段/综合评语对日主强弱的描述必须同极性。"""
+    # 收集三段文本
+    texts = {}
+    wxr = ctx.detail.get('wu_xing_result')
+    if isinstance(wxr, dict):
+        wd = wxr.get('details')
+        if isinstance(wd, dict):
+            texts['旺衰段'] = str(wd.get('日主旺衰') or '')
+    # 月令分析句（按行 split，因 reason 是多行文本）
+    for line in ctx.reason.split('\n'):
+        if line.strip().startswith('月令分析：'):
+            texts['月令分析'] = line.strip()
+            break
+    # 综合判断尾句（按行 split）
+    # 注意：综合判断通常只含"可用/慎用"结论词，不含旺衰词。
+    # 若该行同时含强/弱关键词（如"日主旺相"），才纳入 polarity 比较；
+    # 否则视为不参与旺衰一致性判定，避免误报。
+    for line in ctx.reason.split('\n'):
+        if '综合判断' in line:
+            _line = line.strip()
+            if any(k in _line for k in ('得令','旺相','得力','旺','得生而相','得生','相地',
+                                        '失令','休囚','受克','乏力','弱','囚','死','墓')):
+                texts['综合判断'] = _line
+            break
+
+    if len(texts) < 2:
+        return '可判定段落不足2段'
+
+    STRONG = ('得令', '旺相', '得力', '旺', '得生而相', '得生', '相地')
+    WEAK = ('失令', '休囚', '受克', '乏力', '弱', '囚', '死', '墓')
+    # 排除混合措辞（"失令但得生扶有根不弱"等软描述）
+    MIXED = ('有根不弱', '得生扶', '得助不弱')
+
+    polarity = {}
+    for name, text in texts.items():
+        if not text:
+            continue
+        has_strong = any(k in text for k in STRONG)
+        has_weak = any(k in text for k in WEAK)
+        has_mixed = any(k in text for k in MIXED)
+        if has_mixed:
+            polarity[name] = '混合'
+        elif has_strong and not has_weak:
+            polarity[name] = '强'
+        elif has_weak and not has_strong:
+            polarity[name] = '弱'
+        else:
+            polarity[name] = '不明'
+
+    values = [v for v in polarity.values() if v in ('强', '弱')]
+    if len(set(values)) > 1:
+        ctx.issue('E204',
+                  f'日主旺衰描述不一致：{polarity}',
+                  source='月令分析/旺衰段/综合判断 三段对日主强弱描述',
+                  suggestion='统一措辞，避免"失令"与"旺相"并存')
+    return None
+
+
 # ==================== 阶段三：LLM 语义兜底审查 ====================
 # 定位：只抓硬规则（E001-E105）覆盖不到的语义级矛盾。
 # 边界：不做算术、不做命理判定；只输出 WARN/INFO，不阻断报告。
