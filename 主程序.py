@@ -3328,11 +3328,67 @@ class ZeriApp:
                             _md_real = _sd.get('marriage_details')
                             if not isinstance(_md_real, list):
                                 _md_real = _sd.get('嫁娶明细(分项)') or []
+                            # 2026-11-22 用户审查修复（P1）：合局按含推荐时柱口径重算。
+                            # 评分器刻意用 sizhu_no_hour 算合局（时辰不入围日课），但报告
+                            # 展示含推荐时柱，导致"拱合局(亥,未，拱卯)"与地支关系段
+                            # "三合木局(亥卯未)"并存矛盾。此处按权威时柱重算合局项，
+                            # 同步 marriage_details / 五行评分 / 总分 / 等级 / 嫁娶要点行。
+                            _capped_real = '犯忌嫁娶' in str(
+                                score_result.get('level') or '')
+                            try:
+                                from modules.婚嫁评分算法 import get_zhiju_score as _gzs
+                                _full_sz = {
+                                    'year_zhi': str(nian_zhu)[-1:],
+                                    'month_zhi': str(yue_zhu)[-1:],
+                                    'day_zhi': str(ri_zhu)[-1:],
+                                    'hour_zhi': str(best_shizhu)[-1:],
+                                }
+                                _zj_new_s, _zj_new_r = _gzs(_full_sz)
+                                _HEJU_KEYS = ('三合局', '半合局', '拱合局', '六合(')
+                                _old_zj_idx, _old_zj_name, _old_zj_score = None, '', 0
+                                for _i, _d in enumerate(_md_real):
+                                    if (isinstance(_d, (list, tuple)) and len(_d) >= 2
+                                            and isinstance(_d[1], (int, float)) and _d[1] > 0
+                                            and any(k in str(_d[0]) for k in _HEJU_KEYS)):
+                                        _old_zj_idx, _old_zj_name, _old_zj_score = _i, str(_d[0]), _d[1]
+                                        break
+                                if _zj_new_r and _zj_new_r != _old_zj_name:
+                                    _delta = _zj_new_s - (_old_zj_score if _old_zj_idx is not None else 0)
+                                    if _old_zj_idx is not None:
+                                        _md_real[_old_zj_idx] = (_zj_new_r, _zj_new_s)
+                                    else:
+                                        _md_real.append((_zj_new_r, _zj_new_s))
+                                    score_result['marriage_details'] = _md_real
+                                    if isinstance(_sd, dict):
+                                        _sd['嫁娶明细(分项)'] = _md_real
+                                        _sd['五行评分'] = (_sd.get('五行评分') or 0) + _delta
+                                        if '总分' in _sd:
+                                            _sd['总分'] = (_sd.get('总分') or 0) + _delta
+                                    score_result['score'] = (score_result.get('score') or 0) + _delta
+                                    # 等级重判（与评分器同阈值，含犯忌嫁娶封顶）
+                                    _lv_new = _rds._get_level(
+                                        score_result['score'],
+                                        {'score': (_sd.get('五行评分') or 0) if isinstance(_sd, dict) else 0},
+                                        score_result.get('huangdao_info') or {})
+                                    if _capped_real:
+                                        _lord = ['❌ 凶', '★ 平', '★★ 中吉', '★★★ 吉', '★★★★ 大吉', '★★★★★ 上吉']
+                                        try:
+                                            if _lord.index(_lv_new) > _lord.index('★ 平'):
+                                                _lv_new = '★ 平'
+                                        except ValueError:
+                                            _lv_new = '★ 平'
+                                        if '犯忌嫁娶' not in _lv_new:
+                                            _lv_new += '（犯忌嫁娶，慎用）'
+                                    score_result['level'] = _lv_new
+                                    # "嫁娶要点"行同步替换旧合局名
+                                    for _pi, _pline in enumerate(_head_parts):
+                                        if _old_zj_name and _old_zj_name in _pline:
+                                            _head_parts[_pi] = _pline.replace(_old_zj_name, _zj_new_r)
+                            except Exception as _gz_e:
+                                print(f"[最佳吉时] 合局重算失败: {_gz_e}")
                             _vrs = score_result.get('veto_reasons') or []
                             _veto_real = ('、'.join(str(_v) for _v in _vrs[:3])
                                           if _vrs else None)
-                            _capped_real = '犯忌嫁娶' in str(
-                                score_result.get('level') or '')
                             _tail_new = _rds._build_marriage_reason_tail(
                                 _wr3 if isinstance(_wr3, dict) else {},
                                 _yl_new,

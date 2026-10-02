@@ -728,6 +728,21 @@ def rule_e101(ctx):
                     suggestion=f'寅午类长生+帝旺组合应称半合、缺{next(iter(group - pair))}，'
                                f'不得称拱合')
                 continue
+            # 2026-11-22 用户审查新增：被拱支若已在日课四柱中，则三合齐全，
+            # 应称"三合局"而非"拱合局"（如亥卯未齐全却写"拱合局(亥,未，拱卯)"）
+            _sizhu = ctx.detail.get('sizhu') or {}
+            _zhis_in_pillars = {str(_sizhu.get(k, ''))[-1:]
+                                for k in ('年柱', '月柱', '日柱', '时柱')
+                                if _sizhu.get(k)}
+            if c in _zhis_in_pillars:
+                ctx.issue(
+                    'E101',
+                    f'「{name}」所拱「{c}」已在日课四柱中，'
+                    f'{a}{b}{c}三字齐全，应称「三合局」而非「拱合局」',
+                    source=f'marriage_details[{name}]',
+                    suggestion=f'改为 三合局({a},{c},{b})；若因推荐时柱注入导致，'
+                               f'需重算 marriage_details')
+                continue
             if c != _SANHE[group]['zs']:
                 ctx.issue(
                     'E101',
