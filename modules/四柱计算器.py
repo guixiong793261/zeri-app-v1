@@ -56,6 +56,11 @@ try:
     import sxtwl
     HAS_SXTWL = True
     logger.info("成功导入 sxtwl 库，使用精确的四柱计算方法")
+    # 2026-10-02 性能优化：sxtwl.getJieQiByYear 是 C 扩展调用，单次约 0.65ms，
+    # 但在批量扫日中被重复调用数千次（59 天调用 3523 次），占总耗时 80%+。
+    # 加 lru_cache 后，1000 次缓存调用仅 0.0005s，提升 >1000 倍。
+    import functools
+    sxtwl.getJieQiByYear = functools.lru_cache(maxsize=64)(sxtwl.getJieQiByYear)
 except ImportError:
     HAS_SXTWL = False
     logger.warning("sxtwl 库未安装，使用备用计算方法")
