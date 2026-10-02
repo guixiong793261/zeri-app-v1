@@ -471,11 +471,14 @@ class MarriageRuleChecker(EventRuleChecker):
         # 因为具体神煞（杨公忌/黄沙日/红纱日/三娘煞/四离四绝等）已在前述#1~#5
         # 明确列出，追加"嫁娶"会造成"嫁娶同时出现在宜与忌"的矛盾展示。
         # 当无任何忌项时，才主动标记宜"嫁娶"，保证双向清晰。
-        if not ji_list:
-            yi_list.append('嫁娶')
-        
+        # 2026-10-02 软性补标（用户拍板）：先算一票否决——凡硬忌（杨公忌/红纱/
+        # 三娘煞/月破岁破/四离四绝/禁婚年/阴阳差错/女命忌嫁/冲新娘等）均属否决
+        # 关键词集；无否决时即使存在一般忌项（建除黑道、冲夫星等扣分项），仍补标
+        # 宜"嫁娶"，避免嫁娶日课宜项缺失"宜嫁娶"核心结论。有否决则不标。
         # 7. 检查一票否决项
         veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
+        if not veto and '嫁娶' not in yi_list:
+            yi_list.append('嫁娶')
         if veto:
             return yi_list, ji_list, True, veto_reason
         
