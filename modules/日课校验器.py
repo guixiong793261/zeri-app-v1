@@ -1188,6 +1188,54 @@ def rule_e204(ctx):
     return None
 
 
+@register_rule('E205', SEVERITY_WARN, '评分明细吉神凶煞须在评语中解释')
+def rule_e205(ctx):
+    """评分明细中 |value|>=10 的吉神/凶煞，综合评语必须提及（简写匹配）。"""
+    sd = ctx.sd
+    text = ctx.reason
+
+    # 收集需解释的项：嫁娶明细 + 神煞明细
+    explainable = []
+    for key in ('嫁娶明细(分项)', '神煞明细', '神煞分项(利月/天德等)'):
+        items = sd.get(key)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if isinstance(item, (list, tuple)) and len(item) >= 2:
+                name, value = str(item[0]), item[1]
+            elif isinstance(item, dict):
+                name, value = str(item.get('事项') or item.get('name') or ''), item.get('得分') or item.get('score') or 0
+            else:
+                continue
+            try:
+                value = int(value)
+            except (ValueError, TypeError):
+                continue
+            if abs(value) >= 10:
+                explainable.append((name, value))
+
+    # 白名单：基础项/结构性项不要求解释
+    WHITELIST = {'基础分', '月令得分', '旺衰得分', '支支关系得分', '五行评分', '月令', '喜用神'}
+    explainable = [x for x in explainable if x[0] not in WHITELIST]
+
+    reported = set()  # 同名只报一次
+    for name, value in explainable:
+        # 主干词：去括号/去后缀，取前 2 字匹配
+        short = name.split('（')[0].split('(')[0].strip()
+        if len(short) > 2:
+            short = short[:2]  # "天德贵人"→"天德"
+        if short in reported:
+            continue
+        if short and short not in text:
+            reported.add(short)
+            sign = '加分' if value > 0 else '扣分'
+            ctx.issue('E205',
+                      f'综合评语未提及{sign}项「{name}」（{value:+d}）',
+                      source=f'score_details[{name}]',
+                      suggestion='评语中补充该神煞的说明')
+    return None
+
+
 # ==================== 阶段三：LLM 语义兜底审查 ====================
 # 定位：只抓硬规则（E001-E105）覆盖不到的语义级矛盾。
 # 边界：不做算术、不做命理判定；只输出 WARN/INFO，不阻断报告。
