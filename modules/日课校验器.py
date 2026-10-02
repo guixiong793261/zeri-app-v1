@@ -1028,6 +1028,106 @@ if __name__ == '__main__':
     sys.exit(_main_cli(sys.argv[1:]))
 
 
+# ==================== 阶段四：LLM 高频问题固化（E201-E203） ====================
+# 从真基线数据中提取的稳定硬规则，降低对 LLM 的依赖。
+
+@register_rule('E201', SEVERITY_ERROR, '嫁娶路径综合判断句必须有明确结论')
+def rule_e201(ctx):
+    """嫁娶路径的综合判断句须含"可用/慎用/不可用/不宜"明确结论。"""
+    # 嫁娶路径判定：detail 含 marriage_details（嫁娶专属）或 yi_list 含嫁娶
+    _yi = ctx.detail.get('yi_list') or []
+    _md = ctx.detail.get('marriage_details')
+    if not (isinstance(_md, list) and _md) and '嫁娶' not in str(_yi):
+        return '非嫁娶路径'
+    reason = ctx.reason
+    if '综合判断' not in reason:
+        ctx.issue('E201', '嫁娶路径缺少「综合判断」结论句',
+                  source='reason', suggestion='补写「综合判断：…可用/慎用/不可用」')
+        return None
+    tail = reason.split('综合判断')[-1]
+    verdicts = ('可用', '慎用', '不可用', '不宜用', '不宜嫁娶')
+    if not any(v in tail for v in verdicts):
+        ctx.issue('E201', '嫁娶路径综合判断句缺少明确结论（可用/慎用/不可用/不宜）',
+                  source='reason 综合判断尾段', suggestion='补充明确结论词')
+    return None
+
+
+@register_rule('E202', SEVERITY_WARN, '喜用神评语措辞与得分档位匹配')
+def rule_e202(ctx):
+    """喜用神评语必须落在得分对应档位，不得出现越档褒词。"""
+    score = int(ctx.sd.get('喜用神得分') or 0)
+    # 从 reason 提取喜用神评语句
+    xys_sentences = []
+    for seg in ctx.reason.replace('\n', '；').split('；'):
+        if '喜用神' in seg:
+            xys_sentences.append(seg.strip())
+    if not xys_sentences:
+        return 'reason 无喜用神评语句'
+    text = '；'.join(xys_sentences)
+
+    # 档位 → 允许措辞 / 禁用措辞（先做禁用，避免误伤）
+    PHRASE_TABLE = [
+        (0, 5, ['补益有限'], ['有一定补益', '补益较大', '能量共振极佳']),
+        (6, 10, ['补益有限', '略有助益'], ['补益较大', '能量共振极佳']),
+        (11, 15, ['有一定补益'], ['补益有限', '能量共振极佳']),
+        (16, 999, ['补益较大', '能量共振极佳'], ['补益有限', '略有助益']),
+    ]
+    for lo, hi, _, forbidden in PHRASE_TABLE:
+        if lo <= score <= hi:
+            for bad in forbidden:
+                if bad in text:
+                    ctx.issue(
+                        'E202',
+                        f'喜用神得分{score}分（{lo}-{hi}档），评语不应出现越档措辞「{bad}」',
+                        source='score_details[喜用神得分] vs reason 喜用神句',
+                        suggestion=f'该档允许措辞：{bad} 不属于 {lo}-{hi} 分档位')
+            break
+    return None
+
+
+@register_rule('E203', SEVERITY_WARN, '报告文本干支/日期/占位符一致性')
+def rule_e203(ctx):
+    """检测文本中的干支、日期、占位符是否与结构化数据一致。"""
+    import re
+    text = ctx.rendered_content if ctx.rendered_content is not None else ctx.reason
+
+    # 1. 日柱干支一致性：reason 中出现的日柱干支不应与 detail 日柱矛盾
+    sizhu = ctx.detail.get('sizhu')
+    if isinstance(sizhu, dict):
+        day_pillar = str(sizhu.get('日柱') or '')
+        # 简单检查：文本中是否有"日柱XX"但与实际日柱不同
+        m = re.search(r'日柱[：:]\s*(\S{2})', text)
+        if m and m.group(1) != day_pillar and day_pillar:
+            ctx.issue('E203',
+                      f'文本写「日柱{m.group(1)}」，实际日柱为{day_pillar}',
+                      source='rendered_content vs detail[sizhu][日柱]',
+                      suggestion='核对日柱干支是否串台')
+
+    # 2. 未替换占位符
+    placeholders = ['事主1', '事主2', '事主3', '事主4', '{{姓名}}', '{{日期}}']
+    for ph in placeholders:
+        if ph in text:
+            ctx.issue('E203', f'报告文本出现未替换占位符「{ph}」',
+                      source='rendered_content',
+                      suggestion='检查模板渲染逻辑')
+
+    # 3. 日期串台：检查是否有不属于当前日期的 YYYY-MM-DD
+    date_obj = None
+    if isinstance(sizhu, dict):
+        date_obj = sizhu.get('date')
+    if date_obj is None:
+        date_obj = ctx.detail.get('date')
+    if date_obj:
+        cur_str = str(date_obj)
+        for m in re.finditer(r'20\d{2}-\d{2}-\d{2}', text):
+            if m.group() != cur_str:
+                ctx.issue('E203',
+                          f'文本出现无关日期「{m.group()}」，当前日期为{cur_str}',
+                          source='rendered_content',
+                          suggestion='检查日期串台')
+    return None
+
+
 # ==================== 阶段三：LLM 语义兜底审查 ====================
 # 定位：只抓硬规则（E001-E105）覆盖不到的语义级矛盾。
 # 边界：不做算术、不做命理判定；只输出 WARN/INFO，不阻断报告。
