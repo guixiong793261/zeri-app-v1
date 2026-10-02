@@ -5284,12 +5284,16 @@ class Scorer:
         reason.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
         # 喜用神匹配评语
+        # 2026-10-02 优化：分档口径统一（0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             reason.append(f"喜用神：日课大喜事主用神，能量共振极佳")
+        elif xishen_score > 15:
+            reason.append(f"喜用神：日课对事主补益较大")
         elif xishen_score > 10:
-            reason.append(f"喜用神：日课补益事主用神，有利催吉")
-        elif xishen_score > 5:
             reason.append(f"喜用神：日课对事主有一定补益")
+        elif xishen_score > 5:
+            reason.append(f"喜用神：日课对事主补益有限，略有助益")
         elif xishen_score > 0:
             reason.append(f"喜用神：日课对事主补益有限")
         elif xishen_score == 0:
@@ -5422,13 +5426,16 @@ class Scorer:
         # 月令评语（口径同 _generate_reason，统一走 _yueling_phrase）
         seg.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
-        # 喜用神评语（口径同 _generate_reason）
+        # 喜用神评语（口径同 _generate_reason：0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             seg.append('喜用神：日课大喜事主用神，能量共振极佳')
+        elif xishen_score > 15:
+            seg.append('喜用神：日课对事主补益较大')
         elif xishen_score > 10:
-            seg.append('喜用神：日课补益事主用神，有利催吉')
-        elif xishen_score > 5:
             seg.append('喜用神：日课对事主有一定补益')
+        elif xishen_score > 5:
+            seg.append('喜用神：日课对事主补益有限，略有助益')
         elif xishen_score > 0:
             seg.append('喜用神：日课对事主补益有限')
         elif xishen_score == 0:
@@ -5500,9 +5507,23 @@ class Scorer:
         # 按否决/忌项/吉神自动生成"不宜/可用须择时/可用"，让用户直接看到结论。
         if veto_reason:
             seg.append(f'综合判断：{veto_reason}，本日不宜嫁娶')
-        elif self.ji_list:
-            _ji_brief = '、'.join(str(_j) for _j in self.ji_list[:2])
-            _ji_more = '等' if len(self.ji_list) > 2 else ''
+        elif self.ji_list or _md_neg:
+            # 2026-10-02 修02-05问题3/4：嫁娶路径 ji_list 只含规则忌项，
+            # 假三煞/夫星受克等在 marriage_details 负分项，须合并为忌项数据源。
+            _all_ji = []
+            _seen = set()
+            for _j in self.ji_list:
+                _st = str(_j).split('【')[0].split('（')[0].strip()
+                if _st and _st not in _seen:
+                    _all_ji.append(_st)
+                    _seen.add(_st)
+            for _t in _md_neg:
+                _st = str(_t).split('【')[0].split('（')[0].strip()
+                if _st and _st not in _seen:
+                    _all_ji.append(_st)
+                    _seen.add(_st)
+            _ji_brief = '、'.join(_all_ji[:2])
+            _ji_more = '等' if len(_all_ji) > 2 else ''
             if good_shensha:
                 _good_names = '、'.join(s['name'] for s in good_shensha[:3])
             else:
@@ -5512,10 +5533,16 @@ class Scorer:
                             and isinstance(_d[1], (int, float)) and _d[1] > 0
                             and '基础分' not in str(_d[0])][:3]
                 _good_names = '、'.join(_md_good) if _md_good else '吉神'
+            _tail = ''
+            if yueling_score < 0 and xishen_score > 0:
+                _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
             seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
-                       f'嫁娶可用，须于十二时辰中择吉时')
+                       f'嫁娶可用，须于十二时辰中择吉时{_tail}')
         else:
-            seg.append('综合判断：吉神并见、无忌项，嫁娶可用')
+            _tail = ''
+            if yueling_score < 0 and xishen_score > 0:
+                _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
+            seg.append(f'综合判断：吉神并见、无忌项，嫁娶可用{_tail}')
 
         return '；'.join(seg)
 
