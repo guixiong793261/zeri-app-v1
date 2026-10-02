@@ -227,6 +227,15 @@ def get_zhiju_score(sizhu):
     # 检查半合局
     is_banhe_result, banhe_zhis = is_banhe(zhis)
     if is_banhe_result:
+        # 2026-10-02 术语统一（仅改名不改分）：长生+墓而缺中神（帝旺）者为拱合，
+        # 与评分器地支关系显示层"拱合=长生+墓（如巳丑拱酉）"口径一致；
+        # 中神在局者为半合。分值维持 +8 不变。
+        _ZHONGSHEN = {frozenset(['申', '子', '辰']): '子', frozenset(['寅', '午', '戌']): '午',
+                      frozenset(['巳', '酉', '丑']): '酉', frozenset(['亥', '卯', '未']): '卯'}
+        _pair_set = set(banhe_zhis)
+        _zs = next((v for k, v in _ZHONGSHEN.items() if _pair_set < k), None)
+        if _zs:
+            return 8, f'拱合局({",".join(banhe_zhis)}，拱{_zs})'
         return 8, f'半合局({",".join(banhe_zhis)})'
     
     return 0, None
