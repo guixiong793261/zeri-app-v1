@@ -3117,6 +3117,11 @@ class ZeriApp:
                     _owners = owners_info if isinstance(owners_info, list) else []
 
                     def _rescore_hour(_z):
+                        # 2026-10-02 性能优化（方向D）：优先复用 _rescan_best_hour 已评分的时辰结果，
+                        # 避免重复调用 calculate_sizhu + calculate_score。
+                        _rescan_scores = wushu_sizhu.get('_rescan_hour_scores', {})
+                        if isinstance(_rescan_scores, dict) and _z in _rescan_scores:
+                            return _rescan_scores[_z]
                         _hh = _HH.get(_z)
                         if _hh is None:
                             return None, None
@@ -3490,6 +3495,12 @@ class ZeriApp:
         except Exception as _e:
             print(f"[最佳吉时] 注入时柱失败: {_e}")
             # 出错就保持原午时柱不动，避免影响计算/显示
+        finally:
+            # 2026-10-02 性能优化（方向D）：清理内部缓存键，避免泄露到结果详情
+            if isinstance(wushu_sizhu, dict) and '_rescan_hour_scores' in wushu_sizhu:
+                del wushu_sizhu['_rescan_hour_scores']
+            if isinstance(score_result, dict) and '_rescan_hour_scores' in score_result:
+                del score_result['_rescan_hour_scores']
 
     def _rescan_best_hour(self, current, event_type, owners_data, house_type,
                           shan_xiang, zao_xiang, zao_wei, chuang_wei,
@@ -3554,6 +3565,25 @@ class ZeriApp:
             (0, '子'), (2, '丑'), (4, '寅'), (6, '卯'), (8, '辰'), (10, '巳'),
             (12, '午'), (14, '未'), (16, '申'), (18, '酉'), (20, '戌'), (22, '亥')
         ]
+        # 2026-10-02 性能优化（方向A）：同一天12个时辰的年月日柱完全相同，
+        # 只有时柱变化。先缓存基准sizhu的年月日柱，后续11个时辰只算时柱，
+        # 避免每个时辰重复调用 sxtwl 做年柱/月柱/日柱的精确计算。
+        _base_ymd = None
+        if isinstance(init_sizhu, dict):
+            _base_ymd = {
+                '年柱': init_sizhu.get('年柱', ''),
+                '月柱': init_sizhu.get('月柱', ''),
+                '日柱': init_sizhu.get('日柱', ''),
+                'year_gan': init_sizhu.get('year_gan', ''),
+                'year_zhi': init_sizhu.get('year_zhi', ''),
+                'month_gan': init_sizhu.get('month_gan', ''),
+                'month_zhi': init_sizhu.get('month_zhi', ''),
+                'day_gan': init_sizhu.get('day_gan', ''),
+                'day_zhi': init_sizhu.get('day_zhi', ''),
+            }
+        # 2026-10-02 性能优化（方向D）：缓存12时辰评分结果，供 _inject_best_hour_to_result 复用，
+        # 避免注入时重复调用 calculate_sizhu + calculate_score。
+        _hour_scores = {}
         for _hh, _hz in _hour_candidates:
             if _hh == 12:
                 continue  # 午时已在best初值
@@ -3563,10 +3593,23 @@ class ZeriApp:
                 _hs['month'] = current.month
                 _hs['day'] = current.day
                 _hs['date'] = current
+                # 方向A：复用年月日柱，仅重算时柱
+                if _base_ymd:
+                    _hs['年柱'] = _base_ymd['年柱']
+                    _hs['月柱'] = _base_ymd['月柱']
+                    _hs['日柱'] = _base_ymd['日柱']
+                    _hs['year_gan'] = _base_ymd['year_gan']
+                    _hs['year_zhi'] = _base_ymd['year_zhi']
+                    _hs['month_gan'] = _base_ymd['month_gan']
+                    _hs['month_zhi'] = _base_ymd['month_zhi']
+                    _hs['day_gan'] = _base_ymd['day_gan']
+                    _hs['day_zhi'] = _base_ymd['day_zhi']
                 _hr = calculate_score(_hs, event_type, owners_data, house_type,
                                       shan_xiang, zao_xiang, zao_wei, chuang_wei,
                                       zaozhu_mode=zaozhu_mode,
                                       zeli_mode=self._get_zeli_mode())  # _zm0915
+                # 方向D：缓存本时辰结果，键=时辰地支
+                _hour_scores[_hz] = (_hs, _hr)
                 _hs_sc = int(_hr.get('score') or 0)
                 _hs_veto = len(_hr.get('veto_reasons') or [])
                 _cur_ss = int(any(isinstance(_s, dict)
@@ -3614,6 +3657,12 @@ class ZeriApp:
                     _cur_veto = _hs_veto
             except Exception:
                 continue
+        # 方向D：把12时辰评分结果挂到返回值上，供 _inject_best_hour_to_result 复用
+        # 键 = 时辰地支（'子'/'丑'/.../'亥'），值 = (sizhu_dict, score_result_dict)
+        _best_r['_rescan_hour_scores'] = _hour_scores
+        # 同时挂在 _best_sz（即 wushu_sizhu）上，因为 _inject 读取的是 wushu_sizhu
+        if isinstance(_best_sz, dict):
+            _best_sz['_rescan_hour_scores'] = _hour_scores
         return _best_sz, _best_r
 
     def _render_result_tree(self):
