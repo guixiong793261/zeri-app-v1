@@ -782,7 +782,8 @@ class Scorer:
                             _veto_tail = self._build_marriage_reason_tail(
                                 wu_xing_result, yueling_analysis,
                                 yueling_score, xishen_score, self.shensha_list,
-                                marriage_details=marriage_result.get('details'))
+                                marriage_details=marriage_result.get('details'),
+                                veto_reason=marriage_result.get('reject_reason'))
                             if _veto_tail:
                                 reason_parts.append(_veto_tail)
 
@@ -3362,7 +3363,7 @@ class Scorer:
                 # 中文名称映射（腊月/正月）
                 mc = str(lunar_obj.get('month_chinese') or lunar_obj.get('month') or '')
                 _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                        '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                        '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                 if mc in _map: return _map[mc]
         except Exception:
             pass
@@ -3381,7 +3382,7 @@ class Scorer:
                         return int(m)
                     mc = str(lun.get('month_chinese') or lun.get('month') or '')
                     _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                            '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                            '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                     if mc in _map: return _map[mc]
         except Exception:
             pass
@@ -5363,7 +5364,7 @@ class Scorer:
 
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
-                                   marriage_details=None):
+                                   marriage_details=None, veto_reason=None):
         """
         嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
 
@@ -5494,6 +5495,27 @@ class Scorer:
         # 宜（与综合评语末句保持一致，取本次 yi_list）
         if self.yi_list:
             seg.append('宜：' + '、'.join(self.yi_list))
+
+        # 综合结论句（2026-10-02，审查问题6）：评语末尾补嫁娶总结论，
+        # 按否决/忌项/吉神自动生成"不宜/可用须择时/可用"，让用户直接看到结论。
+        if veto_reason:
+            seg.append(f'综合判断：{veto_reason}，本日不宜嫁娶')
+        elif self.ji_list:
+            _ji_brief = '、'.join(str(_j) for _j in self.ji_list[:2])
+            _ji_more = '等' if len(self.ji_list) > 2 else ''
+            if good_shensha:
+                _good_names = '、'.join(s['name'] for s in good_shensha[:3])
+            else:
+                # 神煞吉项为空时取评分明细正分项（去括注，如 不将日/大黄道天德日）
+                _md_good = [str(_d[0]).split('（')[0] for _d in (marriage_details or [])
+                            if isinstance(_d, (list, tuple)) and len(_d) >= 2
+                            and isinstance(_d[1], (int, float)) and _d[1] > 0
+                            and '基础分' not in str(_d[0])][:3]
+                _good_names = '、'.join(_md_good) if _md_good else '吉神'
+            seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                       f'嫁娶可用，须于十二时辰中择吉时')
+        else:
+            seg.append('综合判断：吉神并见、无忌项，嫁娶可用')
 
         return '；'.join(seg)
 
