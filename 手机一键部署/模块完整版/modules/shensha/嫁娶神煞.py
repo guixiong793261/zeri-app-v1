@@ -485,7 +485,7 @@ class MarriageShenShaChecker(ShenShaChecker):
                     return int(m)
                 mc = str(lunar_obj.get('month_chinese') or lunar_obj.get('month') or '')
                 _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                        '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                        '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                 if mc in _map:
                     return _map[mc]
         except Exception:
@@ -507,7 +507,7 @@ class MarriageShenShaChecker(ShenShaChecker):
                         return int(m)
                     mc = str(lun.get('month_chinese') or lun.get('month') or '')
                     _map = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                            '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                            '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                     if mc in _map:
                         return _map[mc]
             except Exception:
@@ -847,7 +847,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         """解析中文月份为数字"""
         month_map = {
             '正月': 1, '二月': 2, '三月': 3, '四月': 4, '五月': 5, '六月': 6,
-            '七月': 7, '八月': 8, '九月': 9, '十月': 10, '十一月': 11, '十二月': 12,
+            '七月': 7, '八月': 8, '九月': 9, '十月': 10, '十一月': 11, '冬月': 11, '十二月': 12,
             '腊月': 12
         }
         return month_map.get(month_str, 0)

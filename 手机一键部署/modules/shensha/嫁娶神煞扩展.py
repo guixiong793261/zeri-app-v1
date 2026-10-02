@@ -452,12 +452,16 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         # 不再用节气月支法（寅=1丑=12）代推，避免2026-02-05这类"寅月但农历腊月"被误判。
         def _resolve_lunar_month(sz):
             try:
-                from ...四柱计算器 import get_lunar_date as _gld
+                # 本模块在 modules.shensha 包内，'..' 即 modules 包
+                from ..四柱计算器 import get_lunar_date as _gld
             except Exception:
                 try:
-                    from 四柱计算器 import get_lunar_date as _gld
+                    from modules.四柱计算器 import get_lunar_date as _gld
                 except Exception:
-                    _gld = None
+                    try:
+                        from 四柱计算器 import get_lunar_date as _gld
+                    except Exception:
+                        _gld = None
             # 1) 内建字段优先
             lm = sz.get('lunar_month')
             if isinstance(lm, (int, float)) and 1 <= int(lm) <= 12:
@@ -470,7 +474,7 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                         return int(m)
                     mc = str(lun.get('month_chinese') or lun.get('month') or '')
                     mp = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                          '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                          '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                     if mc in mp: return mp[mc]
             except Exception:
                 pass
@@ -485,7 +489,7 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                             return int(m)
                         mc = str(lun.get('month_chinese') or lun.get('month') or '')
                         mp = {'正月':1,'二月':2,'三月':3,'四月':4,'五月':5,'六月':6,
-                              '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'腊月':12}
+                              '七月':7,'八月':8,'九月':9,'十月':10,'十一月':11,'冬月':11,'腊月':12}
                         if mc in mp: return mp[mc]
                 except Exception:
                     pass
