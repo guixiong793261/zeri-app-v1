@@ -5284,12 +5284,16 @@ class Scorer:
         reason.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
         # 喜用神匹配评语
+        # 2026-10-02 优化：分档口径统一（0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             reason.append(f"喜用神：日课大喜事主用神，能量共振极佳")
+        elif xishen_score > 15:
+            reason.append(f"喜用神：日课对事主补益较大")
         elif xishen_score > 10:
-            reason.append(f"喜用神：日课补益事主用神，有利催吉")
-        elif xishen_score > 5:
             reason.append(f"喜用神：日课对事主有一定补益")
+        elif xishen_score > 5:
+            reason.append(f"喜用神：日课对事主补益有限，略有助益")
         elif xishen_score > 0:
             reason.append(f"喜用神：日课对事主补益有限")
         elif xishen_score == 0:
@@ -5422,13 +5426,16 @@ class Scorer:
         # 月令评语（口径同 _generate_reason，统一走 _yueling_phrase）
         seg.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
-        # 喜用神评语（口径同 _generate_reason）
+        # 喜用神评语（口径同 _generate_reason：0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             seg.append('喜用神：日课大喜事主用神，能量共振极佳')
+        elif xishen_score > 15:
+            seg.append('喜用神：日课对事主补益较大')
         elif xishen_score > 10:
-            seg.append('喜用神：日课补益事主用神，有利催吉')
-        elif xishen_score > 5:
             seg.append('喜用神：日课对事主有一定补益')
+        elif xishen_score > 5:
+            seg.append('喜用神：日课对事主补益有限，略有助益')
         elif xishen_score > 0:
             seg.append('喜用神：日课对事主补益有限')
         elif xishen_score == 0:

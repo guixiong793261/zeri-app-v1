@@ -6372,6 +6372,8 @@ class ZeriApp:
         content += "\n"
         
         # 神煞信息
+        # 2026-10-02 优化：始终渲染【神煞信息】段，无额外神煞时显示占位文案，
+        # 保持报告结构完整（与评分详情中的神煞净分是"明细 vs 总分"关系）
         shensha_list = detail.get('shensha_list', [])
         if shensha_list:
             content += """【神煞信息】
@@ -6406,6 +6408,12 @@ class ZeriApp:
                 for it in ping_items: content += it
                 content += "\n"
             content += "\n"
+        else:
+            content += """【神煞信息】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  无额外神煞加减分
+
+"""
         
         # 评语
         if detail.get('reason'):
