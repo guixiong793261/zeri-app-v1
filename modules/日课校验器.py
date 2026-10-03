@@ -657,9 +657,47 @@ def rule_e007(ctx):
     return None
 
 
+_YIJI_EVENT_WORDS = None
+
+
+def _is_xiansha_name(item, event=None):
+    """E008 反向判定：忌项名是否煞名（而非黄历宜忌事项词）。
+
+    不硬编码事项词典——复用今日黄历.YIJI_60（六十甲子日宜忌表）的
+    宜/忌词全集 + 当前事项名反查（开业规则 L246-248 append 的
+    开业/开市/纳财同属黄历忌事项词，词表与煞名集语义不相交）：
+    - 在词集中 → 黄历事项词，无"煞名出处"可言，E008 跳过
+    - 不在词集中 → 按煞名处理，继续出处检查
+      （黄沙/红纱等"出现在忌项就必须有扣分"的真煞仍被抓，安全阀不阉割；
+       切勿改用"是否在评分明细/神煞段"来判煞名——那是 E008 要检查的出处本身，
+       会把真煞无出处误判为非煞名）
+    今日黄历不可用时词集为空 → 全部按煞名处理（保守降级，等同修复前行为）。
+    """
+    global _YIJI_EVENT_WORDS
+    if _YIJI_EVENT_WORDS is None:
+        words = set()
+        try:
+            from modules.今日黄历 import YIJI_60 as _y60
+            for _yi, _ji in _y60.values():
+                words.update(str(w) for w in _yi)
+                words.update(str(w) for w in _ji)
+        except ImportError:
+            pass  # 保守降级：词集为空 = 全按煞名检查（宁多查不漏抓）
+        _YIJI_EVENT_WORDS = words
+    if event and str(item) == str(event):
+        return False
+    return str(item) not in _YIJI_EVENT_WORDS
+
+
 @register_rule('E008', SEVERITY_WARN, '忌项煞名在评分或神煞段有出处')
 def rule_e008(ctx):
-    """忌项每条须能在评分负分项/神煞列表找到，或属结构性硬规则白名单。"""
+    """忌项煞名须能在评分负分项/神煞列表找到，或属结构性硬规则白名单。
+
+    2026-10-05 两类非嫁娶误报修复（用户裁决，2026-02-08 开业案例）：
+    1. 事项名误报（开业/开市/纳财）：_is_xiansha_name 反向判定，黄历事项词跳过
+    2. veto 日假阳性（年三煞(日柱)）：一票否决日报告砍为单行，
+       评分明细/神煞段不存在；扩到渲染全文查出处——只扩范围，不取消检查
+    """
     ji = [str(j).strip() for j in (ctx.detail.get('ji_list') or []) if j]
     if not ji:
         return '忌项为空'
@@ -676,14 +714,22 @@ def rule_e008(ctx):
     _STRUCT_PREFIXES = ('建除', '月破', '岁破', '日破', '四离', '四绝',
                         '重丧', '三娘', '杨公', '冲',
                         '阴胎', '阳气', '夫星', '子星')
+    is_veto = bool(veto_srcs)
+    _event = ctx.detail.get('event') or ctx.detail.get('事项')
 
     for item in ji:
         if item in veto_srcs:
             continue
+        if not _is_xiansha_name(item, _event):
+            continue  # 黄历事项词（开业/开市/纳财…），非煞名，无出处可言
         hit = any(_shensha_name_match(item, src) for src in sources)
         if not hit:
             hit = any(item.startswith(p) or p in item
                       for p in _STRUCT_PREFIXES)
+        if not hit and is_veto:
+            # 一票否决日：报告砍为单行，评分明细/神煞段不存在；
+            # 扩到渲染全文查出处（煞名在全文中出现即有出处）
+            hit = bool(ctx.reason) and item in ctx.reason
         if not hit:
             ctx.issue(
                 'E008',
