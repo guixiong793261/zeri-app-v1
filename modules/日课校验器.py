@@ -706,6 +706,12 @@ def rule_e008(ctx):
                if isinstance(d, (list, tuple)) and len(d) >= 1]
     sources += [str(s.get('name', '')) for s in ctx.shensha_list
                 if isinstance(s, dict)]
+    # 山向中心事项（安葬/修造等）三煞独立扣分通道：不进 marriage_details/
+    # shensha_list，曾致真煞"年三煞(日柱)"被误报无出处；明细行含忌项名作子串。
+    _sd = ctx.detail.get('score_details') if isinstance(
+        ctx.detail.get('score_details'), dict) else None
+    if _sd:
+        sources += [str(x) for x in (_sd.get('三煞扣分明细') or [])]
     veto_srcs = [str(v) for v in (ctx.detail.get('veto_reasons') or [])]
     sources += veto_srcs
 

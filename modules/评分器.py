@@ -1227,28 +1227,28 @@ class Scorer:
             if sansha_info.get('year_sansha_month_fan'):
                 penalty = -30
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯月柱（-30分）')
+                total_sansha_detail.append('年三煞(月柱)（-30分）')
                 self.final_score += penalty
                 if '年三煞(月柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(月柱)')
             if sansha_info.get('year_sansha_day_fan'):
                 penalty = -30
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯日柱（-30分）')
+                total_sansha_detail.append('年三煞(日柱)（-30分）')
                 self.final_score += penalty
                 if '年三煞(日柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(日柱)')
             if sansha_info.get('year_sansha_hour_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯时柱（-20分）')
+                total_sansha_detail.append('年三煞(时柱)（-20分）')
                 self.final_score += penalty
                 if '年三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(时柱)')
             if sansha_info.get('year_sansha_fan'):
                 penalty = -25
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯山向（-25分）')
+                total_sansha_detail.append('年三煞(山向)（-25分）')
                 self.final_score += penalty
                 if '年三煞(山向)' not in self.ji_list:
                     self.ji_list.append('年三煞(山向)')
@@ -1257,21 +1257,21 @@ class Scorer:
             if sansha_info.get('month_sansha_day_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯日柱（-20分）')
+                total_sansha_detail.append('月三煞(日柱)（-20分）')
                 self.final_score += penalty
                 if '月三煞(日柱)' not in self.ji_list:
                     self.ji_list.append('月三煞(日柱)')
             if sansha_info.get('month_sansha_hour_fan'):
                 penalty = -15
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯时柱（-15分）')
+                total_sansha_detail.append('月三煞(时柱)（-15分）')
                 self.final_score += penalty
                 if '月三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('月三煞(时柱)')
             if sansha_info.get('month_sansha_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯山向（-20分）')
+                total_sansha_detail.append('月三煞(山向)（-20分）')
                 self.final_score += penalty
                 if '月三煞(山向)' not in self.ji_list:
                     self.ji_list.append('月三煞(山向)')
@@ -1280,14 +1280,14 @@ class Scorer:
             if sansha_info.get('day_sansha_hour_fan'):
                 penalty = -10
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('日三煞犯时柱（-10分）')
+                total_sansha_detail.append('日三煞(时柱)（-10分）')
                 self.final_score += penalty
                 if '日三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('日三煞(时柱)')
             if sansha_info.get('day_sansha_fan'):
                 penalty = -15
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('日三煞犯山向（-15分）')
+                total_sansha_detail.append('日三煞(山向)（-15分）')
                 self.final_score += penalty
                 if '日三煞(山向)' not in self.ji_list:
                     self.ji_list.append('日三煞(山向)')
@@ -1298,7 +1298,7 @@ class Scorer:
                 penalty = -15
                 total_sansha_penalty += penalty
                 self.final_score += penalty
-                total_sansha_detail.append('月日三煞叠犯时柱（-15分）')
+                total_sansha_detail.append('月日三煞叠犯(时柱)（-15分）')
                 if '月日三煞叠犯(时柱)' not in self.ji_list:
                     self.ji_list.append('月日三煞叠犯(时柱)')
             
@@ -1537,7 +1537,7 @@ class Scorer:
             # 年三煞犯日柱（大忌；山向类按仅坐山论，日柱临方扣分不否决）
             if sansha_info.get('year_sansha_day_fan') and _spv:
                 sansha_fan_da_ji = True
-                sansha_fan_reason = '年三煞犯日柱'
+                sansha_fan_reason = '年三煞(日柱)'
             
             # 年三煞犯山向（大忌）
             if sansha_info.get('year_sansha_fan'):
@@ -1545,7 +1545,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯山向'
                 else:
-                    sansha_fan_reason = '年三煞犯山向'
+                    sansha_fan_reason = '年三煞(山向)'
             
             # 月三煞犯山向（大忌）
             if sansha_info.get('month_sansha_fan'):
@@ -1553,7 +1553,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、月三煞犯山向'
                 else:
-                    sansha_fan_reason = '月三煞犯山向'
+                    sansha_fan_reason = '月三煞(山向)'
             
             # 日三煞犯山向（较轻，不列为大忌）
             # 根据三煞避忌原则：日三煞管时柱，山向犯日三煞相对较轻，不一票否决
@@ -1564,7 +1564,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯月柱'
                 else:
-                    sansha_fan_reason = '年三煞犯月柱'
+                    sansha_fan_reason = '年三煞(月柱)'
 
             # 年三煞犯时柱（嫁娶等事主中心事项大忌，犯即否决；
             # 修造/动土/入宅/安葬等山向中心事项按"仅坐山修方论"，时支临三煞方
@@ -1574,7 +1574,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯时柱'
                 else:
-                    sansha_fan_reason = '年三煞犯时柱'
+                    sansha_fan_reason = '年三煞(时柱)'
 
             # 硬性否决原因（供显示层明确提示，避免只显示模糊门槛文案）
             veto_reasons = []
