@@ -623,6 +623,24 @@ def is_sifei_by_pillar(month_zhi, day_pillar):
     return day_pillar in _SIFEI_PILLARS_BY_SEASON.get(month_zhi, ())
 
 
+# ===== 黄沙权威表（节气月支版，《协纪》义例体系）=====
+#   四孟（寅申巳亥月）逢午日、四仲（子午卯酉月）逢寅日、
+#   四季（辰戌丑未月）逢子日。2026-09-21 统一为节气月口径，废弃日支三合局版。
+# 单点出口：基类 _is_huangsha 与婚嫁评分算法 D 统一委托本函数。
+_HUANGSHA_ZHI_BY_MONTH = {
+    '寅': '午', '申': '午', '巳': '午', '亥': '午',
+    '子': '寅', '午': '寅', '卯': '寅', '酉': '寅',
+    '辰': '子', '戌': '子', '丑': '子', '未': '子',
+}
+
+
+def is_huangsha_by_zhi(month_zhi, day_zhi):
+    """黄沙日（节气月支版）：月支查日支。单点出口，见上表注释。"""
+    if not month_zhi or not day_zhi:
+        return False
+    return _HUANGSHA_ZHI_BY_MONTH.get(month_zhi) == day_zhi
+
+
 _YANGCUO_PILLARS_BY_MONTH = {
     '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
     '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
@@ -962,7 +980,14 @@ class ShenShaChecker:
                     total -= 8
                     reasons.append(f'自刑{label}（{hour_zhi}{z}自刑）')
                 continue
+            # 2026-10-02 六合优先于相破：寅亥、子丑等既合又破的地支，
+            # 六合为吉应优先展示，不再标破。
             pair = {z, hour_zhi}
+            _liuhe_pairs = {('子', '丑'), ('寅', '亥'), ('卯', '戌'),
+                            ('辰', '酉'), ('巳', '申'), ('午', '未')}
+            is_liuhe = any(pair == {a, b} for a, b in _liuhe_pairs)
+            if is_liuhe:
+                continue
             is_xing = any(pair == {a, b} for a, b in self.XIANG_XING_SETS)
             is_hai = any(pair == {a, b} for a, b in self.XIANG_HAI_SETS)
             is_po = any(pair == {a, b} for a, b in self.XIANG_PO_SETS)
@@ -2773,15 +2798,8 @@ class ShenShaChecker:
     def _is_huangsha(self, sizhu):
         """黄沙日（节气月支版：四孟寅申巳亥月逢午日、四仲子午卯酉月逢寅日、
         四季辰戌丑未月子日。2026-09-21 按《协纪》义例体系统一为节气月口径，
-        废弃原日支三合局版。）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        huangsha_map = {
-            '寅': '午', '申': '午', '巳': '午', '亥': '午',
-            '子': '寅', '午': '寅', '卯': '寅', '酉': '寅',
-            '辰': '子', '戌': '子', '丑': '子', '未': '子'
-        }
-        return huangsha_map.get(month_zhi) == day_zhi
+        废弃原日支三合局版。2026-10-02 委托模块级 is_huangsha_by_zhi 单点出口。）"""
+        return is_huangsha_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
     
     def _is_flyinglian(self, sizhu):
         """飞廉（月神比日支，《协纪辨方书》卷四·月神）

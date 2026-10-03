@@ -882,6 +882,8 @@ class Scorer:
                                 level = _cap
                             if '犯忌嫁娶' not in level:
                                 level = level + '（犯忌嫁娶，慎用）'
+                        # 记录是否因忌嫁娶被降级，供综合评语口径统一使用
+                        _was_capped_for_jijiaqu = _has_ji_jiaqu_level
 
                         # 构建详细得分明细（2026-09-03 问题4：增加嫁娶分项+神煞明细占位，
                         # 保证"综合分=嫁娶评分+月令+喜用神+太阳太阴+神煞分项"公式可读）
@@ -1082,6 +1084,34 @@ class Scorer:
                         _yr_mrg = self._build_yangren_shensha(sizhu, event_type)
                         if _yr_mrg:
                             shensha_list.append(_yr_mrg)
+
+                        # 2026-10-02 修2：非veto分支同步回填 marriage_details 负分项
+                        # （黄沙日/四废/八专/夫星受克等）进 shensha_list，使【神煞信息】
+                        # 与【评分详情】口径一致——此前仅 veto 分支回填，非 veto 日
+                        # "评分详情有黄沙-12、神煞信息却写无额外神煞加减分"。
+                        # 按名称前缀去重（marriage_details 名带"（…）"括注，
+                        # 如"羊刃（日干壬见…）"与上方'羊刃'条目视为同项）。
+                        _mrg_d_nv = marriage_result.get('details') or []
+                        for _md in _mrg_d_nv:
+                            if isinstance(_md, (list, tuple)) and len(_md) >= 2:
+                                _mn = str(_md[0])
+                                try:
+                                    _ms = int(_md[1])
+                                except (TypeError, ValueError):
+                                    continue
+                                if _ms < 0:
+                                    _mn_prefix = _mn.split('（')[0].split('(')[0].strip()
+                                    _exists = any(
+                                        isinstance(_x, dict) and
+                                        str(_x.get('name', '')).split('（')[0].split('(')[0].strip() == _mn_prefix
+                                        for _x in shensha_list
+                                    )
+                                    if not _exists:
+                                        shensha_list.append({
+                                            'name': _mn,
+                                            'description': _mn,
+                                            'score': _ms
+                                        })
                         
                         # 生成综合评语（2026-09-03 问题4：格式化+分节，避免假三煞/月令混排）
                         # 结构：嫁娶评分要点 → 宜 → 忌 → 月令分析（独立小标题）
@@ -1120,7 +1150,9 @@ class Scorer:
                         _mrg_tail = self._build_marriage_reason_tail(
                             wu_xing_result, yueling_analysis,
                             yueling_score, xishen_score, shensha_list,
-                            marriage_details=marriage_result.get('details'))
+                            marriage_details=marriage_result.get('details'),
+                            ji_jiaqu_capped=_was_capped_for_jijiaqu,
+                            level_str=level)
                         if _mrg_tail:
                             reason_parts.append(_mrg_tail)
                         
@@ -5213,10 +5245,14 @@ class Scorer:
         会与旺衰段"日主丙在月令戌中休囚"并存成"休囚却又得力"的自相矛盾。
         """
         ws = str(wangshuai_text or '')
-        if '得令而旺' in ws or '得生而相' in ws:
+        if '得令而旺' in ws:
             if yueling_score > 0:
                 return '月令：得令得助，日主旺相'
             return '月令：得令，日主旺相'
+        if '得生而相' in ws:
+            if yueling_score > 0:
+                return '月令：得生得助，日主相旺'
+            return '月令：得生，日主相旺'
         if '休囚' in ws:
             if yueling_score > 0:
                 return '月令：休囚泄气，得生扶有根不弱'
@@ -5284,12 +5320,16 @@ class Scorer:
         reason.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
         # 喜用神匹配评语
+        # 2026-10-02 优化：分档口径统一（0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             reason.append(f"喜用神：日课大喜事主用神，能量共振极佳")
+        elif xishen_score > 15:
+            reason.append(f"喜用神：日课对事主补益较大")
         elif xishen_score > 10:
-            reason.append(f"喜用神：日课补益事主用神，有利催吉")
-        elif xishen_score > 5:
             reason.append(f"喜用神：日课对事主有一定补益")
+        elif xishen_score > 5:
+            reason.append(f"喜用神：日课对事主补益有限，略有助益")
         elif xishen_score > 0:
             reason.append(f"喜用神：日课对事主补益有限")
         elif xishen_score == 0:
@@ -5364,7 +5404,8 @@ class Scorer:
 
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
-                                   marriage_details=None, veto_reason=None):
+                                   marriage_details=None, veto_reason=None,
+                                   ji_jiaqu_capped=False, level_str=None):
         """
         嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
 
@@ -5403,15 +5444,29 @@ class Scorer:
             seg.append(f"日主：{details['日主旺衰']}")
 
         # 地支关系（合局 / 冲害）
+        # 2026-10-03 E104修复：评分明细里的合局项（如"六合(子丑)"）须与
+        # 地支关系中的描述合并；且即使 details['地支关系'] 缺失/无合局，
+        # 只要评分明细有合局加分就必须生成地支合局句（否则 E104 报遗漏）。
+        good = []
+        bad = []
         if details.get('地支关系'):
             rels = details['地支关系']
             if isinstance(rels, (list, tuple)):
-                good = [_clean(r) for r in rels if ('三合' in str(r) or '六合' in str(r)) and _clean(r)]
+                good = [_clean(r) for r in rels if ('三合' in str(r) or '六合' in str(r) or '半合' in str(r) or '拱合' in str(r)) and _clean(r)]
                 bad = [_clean(r) for r in rels if ('冲' in str(r) or '害' in str(r) or '刑' in str(r)) and _clean(r)]
-                if good:
-                    seg.append(f"地支合局：{'；'.join(good)}")
-                if bad:
-                    seg.append(f"地支冲害：{'；'.join(bad)}")
+        if marriage_details:
+            md_heju = [str(d[0]) for d in marriage_details
+                       if isinstance(d, (list, tuple)) and len(d) >= 2
+                       and isinstance(d[1], (int, float)) and d[1] > 0
+                       and any(k in str(d[0]) for k in ('三合', '半合', '拱合', '六合'))]
+            for mh in md_heju:
+                _zhis_in_mh = [c for c in mh if c in '子丑寅卯辰巳午未申酉戌亥']
+                if _zhis_in_mh and not any(all(z in g for z in _zhis_in_mh[:2]) for g in good):
+                    good.append(f"评分合局：{mh}")
+        if good:
+            seg.append(f"地支合局：{'；'.join(good)}")
+        if bad:
+            seg.append(f"地支冲害：{'；'.join(bad)}")
 
         # 命局吉神（天德贵人、禄神等）
         if details.get('吉神'):
@@ -5422,13 +5477,16 @@ class Scorer:
         # 月令评语（口径同 _generate_reason，统一走 _yueling_phrase）
         seg.append(self._yueling_phrase(details.get('日主旺衰', ''), yueling_score))
 
-        # 喜用神评语（口径同 _generate_reason）
+        # 喜用神评语（口径同 _generate_reason：0-5补益有限 / 6-10补益有限，略有助益 /
+        # 11-15有一定补益 / 16-20补益较大 / >20能量共振极佳）
         if xishen_score > 20:
             seg.append('喜用神：日课大喜事主用神，能量共振极佳')
+        elif xishen_score > 15:
+            seg.append('喜用神：日课对事主补益较大')
         elif xishen_score > 10:
-            seg.append('喜用神：日课补益事主用神，有利催吉')
-        elif xishen_score > 5:
             seg.append('喜用神：日课对事主有一定补益')
+        elif xishen_score > 5:
+            seg.append('喜用神：日课对事主补益有限，略有助益')
         elif xishen_score > 0:
             seg.append('喜用神：日课对事主补益有限')
         elif xishen_score == 0:
@@ -5500,9 +5558,23 @@ class Scorer:
         # 按否决/忌项/吉神自动生成"不宜/可用须择时/可用"，让用户直接看到结论。
         if veto_reason:
             seg.append(f'综合判断：{veto_reason}，本日不宜嫁娶')
-        elif self.ji_list:
-            _ji_brief = '、'.join(str(_j) for _j in self.ji_list[:2])
-            _ji_more = '等' if len(self.ji_list) > 2 else ''
+        elif self.ji_list or _md_neg:
+            # 2026-10-02 修02-05问题3/4：嫁娶路径 ji_list 只含规则忌项，
+            # 假三煞/夫星受克等在 marriage_details 负分项，须合并为忌项数据源。
+            _all_ji = []
+            _seen = set()
+            for _j in self.ji_list:
+                _st = str(_j).split('【')[0].split('（')[0].strip()
+                if _st and _st not in _seen:
+                    _all_ji.append(_st)
+                    _seen.add(_st)
+            for _t in _md_neg:
+                _st = str(_t).split('【')[0].split('（')[0].strip()
+                if _st and _st not in _seen:
+                    _all_ji.append(_st)
+                    _seen.add(_st)
+            _ji_brief = '、'.join(_all_ji[:2])
+            _ji_more = '等' if len(_all_ji) > 2 else ''
             if good_shensha:
                 _good_names = '、'.join(s['name'] for s in good_shensha[:3])
             else:
@@ -5512,10 +5584,32 @@ class Scorer:
                             and isinstance(_d[1], (int, float)) and _d[1] > 0
                             and '基础分' not in str(_d[0])][:3]
                 _good_names = '、'.join(_md_good) if _md_good else '吉神'
-            seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
-                       f'嫁娶可用，须于十二时辰中择吉时')
+            _tail = ''
+            if yueling_score < 0 and xishen_score > 0:
+                _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
+            # 2026-10-03 凶级分级（校验器E006真阳性修复）：
+            # 凶级必须写"不宜"，且区分 纯凶 / 凶（慎用） 两种子类——
+            # 纯凶绝对禁用；凶（慎用）有制化空间，须附"如确需使用"说明。
+            _lv = str(level_str if level_str is not None
+                      else getattr(self, 'level', '') or '')
+            _is_xiong = '凶' in _lv
+            if _is_xiong and not ji_jiaqu_capped:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}等凶煞并见，'
+                           f'不宜嫁娶，另择吉日{_tail}')
+            elif _is_xiong and ji_jiaqu_capped:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                           f'不宜嫁娶；如确需使用，须严格制化并择吉时{_tail}')
+            elif ji_jiaqu_capped:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                           f'嫁娶须慎用，宜择吉时{_tail}')
+            else:
+                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                           f'嫁娶可用，须于十二时辰中择吉时{_tail}')
         else:
-            seg.append('综合判断：吉神并见、无忌项，嫁娶可用')
+            _tail = ''
+            if yueling_score < 0 and xishen_score > 0:
+                _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
+            seg.append(f'综合判断：吉神并见、无忌项，嫁娶可用{_tail}')
 
         return '；'.join(seg)
 

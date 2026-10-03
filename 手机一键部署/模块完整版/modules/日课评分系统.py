@@ -354,6 +354,9 @@ class DayScoreWindow:
                     self.owners_info[i]['solar_day'].set(str(owner_data.get('day', '')))
                     self.owners_info[i]['hour'].set(str(owner_data.get('hour', 12)))
                     self.owners_info[i]['minute'].set(str(owner_data.get('minute', 0)))
+                    # 事主经度（真太阳时）：本窗口无经度输入框，经度仅随 owners_data 管道透传，
+                    # 以普通键值挂在 owners_info 上（无 StringVar）；None=120°E 北京时间基准，行为与旧版一致
+                    self.owners_info[i]['longitude'] = owner_data.get('longitude')
                     
                     # 获取事主名称（从name变量中获取字符串值）
                     owner_name = self.owners_info[i]['name']
@@ -377,7 +380,8 @@ class DayScoreWindow:
                         self.owners_info[i]['yongshen_var'],
                         self.owners_info[i].get('fuzi_var'),
                         self.owners_info[i].get('date_type_var'),
-                        self.owners_info[i].get('gender_var')
+                        self.owners_info[i].get('gender_var'),
+                        longitude=self.owners_info[i].get('longitude')
                     )
             
             # 提取事主信息（从界面上已填充的数据中获取）
@@ -1762,8 +1766,12 @@ class DayScoreWindow:
     def calculate_owner_sizhu(self, solar_year_var, solar_month_var, solar_day_var, 
                               lunar_year_var, lunar_month_var, lunar_day_var, leap_var, 
                               hour_var, minute_var, owner, sizhu_var, xishen_var, yongshen_var, 
-                              fuzi_var=None, date_type_var=None, gender_var=None):
-        """计算事主四柱"""
+                              fuzi_var=None, date_type_var=None, gender_var=None, longitude=None):
+        """计算事主四柱
+
+        longitude: 事主出生地经度（真太阳时）；None=120°E 北京时间基准。
+                   界面手动输入回路（L1470/L1540）无经度来源，不传即保持旧行为。
+        """
         try:
             # 防御性检查：获取小时和分钟
             hour_str = hour_var.get() if hour_var and hasattr(hour_var, 'get') else str(hour_var) if hour_var else ''
@@ -1807,7 +1815,7 @@ class DayScoreWindow:
                 day = int(solar_day_str)
                 target_date = date(year, month, day)
             
-            sizhu = calculate_sizhu(target_date, hour, minute)
+            sizhu = calculate_sizhu(target_date, hour, minute, longitude=longitude)
             analysis = analyze_sizhu(sizhu)
             
             # 显示四柱
@@ -2053,7 +2061,7 @@ class DayScoreWindow:
                 minute = int(minute_val)
                 
                 target_date = date(year, month, day)
-                sizhu = calculate_sizhu(target_date, hour, minute)
+                sizhu = calculate_sizhu(target_date, hour, minute, longitude=info.get('longitude'))
                 analysis = analyze_sizhu(sizhu)
                 
                 # 获取姓名（添加防御性检查）
@@ -3274,7 +3282,7 @@ class DayScoreWindow:
                     minute = int(minute_val)
                     
                     target_date = date(year, month, day)
-                    sizhu = calculate_sizhu(target_date, hour, minute)
+                    sizhu = calculate_sizhu(target_date, hour, minute, longitude=info.get('longitude'))
                     analysis = analyze_sizhu(sizhu)
                     
                     # 姓名（StringVar + 裸字符串双兼容）

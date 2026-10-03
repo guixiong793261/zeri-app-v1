@@ -227,15 +227,23 @@ def get_zhiju_score(sizhu):
     # 检查半合局
     is_banhe_result, banhe_zhis = is_banhe(zhis)
     if is_banhe_result:
-        # 2026-10-02 术语统一（仅改名不改分）：长生+墓而缺中神（帝旺）者为拱合，
-        # 与评分器地支关系显示层"拱合=长生+墓（如巳丑拱酉）"口径一致；
-        # 中神在局者为半合。分值维持 +8 不变。
-        _ZHONGSHEN = {frozenset(['申', '子', '辰']): '子', frozenset(['寅', '午', '戌']): '午',
-                      frozenset(['巳', '酉', '丑']): '酉', frozenset(['亥', '卯', '未']): '卯'}
+        # 2026-10-02 按宫位区分拱合与半合：
+        # 长生(0)+帝旺(1)=生地半合，帝旺(1)+墓(2)=墓地半合，长生(0)+墓(2)=拱合。
+        _SANHE_GONG = {
+            frozenset(['申', '子', '辰']): {'申': 0, '子': 1, '辰': 2, 'zs': '子'},
+            frozenset(['寅', '午', '戌']): {'寅': 0, '午': 1, '戌': 2, 'zs': '午'},
+            frozenset(['巳', '酉', '丑']): {'巳': 0, '酉': 1, '丑': 2, 'zs': '酉'},
+            frozenset(['亥', '卯', '未']): {'亥': 0, '卯': 1, '未': 2, 'zs': '卯'},
+        }
         _pair_set = set(banhe_zhis)
-        _zs = next((v for k, v in _ZHONGSHEN.items() if _pair_set < k), None)
-        if _zs:
-            return 8, f'拱合局({",".join(banhe_zhis)}，拱{_zs})'
+        for _gset, _gmap in _SANHE_GONG.items():
+            if _pair_set < _gset:
+                _pos = sorted(_gmap[z] for z in banhe_zhis)
+                _zs = _gmap['zs']
+                _que = list(_gset - _pair_set)[0]
+                if _pos == [0, 2]:
+                    return 8, f'拱合局({",".join(banhe_zhis)}，拱{_zs})'
+                return 8, f'半合局({",".join(banhe_zhis)}半合，缺{_que})'
         return 8, f'半合局({",".join(banhe_zhis)})'
     
     return 0, None
@@ -749,6 +757,20 @@ def is_sifei(date_obj, sizhu):
     day_gz = sizhu.get('日柱', '') or (sizhu.get('day_gan', '') + sizhu.get('day_zhi', ''))
     return is_sifei_by_pillar(sizhu.get('month_zhi', ''), day_gz)
 
+def is_huangsha(date_obj, sizhu):
+    """黄沙日（凶神，2026-10-02 接入 D）
+
+    委托 shensha 层唯一实现 神煞基类.is_huangsha_by_zhi（节气月支版：
+    四孟寅申巳亥月逢午日、四仲子午卯酉月逢寅日、四季辰戌丑未月逢子日）。
+    《协纪》义例体系黄沙为嫁娶忌日；事项键 ('嫁娶','黄沙')=-12 已存在
+    于 事项标准.py，本函数补齐"入评分详情+神煞信息"链路。
+    """
+    try:
+        from .shensha.神煞基类 import is_huangsha_by_zhi
+    except ImportError:
+        from modules.shensha.神煞基类 import is_huangsha_by_zhi
+    return is_huangsha_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
+
 def is_sansang(date_obj):
     """重丧日（按规则判断）
 
@@ -1031,8 +1053,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                             and ke_map[GAN_WX[sd_gan]] == GAN_WX[ny_gan])
                 if zhen:
                     penalty = -25
-                    label = (f"真三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}克年干{ny_gan}（"
+                    label = (f"真三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}克年干{ny_gan}（"
                              f"{GAN_WX.get(sd_gan,'?')}克{GAN_WX.get(ny_gan,'?')}），大凶宜避")
                 elif is_tiande_day(date_obj) or is_yuede_day(date_obj):
                     penalty = -10
@@ -1044,13 +1066,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                                if ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX and
                                   ke_map[GAN_WX[sd_gan]] != GAN_WX[ny_gan]
                                else f"日干{sd_gan}不克年干{ny_gan or '未知'}")
-                    label = (f"假三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}；判为'假'的两项依据："
-                             f"①{_ke_rel}（真三煞需日干克年干），②得{_jie}化解。属有吉神解厄，可酌情")
+                    label = (f"假三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位；判为'假'的依据："
+                             f"①{_ke_rel}（真三煞以三煞日天干克新娘年干为据），②得{_jie}化解。"
+                             f"不构成否决，但须谨慎择时，建议避开犯煞时辰")
                 else:
                     penalty = -25
-                    label = (f"本命三煞【{sha_ming}·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯{sha_ming}，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
+                    label = (f"本命三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
+                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
                 score += penalty
                 details.append((label, penalty))
         
@@ -1194,6 +1217,80 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         score += _sifei_score
         details.append(('四废', _sifei_score))
         result['warnings'].append('四废：四时衰废之气，忌嫁娶')
+
+    # 黄沙（2026-10-02 接入 D）：《协纪》义例体系黄沙日，节气月支版
+    # （四孟寅申巳亥月逢午、四仲子午卯酉月逢寅、四季辰戌丑未月逢子）。
+    # 谓词委托神煞基类.is_huangsha_by_zhi 单点出口，
+    # 分值查 ('嫁娶','黄沙')=-12（事项标准.py 已有键，本次补齐评分链路）。
+    if is_huangsha(date_obj, sizhu):
+        _huangsha_score = _shensha_score('嫁娶', '黄沙', -12)
+        score += _huangsha_score
+        details.append(('黄沙日', _huangsha_score))
+        result['warnings'].append('黄沙日：黄砂飞扬之日，忌嫁娶')
+
+    # ==== 2026-10-03 E008 修复：忌项与评分明细同步 ====
+    # 阴阳差错日/女命忌嫁日/红纱日/神号日/鬼哭日 此前仅由嫁娶规则加入
+    # ji_list（报告忌项），从未计入 marriage score，导致校验器 E008 报
+    # "忌项无评分出处"（365 天抽查 112 例，占 30%）。此处补齐扣分，
+    # 判定表复用 MarriageRuleChecker 类常量，分值查 SHENSHA_SCORES 单一表。
+    try:
+        from .rules.嫁娶规则 import MarriageRuleChecker as _MRC
+    except ImportError:
+        from modules.rules.嫁娶规则 import MarriageRuleChecker as _MRC
+
+    # 农历月/日/闰月（红纱/神号/鬼哭按农历月；闰月不计红纱）
+    _lunar_month_num = 0
+    _is_leap_m = False
+    try:
+        import sxtwl as _sxtwl
+        _lunar = _sxtwl.fromSolar(date_obj.year, date_obj.month, date_obj.day)
+        _lm = _lunar.getLunarMonth()
+        _is_leap_m = _lm < 0
+        _lunar_month_num = abs(_lm)
+    except Exception:
+        _lunar_month_num = 0
+    _day_gan_m, _day_zhi_m = get_day_ganzhi(date_obj)
+    _day_gz_m = _day_gan_m + _day_zhi_m
+
+    # 阴阳差错日（12 特定干支日，《协纪》嫁娶忌）
+    if _day_gz_m in _MRC.YINYANG_CHACUO:
+        _sc = _shensha_score('嫁娶', '阴阳差错日', -15)
+        score += _sc
+        details.append(('阴阳差错日', _sc))
+        result['warnings'].append('阴阳差错日：阴阳不交之日，忌嫁娶')
+
+    # 女命忌嫁日（当梁勾绞：新娘生肖 -> 忌日支）
+    if bride_bazi and bride_bazi.get('year_zhi'):
+        _bride_zx = str(bride_bazi['year_zhi'])
+        if _bride_zx in _MRC.NV_MING_JI_JIA and _day_zhi_m in _MRC.NV_MING_JI_JIA[_bride_zx]:
+            _sc = _shensha_score('嫁娶', '女命忌嫁日', -15)
+            score += _sc
+            details.append((f'女命忌嫁日（{_bride_zx}相忌{_day_zhi_m}日）', _sc))
+            result['warnings'].append(f'女命忌嫁日：{_bride_zx}相忌{_day_zhi_m}日，忌嫁娶')
+
+    # 红纱日（《协纪》辨讹正解：孟巳仲酉季丑；闰月不计）
+    if not _is_leap_m and _lunar_month_num in _MRC.HONGSHA:
+        if _day_zhi_m in _MRC.HONGSHA[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '红纱日', -20)
+            score += _sc
+            details.append(('红纱日', _sc))
+            result['warnings'].append('红纱日：婚嫁大忌')
+
+    # 神号日（农历月 -> 日支）
+    if _lunar_month_num in _MRC.SHENHAO:
+        if _day_zhi_m in _MRC.SHENHAO[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '神号', -15)
+            score += _sc
+            details.append(('神号日', _sc))
+            result['warnings'].append('神号日：忌嫁娶')
+
+    # 鬼哭日（农历月 -> 日支）
+    if _lunar_month_num in _MRC.GUIRU:
+        if _day_zhi_m in _MRC.GUIRU[_lunar_month_num]:
+            _sc = _shensha_score('嫁娶', '鬼哭', -15)
+            score += _sc
+            details.append(('鬼哭日', _sc))
+            result['warnings'].append('鬼哭日：忌嫁娶')
 
     # 羊刃（2026-10-02 修复漏计）：冠带派日干查地支（甲卯乙辰丙午丁未戊午己未
     # 庚酉辛戌壬子癸丑，与评分器._YANGREN_MAP 同表）。此前羊刃仅由评分器加入
