@@ -28,3 +28,8 @@ data/owners_plans.json
 手机一键部署包.zip
 /择日软件_完整单文件版.py
 手机一键部署/单文件版/
+
+# LLM 基线（2026-10-05）：固定锚点 llm_baseline_20261002/03.json 已入库跟踪，
+# 未来新生成的基线文件不入库（已跟踪文件不受 gitignore 影响）
+data/llm_baseline_*.json
+data/tmp/

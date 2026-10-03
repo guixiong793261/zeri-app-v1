@@ -1,7 +1,8 @@
 {
  "counts": {
   "E004:ERROR": 168,
-  "E105:WARN": 33
+  "E105:WARN": 33,
+  "E206:WARN": 15
  },
  "error_samples": {},
  "exceptions": []

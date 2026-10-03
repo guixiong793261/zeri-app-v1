@@ -1,0 +1,102 @@
+[
+  {
+    "date": "2026-01-05",
+    "event": "嫁娶",
+    "score": 83,
+    "level": "★★ 中吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 1,
+    "hard_issues": [
+      {
+        "rule_id": "E104",
+        "severity": "WARN",
+        "message": "评分合局项「拱合局(丑,巳，拱酉)」未在评语地支合局句列出"
+      }
+    ],
+    "llm_count": 2,
+    "llm_issues": [
+      {
+        "rule_id": "L001",
+        "severity": "WARN",
+        "message": "[LLM] 等级慎用但结论写可用"
+      },
+      {
+        "rule_id": "L004",
+        "severity": "WARN",
+        "message": "[LLM] 综合判断句缺明确结论"
+      }
+    ]
+  },
+  {
+    "date": "2026-02-05",
+    "event": "嫁娶",
+    "score": 90,
+    "level": "★★★ 吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 0,
+    "hard_issues": [],
+    "llm_count": 2,
+    "llm_issues": [
+      {
+        "rule_id": "L001",
+        "severity": "WARN",
+        "message": "[LLM] 等级慎用但结论写可用"
+      },
+      {
+        "rule_id": "L004",
+        "severity": "WARN",
+        "message": "[LLM] 综合判断句缺明确结论"
+      }
+    ]
+  },
+  {
+    "date": "2026-09-25",
+    "event": "嫁娶",
+    "score": 86,
+    "level": "★ 平（犯忌嫁娶，慎用）",
+    "hard_error_count": 0,
+    "hard_warn_count": 1,
+    "hard_issues": [
+      {
+        "rule_id": "E105",
+        "severity": "WARN",
+        "message": "黄道等级大吉而总等级为平，报告缺少「黄道虽大吉…整体降格」说明"
+      }
+    ],
+    "llm_count": 2,
+    "llm_issues": [
+      {
+        "rule_id": "L001",
+        "severity": "WARN",
+        "message": "[LLM] 等级慎用但结论写可用"
+      },
+      {
+        "rule_id": "L004",
+        "severity": "WARN",
+        "message": "[LLM] 综合判断句缺明确结论"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-19",
+    "event": "嫁娶",
+    "score": 90,
+    "level": "★★★ 吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 0,
+    "hard_issues": [],
+    "llm_count": 2,
+    "llm_issues": [
+      {
+        "rule_id": "L001",
+        "severity": "WARN",
+        "message": "[LLM] 等级慎用但结论写可用"
+      },
+      {
+        "rule_id": "L004",
+        "severity": "WARN",
+        "message": "[LLM] 综合判断句缺明确结论"
+      }
+    ]
+  }
+]

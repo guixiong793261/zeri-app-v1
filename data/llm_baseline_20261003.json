@@ -1,0 +1,58 @@
+[
+  {
+    "date": "2026-01-05",
+    "event": "嫁娶",
+    "score": 85,
+    "level": "★★★ 吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 1,
+    "hard_issues": [
+      {
+        "rule_id": "E206",
+        "severity": "WARN",
+        "message": "综合判断只说吉神「并见」、未说明如何化解所忌，即写「可用」"
+      }
+    ],
+    "llm_count": 0,
+    "llm_issues": []
+  },
+  {
+    "date": "2026-02-05",
+    "event": "嫁娶",
+    "score": 90,
+    "level": "★★★ 吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 0,
+    "hard_issues": [],
+    "llm_count": 0,
+    "llm_issues": []
+  },
+  {
+    "date": "2026-09-25",
+    "event": "嫁娶",
+    "score": 88,
+    "level": "★ 平（犯忌嫁娶，慎用）",
+    "hard_error_count": 0,
+    "hard_warn_count": 1,
+    "hard_issues": [
+      {
+        "rule_id": "E105",
+        "severity": "WARN",
+        "message": "黄道等级大吉而总等级为平，报告缺少「黄道虽大吉…整体降格」说明"
+      }
+    ],
+    "llm_count": 0,
+    "llm_issues": []
+  },
+  {
+    "date": "2026-10-19",
+    "event": "嫁娶",
+    "score": 90,
+    "level": "★★★ 吉",
+    "hard_error_count": 0,
+    "hard_warn_count": 0,
+    "hard_issues": [],
+    "llm_count": 0,
+    "llm_issues": []
+  }
+]
