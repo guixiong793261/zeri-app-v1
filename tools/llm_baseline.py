@@ -33,16 +33,24 @@ def build_report(date_str, event):
     ]
     result = calculate_score(sz, event, owners, None, None, None, None, None)
 
-    # 重选最佳时柱（与主程序同口径）
+    # 重选最佳时柱 + 注入（与主程序完整流程同口径）
     try:
         import tkinter as tk
         root = tk.Tk(); root.withdraw()
         import 主程序 as appmod
         app = appmod.ZeriApp(root)
         sz, result = app._rescan_best_hour(d, event, owners, None, None, None, None, None, None, sz, result)
+        _wrapper = {
+            'date': date_str,
+            'sizhu': ' '.join([sz['年柱'], sz['月柱'], sz['日柱'], sz['时柱']]),
+            'score': result.get('score'), 'level': result.get('level'),
+            'detail': result,
+        }
+        app._inject_best_hour_to_result(_wrapper, result, event, owners, d, sz)
         root.destroy()
-    except Exception:
-        pass
+    except Exception as e:
+        # 不静默吞错：注入失败须可见，避免基线口径悄悄退回注入前
+        print(f'⚠ 重选/注入失败，使用午时初值: {e}')
 
     ck, _ = build_checker(event, None, '')
     lucky = ck.get_lucky_hours(result.get('sizhu') or sz)

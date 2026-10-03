@@ -1293,41 +1293,78 @@ def rule_e205(ctx):
     return None
 
 
+@register_rule('E206', SEVERITY_WARN, '忌项「并见即可用」须说明化解方式')
+def rule_e206(ctx):
+    """综合判断只罗列吉神"并见"而不说明如何化解所忌，即写「可用」的，告警。
+
+    固化自 LLM 维度 L007：GLM-4-Flash 不具备该元判断能力，
+    2026-10-03 三版 prompt 均漏报，转为确定性规则。
+    """
+    # 综合判断行按行提取（E006/E104 教训：不按"；"截断）
+    verdict_line = ''
+    for line in ctx.reason.split('\n'):
+        if '综合判断' in line:
+            verdict_line = line.strip()
+            break
+    if not verdict_line:
+        return 'reason 无综合判断行（缺失情形由 E201 覆盖）'
+
+    # 必要特征：明确"须避"的忌项 ＋ "并见" ＋ 结论"可用"（排除"不可用"）
+    if '不可用' in verdict_line or not (
+            '须避' in verdict_line and '并见' in verdict_line and '可用' in verdict_line):
+        return '综合判断非「须避+并见+可用」句式'
+
+    # 已有具体化解说明则放行
+    RESOLVED_BY = ('合住', '合去', '制伏', '制住', '克制', '制化',
+                   '化解', '合化', '有制', '得制')
+    if any(k in verdict_line for k in RESOLVED_BY):
+        return '结论含具体制化说明'
+
+    ctx.issue('E206',
+              '综合判断只说吉神「并见」、未说明如何化解所忌，即写「可用」',
+              source='reason 综合判断行',
+              suggestion='补充吉神如何制化/合住所忌的说明，或把结论改为慎用')
+    return None
+
+
 # ==================== 阶段三：LLM 语义兜底审查 ====================
 # 定位：只抓硬规则（E001-E105）覆盖不到的语义级矛盾。
 # 边界：不做算术、不做命理判定；只输出 WARN/INFO，不阻断报告。
 
-LLM_SYSTEM_PROMPT = """你是择日报告的独立审查员，只做语义级审查，不做算术、不做命理判定。
-你会收到一份结构化日课数据 + 渲染后的报告文本。
-请按以下 8 个维度审查，只输出问题列表，不输出通过项。
+LLM_SYSTEM_PROMPT = """你是择日报告的独立文字审查员。只做语义/文字一致性检查，不做算术，不做命理判断，不重复硬规则的工作。
 
-【审查维度】
-L001 等级与综合判断语气是否一致（等级"慎用"却写"可用"等）
-L002 日主旺衰在不同段落是否前后矛盾
-L003 喜用神评语是否与得分档位匹配（+3 分不宜写"补益较大"）
-L004 综合判断句是否包含明确结论（可用/慎用/不可用）
-L005 术语使用是否地道，有无生僻或误用
-L006 有扣分/吉神但报告中无对应解释
-L007 有忌项但结论直接"可用"，无制化说明
-L008 文本是否有明显笔误或复制痕迹（日期、干支、姓名串台）
+【两种错误都要避免】
+- 不要凑数：没有确凿矛盾时必须返回 []，严禁输出"正常/无问题"之类的通过项。
+- 不要漏报：一旦发现下列【明确矛盾】且能在报告中逐字引用，就必须输出。
+你的价值在于抓住文本里自相矛盾、一眼可辨的错误。
+
+【必须报告的明确矛盾】
+L001 等级或语气是"慎用/凶/不宜"，综合判断结论却写"可用/大吉"（二者直接相反）。
+L002 对日主旺衰，一处写"旺相/得令/有力"，另一处写"失令/休囚/身弱"（非"失令但有根不弱"这类同一句内的转折）。
+L003 喜用神得分很低（个位数）却写"补益较大/能量共振极佳"，或得分高却写"补益有限"。
+L004 综合判断句没有任何结论词（可用/慎用/不可用/不宜）。
+L005 术语明显误用或生造。
+L006 有显著扣分/吉神，报告却完全没有对应解释。
+L007 已由硬规则 E206 固化覆盖：你无需检查、也不要输出 L007。
+L008 日期、干支、姓名前后不一致，或残留占位符/复制痕迹。
+
+【证据要求】
+每条问题的 actual 必须是从报告原文【逐字复制】的片段（L004 除外，可引用缺结论的那句）。
+找不到原文佐证的猜测，一律不输出。每个维度至多 1 条。
 
 【输出格式】严格 JSON 数组，每个元素：
 {"rule_id": "L001", "level": "WARN"|"INFO", "message": "一句话描述",
- "field": "出问题的字段或段落", "expected": "期望表述",
- "actual": "实际表述", "suggestion": "修复建议"}
+ "field": "出问题的段落", "actual": "报告原文逐字片段", "suggestion": "修复建议"}
 
-【约束】
-- 不要输出通过项；无法判断返回 []
-- 不做算术/命理判定（由硬规则 E001-E105 负责）
-- 只输出 JSON，不要任何解释性文字"""
+无确凿矛盾时输出 []。除 JSON 外不要输出任何文字。"""
 
-LLM_USER_TEMPLATE = """【结构化数据】
-{data_json}
+LLM_USER_TEMPLATE = """【基本信息】
+{facts_json}
 
-【渲染报告】
+【渲染报告（唯一事实来源，引用必须逐字取自此处）】
 {report_text}
 
-请按 8 个维度审查，输出 JSON 数组。"""
+请审查：有确凿、可逐字引用的问题才输出 JSON 数组，否则输出 []。"""
 
 
 def _llm_result_to_issues(items):
@@ -1344,12 +1381,17 @@ def _llm_result_to_issues(items):
         if not msg:
             continue
         src = str(it.get('field') or 'LLM')
+        actual = str(it.get('actual') or '').strip()
         sug = str(it.get('suggestion') or '')
-        issues.append(Issue(rid, lvl, f'[LLM] {msg}', source=src, suggestion=sug))
+        # 附原文证据，便于人工核验真假阳性（无引用则不附）
+        full_msg = f'[LLM] {msg}'
+        if actual and actual != src:
+            full_msg += f'（原文：{actual}）'
+        issues.append(Issue(rid, lvl, full_msg, source=src, suggestion=sug))
     return issues
 
 
-def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
+def llm_review(detail, report_text, api_func=None, timeout=30, cache=None):
     """LLM 语义兜底审查。
 
     Args:
@@ -1361,10 +1403,20 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
         cache: dict，可选缓存 {(date_str, event, score): issues}。
 
     Returns:
-        list[Issue]：LLM 产出的问题列表（WARN/INFO），失败返回 []。
+        list[Issue]：LLM 产出的问题列表（WARN/INFO）。
+        - 未配置 Key（功能关闭）：返回 []。
+        - 已配置 Key 但本次调用/解析失败：返回 1 条 L000 INFO，明确告知
+          语义审查本次不可用，避免与"审查通过、零问题"混淆（不静默吞错）。
     """
     import json, logging
     logger = logging.getLogger(__name__)
+
+    def _unavailable(reason):
+        # 失败不写缓存，便于下次重试。
+        return [Issue(
+            'L000', SEVERITY_INFO,
+            '[LLM] 语义审查本次不可用，已降级为纯硬规则模式',
+            source='LLM', suggestion=str(reason)[:160])]
 
     # 缓存键：日期 + 事项 + 总分（报告内容实质等价）
     _cache_key = None
@@ -1378,12 +1430,21 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
         if _cache_key in cache:
             return cache[_cache_key]
 
-    # 1) 构造 prompt
+    # 1) 构造精简事实（不喂整份 detail，避免弱模型跨字段串味 + 降低延迟）
+    facts = {
+        '日期': str(detail.get('date') or ''),
+        '事项': str(detail.get('event_type') or ''),
+        '总分': detail.get('score'),
+        '等级': detail.get('level'),
+        '宜': detail.get('yi_list'),
+        '忌': detail.get('ji_list'),
+    }
     try:
-        data_json = json.dumps(detail, ensure_ascii=False, default=str)
+        facts_json = json.dumps(facts, ensure_ascii=False, default=str)
     except Exception:
-        data_json = str(detail)
-    prompt = LLM_USER_TEMPLATE.format(data_json=data_json, report_text=report_text or '')
+        facts_json = str(facts)
+    prompt = LLM_USER_TEMPLATE.format(facts_json=facts_json,
+                                      report_text=report_text or '')
 
     # 2) 调用 LLM
     raw = ''
@@ -1391,7 +1452,7 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
         if api_func:
             raw = api_func(prompt)
         else:
-            # 内置：尝试 OpenAI 兼容接口（无 key 则静默跳过）
+            # 内置：尝试 OpenAI 兼容接口（无 key 则静默跳过＝功能关闭）
             import os
             api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('DASHSCOPE_API_KEY')
             if not api_key:
@@ -1411,7 +1472,7 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
                         {'role': 'user', 'content': prompt},
                     ],
                     'temperature': 0.1,
-                    'max_tokens': 2000,
+                    'max_tokens': 1000,
                 }, ensure_ascii=False).encode('utf-8'),
                 headers={
                     'Content-Type': 'application/json',
@@ -1424,9 +1485,7 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
                 raw = body['choices'][0]['message']['content']
     except Exception as e:
         logger.warning('LLM 审查调用失败，降级为纯硬规则模式：%s', e)
-        if cache is not None and _cache_key:
-            cache[_cache_key] = []
-        return []
+        return _unavailable(e)
 
     # 3) 解析 JSON（容错剥离 markdown 围栏）
     raw = raw.strip()
@@ -1436,9 +1495,7 @@ def llm_review(detail, report_text, api_func=None, timeout=15, cache=None):
         items = json.loads(raw)
     except Exception as e:
         logger.warning('LLM 返回非 JSON，降级：%s | raw=%s', e, raw[:200])
-        if cache is not None and _cache_key:
-            cache[_cache_key] = []
-        return []
+        return _unavailable(f'返回非JSON: {raw[:80]}')
 
     issues = _llm_result_to_issues(items)
     if cache is not None and _cache_key:
