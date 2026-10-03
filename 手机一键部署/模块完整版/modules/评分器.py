@@ -121,6 +121,16 @@ except ImportError:
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
     )
 
+# ============================================================================
+# 亡命（仙命）角色判定：安葬路径的死者卡。GUI 默认卡名"死者"，兼容
+# "亡命/仙命/亡人"称谓（用户可改卡名）。
+# ============================================================================
+WANGMING_ROLES = ('死者', '亡命', '仙命', '亡人')
+
+
+def _is_wangming_role(role):
+    return str(role or '').strip() in WANGMING_ROLES
+
 # H1 双族去重映射表（2026-10-01 用户拍板：Q1=甲 Q2=修造建除停 Q3=veto附文停 Q4=交集停/分歧挂账）
 # 语义：规则文本精确命中 tx 且当日 shensha_list 含 ss 名 → 该条仅展示、不计分。
 H1_ANCHOR_MAP = {
@@ -1227,28 +1237,28 @@ class Scorer:
             if sansha_info.get('year_sansha_month_fan'):
                 penalty = -30
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯月柱（-30分）')
+                total_sansha_detail.append('年三煞(月柱)（-30分）')
                 self.final_score += penalty
                 if '年三煞(月柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(月柱)')
             if sansha_info.get('year_sansha_day_fan'):
                 penalty = -30
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯日柱（-30分）')
+                total_sansha_detail.append('年三煞(日柱)（-30分）')
                 self.final_score += penalty
                 if '年三煞(日柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(日柱)')
             if sansha_info.get('year_sansha_hour_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯时柱（-20分）')
+                total_sansha_detail.append('年三煞(时柱)（-20分）')
                 self.final_score += penalty
                 if '年三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('年三煞(时柱)')
             if sansha_info.get('year_sansha_fan'):
                 penalty = -25
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞犯山向（-25分）')
+                total_sansha_detail.append('年三煞(山向)（-25分）')
                 self.final_score += penalty
                 if '年三煞(山向)' not in self.ji_list:
                     self.ji_list.append('年三煞(山向)')
@@ -1257,21 +1267,21 @@ class Scorer:
             if sansha_info.get('month_sansha_day_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯日柱（-20分）')
+                total_sansha_detail.append('月三煞(日柱)（-20分）')
                 self.final_score += penalty
                 if '月三煞(日柱)' not in self.ji_list:
                     self.ji_list.append('月三煞(日柱)')
             if sansha_info.get('month_sansha_hour_fan'):
                 penalty = -15
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯时柱（-15分）')
+                total_sansha_detail.append('月三煞(时柱)（-15分）')
                 self.final_score += penalty
                 if '月三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('月三煞(时柱)')
             if sansha_info.get('month_sansha_fan'):
                 penalty = -20
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('月三煞犯山向（-20分）')
+                total_sansha_detail.append('月三煞(山向)（-20分）')
                 self.final_score += penalty
                 if '月三煞(山向)' not in self.ji_list:
                     self.ji_list.append('月三煞(山向)')
@@ -1280,14 +1290,14 @@ class Scorer:
             if sansha_info.get('day_sansha_hour_fan'):
                 penalty = -10
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('日三煞犯时柱（-10分）')
+                total_sansha_detail.append('日三煞(时柱)（-10分）')
                 self.final_score += penalty
                 if '日三煞(时柱)' not in self.ji_list:
                     self.ji_list.append('日三煞(时柱)')
             if sansha_info.get('day_sansha_fan'):
                 penalty = -15
                 total_sansha_penalty += penalty
-                total_sansha_detail.append('日三煞犯山向（-15分）')
+                total_sansha_detail.append('日三煞(山向)（-15分）')
                 self.final_score += penalty
                 if '日三煞(山向)' not in self.ji_list:
                     self.ji_list.append('日三煞(山向)')
@@ -1298,7 +1308,7 @@ class Scorer:
                 penalty = -15
                 total_sansha_penalty += penalty
                 self.final_score += penalty
-                total_sansha_detail.append('月日三煞叠犯时柱（-15分）')
+                total_sansha_detail.append('月日三煞叠犯(时柱)（-15分）')
                 if '月日三煞叠犯(时柱)' not in self.ji_list:
                     self.ji_list.append('月日三煞叠犯(时柱)')
             
@@ -1537,7 +1547,7 @@ class Scorer:
             # 年三煞犯日柱（大忌；山向类按仅坐山论，日柱临方扣分不否决）
             if sansha_info.get('year_sansha_day_fan') and _spv:
                 sansha_fan_da_ji = True
-                sansha_fan_reason = '年三煞犯日柱'
+                sansha_fan_reason = '年三煞(日柱)'
             
             # 年三煞犯山向（大忌）
             if sansha_info.get('year_sansha_fan'):
@@ -1545,7 +1555,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯山向'
                 else:
-                    sansha_fan_reason = '年三煞犯山向'
+                    sansha_fan_reason = '年三煞(山向)'
             
             # 月三煞犯山向（大忌）
             if sansha_info.get('month_sansha_fan'):
@@ -1553,7 +1563,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、月三煞犯山向'
                 else:
-                    sansha_fan_reason = '月三煞犯山向'
+                    sansha_fan_reason = '月三煞(山向)'
             
             # 日三煞犯山向（较轻，不列为大忌）
             # 根据三煞避忌原则：日三煞管时柱，山向犯日三煞相对较轻，不一票否决
@@ -1564,7 +1574,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯月柱'
                 else:
-                    sansha_fan_reason = '年三煞犯月柱'
+                    sansha_fan_reason = '年三煞(月柱)'
 
             # 年三煞犯时柱（嫁娶等事主中心事项大忌，犯即否决；
             # 修造/动土/入宅/安葬等山向中心事项按"仅坐山修方论"，时支临三煞方
@@ -1574,7 +1584,7 @@ class Scorer:
                 if sansha_fan_reason:
                     sansha_fan_reason += '、年三煞犯时柱'
                 else:
-                    sansha_fan_reason = '年三煞犯时柱'
+                    sansha_fan_reason = '年三煞(时柱)'
 
             # 硬性否决原因（供显示层明确提示，避免只显示模糊门槛文案）
             veto_reasons = []
@@ -1695,10 +1705,12 @@ class Scorer:
                         self.level = '❌ 凶'
                         score_details['总分'] = 0
 
+            wangming_info = self._build_wangming_info(owners)
             return {
                 'score': self.final_score,
                 'level': self.level,
-                'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score, owner_matches, sun_moon_info),
+                'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score, owner_matches, sun_moon_info, wangming_info),
+                'wangming_info': wangming_info,
                 'shensha_list': self.shensha_list,
                 'yi_list': self.yi_list,
                 'ji_list': self.ji_list,
@@ -1938,7 +1950,22 @@ class Scorer:
                                                owner.get('birth_minute', 0),
                                                longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
-                    
+
+                    # 亡命（仙命）流年关系：一律降为提示（不扣分、不否决），
+                    # 2026-10-04 用户拍板；年层仙命口径留待第二阶段。
+                    if _is_wangming_role(owner.get('role', '')):
+                        _wm_tip = ''
+                        if self.check_liuchong(year_zhi, owner_year_zhi): _wm_tip = '六冲'
+                        elif self.check_po(year_zhi, owner_year_zhi): _wm_tip = '相破'
+                        elif self.check_xing(year_zhi, owner_year_zhi): _wm_tip = '相刑'
+                        elif self.check_hai(year_zhi, owner_year_zhi): _wm_tip = '相害'
+                        elif self.check_liuhe(year_zhi, owner_year_zhi): _wm_tip = '六合'
+                        elif self.check_sanhe([year_zhi, owner_year_zhi]): _wm_tip = '三合'
+                        if _wm_tip:
+                            analysis.setdefault('info_reasons', []).append(
+                                f"提示：流年与亡命（仙命）{owner['name']}年命{owner_year_zhi}{_wm_tip}")
+                        continue
+
                     # 2026-09 作灶主事人模式：辅助者（半权重）年命六冲不降否决，冲刑破害/合化半权重
                     _zz_w = owner.get('_zaozhu_weight', None)
                     _zz_aux = _event_profile(event_type)['zaozhu_half'] and _zz_w is not None and float(_zz_w) < 1.0
@@ -2290,7 +2317,22 @@ class Scorer:
                                                owner.get('birth_minute', 0),
                                                longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
-                    
+
+                    # 亡命（仙命）月支关系：一律降为提示（不扣分、不否决），
+                    # 2026-10-04 用户拍板；月份层仙命口径留待第二阶段。
+                    if _is_wangming_role(owner.get('role', '')):
+                        _wm_tip = ''
+                        if self.check_liuchong(month_zhi, owner_year_zhi): _wm_tip = '相冲'
+                        elif self.check_po(month_zhi, owner_year_zhi): _wm_tip = '相破'
+                        elif self.check_xing(month_zhi, owner_year_zhi): _wm_tip = '相刑'
+                        elif self.check_liuhai(month_zhi, owner_year_zhi): _wm_tip = '相害'
+                        elif self.check_liuhe(month_zhi, owner_year_zhi): _wm_tip = '六合'
+                        elif self.check_sanhe([month_zhi, owner_year_zhi]): _wm_tip = '三合'
+                        if _wm_tip:
+                            analysis.setdefault('info_reasons', []).append(
+                                f"提示：月支与亡命（仙命）{owner['name']}年命{owner_year_zhi}{_wm_tip}")
+                        continue
+
                     # 2026-09 作灶主事人模式：辅助者（半权重）月支六冲不降否决，冲刑破害/合化半权重
                     _zz_w = owner.get('_zaozhu_weight', None)
                     _zz_aux = _event_profile(event_type)['zaozhu_half'] and _zz_w is not None and float(_zz_w) < 1.0
@@ -3782,6 +3824,47 @@ class Scorer:
                 veto_list.append(f"日课日支{day_zhi}冲{name}日支{owner_day_zhi}（冲夫妻宫，婚嫁大忌）")
         return veto_list
 
+    def _build_wangming_info(self, owners):
+        """构造亡命（仙命）信息：年柱干支 + 纳音名 + 纳音五行。
+
+        安葬路径专用；纳音表复用 modules/二十四山.py 的
+        NAYIN_NAMES/NAYIN_WUXING（六十甲子纳音，分金通道同源数据）。
+        无死者卡 / 无生辰 → None（旧方案兼容，下游按缺省处理）。
+        """
+        if not owners:
+            return None
+        for owner in owners:
+            if not _is_wangming_role(owner.get('role', '')):
+                continue
+            year_gz = ''
+            if owner.get('sizhu'):
+                _parts = str(owner['sizhu']).split()
+                if _parts:
+                    year_gz = _parts[0]
+            if not year_gz and owner.get('birth_date'):
+                try:
+                    from .四柱计算器 import calculate_sizhu
+                    _osz = calculate_sizhu(
+                        owner['birth_date'],
+                        owner.get('birth_hour', 12),
+                        owner.get('birth_minute', 0),
+                        longitude=owner.get('birth_longitude'))
+                    year_gz = (_osz.get('year_gan', '')
+                               + _osz.get('year_zhi', ''))
+                except Exception as e:
+                    logger.error(f"亡命年柱计算失败: {str(e)}")
+            try:
+                from .二十四山 import NAYIN_NAMES, NAYIN_WUXING
+            except ImportError:
+                from 二十四山 import NAYIN_NAMES, NAYIN_WUXING
+            return {
+                'name': owner.get('name', ''),
+                '年柱': year_gz,
+                '纳音': NAYIN_NAMES.get(year_gz, '未知'),
+                '五行': NAYIN_WUXING.get(year_gz, '未知'),
+            }
+        return None
+
     def _check_owner_day_zhichong(self, sizhu, owners):
         """
         检查日课日支与事主日支的冲合关系（相主原则）
@@ -3814,7 +3897,10 @@ class Scorer:
         
         for idx, owner in enumerate(owners):
             owner_name = owner.get('name', f'事主{idx+1}')
-            
+            # 亡命（仙命）：年命六冲/自刑降为"须制化"大扣分（不一票否决，
+            # 2026-10-04 用户拍板）；不论亡命日柱、不论月时支冲、不论流年冲。
+            _is_wm = _is_wangming_role(owner.get('role', ''))
+
             # 2026-09 作灶主事人模式：辅助者（半权重）冲刑不降否决、扣分减半
             _zz_w = owner.get('_zaozhu_weight', None)
             _zz_w = float(_zz_w) if _zz_w is not None else 1.0
@@ -3860,13 +3946,19 @@ class Scorer:
                     if check_liuchong(day_zhi, owner_year_zhi):
                         score = -30  # 生肖相冲更严重
                         total_score += score
-                        details.append(f"[硬性门槛]{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}六冲（年命六冲），不可用，{score}分")
+                        if _is_wm:
+                            details.append(f"{owner_name}年命（仙命）{owner_year_zhi}与日课日支{day_zhi}真冲（仙命大忌，须见吉神制化），{score}分")
+                        else:
+                            details.append(f"[硬性门槛]{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}六冲（年命六冲），不可用，{score}分")
                     # 自刑检查（三档口径·档3：年命与日课日支辰午酉亥同支自刑。
                     # 辰午酉亥自刑出自《三命通会》三刑之说 → 一票否决，-25）
                     elif day_zhi == owner_year_zhi and day_zhi in ('辰', '午', '酉', '亥'):
                         score = -25
                         total_score += score
-                        details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}自刑，不可用，{score}分")
+                        if _is_wm:
+                            details.append(f"{owner_name}年命（仙命）{owner_year_zhi}与日课日支{day_zhi}自刑（须见吉神制化），{score}分")
+                        else:
+                            details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}自刑，不可用，{score}分")
                     # 三刑检查（包括自刑）
                     elif check_xing(day_zhi, owner_year_zhi):
                         score = -25  # 生肖相刑严重
@@ -3898,7 +3990,7 @@ class Scorer:
                 # 与日课日支的冲/自刑降为普通扣分（日元为辅，有制化余地）。
                 # 嫁娶另由 _check_marriage_day_chong 独立判"冲夫妻宫"大忌并归零，
                 # 不受此处降级影响。
-                if owner_day_zhi and owner_day_zhi != owner_year_zhi:  # 避免重复检查
+                if owner_day_zhi and owner_day_zhi != owner_year_zhi and not _is_wm:  # 亡命只论年命，不论日柱
                     # 六冲（扣分不否决；-20）
                     if check_liuchong(day_zhi, owner_day_zhi):
                         score = -20
@@ -3940,11 +4032,11 @@ class Scorer:
                 # 对齐既有相害 -10 档。年支档（流年冲太岁）在本函数末段统一处理。
                 _xz_mz = sizhu.get('month_zhi', '')
                 _xz_hz = sizhu.get('hour_zhi', '')
-                if owner_year_zhi and _xz_mz and check_liuchong(_xz_mz, owner_year_zhi):
+                if owner_year_zhi and _xz_mz and not _is_wm and check_liuchong(_xz_mz, owner_year_zhi):
                     score = -15
                     total_score += score
                     details.append(f"{owner_name}年命{owner_year_zhi}与日课月支{_xz_mz}六冲（月柱冲年命，扣分不否决），{score}分")
-                if owner_year_zhi and _xz_hz and check_liuchong(_xz_hz, owner_year_zhi):
+                if owner_year_zhi and _xz_hz and not _is_wm and check_liuchong(_xz_hz, owner_year_zhi):
                     score = -10
                     total_score += score
                     details.append(f"{owner_name}年命{owner_year_zhi}与日课时支{_xz_hz}六冲（时柱冲年命，扣分不否决），{score}分")
@@ -3966,6 +4058,8 @@ class Scorer:
             year_zhi = ''
         if year_zhi:
             for idx, owner in enumerate(owners):
+                if _is_wangming_role(owner.get('role', '')):
+                    continue  # 亡命不论流年冲太岁
                 owner_name = owner.get('name', f'事主{idx+1}')
                 owner_year_zhi = ''
                 if 'sizhu' in owner:
@@ -5274,7 +5368,7 @@ class Scorer:
             return '月令：气弱，需后天补救'
         return '月令：失令，日主乏力'
 
-    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None, sun_moon_info=None):
+    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None, sun_moon_info=None, wangming_info=None):
         """
         生成评分理由
 
@@ -5285,6 +5379,7 @@ class Scorer:
             xishen_score: 喜用神匹配评分
             owner_matches: 每个事主的详细匹配信息
             sun_moon_info: 太阳太阴到山到向信息
+            wangming_info: 亡命（仙命）信息（安葬专用）
 
         Returns:
             str: 评分理由
@@ -5334,7 +5429,14 @@ class Scorer:
             reason.append(f"喜用神：日课对事主补益有限")
         elif xishen_score == 0:
             reason.append(f"喜用神：日课与事主八字无明显冲突")
-        
+
+        # 亡命（仙命）信息段（安葬专用；六冲等忌由相主通道计入，此处只展示仙命）
+        if wangming_info and wangming_info.get('年柱'):
+            reason.append(
+                f"亡命（仙命）：{wangming_info.get('name') or '亡者'}，"
+                f"{wangming_info['年柱']}年生，"
+                f"{wangming_info['纳音']}命（{wangming_info['五行']}）")
+
         # 每个事主的详细分析
         if owner_matches:
             for match in owner_matches:

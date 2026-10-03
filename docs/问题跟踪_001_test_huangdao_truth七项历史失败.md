@@ -4455,3 +4455,57 @@ K 方案用户选 **K1**。值日大黄道《协纪》唯「月建起」一口�
 - modules/今日黄历.py 三层字节一致（SHA256 前 16 位）：`3c43df26d36c532b`。
 - 产品代码×3 层 + tests/verify_k_zhiri_koujing.py + K 方案文档 + §58 本节，
   独立 commit（与 J2 可独立回滚）。
+
+---
+
+## §59 安葬仙命（亡命纳音）核心·第一阶段（2026-10-04，用户拍板分阶段实施）
+
+### 59.1 背景定位
+
+- P0-① 安葬定向探查（§验证地图）结论：软件安葬为 **C 部分实现**——"扶山＋孝子相主
+  ＋鸣吠重丧"山向体系完整；亡命（仙命）维度全空（纳音不显示、仙命真冲无独立语义、
+  月支破刑死者走否决）。
+- 用户拍板：分阶段先做纳音核心（不做仙命×坐山纳音适配，留第二阶段）。
+- 口径裁决：① 仙命年命×日支六冲，由硬否决降为 **-30 大扣分、须见吉神制化**（不否决）；
+  ② 月支/流年与亡命破刑等一律降为**提示**（不扣分、不否决）。
+
+### 59.2 改动清单（主源：主仓根层 modules/评分器.py）
+
+1. 模块级 `WANGMING_ROLES=('死者','亡命','仙命','亡人')` + `_is_wangming_role()`；
+2. 新增方法 `Scorer._build_wangming_info(owners)`：年柱干支＋纳音名＋纳音五行，
+   纳音表**复用 modules/二十四山.py NAYIN_NAMES/NAYIN_WUXING**（六十甲子纳音同源，不重复造表）；
+3. `_check_owner_day_zhichong`：死者六冲/自刑文案改"仙命…须见吉神制化"、
+   去掉 `[硬性门槛]` 前缀（自然不进相主否决）；死者不论日柱、月时支冲、流年冲；
+4. `analyze_month`/`analyze_year`：死者关系进 `info_reasons` 提示、不扣分；
+5. `_generate_reason` 新增 wangming_info 参数，喜用神段后插入亡命信息段；
+6. 正常返回 dict 增加 `wangming_info` 键。
+
+### 59.3 陷阱与边界
+
+- **已知限制**：一票否决的提前返回路径（五行门槛/年月不宜/忌事否决等 6+ 处）
+  不带 wangming_info；veto 日本身仅渲染单行否决，无亡命段。留待收口阶段统一，
+  下游一律 `.get('wangming_info')` 读取（旧方案缺键兼容）。
+- 01-05 乙酉仙命案例：六冲降级后仍凶，但否决理由换成独立五行总分门槛
+  （该日无吉神制化）——"可制化 ≠ 该日可用"，符合口径。
+- test_huangdao_truth 两项失败（J-02/J-04）经 git stash 隔离验证：
+  亡命改动前同样失败，属规则演进历史漂移（shensha_list 负分项旧锁），
+  与本次无关，P0 后随 0111 观察项统一处理。
+- I-05 GOLD（'月三煞犯日柱'旧明细文本）系 §E008 命名统一（884fd04）漏改基准，本次补齐。
+
+### 59.4 验证 / SHA
+
+- tests/verify_wangming_nayin.py **ALL PASS**（纳音30组独立权威双向断言＋
+  5 样本仙命信息＋真冲口径正反案例＋制化案例＋月层提示＋兼容性）；
+- 回归：test_core 0 / test_business_logic 0 / test_integration 0；
+  test_huangdao_truth 仅剩 J-02/J-04 两项历史漂移；
+- 单文件整合器 --smoke：SMOKE_OK；
+- modules/评分器.py 现存副本 SHA 逐字一致（git blob）：
+  主仓根/手机/模块完整版 + 统一版根 = `cd7119f411cb`；
+- tests（test_huangdao_truth.py/verify_wangming_nayin.py）同步统一版仓，
+  test_huangdao_truth SHA `b927bd9fe1b2`；统一版仓 verify ALL PASS。
+
+### 59.5 commit
+
+- 主仓：产品代码×3 层 + tests×2 + §59 本节，独立 commit；
+- 统一版仓：独立 git 身份独立 commit。
+
