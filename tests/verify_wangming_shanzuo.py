@@ -11,6 +11,8 @@
 §1c 等级封顶（§59.9）：坐山克仙命等级封顶"❌ 凶"，无论制化与否
 §2b 双凶叠加（§59.10）：日支真冲＋坐山克同日 → 强制 VETO，
    即使两边都有制化；文案明示两凶各自制化状态（4 状态组合断言）
+§F fixture 数据驱动回归（2.3）：加载 fixtures/wangming_shanzuo/
+   下 JSON 用例，纯函数 + 集成双层断言（格式见 _schema.json）
 
 退出码：全过 0，失败 1。
 """
@@ -285,6 +287,67 @@ check('反向：甲子×甲山（仙命克坐山）等级不含坐山克封顶�
       (r_other.get('shanzuo_eval') or {}).get('relation') == '仙命克坐山'
       and '坐山克仙命' not in r_other.get('level', '')
       and '可用须谨慎' not in r_other.get('reason', ''))
+
+# ---------------------------------------------------------------------------
+# §F fixture 数据驱动回归（2.3，tests/fixtures/wangming_shanzuo/）
+# 格式见 _schema.json；案例文件不以下划线开头
+# ---------------------------------------------------------------------------
+print('== F. fixture 数据驱动回归（fixtures/wangming_shanzuo/）==')
+import glob  # noqa: E402
+import json  # noqa: E402
+_FIX_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         'fixtures', 'wangming_shanzuo')
+_fix_files = sorted(
+    p for p in glob.glob(os.path.join(_FIX_ROOT, '**', '*.json'), recursive=True)
+    if not os.path.basename(p).startswith('_'))
+
+
+def _fix_report(case):
+    """按 fixture input 调评分器生成集成报告（午时正午，与内联矩阵同口径）。"""
+    inp = case['input']
+    d0 = dt.date.fromisoformat(inp['date'])
+    sz = calculate_sizhu(d0, 12, 0)
+    sz.update({'year': d0.year, 'month': d0.month, 'day': d0.day, 'date': d0})
+    owners = []
+    if inp.get('wangming_birth_date'):
+        owners.append({'name': inp.get('wangming_ganzhi', '亡命'),
+                       'role': '死者', '性别': '男',
+                       'birth_date': inp['wangming_birth_date']})
+    return calculate_score(sz, inp.get('event', '安葬'), owners, None,
+                           inp.get('shanzuo'), None, None, None)
+
+
+for _fp in _fix_files:
+    with open(_fp, encoding='utf-8') as _f:
+        case = json.load(_f)
+    cid = case.get('case_id', os.path.basename(_fp))
+    inp, exp = case['input'], case['expected']
+    errs = []
+    r = evaluate_wangming_vs_shanzuo(inp['wangming_nayin_wuxing'],
+                                     inp['shanzuo_wuxing'])
+    for k in ('relation', 'score', 'level'):
+        if k in exp and r[k] != exp[k]:
+            errs.append(f'{k}: {r[k]!r}!={exp[k]!r}')
+    for kw in exp.get('reason_contains', []):
+        if kw not in r['reason']:
+            errs.append(f'reason缺{kw!r}')
+    # 集成断言：带日期 + 亡命生日时跑评分器
+    if inp.get('date') and inp.get('wangming_birth_date'):
+        rep = _fix_report(case)
+        if 'veto' in exp and bool(rep.get('veto_reasons')) != exp['veto']:
+            errs.append(f"veto: {bool(rep.get('veto_reasons'))}!={exp['veto']}")
+        if exp.get('level_cap') and not str(rep.get('level', '')).startswith('❌ 凶'):
+            errs.append('封顶未生效')
+        if 'report_level' in exp and rep.get('level') != exp['report_level']:
+            errs.append(f"report_level: {rep.get('level')!r}!={exp['report_level']!r}")
+        if 'final_score' in exp and rep.get('score') != exp['final_score']:
+            errs.append(f"final: {rep.get('score')}!={exp['final_score']}")
+    check(f"fixture {cid} {case.get('description', '')}", not errs)
+    if errs:
+        for e in errs:
+            print('       - ' + e)
+if not _fix_files:
+    print('  （fixture 暂无案例，等待 commit 2 归档 27 组）')
 
 print('=' * 60)
 print(f'PASS {len(PASS)}  FAIL {len(FAIL)}')
