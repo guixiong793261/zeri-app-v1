@@ -4806,6 +4806,12 @@ test_huangdao_truth 仍仅历史基线 J-02/J-04 两项失败（嫁娶校准项�
 统一版仓根 1 份＝4 份代码；tests 仅两仓根各 1 份，照 shanzuo 先例
 手机副本不带 tests。）
 
-commit 回填：（分批 commit 后补）
+commit 回填：
+- 主仓（main，4 批）：引擎 8fbf2a4（评分器+二十四山×3副本）→
+  verify 2f83a14 → UI 308f38e（主程序×3副本）→ 文档 cce0be0。
+- 统一版仓（master，身份 Zeri App Developer，4 批，仅仓根一份）：
+  引擎 e8ce956 → verify 374530e → UI 9089965 → 文档 b607360。
+  该仓在途的玉皇星辰引擎/展示机、verify_day_pillar 改动与本次
+  无关，未纳入、原样保留。
 
 
