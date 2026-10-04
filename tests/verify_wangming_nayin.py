@@ -160,6 +160,14 @@ check('月支破亡命不扣分（score 无 -15 破罚）',
 check('月支破亡命进 info_reasons 提示且标注临时降级',
       any('相破' in r_ and '亡命' in r_ and '第一阶段临时降级' in r_
           for r_ in (ma.get('info_reasons') or [])))
+# 月支害降档（P0-2）：2026-01-06 起月支丑，丑午相害 → 午年命得"轻微提示"
+_d0106 = dt.date(2026, 1, 6)
+ma_h = Scorer().analyze_month(
+    _d0106, '安葬', [dead('庚午命', '1930-03-01')], None, None,
+    day_sizhu=calculate_sizhu(_d0106, 12, 0), zeli_mode='feixing')
+check('月支害亡命 → "轻微提示"（与破/刑分档）',
+      any('相害' in r_ and r_.startswith('轻微提示')
+          for r_ in (ma_h.get('info_reasons') or [])))
 
 print('== 5. 流年（太岁）层：冲否 / 破刑害提示 ==')
 # analyze_year 整数年 2026 = 丙午年：子 wm 冲午太岁 → 岁破级否决
@@ -173,7 +181,14 @@ ya2 = Scorer().analyze_year(2026, '安葬', [dead('己卯命', '1939-03-01')], N
 check('流年破亡命 → 临时降级提示、不否决',
       ya2.get('suitable') is True
       and any('相破' in r and '第一阶段临时降级' in r
+              and not r.startswith('轻微提示')
               for r in (ya2.get('info_reasons') or [])))
+# 丑午害 → 降档"轻微提示"（P0-2：害<破<刑<冲）
+ya3 = Scorer().analyze_year(2026, '安葬', [dead('丁丑命', '1937-03-01')], None)
+check('流年害亡命 → "轻微提示"、不否决',
+      ya3.get('suitable') is True
+      and any('相害' in r and r.startswith('轻微提示')
+              for r in (ya3.get('info_reasons') or [])))
 # sizhu 直传路径双保险：2026-01-19（年支巳）乙亥仙命 → 相主硬门槛否决
 r_yc = pure_score(D0119, [dead('乙亥命', '1935-03-01')])
 check('sizhu 直传：仙命冲太岁走相主硬门槛否决',

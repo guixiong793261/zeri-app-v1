@@ -2013,8 +2013,10 @@ class Scorer:
                         elif self.check_liuhe(year_zhi, owner_year_zhi): _wm_tip = '六合'
                         elif self.check_sanhe([year_zhi, owner_year_zhi]): _wm_tip = '三合'
                         if _wm_tip:
+                            # 害独立降档为"轻微提示"（害<破<刑<冲，P0-2 口径修正）
+                            _tip_head = ('轻微提示' if _wm_tip == '相害' else '提示')
                             analysis.setdefault('info_reasons', []).append(
-                                f"提示（第一阶段临时降级，第二阶段重估）：流年与亡命（仙命）"
+                                f"{_tip_head}（第一阶段临时降级，第二阶段重估）：流年与亡命（仙命）"
                                 f"{owner['name']}年命{owner_year_zhi}{_wm_tip}")
                         continue
 
@@ -2387,8 +2389,10 @@ class Scorer:
                         elif self.check_liuhe(month_zhi, owner_year_zhi): _wm_tip = '六合'
                         elif self.check_sanhe([month_zhi, owner_year_zhi]): _wm_tip = '三合'
                         if _wm_tip:
+                            # 害独立降档为"轻微提示"（害<破<刑<冲，P0-2 口径修正）
+                            _tip_head = ('轻微提示' if _wm_tip == '相害' else '提示')
                             analysis.setdefault('info_reasons', []).append(
-                                f"提示（第一阶段临时降级，第二阶段重估）：月支与亡命（仙命）"
+                                f"{_tip_head}（第一阶段临时降级，第二阶段重估）：月支与亡命（仙命）"
                                 f"{owner['name']}年命{owner_year_zhi}{_wm_tip}")
                         continue
 
