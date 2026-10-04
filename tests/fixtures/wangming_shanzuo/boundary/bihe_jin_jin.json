@@ -1,0 +1,29 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "bihe_jin_jin",
+  "category": "boundary",
+  "description": "边界1：甲子海中金 × 庚山（金）→ 金金比和",
+  "input": {
+    "wangming_ganzhi": "甲子",
+    "wangming_nayin": "海中金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "庚山甲向",
+    "shanzuo_wuxing": "金",
+    "date": "2025-02-09",
+    "wangming_birth_date": "1924-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "同气相求；比和暂0分（§59.7/§59.8 待调项）；无否决；final=0 系五行/三煞等各项扣减后总分钳至下限，非否决清零"
+}
