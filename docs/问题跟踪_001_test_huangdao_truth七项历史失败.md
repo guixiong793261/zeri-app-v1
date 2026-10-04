@@ -4575,3 +4575,35 @@ verify 补年层（丁丑×丙午丑午害）/月层（庚午×丑月）断言�
    TODO(第二阶段)：24山×3兼向独立判定必要性评估——兼向纳音可能与主山不同
    （如坤山兼未 vs 坤山兼申），当前复用主山是简化，未来按实际案例决定是否独立。
 
+### 59.8 第二阶段 2.1 落地小节（2026-10-04）
+
+**判定函数独立（commit 2b0e3d1）**
+- `evaluate_wangming_vs_shanzuo(wangming_nayin_wuxing, shanzuo_wuxing)` 模块级新增；
+  返回 {relation, score, level, reason}；五行判定与方向判定分离（WuxingRelation
+  is_bihe/is_sheng/is_ke 有向布尔，不做字符串解析）；纯函数可独立测试。
+- 分值梯度：坐山生仙命+20 / 仙命生坐山+10 / 比和0 / 仙命克坐山-15 / 坐山克仙命-30。
+- 单测 25 组五行组合 + 2 组异常输入全 PASS。
+
+**接入评分器 + 叠忌否决（commit df5d0b4）**
+- shanzuo_eval 构建：安葬路径且有山向时取主山五行（`str(shan_xiang)[0]`，兼向复用
+  主山），调判定函数并补 '坐山'/'坐山五行' 键；总分公式并入 shanzuo_score；
+  score_details 增 '仙命坐山得分'/'仙命坐山详情'；返回 dict 增 'shanzuo_eval'；
+  _generate_reason 亡命段后追加"仙命×坐山：…"段。
+- 坐山克仙命三级判定（与仙命真冲同构复用）：
+  叠重煞 → 直接否决（"坐山克仙命叠大忌"）；无化解吉神 → 一票否决（"坐山克仙命
+  无制化"）；有制化 → WARN 并在 reason 标注"（有制化：…）"。
+  其余 4 档（坐山生/仙命生/比和/仙命克）仅影响总分，不单独否决。
+- 公共函数抽取：`_check_veto_overlay(sansha_info)` 查 ji_list 文本 + sansha_info
+  标志位（年/月三煞含日时犯；日三煞犯山向较轻不算叠忌）；`_detect_wm_resolvers`
+  查宽集化解吉神（天德/月德/岁德含德合/太阳到山/天赦/天愿/三合/六合）。
+- 验证：verify_wangming_shanzuo.py ALL PASS 63/0；25 组矩阵 relation/score/level
+  全对 + 5 组坐山克仙命否决触发；三级场景 A（叠忌直否）/B（无制化否决）/C（有制化
+  WARN，总分>0）通过；回归：verify_wangming_nayin ALL PASS、嫁娶 4 日期基线分值不变
+  （shanzuo_eval=None）、安葬第一阶段 5 天无新增误报、fixtures A 段 3 例一致、
+  test_core 27 OK / test_business_logic 20 OK / test_integration 52/52、
+  test_huangdao_truth 仅 J-02/J-04 历史基线失败。
+- 统一版（专业择日大师_统一版）verify_wangming_shanzuo.py ALL PASS 63/0；
+  评分器 3 副本 + 主仓 SHA256 一致。
+
+**遗留 TODO**：比和暂 0 分简化，若实际案例偏中性偏弱后续改小加分如 +5（见 59.7）。
+
