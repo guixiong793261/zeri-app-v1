@@ -1576,6 +1576,26 @@ class Scorer:
             # 仙命信息提前构建（三级判定 + 返回块共用）
             wangming_info = self._build_wangming_info(owners)
 
+            # 仙命×坐山纳音生克（第二阶段 2.1，2026-10-04 拍板）：
+            # 仅安葬路径（有亡命卡）且有山向时启用；兼向复用主山五行。
+            shanzuo_eval = None
+            if wangming_info and shan_xiang:
+                _zuoshan = str(shan_xiang)[0] if str(shan_xiang) else ''
+                _sz_info = None
+                if _zuoshan:
+                    try:
+                        from .二十四山 import get_mountain_info
+                    except ImportError:
+                        from 二十四山 import get_mountain_info
+                    _sz_info = get_mountain_info(_zuoshan)
+                _sz_wx = (_sz_info or {}).get('wuxing', '')
+                if _sz_wx:
+                    shanzuo_eval = evaluate_wangming_vs_shanzuo(
+                        wangming_info.get('五行', ''), _sz_wx)
+                    shanzuo_eval['坐山'] = _zuoshan
+                    shanzuo_eval['坐山五行'] = _sz_wx
+            shanzuo_score = (shanzuo_eval or {}).get('score', 0)
+
             # 相主硬性门槛：命主年支/日支与日课日支六冲或自刑 → 一票否决
             xiangzhu_veto_items = [str(d) for d in xiangzhu_details if str(d).startswith('[硬性门槛]')]
 
@@ -1597,7 +1617,7 @@ class Scorer:
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
             # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
             # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0)
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + shanzuo_score
 
             # 不设置分数上限，显示实际计算的总分
 
@@ -1674,8 +1694,7 @@ class Scorer:
             _wm_gz = wangming_info.get('年柱', '') if wangming_info else ''
             _day_zhi = sizhu.get('day_zhi', '')
             if _wm_gz and self.check_liuchong(_day_zhi, _wm_gz[1]):
-                _ji_blob = ' '.join(str(j) for j in self.ji_list)
-                _heavy = [k for k in ('三煞', '岁破', '月破', '日破') if k in _ji_blob]
+                _heavy = self._check_veto_overlay(sansha_info)
                 if _heavy:
                     wangming_veto = (
                         f"仙命真冲叠大忌：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
@@ -1696,7 +1715,37 @@ class Scorer:
                 if wangming_veto:
                     veto_reasons.append(wangming_veto)
 
-            if sansha_fan_da_ji or xiangzhu_veto_items or sansha_info.get('mountain_blocked') or wangming_veto:
+            # 仙命×坐山纳音三级判定（第二阶段 2.1）：
+            #   坐山克仙命（地克人/地不容此命）= 凶中之凶，复用同套叠忌/化解检查
+            #     叠重煞 → 直接否决；无化解吉神 → 一票否决；有吉神 → WARN
+            #   其余 4 档（坐山生/仙命生/比和/仙命克）仅影响总分，不单独否决
+            shanzuo_veto = ''
+            if shanzuo_eval and shanzuo_eval.get('relation') == '坐山克仙命':
+                _heavy = self._check_veto_overlay(sansha_info)
+                if _heavy:
+                    shanzuo_veto = (
+                        f"坐山克仙命叠大忌：坐山{shanzuo_eval['坐山']}五行属"
+                        f"{shanzuo_eval['坐山五行']}，克亡命{wangming_info['name']}"
+                        f"纳音{wangming_info['纳音']}（{wangming_info['五行']}），"
+                        f"地不容此命，叠{'/'.join(_heavy)}，大忌不用（一票否决）")
+                else:
+                    _resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
+                    if _resolvers:
+                        # 有制化：坐山克仙命仅扣分；标注"有制化：…"
+                        shanzuo_eval['_with_huajie'] = True
+                        shanzuo_eval['reason'] += f"（有制化：{'、'.join(_resolvers)}）"
+                    else:
+                        shanzuo_veto = (
+                            f"坐山克仙命无制化：坐山{shanzuo_eval['坐山']}五行属"
+                            f"{shanzuo_eval['坐山五行']}，克亡命{wangming_info['name']}"
+                            f"纳音{wangming_info['纳音']}（{wangming_info['五行']}），"
+                            f"地不容此命，四柱无天德/月德/岁德/太阳到山/天赦/天愿/"
+                            f"三合/六合等吉神制化，大忌不用（一票否决）")
+                if shanzuo_veto:
+                    veto_reasons.append(shanzuo_veto)
+
+            if (sansha_fan_da_ji or xiangzhu_veto_items
+                    or sansha_info.get('mountain_blocked') or wangming_veto or shanzuo_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -1748,6 +1797,11 @@ class Scorer:
             # 添加相主详情
             if xiangzhu_details:
                 score_details['相主详情'] = xiangzhu_details
+
+            # 仙命×坐山纳音生克（第二阶段 2.1）
+            if shanzuo_eval:
+                score_details['仙命坐山得分'] = shanzuo_score
+                score_details['仙命坐山详情'] = shanzuo_eval.get('reason', '')
 
             # 添加月令详细得分
             wangxiang_score = self._calculate_wangxiang(sizhu)
@@ -1804,8 +1858,9 @@ class Scorer:
             return {
                 'score': self.final_score,
                 'level': self.level,
-                'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score, owner_matches, sun_moon_info, wangming_info),
+                'reason': self._generate_reason(wu_xing_result, self.huangdao_info, yueling_score, xishen_score, owner_matches, sun_moon_info, wangming_info, shanzuo_eval),
                 'wangming_info': wangming_info,
+                'shanzuo_eval': shanzuo_eval,
                 'shensha_list': self.shensha_list,
                 'yi_list': self.yi_list,
                 'ji_list': self.ji_list,
@@ -3980,6 +4035,32 @@ class Scorer:
                 hits.append('太阳到山')
         return hits
 
+    def _check_veto_overlay(self, sansha_info=None):
+        """仙命系三级判定的"叠重煞"检查（公共函数，2026-10-04 拍板抽取）。
+
+        仙命真冲、坐山克仙命共用：命中三煞/岁破/月破/日破任一 → 返回命中键名
+        列表（触发直接否决，有制化也不救）；无 → []。
+        来源：
+        1. ji_list 文本（岁破/月破/日破/三煞）
+        2. sansha_info 标志位（年/月三煞犯山向或犯日柱/月柱/时柱；
+           日三煞犯山向按既有口径较轻，不算叠忌）
+        """
+        hits = []
+        _ji_blob = ' '.join(str(j) for j in self.ji_list)
+        for k in ('三煞', '岁破', '月破', '日破'):
+            if k in _ji_blob:
+                hits.append(k)
+        if isinstance(sansha_info, dict):
+            _ss_flags = (
+                'year_sansha_fan', 'month_sansha_fan',
+                'year_sansha_day_fan', 'year_sansha_month_fan',
+                'year_sansha_hour_fan', 'month_sansha_day_fan',
+                'month_sansha_hour_fan',
+            )
+            if any(sansha_info.get(f) for f in _ss_flags) and '三煞' not in hits:
+                hits.append('三煞')
+        return hits
+
     def _build_wangming_info(self, owners):
         """构造亡命（仙命）信息：年柱干支 + 纳音名 + 纳音五行。
 
@@ -5545,7 +5626,7 @@ class Scorer:
             return '月令：气弱，需后天补救'
         return '月令：失令，日主乏力'
 
-    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None, sun_moon_info=None, wangming_info=None):
+    def _generate_reason(self, wu_xing_result, huangdao_info, yueling_score, xishen_score=0, owner_matches=None, sun_moon_info=None, wangming_info=None, shanzuo_eval=None):
         """
         生成评分理由
 
@@ -5557,6 +5638,7 @@ class Scorer:
             owner_matches: 每个事主的详细匹配信息
             sun_moon_info: 太阳太阴到山到向信息
             wangming_info: 亡命（仙命）信息（安葬专用）
+            shanzuo_eval: 仙命×坐山纳音生克（第二阶段 2.1）
 
         Returns:
             str: 评分理由
@@ -5613,6 +5695,11 @@ class Scorer:
                 f"亡命（仙命）：{wangming_info.get('name') or '亡者'}，"
                 f"{wangming_info['年柱']}年生，"
                 f"{wangming_info['纳音']}命（{wangming_info['五行']}）")
+        # 仙命×坐山纳音生克段（第二阶段 2.1）
+        if shanzuo_eval and shanzuo_eval.get('relation') != '未知':
+            reason.append(
+                f"仙命×坐山：{shanzuo_eval['reason']}"
+                f"（{shanzuo_eval['score']:+d}分）")
 
         # 每个事主的详细分析
         if owner_matches:
