@@ -1242,8 +1242,10 @@ class ZeriApp:
             # 兼向选择（改为下拉菜单）
             ttk.Label(self.special_frame, text="兼向：").grid(row=0, column=4, sticky=tk.W, padx=5)
             self.jian_xiang = tk.StringVar()
+            # §59.13 拍板②兜底3：可下拉选环序兼向，也可手动输入"兼X"（如"兼亥"）
+            # 覆盖系统环序映射；非相邻山由引擎标记为"手动覆盖"
             self.jian_xiang_combo = ttk.Combobox(self.special_frame, textvariable=self.jian_xiang,
-                                                  values=["正中", "兼左", "兼右"], width=10, state="readonly")
+                                                  values=["正中", "兼左", "兼右"], width=10)
             self.jian_xiang_combo.grid(row=0, column=5, sticky=tk.W, padx=5)
             special_entries.append(self.jian_xiang_combo)
             self.jian_xiang.set("正中")  # 默认正中
@@ -1267,8 +1269,10 @@ class ZeriApp:
             # 兼向选择
             ttk.Label(self.special_frame, text="兼向：").grid(row=0, column=2, sticky=tk.W, padx=5)
             self.jian_xiang = tk.StringVar()
+            # §59.13 拍板②兜底3：可下拉选环序兼向，也可手动输入"兼X"（如"兼亥"）
+            # 覆盖系统环序映射；非相邻山由引擎标记为"手动覆盖"
             self.jian_xiang_combo = ttk.Combobox(self.special_frame, textvariable=self.jian_xiang,
-                                                  values=["正中", "兼左", "兼右"], width=10, state="readonly")
+                                                  values=["正中", "兼左", "兼右"], width=10)
             self.jian_xiang_combo.grid(row=0, column=3, sticky=tk.W, padx=5)
             special_entries.append(self.jian_xiang_combo)
             self.jian_xiang.set("正中")
@@ -1938,7 +1942,11 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang_value and jian_xiang_value:
-                shan_xiang_value = shan_xiang_value + jian_xiang_value
+                # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
+                _jx_v = jian_xiang_value.strip()
+                if _jx_v and _jx_v != '正中' and not _jx_v.startswith('兼'):
+                    _jx_v = '兼' + _jx_v
+                shan_xiang_value = shan_xiang_value + _jx_v
 
             # 安葬无墓穴坐山不予月份分析（_azss0914）
             if not self._require_shan_for_burial(event_type):
@@ -3900,7 +3908,11 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang and jian_xiang_value and jian_xiang_value != "正中":
-                shan_xiang = f"{shan_xiang}{jian_xiang_value}"
+                # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
+                _jx_v = jian_xiang_value.strip()
+                if not _jx_v.startswith('兼'):
+                    _jx_v = '兼' + _jx_v
+                shan_xiang = f"{shan_xiang}{_jx_v}"
             
             zao_xiang = getattr(self, 'zao_xiang', None)
             zao_xiang = zao_xiang.get() if zao_xiang else None
@@ -4700,7 +4712,11 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang and jian_xiang_value and jian_xiang_value != "正中":
-                shan_xiang = f"{shan_xiang}{jian_xiang_value}"
+                # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
+                _jx_v = jian_xiang_value.strip()
+                if not _jx_v.startswith('兼'):
+                    _jx_v = '兼' + _jx_v
+                shan_xiang = f"{shan_xiang}{_jx_v}"
             
             zao_xiang = getattr(self, 'zao_xiang', None)
             zao_xiang = zao_xiang.get() if zao_xiang else None
