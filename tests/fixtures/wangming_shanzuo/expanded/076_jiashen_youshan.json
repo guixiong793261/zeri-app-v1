@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e076",
+  "category": "expanded",
+  "description": "甲申亡命（泉中水/水）× 酉山卯向（金）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "甲申",
+    "wangming_nayin": "泉中水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "酉山卯向",
+    "shanzuo_wuxing": "金",
+    "date": "2025-02-08",
+    "wangming_birth_date": "1944-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto；无否决；final=0 系各项扣减后总分钳至下限，非否决清零"
+}

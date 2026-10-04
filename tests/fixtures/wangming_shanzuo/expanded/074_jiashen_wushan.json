@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e074",
+  "category": "expanded",
+  "description": "甲申亡命（泉中水/水）× 午山子向（火）→ 仙命克坐山",
+  "input": {
+    "wangming_ganzhi": "甲申",
+    "wangming_nayin": "泉中水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "午山子向",
+    "shanzuo_wuxing": "火",
+    "date": "2023-02-04",
+    "wangming_birth_date": "1944-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "仙命克坐山",
+    "score": -15,
+    "level": "小凶",
+    "reason_contains": [
+      "仙命",
+      "克",
+      "坐山"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 15
+  },
+  "notes": "2.2扩大集；公理推导=仙命克坐山/-15/小凶；cross=True；集成state=no_veto"
+}

@@ -8,7 +8,7 @@
   "properties": {
     "schema": {"const": "wangming_shanzuo_fixture_v1"},
     "case_id": {"type": "string", "description": "用例唯一编号，basic 用三位序号，boundary/integration 用语义名"},
-    "category": {"enum": ["basic", "boundary", "integration"]},
+    "category": {"enum": ["basic", "boundary", "integration", "expanded"], "description": "basic=2.1基本矩阵；boundary=边界；integration=叠加场景（强制集成字段）；expanded=2.2扩大集（带date即跑集成）"},
     "description": {"type": "string"},
     "allOf": [
       {

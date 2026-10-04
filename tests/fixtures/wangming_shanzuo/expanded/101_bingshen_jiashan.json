@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e101",
+  "category": "expanded",
+  "description": "丙申亡命（山下火/火）× 甲山庚向（木）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "丙申",
+    "wangming_nayin": "山下火",
+    "wangming_nayin_wuxing": "火",
+    "shanzuo": "甲山庚向",
+    "shanzuo_wuxing": "木",
+    "date": "2024-02-05",
+    "wangming_birth_date": "1956-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 34
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto"
+}

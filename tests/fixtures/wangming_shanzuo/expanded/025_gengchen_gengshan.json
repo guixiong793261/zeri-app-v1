@@ -1,0 +1,22 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e025",
+  "category": "expanded",
+  "description": "庚辰亡命（白蜡金/金）× 庚山甲向（金）→ 比和",
+  "input": {
+    "wangming_ganzhi": "庚辰",
+    "wangming_nayin": "白蜡金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "庚山甲向",
+    "shanzuo_wuxing": "金"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True"
+}

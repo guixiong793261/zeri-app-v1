@@ -1,0 +1,29 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e051",
+  "category": "expanded",
+  "description": "庚寅亡命（松柏木/木）× 甲山庚向（木）→ 比和",
+  "input": {
+    "wangming_ganzhi": "庚寅",
+    "wangming_nayin": "松柏木",
+    "wangming_nayin_wuxing": "木",
+    "shanzuo": "甲山庚向",
+    "shanzuo_wuxing": "木",
+    "date": "2024-02-05",
+    "wangming_birth_date": "1950-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 13
+  },
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto"
+}

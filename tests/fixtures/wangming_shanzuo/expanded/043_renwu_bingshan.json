@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e043",
+  "category": "expanded",
+  "description": "壬午亡命（杨柳木/木）× 丙山壬向（火）→ 仙命生坐山",
+  "input": {
+    "wangming_ganzhi": "壬午",
+    "wangming_nayin": "杨柳木",
+    "wangming_nayin_wuxing": "木",
+    "shanzuo": "丙山壬向",
+    "shanzuo_wuxing": "火"
+  },
+  "expected": {
+    "relation": "仙命生坐山",
+    "score": 10,
+    "level": "小吉",
+    "reason_contains": [
+      "仙命",
+      "生",
+      "坐山"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True"
+}

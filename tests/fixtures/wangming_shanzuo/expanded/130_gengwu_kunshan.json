@@ -1,0 +1,29 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e130",
+  "category": "expanded",
+  "description": "庚午亡命（路旁土/土）× 坤山艮向（土）→ 比和",
+  "input": {
+    "wangming_ganzhi": "庚午",
+    "wangming_nayin": "路旁土",
+    "wangming_nayin_wuxing": "土",
+    "shanzuo": "坤山艮向",
+    "shanzuo_wuxing": "土",
+    "date": "2025-02-06",
+    "wangming_birth_date": "1930-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "★★ 中吉",
+    "final_score": 81
+  },
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto"
+}

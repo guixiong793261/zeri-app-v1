@@ -12,7 +12,8 @@ wangming_shanzuo/
 ├── _schema.json         # fixture 格式 v1（含完整示例）
 ├── basic/               # 基本组合矩阵（2.1：25 组）
 ├── boundary/            # 边界案例（2.1：比和、方向反转 2 组）
-└── integration/         # 叠加场景（叠忌/无制化/有制化/双凶）
+├── integration/         # 叠加场景（叠忌/无制化/有制化/双凶，2.1：3 组）
+└── expanded/            # 2.2 扩大集（15×10=150 组；30 组带集成日期）
 ```
 
 ## 断言规则

@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e028",
+  "category": "expanded",
+  "description": "庚辰亡命（白蜡金/金）× 子山午向（水）→ 仙命生坐山",
+  "input": {
+    "wangming_ganzhi": "庚辰",
+    "wangming_nayin": "白蜡金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "子山午向",
+    "shanzuo_wuxing": "水",
+    "date": "2023-01-01",
+    "wangming_birth_date": "1940-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "仙命生坐山",
+    "score": 10,
+    "level": "小吉",
+    "reason_contains": [
+      "仙命",
+      "生",
+      "坐山"
+    ],
+    "veto": true,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True；集成state=veto；veto 来自日期外部因素（正体大凶），非 relation 判定"
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e001",
+  "category": "expanded",
+  "description": "甲子亡命（海中金/金）× 甲山庚向（木）→ 仙命克坐山",
+  "input": {
+    "wangming_ganzhi": "甲子",
+    "wangming_nayin": "海中金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "甲山庚向",
+    "shanzuo_wuxing": "木",
+    "date": "2024-02-05",
+    "wangming_birth_date": "1924-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "仙命克坐山",
+    "score": -15,
+    "level": "小凶",
+    "reason_contains": [
+      "仙命",
+      "克",
+      "坐山"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 16
+  },
+  "notes": "2.2扩大集；公理推导=仙命克坐山/-15/小凶；cross=True；集成state=no_veto"
+}
