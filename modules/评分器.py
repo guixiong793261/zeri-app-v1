@@ -131,6 +131,68 @@ WANGMING_ROLES = ('死者', '亡命', '仙命', '亡人')
 def _is_wangming_role(role):
     return str(role or '').strip() in WANGMING_ROLES
 
+
+# ============================================================================
+# 仙命 × 坐山纳音五行生克判定（第二阶段，2026-10-04 用户口径拍板）
+# ============================================================================
+# 生克分级（传统"坐山扶命为上"，人地不对称）：
+#   坐山生仙命=大吉 > 仙命生坐山=小吉 > 比和=平（暂 0 分，待调）
+#   > 仙命克坐山=小凶 > 坐山克仙命=凶中之凶
+# 否决仅给"坐山克仙命"且叠其他忌时；纯"仙命克坐山"仅扣分不否决。
+# 坐山范围：仅正向 24 山，兼向复用主山纳音（第一阶段简化）。
+_WANGMING_SHANZUO_SCORE = {
+    '坐山生仙命': 20,
+    '仙命生坐山': 10,
+    '比和': 0,
+    '仙命克坐山': -15,
+    '坐山克仙命': -30,
+}
+_WANGMING_SHANZUO_LEVEL = {
+    '坐山生仙命': '大吉',
+    '仙命生坐山': '小吉',
+    '比和': '平',
+    '仙命克坐山': '小凶',
+    '坐山克仙命': '凶中之凶',
+}
+
+
+def evaluate_wangming_vs_shanzuo(wangming_nayin_wuxing, shanzuo_wuxing):
+    """仙命纳音五行 vs 坐山五行 生克判定（方向敏感）。
+
+    返回 dict：
+        relation: 方向性关系名（5 种之一）
+        score: 基础分值（尚未叠其他忌）
+        level: 5 级吉凶（大吉/小吉/平/小凶/凶中之凶）
+        reason: 可读文案（供报告展示）
+    """
+    _wx = str(wangming_nayin_wuxing or '').strip()
+    _sx = str(shanzuo_wuxing or '').strip()
+    if not _wx or not _sx:
+        return {'relation': '未知', 'score': 0, 'level': '平',
+                'reason': '仙命或坐山五行缺失，不予判定'}
+    from .二十四山 import WuxingRelation
+    if WuxingRelation.is_bihe(_wx, _sx):
+        relation = '比和'
+    elif WuxingRelation.is_sheng(_sx, _wx):
+        relation = '坐山生仙命'   # 地生人，大吉
+    elif WuxingRelation.is_sheng(_wx, _sx):
+        relation = '仙命生坐山'   # 人让地，小吉
+    elif WuxingRelation.is_ke(_sx, _wx):
+        relation = '坐山克仙命'   # 地克人，凶中之凶
+    elif WuxingRelation.is_ke(_wx, _sx):
+        relation = '仙命克坐山'   # 人克地，小凶
+    else:
+        return {'relation': '未知', 'score': 0, 'level': '平',
+                'reason': f'无法判定 {_wx} 与 {_sx} 的关系'}
+    score = _WANGMING_SHANZUO_SCORE.get(relation, 0)
+    level = _WANGMING_SHANZUO_LEVEL.get(relation, '平')
+    reason = (
+        f"仙命纳音五行属{_wx}，坐山五行属{_sx}，二者{relation}（{level}）"
+    )
+    return {'relation': relation, 'score': score, 'level': level,
+            'reason': reason}
+
+
 # H1 双族去重映射表（2026-10-01 用户拍板：Q1=甲 Q2=修造建除停 Q3=veto附文停 Q4=交集停/分歧挂账）
 # 语义：规则文本精确命中 tx 且当日 shensha_list 含 ss 名 → 该条仅展示、不计分。
 H1_ANCHOR_MAP = {
