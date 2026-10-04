@@ -1735,7 +1735,13 @@ class Scorer:
                     if _sz_resolvers:
                         # 有制化：坐山克仙命仅扣分；标注"有制化：…"
                         shanzuo_eval['_with_huajie'] = True
+                        shanzuo_eval['制化吉神'] = list(_sz_resolvers)
                         shanzuo_eval['reason'] += f"（有制化：{'、'.join(_sz_resolvers)}）"
+                        # 宜忌段明示（2026-10-04 §59.9 细节3配套展示调和）：
+                        # 虽有制化不否决，仍属忌项——避免等级"凶"而忌列表无此条
+                        _ji_sz = f"坐山克仙命（有制化：{'、'.join(_sz_resolvers)}）"
+                        if _ji_sz not in self.ji_list:
+                            self.ji_list.append(_ji_sz)
                     else:
                         shanzuo_veto = (
                             f"坐山克仙命无制化：坐山{shanzuo_eval['坐山']}五行属"
@@ -5614,13 +5620,12 @@ class Scorer:
         Returns:
             str: 等级（含星级）
         """
-        # 质量底线：五行凶 → ❌ 凶（坚决不用）
+        # 质量底线1：五行凶（不在此提前返回——坐山克有制化时需在凶等级上带注）
         try:
             wu_xing_score = wu_xing_result.get('score') if isinstance(wu_xing_result, dict) else None
-            if wu_xing_score is not None and wu_xing_score < 60:
-                return '❌ 凶'
         except Exception:
-            pass
+            wu_xing_score = None
+        wx_bad = wu_xing_score is not None and wu_xing_score < 60
 
         if score >= 105:
             base_level = '★★★★★ 上吉'
@@ -5635,13 +5640,17 @@ class Scorer:
         else:
             base_level = '❌ 凶'
 
-        # 质量底线（2026-10-04 §59.9，保守派）：坐山克仙命等级封顶"❌ 凶"。
-        # 坐山克仙命在口径中为"凶中之凶"，比仙命真冲更重——制化只解除否决、
-        # 不改变凶性；真冲有制化可到非凶，坐山克不适用。封顶在等级判定层完成，
-        # 不改总分（排序/对比仍反映实际分值）。
-        if (isinstance(shanzuo_eval, dict)
-                and shanzuo_eval.get('relation') == '坐山克仙命'
-                and base_level != '❌ 凶'):
+        # 坐山克仙命（2026-10-04 §59.9 保守派封顶 + 细节3展示调和）：
+        # 命中即凶，制化只解除否决、不改凶性；真冲有制化可到非凶，坐山克不适用。
+        # 有制化时等级行带注——无论凶来自总分、五行底线还是封顶，制化信息不丢，
+        # 与忌列表、综合判断句三处呼应，避免裸"凶"或被误读为可用吉日。
+        # 封顶在等级判定层完成，不改总分（排序/对比仍反映实际分值）。
+        if isinstance(shanzuo_eval, dict) and shanzuo_eval.get('relation') == '坐山克仙命':
+            _cap_res = shanzuo_eval.get('制化吉神') or []
+            if _cap_res:
+                return f"❌ 凶（坐山克仙命，有制化：{'、'.join(_cap_res)}）"
+            return '❌ 凶'
+        if wx_bad:
             return '❌ 凶'
         return base_level
     
@@ -5754,6 +5763,13 @@ class Scorer:
             reason.append(
                 f"仙命×坐山：{shanzuo_eval['reason']}"
                 f"（{shanzuo_eval['score']:+d}分）")
+            # 综合判断句（2026-10-04 §59.9 细节3配套）：封顶凶＋有制化时，
+            # 明示"凶是等级、制化是条件"，可用须谨慎，防止用户误读为吉日
+            if shanzuo_eval.get('_with_huajie'):
+                _hjs = '、'.join(shanzuo_eval.get('制化吉神') or [])
+                reason.append(
+                    f"坐山克仙命虽有{_hjs}制化，等级封顶凶，可用须谨慎"
+                    f"（非上吉之课，须再结合扶山、孝子年命斟酌）")
 
         # 每个事主的详细分析
         if owner_matches:
