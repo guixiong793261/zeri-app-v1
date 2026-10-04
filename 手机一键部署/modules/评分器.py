@@ -1693,17 +1693,19 @@ class Scorer:
             wangming_veto = ''
             _wm_gz = wangming_info.get('年柱', '') if wangming_info else ''
             _day_zhi = sizhu.get('day_zhi', '')
-            if _wm_gz and self.check_liuchong(_day_zhi, _wm_gz[1]):
-                _heavy = self._check_veto_overlay(sansha_info)
-                if _heavy:
+            _zc_hit = bool(_wm_gz) and self.check_liuchong(_day_zhi, _wm_gz[1])
+            _zc_heavy = self._check_veto_overlay(sansha_info) if _zc_hit else []
+            _zc_resolvers = []
+            if _zc_hit:
+                if _zc_heavy:
                     wangming_veto = (
                         f"仙命真冲叠大忌：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
-                        f"叠{'/'.join(_heavy)}，大忌不用（一票否决）")
+                        f"叠{'/'.join(_zc_heavy)}，大忌不用（一票否决）")
                 else:
-                    _resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
-                    if _resolvers:
+                    _zc_resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
+                    if _zc_resolvers:
                         # 有制化：仅扣分；在真冲明细行补注（防止用户误判为裸冲）
-                        _tag = f"（有制化：{'、'.join(_resolvers)}）"
+                        _tag = f"（有制化：{'、'.join(_zc_resolvers)}）"
                         for _i, _line in enumerate(xiangzhu_details):
                             if '真冲' in str(_line) and '有制化' not in str(_line):
                                 xiangzhu_details[_i] = str(_line) + _tag
@@ -1712,28 +1714,28 @@ class Scorer:
                             f"仙命真冲无制化：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
                             f"四柱无天德/月德/岁德/太阳到山/天赦/天愿/三合/六合等吉神制化，"
                             f"大忌不用（一票否决）")
-                if wangming_veto:
-                    veto_reasons.append(wangming_veto)
 
             # 仙命×坐山纳音三级判定（第二阶段 2.1）：
             #   坐山克仙命（地克人/地不容此命）= 凶中之凶，复用同套叠忌/化解检查
             #     叠重煞 → 直接否决；无化解吉神 → 一票否决；有吉神 → WARN
             #   其余 4 档（坐山生/仙命生/比和/仙命克）仅影响总分，不单独否决
             shanzuo_veto = ''
-            if shanzuo_eval and shanzuo_eval.get('relation') == '坐山克仙命':
-                _heavy = self._check_veto_overlay(sansha_info)
-                if _heavy:
+            _sz_hit = bool(shanzuo_eval) and shanzuo_eval.get('relation') == '坐山克仙命'
+            _sz_heavy = self._check_veto_overlay(sansha_info) if _sz_hit else []
+            _sz_resolvers = []
+            if _sz_hit:
+                if _sz_heavy:
                     shanzuo_veto = (
                         f"坐山克仙命叠大忌：坐山{shanzuo_eval['坐山']}五行属"
                         f"{shanzuo_eval['坐山五行']}，克亡命{wangming_info['name']}"
                         f"纳音{wangming_info['纳音']}（{wangming_info['五行']}），"
-                        f"地不容此命，叠{'/'.join(_heavy)}，大忌不用（一票否决）")
+                        f"地不容此命，叠{'/'.join(_sz_heavy)}，大忌不用（一票否决）")
                 else:
-                    _resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
-                    if _resolvers:
+                    _sz_resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
+                    if _sz_resolvers:
                         # 有制化：坐山克仙命仅扣分；标注"有制化：…"
                         shanzuo_eval['_with_huajie'] = True
-                        shanzuo_eval['reason'] += f"（有制化：{'、'.join(_resolvers)}）"
+                        shanzuo_eval['reason'] += f"（有制化：{'、'.join(_sz_resolvers)}）"
                     else:
                         shanzuo_veto = (
                             f"坐山克仙命无制化：坐山{shanzuo_eval['坐山']}五行属"
@@ -1741,11 +1743,26 @@ class Scorer:
                             f"纳音{wangming_info['纳音']}（{wangming_info['五行']}），"
                             f"地不容此命，四柱无天德/月德/岁德/太阳到山/天赦/天愿/"
                             f"三合/六合等吉神制化，大忌不用（一票否决）")
+
+            # 仙命双凶叠加强制否决（2026-10-04 §59.10 用户拍板）：
+            #   日支真冲 + 坐山克仙命同日命中 → 强制 VETO，
+            #   即使两边都各有制化也 VETO；文案明示两凶 + 各自制化状态。
+            #   单凶时维持各自三级判定不变。
+            dual_veto = ''
+            if _zc_hit and _sz_hit:
+                dual_veto = self._build_wm_dual_veto_text(
+                    wangming_info, shanzuo_eval, _day_zhi,
+                    _zc_heavy, _zc_resolvers, _sz_heavy, _sz_resolvers)
+                veto_reasons.append(dual_veto)
+            else:
+                if wangming_veto:
+                    veto_reasons.append(wangming_veto)
                 if shanzuo_veto:
                     veto_reasons.append(shanzuo_veto)
 
             if (sansha_fan_da_ji or xiangzhu_veto_items
-                    or sansha_info.get('mountain_blocked') or wangming_veto or shanzuo_veto):
+                    or sansha_info.get('mountain_blocked')
+                    or wangming_veto or shanzuo_veto or dual_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -1773,7 +1790,7 @@ class Scorer:
                     if _v_text not in self.ji_list:
                         self.ji_list.append(_v_text)
             else:
-                self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info)
+                self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info, shanzuo_eval)
 
             # 构建详细得分明细
             # 注意：神煞得分已包含在五行评分中，不需要单独列出
@@ -1832,7 +1849,7 @@ class Scorer:
                     _zhengwu = self.final_score  # 加权前的正五行总分
                     _feixing_mapped = 50 + fx  # 映射到30~70区间
                     self.final_score = max(0, min(100, int(_zhengwu * 0.7 + _feixing_mapped * 0.3)))
-                    self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info)
+                    self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info, shanzuo_eval)
                     score_details['飞星评分'] = fx
                     score_details['飞星等级'] = feixing_info['feixing_level']
                     score_details['飞星详情'] = feixing_info['feixing_details']
@@ -4035,6 +4052,32 @@ class Scorer:
                 hits.append('太阳到山')
         return hits
 
+    def _build_wm_dual_veto_text(self, wangming_info, shanzuo_eval, day_zhi,
+                                 zc_heavy, zc_resolvers,
+                                 sz_heavy, sz_resolvers):
+        """仙命双凶叠加否决文案（2026-10-04 §59.10 用户拍板）。
+
+        日支真冲 + 坐山克仙命同日命中时使用：明示两凶及各自制化状态
+        （叠大忌 / 有制化：X / 无制化），强制否决，不因个别制化降级。
+        纯文本构造，4 种制化状态组合均可独立断言。
+        """
+        def _state(heavy, resolvers):
+            if heavy:
+                return f"叠{'/'.join(heavy)}大忌"
+            if resolvers:
+                return f"有制化：{'、'.join(resolvers)}"
+            return "无制化"
+
+        return (
+            f"【仙命双凶叠加】日支真冲＋坐山克仙命（亡命{wangming_info['name']}）："
+            f"①日支真冲：亡命{wangming_info['name']}年命{wangming_info['年柱'][1]}"
+            f"与日支{day_zhi}相冲（{_state(zc_heavy, zc_resolvers)}）；"
+            f"②坐山克仙命：坐山{shanzuo_eval['坐山']}五行属"
+            f"{shanzuo_eval['坐山五行']}，克亡命纳音{wangming_info['纳音']}"
+            f"（{wangming_info['五行']}）（{_state(sz_heavy, sz_resolvers)}）。"
+            f"两个-30顶级凶同日并见，吉神同时对症解两凶概率极低，"
+            f"强制否决，不因个别制化而降级（一票否决）")
+
     def _check_veto_overlay(self, sansha_info=None):
         """仙命系三级判定的"叠重煞"检查（公共函数，2026-10-04 拍板抽取）。
 
@@ -5537,7 +5580,7 @@ class Scorer:
 
         return score, nayin_lines
     
-    def _get_level(self, score, wu_xing_result=None, huangdao_info=None):
+    def _get_level(self, score, wu_xing_result=None, huangdao_info=None, shanzuo_eval=None):
         """
         根据综合评分判断等级（含星级）
 
@@ -5566,6 +5609,7 @@ class Scorer:
             score: 综合评分
             wu_xing_result: 五行审核结果（仅用于五行凶兜底判断）
             huangdao_info: 黄道信息（保留参数兼容旧调用，不参与判级）
+            shanzuo_eval: 仙命×坐山判定结果（坐山克仙命时等级封顶"❌ 凶"）
 
         Returns:
             str: 等级（含星级）
@@ -5579,17 +5623,27 @@ class Scorer:
             pass
 
         if score >= 105:
-            return '★★★★★ 上吉'
+            base_level = '★★★★★ 上吉'
         elif score >= 100:
-            return '★★★★ 大吉'
+            base_level = '★★★★ 大吉'
         elif score >= 85:
-            return '★★★ 吉'
+            base_level = '★★★ 吉'
         elif score >= 75:
-            return '★★ 中吉'
+            base_level = '★★ 中吉'
         elif score >= 60:
-            return '★ 平'
+            base_level = '★ 平'
         else:
+            base_level = '❌ 凶'
+
+        # 质量底线（2026-10-04 §59.9，保守派）：坐山克仙命等级封顶"❌ 凶"。
+        # 坐山克仙命在口径中为"凶中之凶"，比仙命真冲更重——制化只解除否决、
+        # 不改变凶性；真冲有制化可到非凶，坐山克不适用。封顶在等级判定层完成，
+        # 不改总分（排序/对比仍反映实际分值）。
+        if (isinstance(shanzuo_eval, dict)
+                and shanzuo_eval.get('relation') == '坐山克仙命'
+                and base_level != '❌ 凶'):
             return '❌ 凶'
+        return base_level
     
     def _yueling_phrase(self, wangshuai_text, yueling_score):
         """月令评语（2026-10-02 口径修复）：强弱以旺衰判定（与"日主旺衰"段同源）
