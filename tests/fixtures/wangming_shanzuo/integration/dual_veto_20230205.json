@@ -1,0 +1,27 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "dual_veto_20230205",
+  "category": "integration",
+  "description": "安全阀锚点3：仙命双凶叠加核心边界——两边均仅三合制化、无前置否决，旧逻辑可用，新逻辑强制VETO",
+  "input": {
+    "wangming_ganzhi": "甲子",
+    "wangming_nayin": "海中金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "丙山壬向",
+    "shanzuo_wuxing": "火",
+    "date": "2023-02-05",
+    "wangming_birth_date": "1924-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": ["坐山", "克", "仙命"],
+    "veto": true,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "双凶叠加强制否决锚点（2023-02-05 甲午日，实测确认）。日支午冲亡命年支子（真冲）+ 坐山丙火克海中金，两凶同日；两边均仅三合制化、无任何前置否决——旧逻辑下不否决可用，新逻辑强制 VETO、final=0（§59.10）。文案明示两凶各自制化状态。veto=true 时严格 level_cap=false（封顶与否决互斥，二者不混淆）。这是比封顶更难得的核心边界。"
+}

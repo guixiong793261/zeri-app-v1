@@ -1,0 +1,27 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "level_cap_20230322",
+  "category": "integration",
+  "description": "安全阀锚点1：坐山克仙命有月德制化、无否决、final=100，等级仍封顶❌凶",
+  "input": {
+    "wangming_ganzhi": "甲子",
+    "wangming_nayin": "海中金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "丙山壬向",
+    "shanzuo_wuxing": "火",
+    "date": "2023-03-22",
+    "wangming_birth_date": "1924-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": ["坐山", "克", "仙命"],
+    "veto": false,
+    "level_cap": true,
+    "report_level": "❌ 凶（坐山克仙命，有制化：月德）",
+    "final_score": 100
+  },
+  "notes": "封顶正向锚点（2023-03-22 己卯日，实测确认）。两层 level 分开：level=凶中之凶（关系层），report_level=封顶后❌凶（展示层）。严格语义四要件齐备：坐山克+无否决+final=100≥60+仍判凶 → level_cap=true。制化只解否决不改凶性（§59.9）。与 basic 27 组全 false 对照。"
+}
