@@ -89,17 +89,27 @@ print('== 1c. _get_level 坐山克仙命等级封顶（§59.9）==')
 from modules.评分器 import Scorer  # noqa: E402
 _sc = Scorer.__new__(Scorer)  # 纯函数方法，不需要完整实例状态
 _KE = {'relation': '坐山克仙命'}
-check('封顶：坐山克 + 总分95 → ❌ 凶',
+_KER = {'relation': '坐山克仙命', '制化吉神': ['月德']}
+check('封顶：坐山克有制化 + 总分95 → ❌ 凶（带制化注）',
+      _sc._get_level(95, {'score': 80}, None, _KER)
+      == '❌ 凶（坐山克仙命，有制化：月德）')
+check('封顶：坐山克有制化 + 总分120（吉神叠满模拟）→ 仍带注凶',
+      _sc._get_level(120, {'score': 90}, None,
+                     {'relation': '坐山克仙命',
+                      '制化吉神': ['天德', '三合', '太阳到山']})
+      == '❌ 凶（坐山克仙命，有制化：天德、三合、太阳到山）')
+check('封顶：坐山克无制化 + 总分95 → 裸❌ 凶（无制化注）',
       _sc._get_level(95, {'score': 80}, None, _KE) == '❌ 凶')
-check('封顶：坐山克 + 总分120（满分吉神叠满模拟）→ ❌ 凶',
-      _sc._get_level(120, {'score': 90}, None, _KE) == '❌ 凶')
 check('不封顶：比和 + 总分95 → ★★★ 吉',
       _sc._get_level(95, {'score': 80}, None, {'relation': '比和'}) == '★★★ 吉')
 check('不封顶：shanzuo_eval=None + 总分95 → ★★★ 吉',
       _sc._get_level(95, {'score': 80}) == '★★★ 吉')
-check('五行底线先触发：坐山克 + 五行50 → ❌ 凶',
+check('五行底线先触发：坐山克无制化 + 五行50 → ❌ 凶',
       _sc._get_level(95, {'score': 50}, None, _KE) == '❌ 凶')
-check('总分<60：坐山克 + 总分55 → ❌ 凶',
+check('低分有制化：坐山克 + 总分55 → 带注凶（制化信息不丢）',
+      _sc._get_level(55, {'score': 80}, None, _KER)
+      == '❌ 凶（坐山克仙命，有制化：月德）')
+check('低分无制化：坐山克 + 总分55 → 裸❌ 凶',
       _sc._get_level(55, {'score': 80}, None, _KE) == '❌ 凶')
 
 # ---------------------------------------------------------------------------
@@ -182,6 +192,8 @@ se_bare = r_bare.get('shanzuo_eval') or {}
 check('场景B 无制化否决：戊子×壬山 2025-09-25 → 坐山克仙命无制化',
       se_bare.get('relation') == '坐山克仙命'
       and any('坐山克仙命无制化' in v for v in (r_bare.get('veto_reasons') or [])))
+check('反向：场景B 等级为裸"❌ 凶"（无制化，不带制化注）',
+      r_bare.get('level') == '❌ 凶')
 
 # warn：2024-01-12 戊子(火)×壬山(水)=坐山克仙命，有制化 → WARN 不否
 r_warn = pure(dt.date(2024, 1, 12), [dead('戊子', '1948-03-01')], '壬山丙向')
@@ -191,21 +203,33 @@ check('场景C 有制化WARN：戊子×壬山 2024-01-12 → 有制化，无否�
       and '有制化' in se_warn.get('reason', '')
       and not any('坐山克仙命' in v for v in (r_warn.get('veto_reasons') or []))
       and r_warn.get('score', 0) > 0)
+check('场景C：score=31 等级带注凶、忌列表/调和句齐全',
+      r_warn.get('level') == '❌ 凶（坐山克仙命，有制化：月德、天德）'
+      and '坐山克仙命（有制化：月德、天德）' in r_warn.get('ji_list')
+      and '可用须谨慎' in r_warn.get('reason', ''))
 
 # 封顶集成（§59.9）：单凶坐山克 + 有制化 + 无否决 + 总分高分 → level 封顶凶
 r_cap1 = pure(dt.date(2023, 3, 22), [dead('甲子', '1924-03-01')], '丙山壬向')
 se_cap1 = r_cap1.get('shanzuo_eval') or {}
-check('封顶集成：甲子×丙山 2023-03-22 score=100 月德制化 → level=❌ 凶',
+check('封顶集成：2023-03-22 score=100 月德 → 等级带注凶',
       se_cap1.get('_with_huajie') and r_cap1.get('score') == 100
       and not (r_cap1.get('veto_reasons') or [])
-      and r_cap1.get('level') == '❌ 凶')
+      and r_cap1.get('level') == '❌ 凶（坐山克仙命，有制化：月德）')
+check('展示调和：2023-03-22 忌列表含制化条目',
+      '坐山克仙命（有制化：月德）' in r_cap1.get('ji_list'))
+check('展示调和：2023-03-22 综合评语含"可用须谨慎"',
+      '可用须谨慎' in r_cap1.get('reason', ''))
 
 r_cap2 = pure(dt.date(2023, 6, 13), [dead('甲子', '1924-03-01')], '丙山壬向')
 se_cap2 = r_cap2.get('shanzuo_eval') or {}
-check('封顶集成：2023-06-13 吉神叠满（天德/三合/太阳到山）score=100 → 仍❌ 凶',
+check('封顶集成：2023-06-13 吉神叠满 score=100 → 等级带注凶',
       r_cap2.get('score') == 100 and not (r_cap2.get('veto_reasons') or [])
-      and r_cap2.get('level') == '❌ 凶'
+      and r_cap2.get('level')
+      == '❌ 凶（坐山克仙命，有制化：天德、三合、太阳到山）'
       and '太阳到山' in se_cap2.get('reason', ''))
+check('展示调和：2023-06-13 忌列表/综合评语齐全',
+      '坐山克仙命（有制化：天德、三合、太阳到山）' in r_cap2.get('ji_list')
+      and '可用须谨慎' in r_cap2.get('reason', ''))
 
 # 双凶叠加强制 VETO 集成（§59.10）
 r_d1 = pure(dt.date(2023, 2, 5), [dead('甲子', '1924-03-01')], '丙山壬向')
@@ -219,6 +243,8 @@ v_d2 = r_d2.get('veto_reasons') or []
 check('双凶：2023-03-13 两边无制化 → VETO+双无制化文案',
       r_d2.get('score') == 0
       and any('仙命双凶叠加' in v and v.count('无制化') == 2 for v in v_d2))
+check('反向：双凶强制否决等级为裸"❌ 凶"（不带制化注，与单凶封顶区分）',
+      r_d2.get('level') == '❌ 凶')
 
 # 双凶文案 4 种制化状态组合 + 叠忌（纯函数断言，覆盖真实流程难出现的交叉状态）
 _WM = {'name': '甲子', '年柱': '甲子', '纳音': '海中金', '五行': '金'}
@@ -252,6 +278,13 @@ check('嫁娶无死者 → shanzuo_eval=None', r_jq.get('shanzuo_eval') is None)
 # 安葬无山向 → shanzuo_eval 应为 None
 r_no_shan = pure(dt.date(2026, 2, 22), [dead('甲子', '1924-03-01')])
 check('安葬无山向 → shanzuo_eval=None', r_no_shan.get('shanzuo_eval') is None)
+
+# 反向：非坐山克仙命（仙命克坐山）路径等级正常，不带封顶注
+r_other = pure(dt.date(2024, 3, 3), [dead('甲子', '1924-03-01')], '甲山庚向')
+check('反向：甲子×甲山（仙命克坐山）等级不含坐山克封顶注、无调和句',
+      (r_other.get('shanzuo_eval') or {}).get('relation') == '仙命克坐山'
+      and '坐山克仙命' not in r_other.get('level', '')
+      and '可用须谨慎' not in r_other.get('reason', ''))
 
 print('=' * 60)
 print(f'PASS {len(PASS)}  FAIL {len(FAIL)}')
