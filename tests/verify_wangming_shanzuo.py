@@ -334,10 +334,17 @@ for _fp in _fix_files:
     # 集成断言：带日期 + 亡命生日时跑评分器
     if inp.get('date') and inp.get('wangming_birth_date'):
         rep = _fix_report(case)
-        if 'veto' in exp and bool(rep.get('veto_reasons')) != exp['veto']:
-            errs.append(f"veto: {bool(rep.get('veto_reasons'))}!={exp['veto']}")
-        if exp.get('level_cap') and not str(rep.get('level', '')).startswith('❌ 凶'):
-            errs.append('封顶未生效')
+        rep_se = rep.get('shanzuo_eval') or {}
+        _veto = bool(rep.get('veto_reasons'))
+        _final = rep.get('score')
+        # 严格双向判定封顶：坐山克 + 无否决 + 总分≥60 但展示仍凶
+        actual_cap = (rep_se.get('relation') == '坐山克仙命'
+                      and not _veto and isinstance(_final, int) and _final >= 60
+                      and str(rep.get('level', '')).startswith('❌ 凶'))
+        if 'veto' in exp and _veto != exp['veto']:
+            errs.append(f"veto: {_veto}!={exp['veto']}")
+        if 'level_cap' in exp and actual_cap != exp['level_cap']:
+            errs.append(f"level_cap: {actual_cap}!={exp['level_cap']}")
         if 'report_level' in exp and rep.get('level') != exp['report_level']:
             errs.append(f"report_level: {rep.get('level')!r}!={exp['report_level']!r}")
         if 'final_score' in exp and rep.get('score') != exp['final_score']:

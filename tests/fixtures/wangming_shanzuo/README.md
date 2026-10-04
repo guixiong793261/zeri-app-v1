@@ -33,7 +33,8 @@ wangming_shanzuo/
 2. **集成断言**（`input.date` 与 `input.wangming_birth_date` 均存在时）：
    以午时正午调评分器，校验：
    - `veto`：veto_reasons 是否非空；
-   - `level_cap`：展示等级是否以 `❌ 凶` 开头（封顶规则 §59.9）；
+   - `level_cap`：封顶是否实际生效（严格判定：坐山克仙命 + 无否决 +
+     final_score≥60 但等级仍凶；自然低分凶不算封顶）；
    - `report_level` / `final_score`：填写时精确匹配（漂移立即可见）。
    - basic/boundary 案例只要带日期同样跑集成，覆盖不降级。
 

@@ -44,7 +44,7 @@
         "level": {"enum": ["大吉", "小吉", "平", "小凶", "凶中之凶"], "description": "纯函数关系等级（非展示等级）"},
         "reason_contains": {"type": "array", "items": {"type": "string"}, "description": "reason 关键词（包含即可，不做全文匹配）"},
         "veto": {"type": "boolean", "description": "集成：veto_reasons 是否非空"},
-        "level_cap": {"type": "boolean", "description": "集成：展示等级是否被封顶（以 ❌ 凶 开头）"},
+        "level_cap": {"type": "boolean", "description": "集成：封顶是否实际生效——严格判定：relation=坐山克仙命 且 无否决 且 final_score≥60 但展示等级仍为❌凶（分数够却判凶，排除自然低分凶）"},
         "report_level": {"type": "string", "description": "集成（可选）：展示等级精确值"},
         "final_score": {"type": "integer", "description": "集成（可选）：最终总分精确值"}
       }
