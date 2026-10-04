@@ -1127,14 +1127,91 @@ SHAN_XIANG_24_TO_SHAN = {
 def shan_xiang_to_shan(shan_xiang: str) -> str:
     """
     将山向转换为坐山名称
-    
+
     Args:
         shan_xiang: 山向，如"子山午向"
-        
+
     Returns:
         坐山名称，如"子"
     """
     return SHAN_XIANG_24_TO_SHAN.get(shan_xiang, shan_xiang)
+
+
+# 二十四山环序（顺时针递增，与 TWENTY_FOUR_MOUNTAINS_DATA 同源；
+# idx-1=逆时针=兼左，idx+1=顺时针=兼右——兼向判定唯一环序约定，§59.13）
+MOUNTAIN_RING = tuple(data[1] for data in TWENTY_FOUR_MOUNTAINS_DATA)
+MOUNTAIN_RING_INDEX = {name: i for i, name in enumerate(MOUNTAIN_RING)}
+
+
+def parse_shan_xiang_jianxiang(shan_xiang, jian_xiang=None):
+    """解析山向中的主山与兼向（仙命"分体并列"判定唯一入口，§59.13 拍板②）。
+
+    主山为体、兼向为用；兼向解析复用系统环序约定
+    （MOUNTAIN_RING 顺时针：idx-1=兼左/逆时针，idx+1=兼右/顺时针），
+    并支持手动格式覆盖。
+
+    支持入参形态：
+      - 拼接态（日扫描/月份分析路径）：shan_xiang="甲山庚向兼卯"，
+        jian_xiang=None；
+      - 分传态（年份分析/直接调用）：shan_xiang="甲山庚向"，
+        jian_xiang="兼卯"；
+      - 正向：无"兼X"且 jian_xiang 为空/"正中"；
+      - 手动覆盖："甲山庚向兼亥" 或 jian_xiang="兼亥"/"亥"
+        （亥非甲环序相邻山 → 来源标记"手动覆盖"，以用户罗盘实测为准）。
+
+    非法/无法识别的兼向字（如旧值"兼左"、非二十四山字）一律不强行判定，
+    兼向返回 None，由调用方按"未指定兼向，按正向处理"提示。
+
+    Returns:
+        dict: {
+            '主山': '甲' or None,
+            '主山基础': '甲山庚向',
+            '兼向': '卯' or None,
+            '兼向来源': '环序映射' | '手动覆盖' | None,
+            '兼向原始': 用户输入的原始兼向尾串（如 '兼卯'/'兼X'/'兼左'），
+                        未提供或为"正中"时为 None——调用方据此区分
+                        "真未指定"（None）与"已给但无法识别"（非None而兼向None），
+                        后者须提示用户且下游通道按正向清洗。
+        }
+    """
+    result = {'主山': None, '主山基础': '', '兼向': None,
+              '兼向来源': None, '兼向原始': None}
+    raw = str(shan_xiang or '').strip()
+    if not raw:
+        return result
+
+    base = raw.split('兼')[0].strip()
+    result['主山基础'] = base
+    zuoshan = base[0] if base else ''
+    if zuoshan in MOUNTAIN_RING_INDEX:
+        result['主山'] = zuoshan
+
+    # 兼向字：优先取山向串内"兼X"，其次取独立 jian_xiang 参数
+    jx_char = None
+    jx_raw_token = None
+    if '兼' in raw:
+        tail = raw.rsplit('兼', 1)[1].strip()
+        if tail:
+            jx_char = tail[0]
+            jx_raw_token = '兼' + tail
+    if jx_char is None and jian_xiang is not None:
+        jx_raw = str(jian_xiang).strip()
+        if jx_raw and jx_raw != '正中':
+            jx_tail = jx_raw.rsplit('兼', 1)[1] if '兼' in jx_raw else jx_raw
+            jx_tail = jx_tail.strip()
+            if jx_tail:
+                jx_char = jx_tail[0]
+                jx_raw_token = ('兼' + jx_tail) if '兼' not in jx_raw else jx_raw
+    result['兼向原始'] = jx_raw_token
+
+    if jx_char is not None and jx_char in MOUNTAIN_RING_INDEX:
+        result['兼向'] = jx_char
+        if result['主山'] is not None:
+            zi = MOUNTAIN_RING_INDEX[result['主山']]
+            ji = MOUNTAIN_RING_INDEX[jx_char]
+            adjacent = (ji - zi) % len(MOUNTAIN_RING) in (1, len(MOUNTAIN_RING) - 1)
+            result['兼向来源'] = '环序映射' if adjacent else '手动覆盖'
+    return result
 
 
 def shan_to_shan_xiang(shan: str, xiang: str = None) -> str:
