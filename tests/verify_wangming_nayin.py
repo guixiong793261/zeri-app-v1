@@ -4,12 +4,16 @@
 覆盖：
 1. 六十甲子纳音 30 组：独立权威值（纳音口诀）与 二十四山.NAYIN_NAMES 双向断言
 2. 亡命信息生成：5 样本（甲子海中金/戊辰大林木/丙子涧下水/戊子霹雳火/庚午路旁土）
-3. 仙命真冲口径（2026-10-04 用户拍板）：
-   - 正：亡命年命与日支六冲 → -30、文案"仙命...真冲...须见吉神制化"，不进硬门槛
+3. 仙命真冲三级判定（2026-10-04 用户拍板 + 验收补档）：
+   - 叠三煞/岁破/月破（日破）→ 直接否决（有制化也不救）
+   - 无宽集化解吉神 → 显式一票否决（不再靠五行分间接门槛）
+   - 有宽集化解吉神（天德/月德/岁德/太阳到山/天赦/天愿/三合/六合）
+     → 仅扣分（WARN），真冲行标注"有制化：…"
    - 反：不冲之日不出现该条
-   - 制化案例：冲但整体合格 → 不一票否决
-4. 月支与亡命关系降为提示（info_reasons，不扣分不否决）
-5. 兼容性：无亡命 owner / 非安葬典型 owners → wangming_info 为 None
+4. 月支与亡命破刑害降为提示（info_reasons，第一阶段临时降级，第二阶段重估）
+5. 流年（太岁）层：仙命六冲 = 岁破级否决（analyze_year + 相主硬门槛双保险）；
+   破/刑/害 = 临时降级提示
+6. 兼容性：无亡命 owner / 非安葬典型 owners → wangming_info 为 None
 退出码：全过 0，失败 1。
 """
 import sys
@@ -86,7 +90,9 @@ for label, bd, ygz, nayin, wx in SAMPLES:
           ('亡命（仙命）：%s，%s年生，%s命（%s）'
            % (label, ygz, nayin, wx)) in r.get('reason', ''))
 
-print('== 3. 仙命真冲口径（2026-01-05 卯日 / 乙酉仙命）==')
+print('== 3. 仙命真冲三级判定 ==')
+
+# 3a. 基础冲扣分：01-05 卯日 / 乙酉仙命（当天五行19走提前返回，仍否决）
 D0105 = dt.date(2026, 1, 5)
 owners_chong = [dead('某公', '1945-08-15'),
                 {'name': '孝子甲', 'role': '孝子1', '性别': '男',
@@ -101,11 +107,11 @@ chong_lines = [d for d in xz if '真冲' in d]
 check('仙命真冲 -30 且文案含"须见吉神制化"',
       len(chong_lines) == 1 and '-30分' in chong_lines[0]
       and '仙命' in chong_lines[0] and '制化' in chong_lines[0])
-check('仙命真冲不带 [硬性门槛] 前缀（不进相主否决通道）',
+check('仙命真冲不带 [硬性门槛] 前缀（三级判定独立于相主否决通道）',
       all(not str(d).startswith('[硬性门槛]') for d in xz))
-check('veto_reasons 不含仙命六冲条目',
-      not any('仙命' in v or '相主硬门槛' in v
-              for v in (r_chong.get('veto_reasons') or [])))
+check('当天总分0、❌凶、有否决原因（不裸放）',
+      r_chong.get('score') == 0 and r_chong.get('level') == '❌ 凶'
+      and bool(r_chong.get('veto_reasons')))
 check('亡命日支害已剔除（相主仅 -30，不再有 -5 日支害）',
       sd.get('相主得分') == -30)
 
@@ -115,15 +121,32 @@ r_no = pure_score(D0119, owners_chong)
 xz_no = (r_no.get('score_details') or {}).get('相主详情') or []
 check('反向：巳日无仙命真冲条', not any('真冲' in str(d) for d in xz_no))
 
-# 制化案例：乙亥仙命（1935）于 01-19 巳日逢冲，但整体合格 → 不一票否决
-r_zh = pure_score(D0119, [dead('乙亥命', '1935-03-01')])
-xz_zh = (r_zh.get('score_details') or {}).get('相主详情') or []
-check('制化案例：仙命真冲条存在', any('仙命' in str(d) and '真冲' in str(d) for d in xz_zh))
-check('制化案例：无一票否决、总分>0',
-      not r_zh.get('veto_reasons') and r_zh.get('score', 0) > 0)
+# 3b. 叠重煞直否：2026-04-25 巳日乙亥仙命，叠月三煞 → 直接否决（不论制化）
+r_heavy = pure_score(dt.date(2026, 4, 25), [dead('乙亥命', '1935-03-01')])
+_vh = [v for v in (r_heavy.get('veto_reasons') or []) if '仙命真冲叠大忌' in v]
+check('叠三煞 → "仙命真冲叠大忌"显式否决',
+      bool(_vh) and '叠三煞' in _vh[0]
+      and r_heavy.get('score') == 0 and r_heavy.get('level') == '❌ 凶')
 
-print('== 4. 月支与亡命关系降为提示 ==')
-# 01-05 午时月支子；子酉相破。直接单测 analyze_month 通道：
+# 3c. 无制化否决：2026-06-24 巳日乙亥仙命，无宽集吉神 → 显式否决
+r_bare = pure_score(dt.date(2026, 6, 24), [dead('乙亥命', '1935-03-01')])
+_vb = [v for v in (r_bare.get('veto_reasons') or []) if '仙命真冲无制化' in v]
+check('无化解吉神 → "仙命真冲无制化"显式否决',
+      bool(_vb) and '大忌不用' in _vb[0]
+      and r_bare.get('score') == 0 and r_bare.get('level') == '❌ 凶')
+
+# 3d. 有制化 WARN：2026-02-22 卯日乙酉仙命，天德制化 → 仅 -30 扣分，不否决
+r_warn = pure_score(dt.date(2026, 2, 22), [dead('乙酉命', '1945-08-15')])
+xz_warn = (r_warn.get('score_details') or {}).get('相主详情') or []
+_wline = [str(d) for d in xz_warn if '真冲' in str(d)]
+check('有制化：真冲行标注"（有制化：天德）"',
+      len(_wline) == 1 and '有制化：天德' in _wline[0])
+check('有制化：不否决、总分>0、等级非凶',
+      not r_warn.get('veto_reasons') and r_warn.get('score', 0) > 0
+      and r_warn.get('level') != '❌ 凶')
+
+print('== 4. 月支与亡命破刑害：临时降级提示 ==')
+# 01-05 月支子；子酉相破。直接单测 analyze_month 通道：
 analysis = None
 from modules.评分器 import Scorer
 _m_date = dt.date(2026, 1, 5)
@@ -134,11 +157,30 @@ print('   month score=%s reasons=%s info=%s'
       % (ma.get('score'), ma.get('reasons'), ma.get('info_reasons')))
 check('月支破亡命不扣分（score 无 -15 破罚）',
       not any('相破' in r_ for r_ in (ma.get('reasons') or [])))
-check('月支破亡命进 info_reasons 提示',
-      any('相破' in r_ and '亡命' in r_
+check('月支破亡命进 info_reasons 提示且标注临时降级',
+      any('相破' in r_ and '亡命' in r_ and '第一阶段临时降级' in r_
           for r_ in (ma.get('info_reasons') or [])))
 
-print('== 5. 兼容性 ==')
+print('== 5. 流年（太岁）层：冲否 / 破刑害提示 ==')
+# analyze_year 整数年 2026 = 丙午年：子 wm 冲午太岁 → 岁破级否决
+ya = Scorer().analyze_year(2026, '安葬', [dead('丙子命', '1936-03-01')], None)
+check('仙命冲流年太岁 → suitable=False/大凶',
+      ya.get('suitable') is False and ya.get('level') == '大凶'
+      and any('冲流年太岁' in r and '岁破级' in r
+              for r in (ya.get('reasons') or [])))
+# 午卯破 → 临时降级提示，可否
+ya2 = Scorer().analyze_year(2026, '安葬', [dead('己卯命', '1939-03-01')], None)
+check('流年破亡命 → 临时降级提示、不否决',
+      ya2.get('suitable') is True
+      and any('相破' in r and '第一阶段临时降级' in r
+              for r in (ya2.get('info_reasons') or [])))
+# sizhu 直传路径双保险：2026-01-19（年支巳）乙亥仙命 → 相主硬门槛否决
+r_yc = pure_score(D0119, [dead('乙亥命', '1935-03-01')])
+check('sizhu 直传：仙命冲太岁走相主硬门槛否决',
+      any('冲流年太岁' in v for v in (r_yc.get('veto_reasons') or []))
+      and r_yc.get('score') == 0 and r_yc.get('level') == '❌ 凶')
+
+print('== 6. 兼容性 ==')
 r_none = pure_score(D0119, [
     {'name': '孝子甲', 'role': '孝子1', '性别': '男', 'birth_date': '1999-04-05'}])
 check('无死者卡 → wangming_info=None', r_none.get('wangming_info') is None)

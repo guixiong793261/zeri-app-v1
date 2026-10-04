@@ -1511,6 +1511,8 @@ class Scorer:
 
             # 计算相主得分（日课日支与事主生肖/日支的关系）
             xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(sizhu, owners)
+            # 仙命信息提前构建（三级判定 + 返回块共用）
+            wangming_info = self._build_wangming_info(owners)
 
             # 相主硬性门槛：命主年支/日支与日课日支六冲或自刑 → 一票否决
             xiangzhu_veto_items = [str(d) for d in xiangzhu_details if str(d).startswith('[硬性门槛]')]
@@ -1553,7 +1555,7 @@ class Scorer:
             if sansha_info.get('year_sansha_fan'):
                 sansha_fan_da_ji = True
                 if sansha_fan_reason:
-                    sansha_fan_reason += '、年三煞犯山向'
+                    sansha_fan_reason += '、年三煞(山向)'
                 else:
                     sansha_fan_reason = '年三煞(山向)'
             
@@ -1561,7 +1563,7 @@ class Scorer:
             if sansha_info.get('month_sansha_fan'):
                 sansha_fan_da_ji = True
                 if sansha_fan_reason:
-                    sansha_fan_reason += '、月三煞犯山向'
+                    sansha_fan_reason += '、月三煞(山向)'
                 else:
                     sansha_fan_reason = '月三煞(山向)'
             
@@ -1572,7 +1574,7 @@ class Scorer:
             if sansha_info.get('year_sansha_month_fan') and _spv:
                 sansha_fan_da_ji = True
                 if sansha_fan_reason:
-                    sansha_fan_reason += '、年三煞犯月柱'
+                    sansha_fan_reason += '、年三煞(月柱)'
                 else:
                     sansha_fan_reason = '年三煞(月柱)'
 
@@ -1582,7 +1584,7 @@ class Scorer:
             if sansha_info.get('year_sansha_hour_fan') and _spv:
                 sansha_fan_da_ji = True
                 if sansha_fan_reason:
-                    sansha_fan_reason += '、年三煞犯时柱'
+                    sansha_fan_reason += '、年三煞(时柱)'
                 else:
                     sansha_fan_reason = '年三煞(时柱)'
 
@@ -1600,7 +1602,39 @@ class Scorer:
                 _block_text = '；'.join(str(r) for r in _block_reasons) if _block_reasons else '坐山犯五黄，宜静不宜动'
                 veto_reasons.append(f"山家封禁：{_block_text}（一票否决）")
 
-            if sansha_fan_da_ji or xiangzhu_veto_items or sansha_info.get('mountain_blocked'):
+            # 仙命真冲三级判定（2026-10-04 用户验收补档，显式 VETO）：
+            # 基础 -30（相主通道）
+            #   ├─ 叠三煞/岁破/月破（日破）→ 直接否决（有制化也不救）
+            #   ├─ 无宽集化解吉神 → 一票否决
+            #   └─ 有宽集化解吉神（天德/月德/岁德/太阳到山/天赦/天愿/三合/六合）
+            #      → 仅扣分（WARN），并在真冲行标注"有制化：…"
+            wangming_veto = ''
+            _wm_gz = wangming_info.get('年柱', '') if wangming_info else ''
+            _day_zhi = sizhu.get('day_zhi', '')
+            if _wm_gz and self.check_liuchong(_day_zhi, _wm_gz[1]):
+                _ji_blob = ' '.join(str(j) for j in self.ji_list)
+                _heavy = [k for k in ('三煞', '岁破', '月破', '日破') if k in _ji_blob]
+                if _heavy:
+                    wangming_veto = (
+                        f"仙命真冲叠大忌：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
+                        f"叠{'/'.join(_heavy)}，大忌不用（一票否决）")
+                else:
+                    _resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
+                    if _resolvers:
+                        # 有制化：仅扣分；在真冲明细行补注（防止用户误判为裸冲）
+                        _tag = f"（有制化：{'、'.join(_resolvers)}）"
+                        for _i, _line in enumerate(xiangzhu_details):
+                            if '真冲' in str(_line) and '有制化' not in str(_line):
+                                xiangzhu_details[_i] = str(_line) + _tag
+                    else:
+                        wangming_veto = (
+                            f"仙命真冲无制化：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
+                            f"四柱无天德/月德/岁德/太阳到山/天赦/天愿/三合/六合等吉神制化，"
+                            f"大忌不用（一票否决）")
+                if wangming_veto:
+                    veto_reasons.append(wangming_veto)
+
+            if sansha_fan_da_ji or xiangzhu_veto_items or sansha_info.get('mountain_blocked') or wangming_veto:
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -1705,7 +1739,6 @@ class Scorer:
                         self.level = '❌ 凶'
                         score_details['总分'] = 0
 
-            wangming_info = self._build_wangming_info(owners)
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -1886,7 +1919,7 @@ class Scorer:
         except Exception:
             return None
 
-    def analyze_year(self, year, event_type, owners=None, shan_xiang=None, jian_xiang=None, direction=None, zeli_mode='feixing'):  # _zm0915
+    def analyze_year(self, year, event_type, owners=None, shan_xiang=None, jian_xiang=None, direction=None, zeli_mode='feixing', year_pillar_override=None):  # _zm0915
         """
         分析年份吉凶
 
@@ -1897,6 +1930,10 @@ class Scorer:
             shan_xiang: 山向信息
             jian_xiang: 兼向信息
             direction: 动土方位
+            year_pillar_override: 两字年柱（如'乙巳'）。按整数年分析时内部取
+                立春后年柱代表全年（2026→丙午）；但分析具体日课（尤其立春前）时，
+                流年必须以实际日课年柱为准，由调用方传入覆盖（2026-10-04 仙命
+                冲太岁验收整改：否则子命在乙巳年残课会被误判为冲丙午太岁）。
 
         Returns:
             dict: 年份分析结果
@@ -1919,6 +1956,10 @@ class Scorer:
         sizhu = calculate_sizhu(test_date, 12, 0)
         year_gan = sizhu.get('year_gan', '')
         year_zhi = sizhu.get('year_zhi', '')
+        # 具体日课：以实际年柱覆盖代表年柱（见函数 docstring）
+        if year_pillar_override and len(str(year_pillar_override)) >= 2:
+            year_gan = str(year_pillar_override)[0]
+            year_zhi = str(year_pillar_override)[1]
         
         # 分析结果
         analysis = {
@@ -1951,19 +1992,30 @@ class Scorer:
                                                longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
 
-                    # 亡命（仙命）流年关系：一律降为提示（不扣分、不否决），
-                    # 2026-10-04 用户拍板；年层仙命口径留待第二阶段。
+                    # 亡命（仙命）流年关系（2026-10-04 用户补授权，分两档）：
+                    #   六冲（仙命冲流年太岁）= 岁破级，直接否决；
+                    #   破/刑/害/合 = 【第一阶段临时降级】为提示（不扣分不否决），
+                    #     第二阶段仙命口径统一时重新核定；叠加重煞的否决由本函数后续
+                    #     独立通道（三煞占方等）保证，不因提示漏网。
                     if _is_wangming_role(owner.get('role', '')):
+                        if self.check_liuchong(year_zhi, owner_year_zhi):
+                            analysis['suitable'] = False
+                            analysis['level'] = '大凶'
+                            analysis['score'] = 0
+                            analysis['reasons'].append(
+                                f"亡命（仙命）{owner['name']}年命{owner_year_zhi}冲流年太岁{year_zhi}"
+                                f"（岁破级大忌，一票否决）")
+                            return analysis
                         _wm_tip = ''
-                        if self.check_liuchong(year_zhi, owner_year_zhi): _wm_tip = '六冲'
-                        elif self.check_po(year_zhi, owner_year_zhi): _wm_tip = '相破'
+                        if self.check_po(year_zhi, owner_year_zhi): _wm_tip = '相破'
                         elif self.check_xing(year_zhi, owner_year_zhi): _wm_tip = '相刑'
                         elif self.check_hai(year_zhi, owner_year_zhi): _wm_tip = '相害'
                         elif self.check_liuhe(year_zhi, owner_year_zhi): _wm_tip = '六合'
                         elif self.check_sanhe([year_zhi, owner_year_zhi]): _wm_tip = '三合'
                         if _wm_tip:
                             analysis.setdefault('info_reasons', []).append(
-                                f"提示：流年与亡命（仙命）{owner['name']}年命{owner_year_zhi}{_wm_tip}")
+                                f"提示（第一阶段临时降级，第二阶段重估）：流年与亡命（仙命）"
+                                f"{owner['name']}年命{owner_year_zhi}{_wm_tip}")
                         continue
 
                     # 2026-09 作灶主事人模式：辅助者（半权重）年命六冲不降否决，冲刑破害/合化半权重
@@ -2243,7 +2295,11 @@ class Scorer:
             year = test_date.year  # fallback
         
         # 首先检查年份是否适合，如果年份不适合，则月份也不适合
-        year_analysis = self.analyze_year(year, event_type, owners, shan_xiang, direction=direction, zeli_mode=zeli_mode)  # _zm0915
+        year_analysis = self.analyze_year(
+            year, event_type, owners, shan_xiang, direction=direction,
+            zeli_mode=zeli_mode,
+            year_pillar_override=((day_sizhu or {}).get('year_gan', '')
+                                  + (day_sizhu or {}).get('year_zhi', '')) or None)  # _zm0915
         # 使用 .get() 方法安全访问，确保所有必要键都存在
         if not year_analysis.get('suitable', True):
             # 如果年份不适合，直接返回年份分析结果（作为月份分析结果）
@@ -2318,8 +2374,10 @@ class Scorer:
                                                longitude=owner.get('birth_longitude'))
                     owner_year_zhi = owner_sizhu.get('year_zhi', '')
 
-                    # 亡命（仙命）月支关系：一律降为提示（不扣分、不否决），
-                    # 2026-10-04 用户拍板；月份层仙命口径留待第二阶段。
+                    # 亡命（仙命）月支关系：【第一阶段临时降级】为提示（不扣分、不否决），
+                    # 第二阶段仙命口径统一时重新核定。叠加前置条件（2026-10-04 用户验收
+                    # 要求）：叠三煞占月/五黄到山/阴府等否决由本函数后续独立通道保证，
+                    # 不因本提示漏网；仙命日支真冲的叠加否决在 calculate_score 主流程处理。
                     if _is_wangming_role(owner.get('role', '')):
                         _wm_tip = ''
                         if self.check_liuchong(month_zhi, owner_year_zhi): _wm_tip = '相冲'
@@ -2330,7 +2388,8 @@ class Scorer:
                         elif self.check_sanhe([month_zhi, owner_year_zhi]): _wm_tip = '三合'
                         if _wm_tip:
                             analysis.setdefault('info_reasons', []).append(
-                                f"提示：月支与亡命（仙命）{owner['name']}年命{owner_year_zhi}{_wm_tip}")
+                                f"提示（第一阶段临时降级，第二阶段重估）：月支与亡命（仙命）"
+                                f"{owner['name']}年命{owner_year_zhi}{_wm_tip}")
                         continue
 
                     # 2026-09 作灶主事人模式：辅助者（半权重）月支六冲不降否决，冲刑破害/合化半权重
@@ -3824,6 +3883,37 @@ class Scorer:
                 veto_list.append(f"日课日支{day_zhi}冲{name}日支{owner_day_zhi}（冲夫妻宫，婚嫁大忌）")
         return veto_list
 
+    def _detect_wm_resolvers(self, wu_xing_result=None, sun_moon_info=None):
+        """仙命真冲的化解吉神探测（宽集，2026-10-04 用户拍板）。
+
+        宽集：天德/月德/岁德（含 *德合）、天赦、天愿、太阳到山、
+        三合、六合——三合/六合不论合化成功与否，见即算有制化。
+        来源：
+        1. shensha_list 吉神项 name（神煞通道；三合/六合均为吉神项）
+        2. wu_xing_result.details['地支关系'] 中的合局（四柱会合）
+        3. sun_moon_info.sun_to_mountain（太阳到山）
+        返回命中的吉神键名列表；无 → []。
+        """
+        hits = []
+
+        def _take(blob):
+            for k in ('天德', '月德', '岁德', '天赦', '天愿', '三合', '六合'):
+                if k in blob and k not in hits:
+                    hits.append(k)
+
+        for s in self.shensha_list:
+            name = str(s.get('name', '')) if isinstance(s, dict) else ''
+            if name:
+                _take(name)
+        if isinstance(wu_xing_result, dict):
+            _d = wu_xing_result.get('details', {})
+            for r in (_d.get('地支关系') or []):
+                _take(str(r))
+        if sun_moon_info and sun_moon_info.get('sun_to_mountain'):
+            if '太阳到山' not in hits:
+                hits.append('太阳到山')
+        return hits
+
     def _build_wangming_info(self, owners):
         """构造亡命（仙命）信息：年柱干支 + 纳音名 + 纳音五行。
 
@@ -3897,8 +3987,10 @@ class Scorer:
         
         for idx, owner in enumerate(owners):
             owner_name = owner.get('name', f'事主{idx+1}')
-            # 亡命（仙命）：年命六冲/自刑降为"须制化"大扣分（不一票否决，
-            # 2026-10-04 用户拍板）；不论亡命日柱、不论月时支冲、不论流年冲。
+            # 亡命（仙命）：本函数只产出日支真冲 -30 的扣分与明细（文案"须见
+            # 吉神制化"），不直接否决；显式三级判定（有制化WARN/无制化VETO/
+            # 叠重煞直否）在 calculate_score 主流程执行。亡命不论日柱、不论月时支
+            # 冲；流年（冲太岁）见本函数末段：仙命六冲走 [硬性门槛] 否决。
             _is_wm = _is_wangming_role(owner.get('role', ''))
 
             # 2026-09 作灶主事人模式：辅助者（半权重）冲刑不降否决、扣分减半
@@ -4058,8 +4150,6 @@ class Scorer:
             year_zhi = ''
         if year_zhi:
             for idx, owner in enumerate(owners):
-                if _is_wangming_role(owner.get('role', '')):
-                    continue  # 亡命不论流年冲太岁
                 owner_name = owner.get('name', f'事主{idx+1}')
                 owner_year_zhi = ''
                 if 'sizhu' in owner:
@@ -4068,7 +4158,24 @@ class Scorer:
                         owner_year_zhi = _parts[0][1]
                 elif '生肖' in owner:
                     owner_year_zhi = owner['生肖']
+                if not owner_year_zhi and owner.get('birth_date') and \
+                        _is_wangming_role(owner.get('role', '')):
+                    # 仅仙命需要 birth_date 解析（冲太岁硬否决）。
+                    # 普通事主保持旧口径：只认 sizhu/生肖 键，不在此扩展，
+                    # 避免激活历史死档漂移锁定基线（2021金课 事主4 未冲丑）。
+                    _osz = calculate_sizhu(owner['birth_date'],
+                                           owner.get('birth_hour', 12),
+                                           owner.get('birth_minute', 0),
+                                           longitude=owner.get('birth_longitude'))
+                    owner_year_zhi = _osz.get('year_zhi', '')
                 if owner_year_zhi and check_liuchong(year_zhi, owner_year_zhi):
+                    if _is_wangming_role(owner.get('role', '')):
+                        # 仙命冲流年太岁（岁破级），2026-10-04 用户补授权：硬否决。
+                        # 走 [硬性门槛] → xiangzhu_veto_items，sizhu 直传路径与
+                        # analyze_year 通道（非直传路径）双保险，口径一致。
+                        details.append(f"[硬性门槛]亡命（仙命）{owner_name}年命{owner_year_zhi}"
+                                       f"冲流年太岁{year_zhi}（岁破级大忌），不可用")
+                        continue
                     _zn_w = owner.get('_zaozhu_weight', None)
                     _zn_w = float(_zn_w) if _zn_w is not None else 1.0
                     score = _zaozhu_weighted(-15, _zn_w)
@@ -4330,7 +4437,11 @@ class Scorer:
             # 检查是否为四柱输入模式，如果是则跳过基于日期的年、月分析
             if not sizhu.get('is_sizhu_input', False):
                 # 分析年份吉凶（传递山向和动土方位用于分析）
-                year_analysis = self.analyze_year(year, event_type, owners, shan_xiang, direction=direction, zeli_mode=self._zeli_mode)  # _zm0915
+                year_analysis = self.analyze_year(
+                    year, event_type, owners, shan_xiang, direction=direction,
+                    zeli_mode=self._zeli_mode,
+                    year_pillar_override=(sizhu.get('year_gan', '')
+                                          + sizhu.get('year_zhi', '')) or None)  # _zm0915
                 if not year_analysis['suitable']:
                     # 2026-09-10 否决文案只列真实触发项（同月份不宜口径）
                     _ya_info = set(year_analysis.get('info_reasons') or [])
