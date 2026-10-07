@@ -531,17 +531,23 @@ class ConstructionRuleChecker(EventRuleChecker):
             luck = self.check_year_luck(shan_xiang, year_ganzhi)
             
             if luck:
-                # 2026-09-01 修复：复合文本拆分，"大利。忌金神"不应整条进宜区
-                # 拆为 宜"{山}{年}大利" + 忌"{山}{年}忌金神"，宜忌分离
-                yi_note, ji_note = luck, ''
-                if '。忌' in luck:
-                    yi_note, ji_note = luck.split('。忌', 1)
-                if '不利' in yi_note:
-                    ji_list.append(f'{shan_xiang}{year_ganzhi}年{yi_note}')
-                elif yi_note:
-                    yi_list.append(f'{shan_xiang}{year_ganzhi}年{yi_note}')
-                if ji_note:
-                    ji_list.append(f'{shan_xiang}{year_ganzhi}年忌{ji_note}')
+                # 2026-10-08 修复（忌项混入长句）：按句号/分号逐句拆分分类，
+                # 仅否定句（不利/忌/凶/犯）入忌，肯定句（利/吉）入宜，
+                # 混合长句不再整条进忌。
+                # 例："利。兼末：不利，犯三煞。兼申：大利" → 宜"利"、宜"兼申：大利"
+                #     + 忌"兼末：不利，犯三煞"；
+                #     "不利。犯正阴府" → 两句均入忌。
+                # 2026-09-01 的"大利。忌金神"拆分由此统一覆盖。
+                import re as _re
+                sentences = [s.strip()
+                             for s in _re.split(r'[。；]', luck) if s.strip()]
+                for sent in sentences:
+                    _neg = ('不利' in sent or '忌' in sent
+                            or '凶' in sent or '犯' in sent)
+                    if _neg:
+                        ji_list.append(f'{shan_xiang}{year_ganzhi}年{sent}')
+                    elif '利' in sent or '吉' in sent:
+                        yi_list.append(f'{shan_xiang}{year_ganzhi}年{sent}')
         except Exception:
             pass
     

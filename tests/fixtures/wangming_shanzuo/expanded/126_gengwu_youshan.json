@@ -22,10 +22,10 @@
       "生",
       "坐山"
     ],
-    "veto": false,
+    "veto": true,
     "level_cap": false,
     "report_level": "❌ 凶",
-    "final_score": 43
+    "final_score": 0
   },
-  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True；集成state=no_veto"
+  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True；Q2并列化补寅巳刑-8，五行34→26<60门槛否决（原final43为漏报前提下的结果）"
 }

@@ -640,6 +640,9 @@ class Scorer:
             # （修造等山向中心，四柱临方扣分不否决）。默认True走严口径，
             # 通用评分路径在 sansha_info 口径确定后立即覆写。
             self._pillar_veto_mode = True
+            # Q4：本轮已制化正阴府干集合（供 _check_wu_xing 规则合并后清理
+            # 年运/日月干静态忌项），随评分重置防跨日残留
+            self._mitigated_yinfu_gans = set()
             # _zm0915：择日模式 pure=纯正五行（协纪辨方书；玄空飞星/年家五黄二黑紫白封禁不参与），
             # feixing=正五行+玄空飞星（2026-09-15前的混合规则）。引擎默认 feixing 保持向后兼容，
             # 主程序按界面选择显式传值（界面默认 pure）。
@@ -1415,20 +1418,59 @@ class Scorer:
                 sansha_info['sansha_penalty'] = total_sansha_penalty  # _fc0915：封禁扣分回写，penalty须==明细合计
                 sansha_info['sansha_penalty_detail'] = total_sansha_detail
             if sansha_info.get('mountain_warnings'):
+                # Q4（2026-10-08 拍板）：山家警告与忌项分离，同一警告只处理一次。
+                #   情形①已注“有制化”（含正阴府“不禁用”且有岁德/天乙贵人等制化）
+                #       → 不入 ji_list、不扣忌事分，入 mountain_warnings_mitigated
+                #       供详情“山家警告·已制化”区块展示；
+                #   情形②“制化不全” → 保留忌项并注明“制化不全，需补制”；
+                #   情形③“无制化” → 保留忌项，忌事 -15（breakdown）+ 专项 -10；
+                #   情形④同文重复 → 合并一条，不重复扣分。
+                _mitigated = []
                 for warning in sansha_info.get('mountain_warnings', []):
                     warn_text = warning if isinstance(warning, str) else warning.get('说明', str(warning))
-                    if warn_text and warn_text not in self.ji_list:
+                    if not warn_text:
+                        continue
+                    if '（有制化：' in warn_text:
+                        if warn_text not in _mitigated:
+                            _mitigated.append(warn_text)
+                        continue
+                    if '制化不全' in warn_text:
+                        _ji_text = warn_text if '需补制' in warn_text else warn_text + '（制化不全，需补制）'
+                        if _ji_text not in self.ji_list:
+                            self.ji_list.append(_ji_text)
+                        continue
+                    if warn_text not in self.ji_list:
                         # 克山运去重：修造规则路径已报则跳过，避免重复计忌
                         if '克山运' in warn_text and any('克山运' in j for j in self.ji_list):
                             continue
                         self.ji_list.append(warn_text)
-                        # 无制化条件凶煞（时灾煞/时曜煞等）独立扣分，与"日三煞(时柱)"同级
-                        if '（无制化）' in warn_text:
-                            self.final_score -= 10
-                            total_sansha_penalty -= 10
-                            total_sansha_detail.append('%s（-10分）' % warn_text)
-                            sansha_info['sansha_penalty'] = total_sansha_penalty
-                            sansha_info['sansha_penalty_detail'] = total_sansha_detail
+                    # 无制化条件凶煞（时灾煞/时曜煞等）独立扣分，与"日三煞(时柱)"同级
+                    if '（无制化）' in warn_text:
+                        self.final_score -= 10
+                        total_sansha_penalty -= 10
+                        total_sansha_detail.append('%s（-10分）' % warn_text)
+                        sansha_info['sansha_penalty'] = total_sansha_penalty
+                        sansha_info['sansha_penalty_detail'] = total_sansha_detail
+                if _mitigated:
+                    sansha_info['mountain_warnings_mitigated'] = _mitigated
+                    # Q4 拍板补充：规则层另有两条静态路径会就同一正阴府再列忌项——
+                    # 年运表“…年犯正阴府”（及配套“…年不利”）与
+                    # “…正阴府：忌X日/月干”（安葬路径为“阴府：忌X…”）。
+                    # 凡已制化且不禁用的干，按拍板一并移出忌项（不再进忌事扣分），
+                    # E008 随之清零。仅按“干”粒度判定（check_yinfu 不区分何柱）。
+                    import re as _re_yf
+                    _mit_gans = set()
+                    for _mt in _mitigated:
+                        for _mg in _re_yf.findall(
+                                r'([甲乙丙丁戊己庚辛壬癸])干见[^。]*犯正阴府', _mt):
+                            _mit_gans.add(_mg)
+                        for _pair in _re_yf.findall(
+                                r'([甲乙丙丁戊己庚辛壬癸]{2})年月日时干全见，犯正阴府', _mt):
+                            _mit_gans.update(list(_pair))
+                    # 忌项清理不能在此执行：规则层（年运表“…年犯正阴府”、
+                    # “…正阴府：忌X日/月干”）在稍后的 _check_wu_xing 中才合并进
+                    # self.ji_list。暂存干集合，由 _check_wu_xing 统一清理。
+                    self._mitigated_yinfu_gans = _mit_gans
             
             # 吉神加分（来自山家检查）
             mountain_jishen = sansha_info.get('mountain_jishen', [])
@@ -4129,7 +4171,7 @@ class Scorer:
 
         # 遍历所有事主，计算匹配度
         for idx, owner in enumerate(owners):
-            owner_name = owner.get('name', f'事主{idx+1}')
+            owner_name = owner.get('name') or owner.get('role') or f'事主{idx+1}'
             owner_xishen = owner.get('xishen', '')
             owner_yongshen = owner.get('yongshen', '')
 
@@ -4386,7 +4428,7 @@ class Scorer:
             return 0, []
         
         for idx, owner in enumerate(owners):
-            owner_name = owner.get('name', f'事主{idx+1}')
+            owner_name = owner.get('name') or owner.get('role') or f'事主{idx+1}'
             # 亡命（仙命）：本函数只产出日支真冲 -30 的扣分与明细（文案"须见
             # 吉神制化"），不直接否决；显式三级判定（有制化WARN/无制化VETO/
             # 叠重煞直否）在 calculate_score 主流程执行。亡命不论日柱、不论月时支
@@ -4550,7 +4592,7 @@ class Scorer:
             year_zhi = ''
         if year_zhi:
             for idx, owner in enumerate(owners):
-                owner_name = owner.get('name', f'事主{idx+1}')
+                owner_name = owner.get('name') or owner.get('role') or f'事主{idx+1}'
                 owner_year_zhi = ''
                 if 'sizhu' in owner:
                     _parts = owner['sizhu'].split()
@@ -4735,6 +4777,38 @@ class Scorer:
         for _j in (_rule_ji or []):
             if _j not in self.ji_list:
                 self.ji_list.append(_j)
+
+        # Q4（2026-10-08 拍板）：已制化且不禁用的正阴府干，其规则层静态忌项
+        # （年运表“…年犯正阴府”及配套“…年不利”；
+        #  “…正阴府/阴府：忌X日/月干”）一律移出忌项——不再进忌事扣分，
+        #  E008 随之清零。“年不利”仅在与“年犯正阴府”成对出现时才移出，
+        #  他因（三煞/金神等）所致的“年不利”保留。
+        _mit_gans = getattr(self, '_mitigated_yinfu_gans', None) or set()
+        if _mit_gans:
+            _year_gz = (str(sizhu.get('year_gan', '') or '')
+                        + str(sizhu.get('year_zhi', '') or ''))
+            _yg = str(sizhu.get('year_gan', '') or '')
+            _keep, _yf_year = [], set()
+            for _j in self.ji_list:
+                _js = str(_j)
+                if (_yg in _mit_gans
+                        and _js == f'{shan_xiang}{_year_gz}年犯正阴府'):
+                    _yf_year.add(_js)
+                    continue
+                _m2 = re.search(
+                    r'阴府：忌([甲乙丙丁戊己庚辛壬癸])(日|月)干$', _js)
+                if _m2 and _m2.group(1) in _mit_gans:
+                    continue
+                _keep.append(_j)
+            if _yf_year:
+                _keep2 = []
+                for _j in _keep:
+                    if (str(_j) == f'{shan_xiang}{_year_gz}年不利'
+                            and f'{shan_xiang}{_year_gz}年犯正阴府' in _yf_year):
+                        continue
+                    _keep2.append(_j)
+                _keep = _keep2
+            self.ji_list = _keep
 
         # 分金/正体大凶一票否决（选定山向时）：修造择日以山家为核心，
         # 分金五行（纳音）受日课四柱克泄至"大凶"，或正向正体大凶，直接否决。
@@ -5563,20 +5637,21 @@ class Scorer:
                             score += 6
                             _lb = self._banhe_pos_label(z1, z2) or _bn or '半合'
                             seg.append('%s：+6分' % _lb)
+                    # §Q2 冲/害/刑/破为各自独立布尔条件，并列累加（原 if/elif 互斥
+                    # 会在复合关系日漏报：丑未/寅申冲+刑、寅巳害+刑、巳申/戌未刑+破）
                     if check_liuchong(z1, z2):
                         score -= 15
                         seg.append('六冲（%s%s冲）：-15分' % (z1, z2))
-                    elif check_liuhai(z1, z2):
+                    if check_liuhai(z1, z2):
                         score -= 6
                         seg.append('六害（%s%s害）：-6分' % (z1, z2))
-                    else:
-                        _xing = check_xing(z1, z2)
-                        if _xing:
-                            score -= 8
-                            seg.append('相刑（%s，%s%s刑）：-8分' % (_xing, z1, z2))
-                        elif check_po(z1, z2):
-                            score -= 4
-                            seg.append('相破（%s%s破）：-4分' % (z1, z2))
+                    _xing = check_xing(z1, z2)
+                    if _xing:
+                        score -= 8
+                        seg.append('相刑（%s，%s%s刑）：-8分' % (_xing, z1, z2))
+                    if check_po(z1, z2):
+                        score -= 4
+                        seg.append('相破（%s%s破）：-4分' % (z1, z2))
                     if z1 == z2 and not check_xing(z1, z2):
                         seg.append('伏吟（%s%s伏吟，0分不计分）' % (z1, z2))
                     for _s in seg:
@@ -5653,17 +5728,15 @@ class Scorer:
                         is_banhe, banhe_name = self._check_banhe(zhi1, zhi2)
                         if is_banhe:
                             score += 6
-                    # 六冲
+                    # §Q2 冲/害/刑/破并列累加（原为 elif 互斥）。注：本函数当前无
+                    # 调用方（五行恒等式走 _calc_all_zhi_relations_detail），保留仅为口径参考。
                     if check_liuchong(zhi1, zhi2):
                         score -= 15
-                    # 六害
-                    elif check_liuhai(zhi1, zhi2):
+                    if check_liuhai(zhi1, zhi2):
                         score -= 6
-                    # 相刑
-                    elif check_xing(zhi1, zhi2):
+                    if check_xing(zhi1, zhi2):
                         score -= 8
-                    # 相破
-                    elif check_po(zhi1, zhi2):
+                    if check_po(zhi1, zhi2):
                         score -= 4
                 except Exception as e:
                     logger.error(f"地支关系计算失败({zhi1}, {zhi2}): {str(e)}")
@@ -5717,21 +5790,21 @@ class Scorer:
                             else:
                                 _bh = '拱合%s局' % _ju
                         lines.append(f"{_bh}（时支{hz}与{nm}{z}）：+6分")
-                # 冲/害/刑/破（互斥，与计分同一优先级）
+                # §Q2 冲/害/刑/破为各自独立布尔条件，并列累加（原 elif 互斥在复合
+                # 时辰如寅巳（害+刑）、巳申（刑+破）会漏列，与全局明细对不上）
                 if check_liuchong(hz, z):
                     score -= 15
                     lines.append(f"六冲：时支{hz}冲{nm}{z}：-15分")
-                elif check_liuhai(hz, z):
+                if check_liuhai(hz, z):
                     score -= 6
                     lines.append(f"六害：时支{hz}害{nm}{z}：-6分")
-                else:
-                    _xing = check_xing(hz, z)
-                    if _xing:
-                        score -= 8
-                        lines.append(f"相刑（{_xing}）：时支{hz}刑{nm}{z}：-8分")
-                    elif check_po(hz, z):
-                        score -= 4
-                        lines.append(f"相破：时支{hz}破{nm}{z}：-4分")
+                _xing = check_xing(hz, z)
+                if _xing:
+                    score -= 8
+                    lines.append(f"相刑（{_xing}）：时支{hz}刑{nm}{z}：-8分")
+                if check_po(hz, z):
+                    score -= 4
+                    lines.append(f"相破：时支{hz}破{nm}{z}：-4分")
             except Exception as e:
                 logger.error(f"时柱关系明细计算失败({hz},{z}): {e}")
         return score, lines

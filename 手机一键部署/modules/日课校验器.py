@@ -181,12 +181,13 @@ class LintContext:
         self.bride_year_zhi = bride_year_zhi
         self.issues = []
 
-    def issue(self, rule_id, message, source='', suggestion=''):
-        """Issue 唯一入口：强制 rule_id 白名单校验。"""
+    def issue(self, rule_id, message, source='', suggestion='', severity=None):
+        """Issue 唯一入口：强制 rule_id 白名单校验。
+        severity 可覆盖注册级（用于同一规则内“禁用=ERROR/负分=WARN”分级）。"""
         meta = RULE_REGISTRY.get(rule_id)
         if meta is None:
             raise ValueError(f'未注册规则，禁止生成 issue: {rule_id}')
-        self.issues.append(Issue(rule_id, meta['severity'], message,
+        self.issues.append(Issue(rule_id, severity or meta['severity'], message,
                                  source, suggestion))
 
     # ---------- 便捷取值 ----------
@@ -514,12 +515,15 @@ def rule_e004(ctx):
             source=f'lucky_hours[{hour_zhi}]',
             suggestion='推荐时柱不得取禁用时辰，应改选吉时')
     elif _num(item.get('分值')) < 0:
+        # 负分按本规则文档口径为 WARN（时辰表与推荐时柱本为两套标准，
+        # 推荐柱在表中负分提示但不阻断交付；“禁用”才是 ERROR）
         ctx.issue(
             'E004',
-            f'推荐时柱「{hour_zhi}」时辰评分为负（{item.get("分值")}分）：'
+            f'推荐时柱「{hour_zhi}」时辰表评分为负（{item.get("分值")}分）：'
             f'{"、".join(item.get("说明", []))}',
             source=f'lucky_hours[{hour_zhi}]',
-            suggestion='推荐时柱宜取正分吉时')
+            suggestion='推荐时柱宜取正分吉时',
+            severity=SEVERITY_WARN)
     return None
 
 
@@ -706,6 +710,12 @@ def rule_e008(ctx):
                if isinstance(d, (list, tuple)) and len(d) >= 1]
     sources += [str(s.get('name', '')) for s in ctx.shensha_list
                 if isinstance(s, dict)]
+    # 山向中心事项（安葬/修造等）三煞独立扣分通道：不进 marriage_details/
+    # shensha_list，曾致真煞"年三煞(日柱)"被误报无出处；明细行含忌项名作子串。
+    _sd = ctx.detail.get('score_details') if isinstance(
+        ctx.detail.get('score_details'), dict) else None
+    if _sd:
+        sources += [str(x) for x in (_sd.get('三煞扣分明细') or [])]
     veto_srcs = [str(v) for v in (ctx.detail.get('veto_reasons') or [])]
     sources += veto_srcs
 
@@ -736,6 +746,85 @@ def rule_e008(ctx):
                 f'忌项「{item}」在评分明细与神煞信息段均无出处',
                 source='detail[ji_list]',
                 suggestion='若确为凶煞须补扣分并列神煞；否则从忌项删除')
+    return None
+
+
+@register_rule('E207', SEVERITY_ERROR, '时柱自述已含与地支关系恒等式一致')
+def rule_e207(ctx):
+    """时柱关系块自述“已计入五行评分·地支关系得分”时，用八字工具整合原语
+    独立重算四柱六对合计，须与 breakdown 地支关系得分一致；防止“自述已含、
+    实际未计/重复计”（Q5，2026-10-08 拍板）。
+
+    分值口径与评分器 _calc_all_zhi_relations_detail 一致：
+        六合+8/半合+6/六冲-15/六害-6/相刑-8/相破-4；伏吟0分。
+    枚举与原语调用在本规则内独立完成，不读取评分器算出的明细。
+    """
+    sz = ctx.detail.get('sizhu')
+    if not isinstance(sz, dict):
+        return '无四柱结构数据'
+    zhis = []
+    for k in ('年柱', '月柱', '日柱', '时柱'):
+        v = str(sz.get(k) or '')
+        if len(v) == 2:
+            zhis.append(v[1])
+    if len(zhis) != 4:
+        return '四柱地支不全'
+    try:
+        from .八字工具整合 import (check_liuhe, check_liuchong, check_liuhai,
+                                   check_xing, check_po)
+    except ImportError:
+        from 八字工具整合 import (check_liuhe, check_liuchong, check_liuhai,
+                                  check_xing, check_po)
+
+    # 半合：同一三合局内两支不同（与评分器 _check_banhe 同定义，此处独立枚举）
+    _SANHE_GROUPS = (('申', '子', '辰'), ('寅', '午', '戌'),
+                     ('巳', '酉', '丑'), ('亥', '卯', '未'))
+
+    def _is_banhe(a, b):
+        if a == b:
+            return False
+        return any(a in g and b in g for g in _SANHE_GROUPS)
+
+    calc = 0
+    for i in range(4):
+        for j in range(i + 1, 4):
+            a, b = zhis[i], zhis[j]
+            if check_liuhe(a, b):
+                calc += 8
+            elif _is_banhe(a, b):
+                calc += 6
+            if check_liuchong(a, b):
+                calc -= 15
+            if check_liuhai(a, b):
+                calc -= 6
+            if check_xing(a, b):
+                calc -= 8
+            if check_po(a, b):
+                calc -= 4
+
+    wxr = ctx.detail.get('wu_xing_result')
+    bd = wxr.get('score_breakdown') if isinstance(wxr, dict) else None
+    bd = bd if isinstance(bd, dict) else {}
+    claimed = bd.get('地支关系得分')
+    if claimed is None:
+        return '无五行恒等式地支关系分项'
+    if int(claimed) != calc:
+        ctx.issue(
+            'E207',
+            f'地支关系恒等式不符：独立重算六对合计 {calc:+d}，'
+            f'breakdown 记 {int(claimed):+d}',
+            source='八字工具整合原语重算 vs wu_xing_result.score_breakdown',
+            suggestion='核对时柱关系是否漏计或重复计')
+
+    # 自述措辞一致性：渲染文本存在时柱关系块时，须注明“已计入”
+    text = ctx.rendered_content
+    if text and '时柱地支关系' in text:
+        if '已计入五行评分·地支关系得分' not in text:
+            ctx.issue(
+                'E207',
+                '时柱关系块未注明“已计入五行评分·地支关系得分”',
+                source='rendered_content',
+                suggestion='统一时柱关系块措辞，避免误读为独立分项')
     return None
 
 
@@ -1196,13 +1285,17 @@ def rule_e203(ctx):
                       source='rendered_content vs detail[sizhu][日柱]',
                       suggestion='核对日柱干支是否串台')
 
-    # 2. 未替换占位符
+    # 2. 未替换占位符（先剔除有意保留的事主角色标签：相主角色后缀、生肖/日支
+    #    前缀、喜用匹配行——空名事主以角色名“事主N”作展示标签，非模板占位符）
+    _text_lab = re.sub(r'（事主[1-4]）', '', text)
+    _text_lab = re.sub(r'事主[1-4](生肖|日支|年命)', '', _text_lab)
+    _text_lab = re.sub(r'事主[1-4]：', '', _text_lab)
     placeholders = ['事主1', '事主2', '事主3', '事主4', '{{姓名}}', '{{日期}}']
     for ph in placeholders:
-        if ph in text:
+        if ph in _text_lab:
             ctx.issue('E203', f'报告文本出现未替换占位符「{ph}」',
                       source='rendered_content',
-                      suggestion='检查模板渲染逻辑')
+                      suggestion='检查模板渲染逻辑（已排除事主角色标签）')
 
     # 3. 日期串台：检查是否有不属于当前日期的 YYYY-MM-DD
     date_obj = None

@@ -22,10 +22,10 @@
       "克",
       "仙命"
     ],
-    "veto": false,
+    "veto": true,
     "level_cap": false,
-    "report_level": "❌ 凶（坐山克仙命，有制化：岁德）",
-    "final_score": 15
+    "report_level": "❌ 凶",
+    "final_score": 0
   },
-  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto"
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；Q2并列化补寅巳刑-8，五行33→25<60门槛否决（原final15为漏报前提下的结果）"
 }

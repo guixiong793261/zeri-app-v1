@@ -5914,10 +5914,12 @@ class ZeriApp:
                     for _zl in score_breakdown.get('十二长生明细', []):
                         content += f"      • {_zl}\n"
                 zhizhi = score_breakdown.get('地支关系得分', 0)
-                if zhizhi != 0:
-                    content += f"    ├─ 地支关系得分（四柱六对合计）：{zhizhi:+d} 分\n"
-                    for _zl in score_breakdown.get('地支关系明细', []):
-                        content += f"      • {_zl}\n"
+                # Q5（2026-10-08 拍板）：地支关系 0 分也展示总分行，
+                # 明细存在即列出（如午午午未：六合+24/自刑-24 相抵为 0），
+                # 避免审查/用户把“0 分隐藏”误读为时柱关系未计入。
+                content += f"    ├─ 地支关系得分（四柱六对合计）：{zhizhi:+d} 分\n"
+                for _zl in score_breakdown.get('地支关系明细', []):
+                    content += f"      • {_zl}\n"
                 nayin = score_breakdown.get('纳音匹配得分', 0)
                 if nayin != 0:
                     content += f"    └─ 纳音匹配得分：{nayin:+d} 分\n"
@@ -5994,7 +5996,7 @@ class ZeriApp:
             hour_rel_score = score_details.get('时柱关系得分', 0) or 0
             hour_rel_details = score_details.get('时柱关系明细', [])
             if hour_rel_score or hour_rel_details:
-                content += f"  时柱地支关系（仅展示，非独立分项，已含于上方地支关系得分，不单独计入公式）：{hour_rel_score:+d} 分\n"
+                content += f"  时柱地支关系（按时柱归集展示；时柱关系已计入五行评分·地支关系得分，非独立分项）：{hour_rel_score:+d} 分\n"
                 for rl in hour_rel_details:
                     content += f"    • {rl}\n"
             sansha_penalty = score_details.get('三煞扣分', 0) or 0
@@ -6051,6 +6053,26 @@ class ZeriApp:
             _ss_detail = score_details.get('三煞扣分明细') or []
             if _ss_detail:
                 content += f"    三煞扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n"
+            # 三煞“上管下、下不犯上”口径透明化（2026-10-08 拍板维持单向）：
+            # 枚举早序柱临晚序柱三煞方的反向组合，按口径不查、不扣分，仅提示，
+            # 避免反向相临被误读为“临三煞漏扣分”（hour 三煞方本模块不计算）。
+            _ssz = detail.get('sizhu') if isinstance(detail.get('sizhu'), dict) else {}
+            _yz = str(_ssz.get('年柱', '') or '')[1:2]
+            _mz = str(_ssz.get('月柱', '') or '')[1:2]
+            # 直接从 detail 取三煞信息（不依赖外层 sansha_info 绑定，
+            # 保证沙箱函数化执行与真实 GUI 内联执行同行为）
+            _ssi2 = detail.get('sansha_info') if isinstance(detail.get('sansha_info'), dict) else {}
+            _msf = _ssi2.get('month_sansha') or []
+            _dsf = _ssi2.get('day_sansha') or []
+            _rev = []
+            if _yz and _yz in _msf:
+                _rev.append(f'年柱{_yz}临月柱三煞方（{"".join(_msf)}）')
+            if _yz and _yz in _dsf:
+                _rev.append(f'年柱{_yz}临日柱三煞方（{"".join(_dsf)}）')
+            if _mz and _mz in _dsf:
+                _rev.append(f'月柱{_mz}临日柱三煞方（{"".join(_dsf)}）')
+            for _rv in _rev:
+                content += f"    • {_rv}：三煞口径“上管下、下不犯上”，反向不查不扣分\n"
             content += f"  总分：{total_score} 分\n"
             content += _cap_note
 
@@ -6307,12 +6329,17 @@ class ZeriApp:
             if detail.get('_auth_sizhu'):
                 shi_note = "　（系统择定推荐时柱，恰为午时）" if is_demo else "　（系统择定推荐时柱）"
             else:
-                shi_note = "　⚠示例时辰（中午12点），非推荐"
+                # Q5（2026-10-08）：非推荐柱按是否午时示例区分，
+                # 不再对任意时辰硬写“中午12点”
+                shi_note = ("　⚠ 示例时辰（中午12点），非推荐" if is_demo
+                            else "　⚠ 此时辰非系统推荐，请参考下方时辰表")
             shi_hint_line = ""
-            if detail.get('_auth_sizhu') or not is_demo:
+            if detail.get('_auth_sizhu'):
                 shi_hint_line = "  💡 提示：时柱为系统择定的推荐用柱，实际用课请参考下方【十二时辰吉凶】做二次确认\n"
-            else:
+            elif is_demo:
                 shi_hint_line = "  ⚠ 提示：时柱为中午12点的示例干支，实际用课请参考下方【十二时辰吉凶】选择吉时\n"
+            else:
+                shi_hint_line = "  ⚠ 提示：此时柱非系统推荐，实际用课请参考下方【十二时辰吉凶】选择吉时\n"
             nian_g = sizhu.get('年柱', '')
             yue_g = sizhu.get('月柱', '')
             ri_g = sizhu.get('日柱', '')
@@ -6506,6 +6533,9 @@ class ZeriApp:
         # 宜忌信息
         content += f"""【宜忌信息】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  口径：宜项来自通书黄历/吉神/建除宜等多层；遇冲突时硬门槛优先——
+  相主（事主生肖、日柱冲刑）、三煞、山家封禁、建除当日之忌优先于通书宜项，
+  通书宜项不覆盖硬性禁忌（硬门槛未犯时方以通书宜项为用）。
 """
         yi_list = detail.get('yi_list', [])
         ji_list = detail.get('ji_list', [])
@@ -6573,7 +6603,26 @@ class ZeriApp:
   无额外神煞加减分
 
 """
-        
+
+        # Q4（2026-10-08 拍板）：已制化凶煞不再列忌、不扣忌事分，
+        # 独立“山家警告·已制化”区块展示（数据由评分器按警告文本分类注入）
+        _mit_warnings = []
+        # 直接从 detail 取（与三煞反向枚举同因：块内 sansha_info 为函数参数，
+        # 沙箱执行时为{}；detail 路径在真实 GUI 与沙箱均成立）
+        _ssi_mit = detail.get('sansha_info') if isinstance(detail.get('sansha_info'), dict) else {}
+        if _ssi_mit:
+            _mit_warnings = _ssi_mit.get('mountain_warnings_mitigated', []) or []
+        elif isinstance(sansha_info, dict):
+            _mit_warnings = sansha_info.get('mountain_warnings_mitigated', []) or []
+        if _mit_warnings:
+            content += """【山家警告 · 已制化】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  以下凶煞本日原有吉神制化，按制化口径不禁用、不作忌项扣分：
+"""
+            for _mw in _mit_warnings:
+                content += f"  • {_mw}\n"
+            content += "\n"
+
         # 评语
         if detail.get('reason'):
             content += f"""【综合评语】

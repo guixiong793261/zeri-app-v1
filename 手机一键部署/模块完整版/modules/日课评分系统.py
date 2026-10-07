@@ -2671,7 +2671,7 @@ class DayScoreWindow:
             hour_rel_score = score_details.get('时柱关系得分', 0) or 0
             hour_rel_details = score_details.get('时柱关系明细', []) or []
             if hour_rel_score or hour_rel_details:
-                self._insert_colored_text(f"  时柱地支关系（仅展示，非独立分项，已含于上方地支关系得分，不单独计入公式）：{hour_rel_score:+d} 分\n")
+                self._insert_colored_text(f"  时柱地支关系（按时柱归集展示；时柱关系已计入五行评分·地支关系得分，非独立分项）：{hour_rel_score:+d} 分\n")
                 for rl in hour_rel_details:
                     self._insert_colored_text(f"    • {rl}\n")
             sansha_penalty = score_details.get('三煞扣分', 0) or 0

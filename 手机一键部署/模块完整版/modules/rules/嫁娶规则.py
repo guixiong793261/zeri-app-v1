@@ -800,7 +800,11 @@ class MarriageRuleChecker(EventRuleChecker):
         # 检查每个事主
         for owner in owners:
             name = owner.get('name', '事主')
-            
+            # 2026-10-08：姓名为空时用角色（事主1/新娘…）作标识后缀，
+            # 避免多名事主与日课同冲时产生完全相同的条目无法区分。
+            _olabel = name or owner.get('role') or ''
+            _otag = f'（{_olabel}）' if _olabel and not name else ''
+
             # 获取事主年支（地支）
             owner_zhi = self._get_owner_year_zhi(owner)
             
@@ -820,28 +824,28 @@ class MarriageRuleChecker(EventRuleChecker):
                 day_chong_zhi = chong_map.get(owner_day_zhi, '')
                 if day_zhi == day_chong_zhi:
                     if is_bride:
-                        ji_list.append(f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}')
+                        ji_list.append(f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}{_otag}')
                     else:
-                        ji_list.append(f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}')
+                        ji_list.append(f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}{_otag}')
             else:
                 # 无日柱信息时回退到生肖检查
                 if day_zhi == target_chong_zhi:
                     if is_bride:
-                        ji_list.append(f'日柱{day_zhi}冲新娘{name}')
+                        ji_list.append(f'日柱{day_zhi}冲新娘{name}{_otag}')
                     else:
-                        ji_list.append(f'日柱{day_zhi}冲{name}')
-            
+                        ji_list.append(f'日柱{day_zhi}冲{name}{_otag}')
+
             # 检查年柱
             if year_zhi == target_chong_zhi:
-                ji_list.append(f'年柱{year_zhi}冲{name}')
-            
+                ji_list.append(f'年柱{year_zhi}冲{name}{_otag}')
+
             # 检查月柱
             if month_zhi == target_chong_zhi:
-                ji_list.append(f'月柱{month_zhi}冲{name}')
-            
+                ji_list.append(f'月柱{month_zhi}冲{name}{_otag}')
+
             # 检查时柱
             if hour_zhi == target_chong_zhi:
-                ji_list.append(f'时柱{hour_zhi}冲{name}')
+                ji_list.append(f'时柱{hour_zhi}冲{name}{_otag}')
 
 # 测试
 if __name__ == '__main__':

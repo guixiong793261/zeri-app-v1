@@ -201,13 +201,16 @@ def is_banhe(zhi_list):
 
 # ==================== 日课四柱内部合局评分 ====================
 
-def get_zhiju_score(sizhu):
+def get_zhiju_score(sizhu, hour_zhi=''):
     """
     计算日课四柱内部地支合局得分
-    
+
     Args:
-        sizhu: 包含 year_zhi, month_zhi, day_zhi, hour_zhi 的字典
-    
+        sizhu: 包含 year_zhi, month_zhi, day_zhi, hour_zhi 的字典（评分口径
+               可传已剔除时柱的 sizhu——时柱分数由十二时辰表独立评估）
+        hour_zhi: 可选，实际时柱地支；仅用于命名——拱合所拱支若由时柱补齐，
+                  三合已齐，应称“三合局”（E101）；分数仍按年月日拱合口径 +8。
+
     Returns:
         (score, reason): 得分和原因
     """
@@ -242,6 +245,10 @@ def get_zhiju_score(sizhu):
                 _zs = _gmap['zs']
                 _que = list(_gset - _pair_set)[0]
                 if _pos == [0, 2]:
+                    if hour_zhi and hour_zhi == _zs:
+                        # 时柱补齐所拱支：三合已齐（E101），年月日部分仍按 +8
+                        return 8, (f'三合局({",".join(banhe_zhis)}+时支{_zs}补齐，'
+                                   f'年月日按拱合+8)')
                     return 8, f'拱合局({",".join(banhe_zhis)}，拱{_zs})'
                 return 8, f'半合局({",".join(banhe_zhis)}半合，缺{_que})'
         return 8, f'半合局({",".join(banhe_zhis)})'
@@ -1344,7 +1351,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                 details.append((reason, -6))
     
     # 5. 日课年月日柱内部合局评分（排除示例时柱）
-    zhiju_score, zhiju_reason = get_zhiju_score(sizhu_no_hour)
+    zhiju_score, zhiju_reason = get_zhiju_score(
+        sizhu_no_hour, sizhu.get('时柱', '')[1:2] if sizhu.get('时柱') else '')
     if zhiju_reason:
         score += zhiju_score
         details.append((zhiju_reason, zhiju_score))
