@@ -666,7 +666,15 @@ class Scorer:
                 except ImportError:
                     from 二十四山 import parse_shan_xiang_jianxiang
                 _jx_pp = parse_shan_xiang_jianxiang(full_shan_xiang)
-                if _jx_pp['兼向'] is None and _jx_pp['主山基础']:
+                # 仅当用户确实给了兼尾（兼向原始非None）而无法识别时才清洗；
+                # 正向串（无兼尾）主山基础==原串，重绑定是no-op，直接跳过不记日志
+                if (_jx_pp['兼向'] is None and _jx_pp['兼向原始']
+                        and _jx_pp['主山基础']):
+                    logger.info(
+                        "兼向清洗：%s → %s（兼尾%s非二十四山山字，"
+                        "按正向处理；如需兼向请输入合法山字，如\"兼卯\"）",
+                        full_shan_xiang, _jx_pp['主山基础'],
+                        _jx_pp['兼向原始'])
                     shan_xiang = _jx_pp['主山基础']
                     full_shan_xiang = _jx_pp['主山基础']
 
