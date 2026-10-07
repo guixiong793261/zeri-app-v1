@@ -2732,6 +2732,8 @@ class Scorer:
                 analysis['level'] = '小凶'
         
         # 检查月刑
+        # 口径（2026-10-08 拍板）：神煞（月刑/月破/月害）与地支关系（相刑/六冲/六害）
+        # 为两套独立评分，逢刑冲破害时双轨同时触发，非重复扣分。
         if self.check_xing(month_zhi, year_zhi):
             analysis['score'] -= 8
             analysis['reasons'].append('月刑')
