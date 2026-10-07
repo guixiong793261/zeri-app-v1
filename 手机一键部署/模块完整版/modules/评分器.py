@@ -1442,7 +1442,58 @@ class Scorer:
             day_type = sansha_info.get('mountain_day_type', '')
             if day_type and day_type != '普通日':
                 sansha_info['day_type'] = day_type
-            
+
+            # 仙命信息提前构建（三级判定 + 各返回块共用）
+            # §59.3（2026-10-07）：构建点前移至五行门槛审核之前，使门槛否决等
+            # 提前返回路径也能携带 wangming_info/shanzuo_eval，否决日报告结构
+            # 与正常路径对齐（缺项标注"因否决未计算"）。
+            wangming_info = self._build_wangming_info(owners)
+
+            # 仙命×坐山纳音生克（第二阶段 2.1，2026-10-04 拍板）：
+            # 仅安葬路径（有亡命卡）且有山向时启用。
+            # §59.13（2026-10-05 拍板①）分体并列：主山为体、兼向为用——
+            #   主山判定分计入总分；兼向独立判定仅入 score_details/reason 展示，
+            #   不重复计入 final_score；兼向坐山克仙命独立触发否决（见下方通道）。
+            shanzuo_eval = None
+            if wangming_info and shan_xiang:
+                try:
+                    from .二十四山 import get_mountain_info, parse_shan_xiang_jianxiang
+                except ImportError:
+                    from 二十四山 import get_mountain_info, parse_shan_xiang_jianxiang
+                # 复用入口单点解析（非法兼向已在入口清洗，此处兼向=None）
+                _parsed_sz = _jx_pp or parse_shan_xiang_jianxiang(shan_xiang, jian_xiang)
+                _zuoshan = _parsed_sz.get('主山') or ''
+                _sz_info = get_mountain_info(_zuoshan) if _zuoshan else None
+                _sz_wx = (_sz_info or {}).get('wuxing', '')
+                if _sz_wx:
+                    shanzuo_eval = evaluate_wangming_vs_shanzuo(
+                        wangming_info.get('五行', ''), _sz_wx)
+                    shanzuo_eval['坐山'] = _zuoshan
+                    shanzuo_eval['坐山五行'] = _sz_wx
+                    # 兼向独立判定（拍板①细节3：信息独立成条，分数不进总分）
+                    _jx_shan = _parsed_sz.get('兼向')
+                    if _jx_shan:
+                        _jx_info = get_mountain_info(_jx_shan)
+                        _jx_wx = (_jx_info or {}).get('wuxing', '')
+                        if _jx_wx:
+                            _jx_eval = evaluate_wangming_vs_shanzuo(
+                                wangming_info.get('五行', ''), _jx_wx)
+                            _jx_eval['坐山'] = _jx_shan
+                            _jx_eval['坐山五行'] = _jx_wx
+                            _jx_eval['来源'] = _parsed_sz.get('兼向来源')
+                            # 反向＝主山/兼向一吉一凶（分值异号；比和0不参与）
+                            _jx_eval['与主山反向'] = (
+                                shanzuo_eval.get('score', 0)
+                                * _jx_eval.get('score', 0) < 0)
+                            shanzuo_eval['兼向判定'] = _jx_eval
+                    else:
+                        # 拍板②兜底1：未提供=未指定；已给但无法识别（"兼X"/"兼左"）
+                        # =未识别。两者均不硬判、按正向处理，仅提示文案不同。
+                        shanzuo_eval['兼向提示'] = (
+                            '未识别' if _parsed_sz.get('兼向原始') else '未指定')
+                        shanzuo_eval['兼向原始'] = _parsed_sz.get('兼向原始')
+            shanzuo_score = (shanzuo_eval or {}).get('score', 0)
+
             # 第一步：正五行审核（核心门槛）
             wu_xing_result = self._check_wu_xing(sizhu, event_type, owners,
                                                     house_type, shan_xiang,
@@ -1548,6 +1599,33 @@ class Scorer:
                     score_details['时柱关系明细'] = _hl
                 except Exception:
                     pass
+
+                # §59.3（2026-10-07）：否决日补齐仙命×坐山/兼向展示键。
+                # 判定已于五行门槛审核之前完成，此处仅披露，不计入总分（总分强制=0）；
+                # 否决通道的制化/双凶叠加判定未运行，相关明细标注"因否决未计算"。
+                if shanzuo_eval:
+                    score_details['仙命坐山得分'] = shanzuo_score
+                    score_details['仙命坐山详情'] = (
+                        shanzuo_eval.get('reason', '')
+                        + '（因否决未计入总分，仅披露）')
+                    _jxe = shanzuo_eval.get('兼向判定')
+                    if _jxe:
+                        score_details['仙命兼向得分'] = _jxe.get('score', 0)
+                        _fan_tag = '⚠与主山反向；' if _jxe.get('与主山反向') else ''
+                        score_details['仙命兼向详情'] = (
+                            f"兼{_jxe['坐山']}（{_jxe['坐山五行']}）："
+                            f"{_jxe['relation']}（{_jxe['level']}）"
+                            f"（{_jxe.get('score', 0):+d}分，因否决未计入总分）；{_fan_tag}"
+                            f"主山为体，以主山判定计总分，兼向不重复计分")
+                    elif shanzuo_eval.get('兼向提示') in ('未指定', '未识别'):
+                        if shanzuo_eval.get('兼向提示') == '未识别':
+                            score_details['仙命兼向详情'] = (
+                                f'兼向"{shanzuo_eval.get("兼向原始") or ""}"未能识别为二十四山山字，'
+                                '已按正向处理（请从环序选项选择，或手动输入合法山字，如"兼亥"）')
+                        else:
+                            score_details['仙命兼向详情'] = (
+                                '未指定兼向，按正向处理（如需核实具体兼向，'
+                                '请用电子罗盘确认，或手动输入"X山Y向兼Z"）')
                 
                 # _fc0915：相主硬门槛（自刑/六冲）同步进忌列表，与正常路径口径一致
                 for _xz_h in xiangzhu_details:
@@ -1562,14 +1640,47 @@ class Scorer:
                     reason_parts.append('宜：' + '、'.join(self.yi_list))
                 if self.ji_list:
                     reason_parts.append('忌：' + '、'.join(self.ji_list))
-                
+
                 # 添加月令分析
                 yueling_analysis = self._generate_yueling_analysis(sizhu)
                 if yueling_analysis:
                     reason_parts.append(f'月令：{yueling_analysis}')
-                
+
+                # §59.3（2026-10-07）：否决日补仙命信息段，与正常路径
+                # _generate_reason 的亡命段/仙命×坐山/仙命×兼向段同构。
+                # 制化探测/双凶叠加等否决通道未运行，坐山克仙命时标注"因否决未计算"。
+                if wangming_info and wangming_info.get('年柱'):
+                    reason_parts.append(
+                        f"亡命（仙命）：{wangming_info.get('name') or '亡者'}，"
+                        f"{wangming_info['年柱']}年生，"
+                        f"{wangming_info['纳音']}命（{wangming_info['五行']}）")
+                if shanzuo_eval and shanzuo_eval.get('relation') != '未知':
+                    reason_parts.append(
+                        f"仙命×坐山：{shanzuo_eval['reason']}"
+                        f"（{shanzuo_eval['score']:+d}分，因否决未计入总分）")
+                    _jxe = shanzuo_eval.get('兼向判定')
+                    if _jxe:
+                        _fan = '，⚠与主山判定反向' if _jxe.get('与主山反向') else ''
+                        reason_parts.append(
+                            f"仙命×兼向：穴线兼{_jxe['坐山']}五行属{_jxe['坐山五行']}，"
+                            f"{_jxe['relation']}（{_jxe['level']}）"
+                            f"（{_jxe['score']:+d}分，因否决未计入总分）{_fan}；"
+                            f"主山为体，以主山判定计总分，兼向不重复计分")
+                    elif shanzuo_eval.get('兼向提示') in ('未指定', '未识别'):
+                        if shanzuo_eval.get('兼向提示') == '未识别':
+                            reason_parts.append(
+                                f"仙命×兼向：兼向\"{shanzuo_eval.get('兼向原始') or ''}\"未能识别为"
+                                "二十四山山字，已按正向处理")
+                        else:
+                            reason_parts.append(
+                                "仙命×兼向：未指定兼向，按正向处理")
+                    if shanzuo_eval.get('relation') == '坐山克仙命':
+                        reason_parts.append(
+                            "坐山克仙命的制化探测与双凶叠加判定：因否决未计算"
+                            "（本日已被五行门槛一票否决，不再进入仙命否决通道）")
+
                 final_reason = '；'.join(reason_parts)
-                
+
                 return {
                     'score': 0,
                     'level': '❌ 凶',
@@ -1588,7 +1699,9 @@ class Scorer:
                     'sun_moon_info': sun_moon_info,
                     'sizhu': sizhu,
                     'sansha_info': sansha_info,
-                    'shan_xiang': shan_xiang
+                    'shan_xiang': shan_xiang,
+                    'wangming_info': wangming_info,   # §59.3 否决日携带
+                    'shanzuo_eval': shanzuo_eval      # §59.3 否决日携带
                 }
 
             # 第二步：月令对日主的帮助评分
@@ -1599,53 +1712,8 @@ class Scorer:
 
             # 计算相主得分（日课日支与事主生肖/日支的关系）
             xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(sizhu, owners)
-            # 仙命信息提前构建（三级判定 + 返回块共用）
-            wangming_info = self._build_wangming_info(owners)
-
-            # 仙命×坐山纳音生克（第二阶段 2.1，2026-10-04 拍板）：
-            # 仅安葬路径（有亡命卡）且有山向时启用。
-            # §59.13（2026-10-05 拍板①）分体并列：主山为体、兼向为用——
-            #   主山判定分计入总分；兼向独立判定仅入 score_details/reason 展示，
-            #   不重复计入 final_score；兼向坐山克仙命独立触发否决（见下方通道）。
-            shanzuo_eval = None
-            if wangming_info and shan_xiang:
-                try:
-                    from .二十四山 import get_mountain_info, parse_shan_xiang_jianxiang
-                except ImportError:
-                    from 二十四山 import get_mountain_info, parse_shan_xiang_jianxiang
-                # 复用入口单点解析（非法兼向已在入口清洗，此处兼向=None）
-                _parsed_sz = _jx_pp or parse_shan_xiang_jianxiang(shan_xiang, jian_xiang)
-                _zuoshan = _parsed_sz.get('主山') or ''
-                _sz_info = get_mountain_info(_zuoshan) if _zuoshan else None
-                _sz_wx = (_sz_info or {}).get('wuxing', '')
-                if _sz_wx:
-                    shanzuo_eval = evaluate_wangming_vs_shanzuo(
-                        wangming_info.get('五行', ''), _sz_wx)
-                    shanzuo_eval['坐山'] = _zuoshan
-                    shanzuo_eval['坐山五行'] = _sz_wx
-                    # 兼向独立判定（拍板①细节3：信息独立成条，分数不进总分）
-                    _jx_shan = _parsed_sz.get('兼向')
-                    if _jx_shan:
-                        _jx_info = get_mountain_info(_jx_shan)
-                        _jx_wx = (_jx_info or {}).get('wuxing', '')
-                        if _jx_wx:
-                            _jx_eval = evaluate_wangming_vs_shanzuo(
-                                wangming_info.get('五行', ''), _jx_wx)
-                            _jx_eval['坐山'] = _jx_shan
-                            _jx_eval['坐山五行'] = _jx_wx
-                            _jx_eval['来源'] = _parsed_sz.get('兼向来源')
-                            # 反向＝主山/兼向一吉一凶（分值异号；比和0不参与）
-                            _jx_eval['与主山反向'] = (
-                                shanzuo_eval.get('score', 0)
-                                * _jx_eval.get('score', 0) < 0)
-                            shanzuo_eval['兼向判定'] = _jx_eval
-                    else:
-                        # 拍板②兜底1：未提供=未指定；已给但无法识别（"兼X"/"兼左"）
-                        # =未识别。两者均不硬判、按正向处理，仅提示文案不同。
-                        shanzuo_eval['兼向提示'] = (
-                            '未识别' if _parsed_sz.get('兼向原始') else '未指定')
-                        shanzuo_eval['兼向原始'] = _parsed_sz.get('兼向原始')
-            shanzuo_score = (shanzuo_eval or {}).get('score', 0)
+            # 仙命信息/仙命×坐山判定已于五行门槛审核之前构建（§59.3 前移，
+            # 供门槛否决提前返回路径共用），此处直接复用 wangming_info/shanzuo_eval。
 
             # 相主硬性门槛：命主年支/日支与日课日支六冲或自刑 → 一票否决
             xiangzhu_veto_items = [str(d) for d in xiangzhu_details if str(d).startswith('[硬性门槛]')]
@@ -1784,6 +1852,14 @@ class Scorer:
                 else:
                     _sz_resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
                     if _sz_resolvers:
+                        # §59.11（2026-10-07）：太阳到山对坐山克仙命=正照对症
+                        # （对真冲仅间接增吉），坐山克场景命中时文案标注"正照制化"
+                        # 并置顶于化解吉神列表（相对天德/月德等其他化解）。
+                        # 仅文案层区分，判定层维持宽集布尔口径不变。
+                        _sun_hit = '太阳到山' in _sz_resolvers
+                        if _sun_hit:
+                            _sz_resolvers.remove('太阳到山')
+                            _sz_resolvers.insert(0, '太阳到坐山正照制化')
                         # 有制化：坐山克仙命仅扣分；标注"有制化：…"
                         shanzuo_eval['_with_huajie'] = True
                         shanzuo_eval['制化吉神'] = list(_sz_resolvers)
