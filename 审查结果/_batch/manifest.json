@@ -1,0 +1,423 @@
+{
+ "seed": 20261007,
+ "date_pool": [
+  "2024-01-01",
+  "2026-12-31"
+ ],
+ "candidates_per_event": 30,
+ "pick_per_event": 3,
+ "shan": "坤山艮向兼未",
+ "samples": [
+  {
+   "event": "嫁娶",
+   "date": "2024-08-13",
+   "hour": 12,
+   "score": 36,
+   "level": "❌ 凶（犯忌嫁娶，慎用）",
+   "shan": null,
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "嫁娶",
+   "date": "2026-01-12",
+   "hour": 18,
+   "score": 92,
+   "level": "★★★ 吉",
+   "shan": null,
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "嫁娶",
+   "date": "2025-07-27",
+   "hour": 18,
+   "score": 36,
+   "level": "❌ 凶",
+   "shan": null,
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "修造",
+   "date": "2024-10-02",
+   "hour": 14,
+   "score": 0,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "否决日"
+   ],
+   "shortage": 2
+  },
+  {
+   "event": "动土",
+   "date": "2024-11-01",
+   "hour": 12,
+   "score": 0,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突",
+    "否决日"
+   ],
+   "shortage": 2
+  },
+  {
+   "event": "拆舍",
+   "date": "2026-10-11",
+   "hour": 14,
+   "score": 157,
+   "level": "★★★★★ 上吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "拆舍",
+   "date": "2026-09-25",
+   "hour": 6,
+   "score": -43,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "拆舍",
+   "date": "2026-02-21",
+   "hour": 22,
+   "score": -66,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "入宅",
+   "date": "2026-10-19",
+   "hour": 22,
+   "score": 3,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "入宅",
+   "date": "2025-08-01",
+   "hour": 6,
+   "score": -105,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "入宅",
+   "date": "2026-02-20",
+   "hour": 6,
+   "score": 0,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突",
+    "否决日"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "作灶",
+   "date": "2026-10-23",
+   "hour": 14,
+   "score": 209,
+   "level": "★★★★★ 上吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "作灶",
+   "date": "2025-10-13",
+   "hour": 6,
+   "score": 49,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "作灶",
+   "date": "2026-08-20",
+   "hour": 22,
+   "score": 0,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突",
+    "否决日"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "开业",
+   "date": "2026-03-30",
+   "hour": 10,
+   "score": 180,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "开业",
+   "date": "2025-01-10",
+   "hour": 16,
+   "score": 151,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "开业",
+   "date": "2024-12-29",
+   "hour": 22,
+   "score": 119,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "出行",
+   "date": "2025-06-10",
+   "hour": 16,
+   "score": 194,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "出行",
+   "date": "2026-10-03",
+   "hour": 4,
+   "score": 117,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "出行",
+   "date": "2024-03-28",
+   "hour": 4,
+   "score": 221,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "安葬",
+   "date": "2026-03-21",
+   "hour": 14,
+   "score": 148,
+   "level": "★★★★★ 上吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "安葬",
+   "date": "2025-05-25",
+   "hour": 14,
+   "score": 177,
+   "level": "★★★★★ 上吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "五星<250",
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "安葬",
+   "date": "2025-05-10",
+   "hour": 6,
+   "score": 17,
+   "level": "❌ 凶",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "安床",
+   "date": "2025-03-26",
+   "hour": 14,
+   "score": 96,
+   "level": "★★★ 吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [
+    "宜忌冲突"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "安床",
+   "date": "2026-10-12",
+   "hour": 6,
+   "score": 84,
+   "level": "★★ 中吉",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "安床",
+   "date": "2026-11-07",
+   "hour": 22,
+   "score": 70,
+   "level": "★ 平",
+   "shan": "坤山艮向兼未",
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "入学",
+   "date": "2026-06-10",
+   "hour": 16,
+   "score": 120,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "入学",
+   "date": "2025-09-29",
+   "hour": 2,
+   "score": 137,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "入学",
+   "date": "2025-12-27",
+   "hour": 16,
+   "score": 55,
+   "level": "❌ 凶",
+   "shan": null,
+   "priority_tags": [],
+   "shortage": 0
+  },
+  {
+   "event": "求医",
+   "date": "2024-03-25",
+   "hour": 2,
+   "score": 139,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "求医",
+   "date": "2026-08-04",
+   "hour": 4,
+   "score": 163,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "求医",
+   "date": "2025-07-27",
+   "hour": 22,
+   "score": 112,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "签约",
+   "date": "2026-06-13",
+   "hour": 14,
+   "score": 169,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "签约",
+   "date": "2025-10-07",
+   "hour": 16,
+   "score": 164,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  },
+  {
+   "event": "签约",
+   "date": "2024-01-25",
+   "hour": 2,
+   "score": 170,
+   "level": "★★★★★ 上吉",
+   "shan": null,
+   "priority_tags": [
+    "五星<250"
+   ],
+   "shortage": 0
+  }
+ ]
+}
