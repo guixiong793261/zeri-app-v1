@@ -258,6 +258,11 @@ if found3:
     check(f'三重叠加：{_ds3} veto_reasons 无重复条目、归零、等级凶',
           len(rr3['veto_reasons']) == len(set(rr3['veto_reasons']))
           and rr3['score'] == 0 and rr3['level'] == '❌ 凶')
+    check(f'三重叠加：{_ds3} 长度恰为2、顺序稳定（双凶叠加→主兼双坐山克）、'
+          '两条均有【】标题前缀',
+          len(rr3['veto_reasons']) == 2
+          and rr3['veto_reasons'][0].startswith('【仙命双凶叠加】')
+          and rr3['veto_reasons'][1].startswith('【主兼双坐山克强制否决】'))
 
 # 环序映射明示（兜底2）
 r = score('2024-02-05', '甲山庚向兼卯')
