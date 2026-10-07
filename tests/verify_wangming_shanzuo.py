@@ -227,10 +227,11 @@ se_cap2 = r_cap2.get('shanzuo_eval') or {}
 check('封顶集成：2023-06-13 吉神叠满 score=100 → 等级带注凶',
       r_cap2.get('score') == 100 and not (r_cap2.get('veto_reasons') or [])
       and r_cap2.get('level')
-      == '❌ 凶（坐山克仙命，有制化：天德、三合、太阳到山）'
-      and '太阳到山' in se_cap2.get('reason', ''))
+      # §59.11（2026-10-07）：坐山克场景太阳到山改写为"太阳到坐山正照制化"并置顶
+      == '❌ 凶（坐山克仙命，有制化：太阳到坐山正照制化、天德、三合）'
+      and '太阳到坐山正照制化' in se_cap2.get('reason', ''))
 check('展示调和：2023-06-13 忌列表/综合评语齐全',
-      '坐山克仙命（有制化：天德、三合、太阳到山）' in r_cap2.get('ji_list')
+      '坐山克仙命（有制化：太阳到坐山正照制化、天德、三合）' in r_cap2.get('ji_list')
       and '可用须谨慎' in r_cap2.get('reason', ''))
 
 # 双凶叠加强制 VETO 集成（§59.10）
