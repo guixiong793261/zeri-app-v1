@@ -1852,6 +1852,14 @@ class Scorer:
                 else:
                     _sz_resolvers = self._detect_wm_resolvers(wu_xing_result, sun_moon_info)
                     if _sz_resolvers:
+                        # §59.11（2026-10-07）：太阳到山对坐山克仙命=正照对症
+                        # （对真冲仅间接增吉），坐山克场景命中时文案标注"正照制化"
+                        # 并置顶于化解吉神列表（相对天德/月德等其他化解）。
+                        # 仅文案层区分，判定层维持宽集布尔口径不变。
+                        _sun_hit = '太阳到山' in _sz_resolvers
+                        if _sun_hit:
+                            _sz_resolvers.remove('太阳到山')
+                            _sz_resolvers.insert(0, '太阳到坐山正照制化')
                         # 有制化：坐山克仙命仅扣分；标注"有制化：…"
                         shanzuo_eval['_with_huajie'] = True
                         shanzuo_eval['制化吉神'] = list(_sz_resolvers)
