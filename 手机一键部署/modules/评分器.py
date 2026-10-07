@@ -666,7 +666,15 @@ class Scorer:
                 except ImportError:
                     from 二十四山 import parse_shan_xiang_jianxiang
                 _jx_pp = parse_shan_xiang_jianxiang(full_shan_xiang)
-                if _jx_pp['兼向'] is None and _jx_pp['主山基础']:
+                # 仅当用户确实给了兼尾（兼向原始非None）而无法识别时才清洗；
+                # 正向串（无兼尾）主山基础==原串，重绑定是no-op，直接跳过不记日志
+                if (_jx_pp['兼向'] is None and _jx_pp['兼向原始']
+                        and _jx_pp['主山基础']):
+                    logger.info(
+                        "兼向清洗：%s → %s（兼尾%s非二十四山山字，"
+                        "按正向处理；如需兼向请输入合法山字，如\"兼卯\"）",
+                        full_shan_xiang, _jx_pp['主山基础'],
+                        _jx_pp['兼向原始'])
                     shan_xiang = _jx_pp['主山基础']
                     full_shan_xiang = _jx_pp['主山基础']
 
@@ -1793,10 +1801,11 @@ class Scorer:
                             f"地不容此命，四柱无天德/月德/岁德/太阳到山/天赦/天愿/"
                             f"三合/六合等吉神制化，大忌不用（一票否决）")
 
-            # 仙命×兼向独立否决（2026-10-05 §59.13 拍板①细节1）：
+            # 仙命×兼向独立否决（2026-10-05 §59.13 拍板①细节1；批次一 2026-10-07
+            #   加【兼向独立否决】前缀，与"主兼双坐山克"文案区分触发源）：
             #   仅当"兼向判定=坐山克仙命"且"主山判定≠坐山克仙命"时硬触发
             #   （不设制化出口：穴线偏向"地不容命"之山即不可用）；
-            #   主山已是坐山克仙命者走主山三级通道，兼向不洗白、不重复否决。
+            #   主山已是坐山克仙命者不再走本条，改由下方"主兼双坐山克"强制否决。
             #   与真冲/双凶通道并行，不并入 §59.10 双凶文案（双凶定义维持主山）。
             jianxiang_veto = ''
             _jx_eval = (shanzuo_eval or {}).get('兼向判定')
@@ -1806,12 +1815,31 @@ class Scorer:
                 _jx_kind = ('与主山判定反向' if _jx_eval.get('与主山反向')
                             else '较主山升级为凶中之凶')
                 jianxiang_veto = (
-                    f"兼向坐山克仙命：穴线兼{_jx_eval['坐山']}五行属"
-                    f"{_jx_eval['坐山五行']}，克亡命{wangming_info['name']}"
+                    f"【兼向独立否决】兼向坐山克仙命：穴线兼{_jx_eval['坐山']}"
+                    f"五行属{_jx_eval['坐山五行']}，克亡命{wangming_info['name']}"
                     f"纳音{wangming_info['纳音']}（{wangming_info['五行']}）；"
                     f"主山{shanzuo_eval['坐山']}（{shanzuo_eval['坐山五行']}）"
                     f"为{shanzuo_eval['relation']}，兼向{_jx_kind}，"
                     f"穴线偏绝地，独立否决（一票否决）")
+
+            # 主兼双坐山克强制否决（2026-10-07 §59.13 批次一用户拍板）：
+            #   主山判定与兼向判定均为"坐山克仙命"→ 强制 VETO，制化不豁免
+            #   （与 §59.10 双凶叠加同构：两边各有制化仍 VETO）。
+            #   消除倒挂：主-15+兼-30 已 VETO，而主-30+兼-30 仅 WARN。
+            #   分数层不变：主山 -30 照旧计入 final_score，兼向不重复扣分。
+            #   触发源独立成条（区别于主山无制化/叠忌、双凶叠加、兼向独立），
+            #   追加时按原文去重，防止同文重复条目。
+            jianxiang_dual_veto = ''
+            if (wangming_info and _jx_eval
+                    and _jx_eval.get('relation') == '坐山克仙命'
+                    and shanzuo_eval.get('relation') == '坐山克仙命'):
+                jianxiang_dual_veto = (
+                    f"【主兼双坐山克强制否决】主山（{shanzuo_eval['坐山']}）"
+                    f"坐山克仙命（{shanzuo_eval.get('score', -30):+d}），"
+                    f"兼向（{_jx_eval['坐山']}）坐山克仙命"
+                    f"（{_jx_eval.get('score', -30):+d}）；"
+                    f"穴线两读数均为\"地不容命\"，凶中之凶贯穿整条穴线，"
+                    f"制化不豁免，强制否决（一票否决）")
 
             # 仙命双凶叠加强制否决（2026-10-04 §59.10 用户拍板）：
             #   日支真冲 + 坐山克仙命同日命中 → 强制 VETO，
@@ -1828,13 +1856,15 @@ class Scorer:
                     veto_reasons.append(wangming_veto)
                 if shanzuo_veto:
                     veto_reasons.append(shanzuo_veto)
-            if jianxiang_veto:
+            if jianxiang_dual_veto and jianxiang_dual_veto not in veto_reasons:
+                veto_reasons.append(jianxiang_dual_veto)
+            if jianxiang_veto and jianxiang_veto not in veto_reasons:
                 veto_reasons.append(jianxiang_veto)
 
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
                     or wangming_veto or shanzuo_veto or dual_veto
-                    or jianxiang_veto):
+                    or jianxiang_veto or jianxiang_dual_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list

@@ -1249,6 +1249,11 @@ class ZeriApp:
             self.jian_xiang_combo.grid(row=0, column=5, sticky=tk.W, padx=5)
             special_entries.append(self.jian_xiang_combo)
             self.jian_xiang.set("正中")  # 默认正中
+            # §59.13 批次一细节4：失焦/回车行内即时提示（不拦输入不改值）
+            self._jx_hint_label = ttk.Label(self.special_frame, text="")
+            self._jx_hint_label.grid(row=0, column=7, sticky=tk.W, padx=2)
+            self.jian_xiang_combo.bind('<FocusOut>', lambda e: self._update_jx_hint())
+            self.jian_xiang_combo.bind('<Return>', lambda e: self._update_jx_hint())
             # 绑定山向变化时更新兼向选项
             self.shan_xiang.trace_add('write', self._update_jianxiang_options)
             
@@ -1276,6 +1281,11 @@ class ZeriApp:
             self.jian_xiang_combo.grid(row=0, column=3, sticky=tk.W, padx=5)
             special_entries.append(self.jian_xiang_combo)
             self.jian_xiang.set("正中")
+            # §59.13 批次一细节4：失焦/回车行内即时提示（不拦输入不改值）
+            self._jx_hint_label = ttk.Label(self.special_frame, text="")
+            self._jx_hint_label.grid(row=0, column=7, sticky=tk.W, padx=2)
+            self.jian_xiang_combo.bind('<FocusOut>', lambda e: self._update_jx_hint())
+            self.jian_xiang_combo.bind('<Return>', lambda e: self._update_jx_hint())
             self.shan_xiang.trace_add('write', self._update_jianxiang_options)
 
             # 电子罗盘按钮 + 必填提示
@@ -1942,6 +1952,9 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang_value and jian_xiang_value:
+                # §59.13 批次一提醒3：提交前校验——非法兼向弹窗提示，不阻断
+                # （引擎按正向处理并记日志）
+                self._warn_invalid_jianxiang_before_submit(jian_xiang_value)
                 # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
                 _jx_v = jian_xiang_value.strip()
                 if _jx_v and _jx_v != '正中' and not _jx_v.startswith('兼'):
@@ -2794,6 +2807,42 @@ class ZeriApp:
         
         show_compass_dialog(self.root, initial_shan_xiang, on_compass_select)
     
+    def _jianxiang_invalid_reason(self, value):
+        """§59.13 批次一细节4：兼向输入校验（复用引擎单点解析，UI不另建白名单）。
+        返回 None=合法；否则返回提示文案。"""
+        v = (value or '').strip()
+        if not v or v == '正中':
+            return None
+        try:
+            from modules.二十四山 import parse_shan_xiang_jianxiang
+        except ImportError:
+            from 二十四山 import parse_shan_xiang_jianxiang
+        p = parse_shan_xiang_jianxiang('甲山', v)
+        if p['兼向原始'] and p['兼向'] is None:
+            return (f"兼向\"{p['兼向原始']}\"未识别为二十四山山字，"
+                    "将按正向处理（可从下拉选择，或输入合法山字如\"兼卯\"）")
+        return None
+
+    def _update_jx_hint(self, *_args):
+        """§59.13 批次一细节4：失焦/回车时更新兼向行内提示（不拦输入不改值）。"""
+        combo = getattr(self, 'jian_xiang_combo', None)
+        label = getattr(self, '_jx_hint_label', None)
+        if combo is None or label is None:
+            return
+        msg = self._jianxiang_invalid_reason(combo.get())
+        if msg:
+            label.config(text='⚠ ' + msg, foreground='#c62828')
+        else:
+            label.config(text='', foreground='#000000')
+
+    def _warn_invalid_jianxiang_before_submit(self, jian_xiang_value):
+        """§59.13 批次一细节4（提醒3）：提交前校验——生成报告/扫描前兜底提示，
+        保证用户提交前一定看到提示；不阻断流程（引擎按正向处理并记日志）。"""
+        msg = self._jianxiang_invalid_reason(jian_xiang_value)
+        if msg:
+            messagebox.showwarning('兼向提示', msg)
+        return msg
+
     def _update_jianxiang_options(self, *args):
         """根据山向更新兼向选项"""
         shan_xiang = self.shan_xiang.get()
@@ -3908,6 +3957,9 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang and jian_xiang_value and jian_xiang_value != "正中":
+                # §59.13 批次一提醒3：提交前校验——非法兼向弹窗提示，不阻断
+                # （引擎按正向处理并记日志）
+                self._warn_invalid_jianxiang_before_submit(jian_xiang_value)
                 # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
                 _jx_v = jian_xiang_value.strip()
                 if not _jx_v.startswith('兼'):
@@ -4712,6 +4764,9 @@ class ZeriApp:
             jian_xiang = getattr(self, 'jian_xiang', None)
             jian_xiang_value = jian_xiang.get() if jian_xiang else None
             if shan_xiang and jian_xiang_value and jian_xiang_value != "正中":
+                # §59.13 批次一提醒3：提交前校验——非法兼向弹窗提示，不阻断
+                # （引擎按正向处理并记日志）
+                self._warn_invalid_jianxiang_before_submit(jian_xiang_value)
                 # §59.13：手动裸值"亥"规范化为"兼亥"，保证拼接串可被引擎解析
                 _jx_v = jian_xiang_value.strip()
                 if not _jx_v.startswith('兼'):
