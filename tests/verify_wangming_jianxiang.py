@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-仙命×兼向 分体并列判定验证（§59.13，2026-10-05 用户拍板①②）
+仙命×兼向 分体并列判定验证（§59.13，2026-10-05 用户拍板①②；
+批次一 2026-10-07：主兼双坐山克强制VETO + 兼向独立否决前缀）
 
 口径：
   拍板①分体并列：主山为体（分计入 final_score）、兼向为用（独立成条、
     分数不进 final_score、不双扣）；兼向独立 VETO 仅当
-    "兼向判定=坐山克仙命 且 主山判定≠坐山克仙命"（硬触发，无制化出口）；
-    主山已坐山克者走主山三级通道，兼向不洗白、不重复否决。
+    "兼向判定=坐山克仙命 且 主山判定≠坐山克仙命"（硬触发，无制化出口，
+    文案【兼向独立否决】）；主山已坐山克且兼向亦坐山克 →
+    主兼双坐山克强制 VETO（制化不豁免，批次一）；
+    主山坐山克而兼向非坐山克 → 走主山三级通道，兼向不洗白、不加分。
   拍板②环序约定+三兜底：复用 _update_jianxiang_options 的 idx-1=兼左
     （MOUNTAIN_RING 逆时针）/idx+1=兼右；笼统无左右不硬判仅提示；
     环序映射展示明示约定；"兼X"非相邻山=手动覆盖。
@@ -14,8 +17,8 @@
 §1 解析函数形态穷举（含非法输入反向断言）
 §2 集成·拍板四情形＋同五行＋手动覆盖（走 calculate_score 生产入口，
    日期锚点来自改前基线 C:\\Temp\\baseline_jianxiang_BEFORE.json 实证）
-§3 边界反向断言：兼吉不洗白/同凶不重复否决/非法兼向不影响/双凶不扩大/
-   非安葬与无山向路径零污染
+§3 边界反向断言：兼吉不洗白/同凶强制VETO(批次一)/三重叠加去重/
+   非法兼向不影响/双凶不扩大/非安葬与无山向路径零污染
 
 退出码：全过 0，失败 1。
 """
@@ -122,8 +125,9 @@ check('情形1 兼向：丁火克金=坐山克仙命 -30，反向标注',
 check('情形1 兼向独立VETO触发、总分归零、等级凶',
       any('兼向坐山克仙命' in v for v in r['veto_reasons'])
       and r['score'] == 0 and r['level'] == '❌ 凶')
-check('情形1 VETO文案含反向说明与主山关系',
-      any('与主山判定反向' in v and '主山未' in v for v in r['veto_reasons']))
+check('情形1 VETO文案含【兼向独立否决】前缀+反向说明与主山关系',
+      any(v.startswith('【兼向独立否决】') and '与主山判定反向' in v
+          and '主山未' in v for v in r['veto_reasons']))
 check('情形1 兼向分入score_details（仙命兼向得分=-30）',
       r['score_details'].get('仙命兼向得分') == -30)
 
@@ -150,8 +154,8 @@ check('情形3 主山：巽木=仙命克坐山 -15',
 check('情形3 兼向：巳火=坐山克仙命 -30；同向升级（非反向）',
       jxe['relation'] == '坐山克仙命' and jxe['score'] == -30
       and jxe['与主山反向'] is False)
-check('情形3 兼向独立VETO（升级文案）、归零',
-      any('兼向坐山克仙命' in v and '升级为凶中之凶' in v
+check('情形3 兼向独立VETO（【兼向独立否决】前缀+升级文案）、归零',
+      any(v.startswith('【兼向独立否决】') and '升级为凶中之凶' in v
           for v in r['veto_reasons'])
       and r['score'] == 0 and r['level'] == '❌ 凶')
 
@@ -208,31 +212,52 @@ check('无兼向案：无仙命兼向得分键、有未指定提示',
       '仙命兼向得分' not in r_without['score_details']
       and '未指定兼向，按正向处理' in r_without['reason'])
 
-# 主山与兼向同为坐山克（丙火兼午火）：兼向通道关闭，不重复否决、不改主山WARN。
+# 主兼双坐山克（丙火兼午火，亡命金）→ 批次一强制 VETO（制化不豁免）。
 # 2023-03-22 为既有 verify 锚点（丙山无兼：score=100 月德WARN无否决）。
-# 注意：带兼午后飞星通道既有"兼向需替卦复核-10"消费（与仙命无关），故总分锚点
-# 不适用；核心断言=主山判定/否决/等级不变，仙命坐山得分两案一致。
 r_same = score('2023-03-22', '丙山壬向兼午')
-r_same_base = score('2023-03-22', '丙山壬向')
 se = r_same['shanzuo_eval'] or {}
 jxe = se.get('兼向判定')
 if not (se.get('relation') == '坐山克仙命' and jxe
-        and jxe['relation'] == '坐山克仙命' and not r_same['veto_reasons']):
-    check('同凶不重复：2023-03-22 丙兼午 主兼均坐山克且外部通道干净（锚点适用）', False)
+        and jxe['relation'] == '坐山克仙命'):
+    check('同凶强制VETO：2023-03-22 丙兼午 主兼均坐山克（锚点适用）', False)
 else:
-    check('同凶不重复：主兼均坐山克仙命', True)
-    check('同凶不重复：无兼向独立VETO条目（走主山通道）',
-          not any('兼向坐山克仙命' in v for v in r_same['veto_reasons']))
-    check('同凶不重复：无否决、等级维持封顶凶带月德注',
-          r_same['veto_reasons'] == []
-          and r_same['level'] == '❌ 凶（坐山克仙命，有制化：月德）')
-    check('同凶不重复：仙命坐山得分与无兼案一致（兼向-30不双扣）',
-          r_same['score_details'].get('仙命坐山得分')
-          == r_same_base['score_details'].get('仙命坐山得分') == -30)
-    check('同凶不重复：与无兼案总分差仅来自飞星替卦复核（非仙命通道）',
-          {k for k in (set(r_same['score_details']) | set(r_same_base['score_details']))
-           if r_same['score_details'].get(k) != r_same_base['score_details'].get(k)}
-          <= {'仙命兼向得分', '仙命兼向详情', '总分', '飞星评分', '飞星详情'})
+    check('同凶强制VETO：主兼均坐山克仙命', True)
+    check('同凶强制VETO：触发【主兼双坐山克强制否决】、归零、等级凶',
+          any(v.startswith('【主兼双坐山克强制否决】')
+              for v in r_same['veto_reasons'])
+          and r_same['score'] == 0 and r_same['level'] == '❌ 凶')
+    check('同凶强制VETO：文案明示制化不豁免、触发源互斥（无兼向独立条目）',
+          any('制化不豁免' in v for v in r_same['veto_reasons'])
+          and not any('兼向独立否决】' in v for v in r_same['veto_reasons']))
+    check('同凶强制VETO：分数层不变——仙命坐山得分仍-30、兼向-30仅披露',
+          r_same['score_details'].get('仙命坐山得分') == -30
+          and r_same['score_details'].get('仙命兼向得分') == -30)
+    check('同凶强制VETO：veto_reasons 无重复条目',
+          len(r_same['veto_reasons']) == len(set(r_same['veto_reasons'])))
+
+# 三重凶叠加：主兼双坐山克 + 日支真冲（午日冲甲子命）→
+# 双凶叠加与主兼双坐山克两触发源并列各一条、无重复、无兼向独立条目
+found3 = None
+_d = dt.date(2023, 1, 1)
+while _d.year == 2023:
+    sz = calculate_sizhu(_d, 12, 0)
+    if sz.get('day_zhi') == '午':
+        rr = score(_d, '丙山壬向兼午')
+        if any('仙命双凶叠加' in v for v in rr['veto_reasons']):
+            found3 = (_d.isoformat(), rr)
+            break
+    _d += dt.timedelta(days=1)
+check('三重叠加：2023 找到 丙兼午 午日（真冲+主坐山克+兼坐山克）案例',
+      found3 is not None)
+if found3:
+    _ds3, rr3 = found3
+    check(f'三重叠加：{_ds3} 双凶叠加与主兼双坐山克各恰一条、无兼向独立条目',
+          sum('仙命双凶叠加' in v for v in rr3['veto_reasons']) == 1
+          and sum('主兼双坐山克强制否决' in v for v in rr3['veto_reasons']) == 1
+          and not any('兼向独立否决】' in v for v in rr3['veto_reasons']))
+    check(f'三重叠加：{_ds3} veto_reasons 无重复条目、归零、等级凶',
+          len(rr3['veto_reasons']) == len(set(rr3['veto_reasons']))
+          and rr3['score'] == 0 and rr3['level'] == '❌ 凶')
 
 # 环序映射明示（兜底2）
 r = score('2024-02-05', '甲山庚向兼卯')
