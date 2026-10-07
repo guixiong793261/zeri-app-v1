@@ -1605,7 +1605,9 @@ class Scorer:
                 # 否决通道的制化/双凶叠加判定未运行，相关明细标注"因否决未计算"。
                 if shanzuo_eval:
                     score_details['仙命坐山得分'] = shanzuo_score
-                    score_details['仙命坐山详情'] = shanzuo_eval.get('reason', '')
+                    score_details['仙命坐山详情'] = (
+                        shanzuo_eval.get('reason', '')
+                        + '（因否决未计入总分，仅披露）')
                     _jxe = shanzuo_eval.get('兼向判定')
                     if _jxe:
                         score_details['仙命兼向得分'] = _jxe.get('score', 0)
@@ -1613,7 +1615,7 @@ class Scorer:
                         score_details['仙命兼向详情'] = (
                             f"兼{_jxe['坐山']}（{_jxe['坐山五行']}）："
                             f"{_jxe['relation']}（{_jxe['level']}）"
-                            f"（{_jxe.get('score', 0):+d}分）；{_fan_tag}"
+                            f"（{_jxe.get('score', 0):+d}分，因否决未计入总分）；{_fan_tag}"
                             f"主山为体，以主山判定计总分，兼向不重复计分")
                     elif shanzuo_eval.get('兼向提示') in ('未指定', '未识别'):
                         if shanzuo_eval.get('兼向提示') == '未识别':
@@ -1655,14 +1657,14 @@ class Scorer:
                 if shanzuo_eval and shanzuo_eval.get('relation') != '未知':
                     reason_parts.append(
                         f"仙命×坐山：{shanzuo_eval['reason']}"
-                        f"（{shanzuo_eval['score']:+d}分）")
+                        f"（{shanzuo_eval['score']:+d}分，因否决未计入总分）")
                     _jxe = shanzuo_eval.get('兼向判定')
                     if _jxe:
                         _fan = '，⚠与主山判定反向' if _jxe.get('与主山反向') else ''
                         reason_parts.append(
                             f"仙命×兼向：穴线兼{_jxe['坐山']}五行属{_jxe['坐山五行']}，"
                             f"{_jxe['relation']}（{_jxe['level']}）"
-                            f"（{_jxe['score']:+d}分）{_fan}；"
+                            f"（{_jxe['score']:+d}分，因否决未计入总分）{_fan}；"
                             f"主山为体，以主山判定计总分，兼向不重复计分")
                     elif shanzuo_eval.get('兼向提示') in ('未指定', '未识别'):
                         if shanzuo_eval.get('兼向提示') == '未识别':

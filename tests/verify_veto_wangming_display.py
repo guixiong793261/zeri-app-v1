@@ -78,12 +78,34 @@ for tag, d0 in _CASES:
           sd.get('仙命坐山得分') == -30 and bool(sd.get('仙命坐山详情')))
     check(f'{tag}：reason 含亡命（仙命）段',
           '亡命（仙命）：甲子，甲子年生，海中金命（金）' in rs)
-    check(f'{tag}：reason 含仙命×坐山段（-30分）',
-          '仙命×坐山：' in rs and '（-30分）' in rs)
+    check(f'{tag}：reason 含仙命×坐山段（-30分，因否决未计入总分）',
+          '仙命×坐山：' in rs and '（-30分，因否决未计入总分）' in rs)
     check(f'{tag}：reason 标注"因否决未计算"（坐山克仙命）',
           '因否决未计算' in rs)
     check(f'{tag}：仙命分仅披露不进总分（总分=0）',
           sd.get('总分') == 0)
+
+# ---------------------------------------------------------------------------
+# V4：多否决源叠加（五行门槛 + 相主硬门槛），仙命信息仍完整
+# ---------------------------------------------------------------------------
+print('== V4. 多否决源叠加（§59.3 验收后补）==')
+_owners4 = [dead(), {'name': '孝子', 'role': '孝子1', '性别': '男',
+                     'birth_date': '1960-01-15'}]
+_r4v = run(dt.date(2023, 1, 11), _owners4)
+_vr4 = _r4v.get('veto_reasons') or []
+check('V4 2023-01-11：双否决源（veto_reasons 含 五行门槛+相主硬门槛）',
+      len(_vr4) == 2
+      and any('五行' in str(v) for v in _vr4)
+      and any('相主硬门槛' in str(v) for v in _vr4))
+check('V4：wangming_info/shanzuo_eval 在多否决源下仍携带',
+      bool(_r4v.get('wangming_info')) and bool(_r4v.get('shanzuo_eval')))
+check('V4：reason 同时含两类否决与仙命段',
+      '五行严重不合格' in _r4v.get('reason', '')
+      and '亡命（仙命）' in _r4v.get('reason', '')
+      and '仙命×坐山：' in _r4v.get('reason', ''))
+check('V4：score_details 仙命坐山详情含"因否决未计入总分，仅披露"',
+      '因否决未计入总分，仅披露'
+      in (_r4v.get('score_details') or {}).get('仙命坐山详情', ''))
 
 # ---------------------------------------------------------------------------
 # R1：比和坐山的否决日 → 有仙命段、无"因否决未计算"标注
