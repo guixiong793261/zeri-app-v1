@@ -3392,6 +3392,8 @@ class ZeriApp:
                             # 同步 marriage_details / 五行评分 / 总分 / 等级 / 嫁娶要点行。
                             _capped_real = '犯忌嫁娶' in str(
                                 score_result.get('level') or '')
+                            _minor_real = '降一格' in str(
+                                score_result.get('level') or '')
                             try:
                                 from modules.婚嫁评分算法 import get_zhiju_score as _gzs
                                 _full_sz = {
@@ -3422,21 +3424,18 @@ class ZeriApp:
                                         if '总分' in _sd:
                                             _sd['总分'] = (_sd.get('总分') or 0) + _delta
                                     score_result['score'] = (score_result.get('score') or 0) + _delta
-                                    # 等级重判（与评分器同阈值，含犯忌嫁娶封顶）
+                                    # 等级重判（与评分器同阈值，两级婚嫁调整走统一方法）
                                     _lv_new = _rds._get_level(
                                         score_result['score'],
                                         {'score': (_sd.get('五行评分') or 0) if isinstance(_sd, dict) else 0},
                                         score_result.get('huangdao_info') or {})
-                                    if _capped_real:
-                                        _lord = ['❌ 凶', '★ 平', '★★ 中吉', '★★★ 吉', '★★★★ 大吉', '★★★★★ 上吉']
-                                        try:
-                                            if _lord.index(_lv_new) > _lord.index('★ 平'):
-                                                _lv_new = '★ 平'
-                                        except ValueError:
-                                            _lv_new = '★ 平'
-                                        if '犯忌嫁娶' not in _lv_new:
-                                            _lv_new += '（犯忌嫁娶，慎用）'
+                                    _lv_new, _cap_l1, _cap_l2 = _rds._apply_marriage_level_caps(
+                                        _lv_new,
+                                        {'details': _md_real,
+                                         'warnings': score_result.get('warnings') or []})
                                     score_result['level'] = _lv_new
+                                    _capped_real = '犯忌嫁娶' in _lv_new
+                                    _minor_real = '降一格' in _lv_new
                                     # "嫁娶要点"行同步替换旧合局名
                                     for _pi, _pline in enumerate(_head_parts):
                                         if _old_zj_name and _old_zj_name in _pline:
@@ -3455,7 +3454,8 @@ class ZeriApp:
                                 _md_real,
                                 _veto_real,
                                 _capped_real,
-                                level_str=score_result.get('level'))
+                                level_str=score_result.get('level'),
+                                minor_downgrade=_minor_real)
                             _new_parts = [p for p in _head_parts if p]
                             if _tail_new:
                                 _new_parts.append(_tail_new)
@@ -6420,8 +6420,14 @@ class ZeriApp:
                 # 2. 地支关系（三合、六合、六冲、六害、三刑）
                 if wu_xing_details.get('地支关系') and len(wu_xing_details['地支关系']) > 0:
                     content += "\n  【地支关系】\n"
-                    for relation in wu_xing_details['地支关系']:
+                    _dz_rels = wu_xing_details['地支关系']
+                    for relation in _dz_rels:
                         content += f"    • {relation}\n"
+                    # 裁定4（2026-10-08 拍板）：同段合与刑并存时，固定声明各自计分，
+                    # 与 Q2"全量并列"原则一致，避免误读为"合能解刑/刑能破合"。
+                    if any(any(_k in str(_r) for _k in ('三合', '六合', '半合'))
+                           for _r in _dz_rels) and any('刑' in str(_r) for _r in _dz_rels):
+                        content += "    （合刑并存，各自计分，非只取一边）\n"
                 else:
                     content += "\n  【地支关系】\n    无明显合冲刑害关系\n"
                 

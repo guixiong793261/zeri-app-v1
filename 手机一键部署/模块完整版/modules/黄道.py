@@ -56,7 +56,7 @@ class 黄道计算器:
         '成': {'type': '吉', 'score': 5, 'description': '成日，诸事皆宜'},
         '收': {'type': '凶', 'score': -10, 'description': '收日，宜收敛、积蓄，忌嫁娶'},
         '开': {'type': '吉', 'score': 5, 'description': '开日，诸事皆宜'},
-        '闭': {'type': '凶', 'score': -10, 'description': '闭日，宜闭门、静养，忌出行'},
+        '闭': {'type': '凶', 'score': -10, 'description': '闭日，宜闭门、静养，忌嫁娶、出行'},
     }
     
     # 大黄道计算表（根据日支和时辰）—— 时辰级黄道吉时判定

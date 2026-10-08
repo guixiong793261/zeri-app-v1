@@ -959,32 +959,13 @@ class Scorer:
                             self.huangdao_info
                         )
 
-                        # 2026-09-15 婚嫁硬禁忌降级：若嫁娶评分明细含"忌嫁娶"项
-                        # （如小黄道除/危/执日忌嫁娶），说明该日虽评分高但犯嫁娶硬性禁忌，
-                        # 等级不得高于"★ 平"，并加注"犯忌嫁娶，慎用"，避免"上吉"与
-                        # "忌嫁娶"并存的逻辑矛盾。
-                        _mrg_details_for_level = marriage_result.get('details') or []
-                        _has_ji_jiaqu_level = False
-                        if isinstance(_mrg_details_for_level, list):
-                            _has_ji_jiaqu_level = any(
-                                '忌嫁娶' in str(_d[0])
-                                for _d in _mrg_details_for_level
-                                if isinstance(_d, (list, tuple)) and len(_d) >= 1
-                            )
-                        if _has_ji_jiaqu_level:
-                            _level_order = ['❌ 凶', '★ 平', '★★ 中吉', '★★★ 吉', '★★★★ 大吉', '★★★★★ 上吉']
-                            _cap = '★ 平'
-                            try:
-                                _cur_idx = _level_order.index(level)
-                                _cap_idx = _level_order.index(_cap)
-                                if _cur_idx > _cap_idx:
-                                    level = _cap
-                            except ValueError:
-                                level = _cap
-                            if '犯忌嫁娶' not in level:
-                                level = level + '（犯忌嫁娶，慎用）'
-                        # 记录是否因忌嫁娶被降级，供综合评语口径统一使用
-                        _was_capped_for_jijiaqu = _has_ji_jiaqu_level
+                        # 婚嫁等级两级调整（2026-10-08 拍板，裁定3=C）：
+                        # 一级封顶★平（details含"忌嫁娶"，即小黄道除/危/执）；
+                        # 二级降一格（闭日、夫星受耗、warnings中阳错/阴差阳错等）。
+                        # 统一走 _apply_marriage_level_caps，主程序合局重算后重判
+                        # 也调用同一方法，避免两处封顶逻辑漂移。
+                        level, _was_capped_for_jijiaqu, _was_minor_downgrade = \
+                            self._apply_marriage_level_caps(level, marriage_result)
 
                         # 构建详细得分明细（2026-09-03 问题4：增加嫁娶分项+神煞明细占位，
                         # 保证"综合分=嫁娶评分+月令+喜用神+太阳太阴+神煞分项"公式可读）
@@ -1253,6 +1234,7 @@ class Scorer:
                             yueling_score, xishen_score, shensha_list,
                             marriage_details=marriage_result.get('details'),
                             ji_jiaqu_capped=_was_capped_for_jijiaqu,
+                            minor_downgrade=_was_minor_downgrade,
                             level_str=level)
                         if _mrg_tail:
                             reason_parts.append(_mrg_tail)
@@ -5932,7 +5914,76 @@ class Scorer:
         if wx_bad:
             return '❌ 凶'
         return base_level
-    
+
+    # 婚嫁等级顺序表（2026-10-08 两级降格用；主程序合局重算块亦引用本表）
+    MARRIAGE_LEVEL_ORDER = ['❌ 凶', '★ 平', '★★ 中吉', '★★★ 吉',
+                            '★★★★ 大吉', '★★★★★ 上吉']
+
+    def _apply_marriage_level_caps(self, level, marriage_result):
+        """婚嫁路径两级等级调整（2026-10-08 拍板，裁定3=C）。
+
+        只改等级、不改总分（排序/对比仍按实际分值），与坐山克仙命封顶同机制，
+        是"等级=总分纯函数"原则的唯一特许。
+
+        一级·封顶"★ 平"并注"（犯忌嫁娶，慎用）"：
+            婚嫁评分 details 中名称含"忌嫁娶"。现行唯一来源为
+            "小黄道除/危/执日忌嫁娶"（-5）。
+        二级·降一格并注"（小忌，降一格）"（一级未命中才适用）：
+            ① details 名称含"闭日"或"夫星"（建除/小黄道闭日、夫星受耗）；
+            ② warnings 文本含"忌嫁娶"——阳错、厌对、八专、四废、黄沙、
+              阴阳差错、女命忌嫁、神号、鬼哭等只进 warnings 不进 details。
+            本等级已是"❌ 凶"（idx=0）时无处可降，不加注、不记命中。
+
+        Returns:
+            (调整后 level, 一级命中 bool, 二级命中 bool)
+        """
+        details = marriage_result.get('details') if isinstance(marriage_result, dict) else None
+        warnings = marriage_result.get('warnings') if isinstance(marriage_result, dict) else None
+
+        has_l1 = False
+        if isinstance(details, list):
+            has_l1 = any(
+                '忌嫁娶' in str(_d[0])
+                for _d in details
+                if isinstance(_d, (list, tuple)) and len(_d) >= 1
+            )
+        if has_l1:
+            _new_lv = '★ 平'
+            try:
+                _idx = self.MARRIAGE_LEVEL_ORDER.index(level)
+                if _idx <= self.MARRIAGE_LEVEL_ORDER.index('★ 平'):
+                    _new_lv = level
+            except ValueError:
+                pass
+            if '犯忌嫁娶' not in _new_lv:
+                _new_lv += '（犯忌嫁娶，慎用）'
+            return _new_lv, True, False
+
+        has_l2 = False
+        if isinstance(details, list):
+            for _d in details:
+                if isinstance(_d, (list, tuple)) and len(_d) >= 1:
+                    _nm = str(_d[0])
+                    if '闭日' in _nm or '夫星' in _nm:
+                        has_l2 = True
+                        break
+        if not has_l2 and isinstance(warnings, list):
+            has_l2 = any('忌嫁娶' in str(_w) for _w in warnings)
+
+        if has_l2:
+            try:
+                _idx = self.MARRIAGE_LEVEL_ORDER.index(level)
+                if _idx <= 0:
+                    return level, False, False
+                _new_lv = self.MARRIAGE_LEVEL_ORDER[_idx - 1]
+            except ValueError:
+                return level, False, False
+            if '降一格' not in _new_lv:
+                _new_lv += '（小忌，降一格）'
+            return _new_lv, False, True
+
+        return level, False, False
+
     def _yueling_phrase(self, wangshuai_text, yueling_score):
         """月令评语（2026-10-02 口径修复）：强弱以旺衰判定（与"日主旺衰"段同源）
         为准，帮扶程度以月令得分为准。旧实现仅按分数档位（>0 即"日主得力"），
@@ -6148,7 +6199,8 @@ class Scorer:
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
                                    marriage_details=None, veto_reason=None,
-                                   ji_jiaqu_capped=False, level_str=None):
+                                   ji_jiaqu_capped=False, level_str=None,
+                                   minor_downgrade=False):
         """
         嫁娶【综合评语】月令分析之后的完整正五行分析串（2026-09-17 应需求补全）。
 
@@ -6353,6 +6405,14 @@ class Scorer:
             if yueling_score < 0 and xishen_score > 0:
                 _tail = '；日主虽失令，喜用神得补，整体吉中带弱'
             seg.append(f'综合判断：吉神并见、无忌项，嫁娶可用{_tail}')
+
+        # 等级下调说明（2026-10-08 拍板，E105 对账用；与等级行后缀错开：
+        # 等级行写"犯忌嫁娶/降一格"，此处用"降格/降星"，避免校验恒真）。
+        # 一级与二级互斥（_apply_marriage_level_caps 保证）。
+        if ji_jiaqu_capped:
+            seg.append('等级因犯嫁娶大忌降格封顶，非大吉之日，慎用')
+        elif minor_downgrade:
+            seg.append('等级因闭日、夫星等嫁娶小忌降星一档，详见等级行')
 
         return '；'.join(seg)
 

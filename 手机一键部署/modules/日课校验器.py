@@ -758,7 +758,16 @@ def rule_e207(ctx):
     分值口径与评分器 _calc_all_zhi_relations_detail 一致：
         六合+8/半合+6/六冲-15/六害-6/相刑-8/相破-4；伏吟0分。
     枚举与原语调用在本规则内独立完成，不读取评分器算出的明细。
+
+    嫁娶路径不适用（2026-10-08 拍板，裁定1=B）：该路径
+    score_breakdown 结构性为空 dict（评分器.py 正常/否决两路径硬置），
+    且合局分值家族不同（嫁娶六合+10/半合+8，本规则+8/+6），
+    即使补字段也无法对账。明确跳过而非"缺键被动跳过"，不再假装检查；
+    分值家族统一随"两套评分架构"另案处理，到期改回本规则覆盖。
     """
+    if 'marriage_details' in ctx.detail:
+        return '嫁娶路径不适用（无恒等式，2026-10-08拍板，随架构另案统一）'
+
     sz = ctx.detail.get('sizhu')
     if not isinstance(sz, dict):
         return '无四柱结构数据'
@@ -1082,28 +1091,34 @@ def rule_e104(ctx):
     return None
 
 
-@register_rule('E105', SEVERITY_WARN, '黄道大吉但总等级降平时有说明')
+@register_rule('E105', SEVERITY_WARN, '因嫁娶禁忌降格/降星时报告须有说明')
 def rule_e105(ctx):
-    """因忌嫁娶降格日，渲染文本须含黄道降级说明。"""
+    """因嫁娶禁忌等级被下调的日课，渲染文本须含下调说明（两级，2026-10-08拍板）。
+
+    一级（level 含"犯忌嫁娶"，封顶★平）：评语须含"降格"说明；
+    二级（level 含"降一格"，降星）：评语须含"降星"说明。
+    等级行自身后缀（犯忌嫁娶/降一格）不含"降格/降星"，故检查不会恒真；
+    说明句由评分器 _build_marriage_reason_tail 末尾生成。
+    """
     level = str(ctx.detail.get('level') or '')
-    if '犯忌嫁娶' not in level:
-        return '未因忌嫁娶降格'
-    hd = ctx.detail.get('huangdao_info')
-    xo_name = ''
-    if isinstance(hd, dict):
-        xo = hd.get('xiao_huang_dao')
-        if isinstance(xo, dict):
-            xo_name = str(xo.get('name') or '')
-    if xo_name not in ('除', '危', '执'):
-        return '小黄道非除/危/执'
+    is_l1 = '犯忌嫁娶' in level
+    is_l2 = (not is_l1) and ('降一格' in level)
+    if not is_l1 and not is_l2:
+        return '未因嫁娶禁忌降格/降星'
 
     text = ctx.rendered_content if ctx.rendered_content is not None else ctx.reason
-    if '降格' not in text:
+    if is_l1:
+        _need = '降格'
+        _kind = '一级封顶（犯嫁娶大忌）'
+    else:
+        _need = '降星'
+        _kind = '二级降星（闭日、夫星等小忌）'
+    if _need not in text:
         ctx.issue(
             'E105',
-            f'黄道等级大吉而总等级为平，报告缺少「黄道虽大吉…整体降格」说明',
-            source='huangdao_info vs 渲染文本',
-            suggestion='黄道信息段补降级原因，避免用户困惑')
+            f'等级已按{_kind}下调，但报告缺少「{_need}」说明',
+            source='level vs 渲染文本',
+            suggestion=f'综合评语补等级{_need}原因，避免等级与评语脱节')
     return None
 
 
@@ -1460,11 +1475,20 @@ def rule_e206(ctx):
             '须避' in verdict_line and '并见' in verdict_line and '可用' in verdict_line):
         return '综合判断非「须避+并见+可用」句式'
 
-    # 已有具体化解说明则放行
-    RESOLVED_BY = ('合住', '合去', '制伏', '制住', '克制', '制化',
-                   '化解', '合化', '有制', '得制')
-    if any(k in verdict_line for k in RESOLVED_BY):
-        return '结论含具体制化说明'
+    # 已有既成制化/化解说明则放行（2026-10-08 拍板，新增1：拆"要求类/事实类"）。
+    # 只认事实性搭配——"合住/合去/制伏/制住/克制/化解/合化/有制/得制/已制"；
+    # 裸"制化"移出白名单：评语"须有制化"只是提出要求（须/需/应/要+制化），
+    # 未给时辰/方位等方向，不得据此放行。
+    # 要求句式（须/需/应/要…制化/化解）先整体抹除——否则"须有制化"中的
+    # "有制"会被误当既成事实（2026-10-08 verify 发现的子串陷阱）。
+    import re as _re
+    _probe = _re.sub(
+        r'[须需要应][^，；。]{0,6}(?:制化|化解|制伏|制住|克制|合住|合去)',
+        '', verdict_line)
+    RESOLVED_FACT = ('合住', '合去', '制伏', '制住', '克制', '化解',
+                     '合化', '有制', '得制', '已制')
+    if any(k in _probe for k in RESOLVED_FACT):
+        return '结论已含既成制化/化解说明'
 
     ctx.issue('E206',
               '综合判断只说吉神「并见」、未说明如何化解所忌，即写「可用」',

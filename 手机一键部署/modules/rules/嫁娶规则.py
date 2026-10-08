@@ -477,7 +477,11 @@ class MarriageRuleChecker(EventRuleChecker):
         # 宜"嫁娶"，避免嫁娶日课宜项缺失"宜嫁娶"核心结论。有否决则不标。
         # 7. 检查一票否决项
         veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
-        if not veto and '嫁娶' not in yi_list:
+        # 2026-10-08 拍板（裁定2）：闭日忌嫁娶（小黄道宜忌表闭.ji含嫁娶、
+        # 建除 JIANCHU_JI 含闭），即使闭日不在否决清单，也不补标宜"嫁娶"，
+        # 避免"宜嫁娶"与"建除闭日/小黄道闭日"并存。
+        _has_biri = any('闭日' in str(_j) for _j in ji_list)
+        if not veto and not _has_biri and '嫁娶' not in yi_list:
             yi_list.append('嫁娶')
         if veto:
             return yi_list, ji_list, True, veto_reason
