@@ -1555,7 +1555,8 @@ class Scorer:
                                  if any(re.search(_k, str(j))
                                         for _k in self._HARD_VETO_KEYWORDS)
                                  and not (_spv_mode is False
-                                          and self._is_pillar_sansha_item(j))]
+                                          and (self._is_pillar_sansha_item(j)
+                                               or '月三煞(山向)' in str(j)))]
                     _hard_need = [j for j in _hard_hit if '（有制化：' not in str(j)]
                     _mountain_bad = [str(b) for b in sansha_info.get('mountain_block_reasons', [])
                                      if isinstance(b, (str, dict))]
@@ -1797,13 +1798,9 @@ class Scorer:
                 else:
                     sansha_fan_reason = '年三煞(山向)'
             
-            # 月三煞犯山向（大忌）
-            if sansha_info.get('month_sansha_fan'):
-                sansha_fan_da_ji = True
-                if sansha_fan_reason:
-                    sansha_fan_reason += '、月三煞(山向)'
-                else:
-                    sansha_fan_reason = '月三煞(山向)'
+            # §63（2026-10-09 拍板：三煞D）：月三煞犯山向从一票否决降级为强扣分，
+            # 扣分由通用评分逻辑 sansha_penalty 通道承担（-20），此处不再置 veto；
+            # 年三煞犯山向维持否决（上一段），日三煞犯山向维持扣分（更下段）
             
             # 日三煞犯山向（较轻，不列为大忌）
             # 根据三煞避忌原则：日三煞管时柱，山向犯日三煞相对较轻，不一票否决
@@ -2699,6 +2696,12 @@ class Scorer:
             'details': {},
             '_chong_penalty': 0,  # 2026-09-18：年命×月支六冲扣分（扣分不否决档），
                                  # 不计入末尾 suitable 兜底阈值
+            # §63（2026-10-09 拍板：月份不宜E）：月份不宜降级项强扣分，传导日课
+            # 五行评分（正阴府无制化-30/月破犯坐山-25；三煞占月-30不传导，日课层
+            # year_sansha_month_fan -30 同一判定，防双扣）
+            'month_penalty': 0,
+            'month_penalty_detail': [],
+            '_mp_penalty': 0,     # 扣分不否决档隔离键：不计入末尾 suitable 兜底阈值
         }
 
         # 继承年份分析的关键结论（坐太岁可用、年三煞、太岁方、岁破方等方位煞忌信息），
@@ -2844,13 +2847,20 @@ class Scorer:
                                     if analysis['score'] < 60:
                                         analysis['level'] = '小凶'
                                 else:
-                                    # 无制化：正阴府单干也大忌，一票否决（保留原口径）
-                                    analysis['reasons'].append(f"月干{month_gan}为{shan_xiang}{yinfu_type}，大忌")
+                                    # §63（2026-10-09 拍板：月份不宜E）：正阴府无制化
+                                    # 从一票否决降级为强扣分（-30），扣分经 month_penalty
+                                    # 传导日课五行评分；月分隔离末尾 suitable 兜底阈值，
+                                    # 叠加其他硬项（如月家五黄）仍可否决
+                                    analysis['reasons'].append(
+                                        f"月干{month_gan}为{shan_xiang}{yinfu_type}，无制化，强扣分不否决")
                                     analysis['details']['月干犯阴府'] = True
                                     analysis['details']['阴府类型'] = yinfu_type
-                                    analysis['suitable'] = False
-                                    analysis['score'] = 0
-                                    analysis['level'] = '大凶'
+                                    analysis['score'] -= 30
+                                    analysis['month_penalty'] -= 30
+                                    analysis['month_penalty_detail'].append('正阴府无制化（-30分）')
+                                    analysis['_mp_penalty'] -= 30
+                                    if analysis['score'] < 60:
+                                        analysis['level'] = '小凶'
                             else:
                                 # 傍阴府：单干有制权用，只扣分不否决
                                 analysis['reasons'].append(f"月干{month_gan}为{shan_xiang}{yinfu_type}")
@@ -2878,14 +2888,18 @@ class Scorer:
             }
             _year_sha_fang = year_sansha_map.get(year_zhi, [])
             if month_zhi and month_zhi in _year_sha_fang:
+                # §63（2026-10-09 拍板：三煞D）：三煞占月从整月否决降级为强扣分，
+                # 年三煞犯山向（年层/日课层）维持否决。月建∈年三煞方与日课层
+                # year_sansha_month_fan（年三煞犯月柱-30）为同一判定，日课总分
+                # 扣分由该既有通道承担，此处扣分仅入月分不传导（防双扣）；
+                # 隔离末尾 suitable 兜底阈值，不再提前 return
                 analysis['reasons'].append(
-                    f"月建{month_zhi}正当年三煞（{''.join(_year_sha_fang)}）方，三煞占月，该月忌修造动土")
+                    f"月建{month_zhi}正当年三煞（{''.join(_year_sha_fang)}）方，三煞占月，强扣分不否决")
                 analysis['details']['年三煞占月'] = True
                 analysis['details']['年三煞方'] = _year_sha_fang
-                analysis['suitable'] = False
-                analysis['score'] = 0
-                analysis['level'] = '大凶'
-                return analysis
+                analysis['score'] -= 30
+                analysis['month_penalty_detail'].append('三煞占月（月层-30分；日课层由年三煞犯月柱-30通道承担，不重复传导）')
+                analysis['_mp_penalty'] -= 30
 
             # 月三煞分析
             # 月三煞方位映射（按传统择日规则，纯地支）
@@ -3016,7 +3030,12 @@ class Scorer:
                         analysis['details']['山向犯月煞'] = True
                         # 月三煞（犯坐山）扣 20 分，判为"凶"
                         analysis['score'] -= 20
-                        # 不设置 suitable 为 False，因为只是月份不利，不是完全不可用
+                        # §63（2026-10-09 拍板：三煞D）：月三煞犯山向降级强扣分，
+                        # 月分隔离末尾 suitable 兜底阈值（叠加三煞占月等降级项时
+                        # 不再因累积<50 被兜底否决）；日课总分由主流程
+                        # sansha_penalty 通道（-20）承担
+                        analysis['_mp_penalty'] -= 20
+                        analysis['month_penalty_detail'].append('坐山犯月三煞（月层-20分；日课层由月三煞犯山向-20通道承担，不重复传导）')
             
             # 月破方位
             chong_zhi = {
@@ -3113,11 +3132,15 @@ class Scorer:
                             break
                     
                     if zuoshan_fan_yuepo:
-                        analysis['reasons'].append(f"月支{month_zhi}冲坐山{zuoshan}，犯月破，大凶")
+                        analysis['reasons'].append(f"月支{month_zhi}冲坐山{zuoshan}，犯月破，强扣分不否决")
                         analysis['details']['山向犯月破（地支冲）'] = True
-                        # 月破（犯坐山）扣 25 分，判为凶
+                        # §63（2026-10-09 拍板：月份不宜E）：月破犯坐山强扣分-25，
+                        # 扣分传导日课五行评分（主流程无同判定通道）；隔离末尾
+                        # 兜底阈值——原状叠加致分<50 自动否决，降级后不再否决
                         analysis['score'] -= 25
-                        # 不设置 suitable 为 False，因为只是月份不利，不是完全不可用
+                        analysis['month_penalty'] -= 25
+                        analysis['month_penalty_detail'].append('月破犯坐山（-25分）')
+                        analysis['_mp_penalty'] -= 25
             
             # 暗建煞分析（修正规则）
             # 标准暗建煞规则：寅午戌月暗建在亥，亥卯未月暗建在申，申子辰月暗建在巳，巳酉丑月暗建在寅
@@ -3270,10 +3293,14 @@ class Scorer:
             analysis['level'] = '大凶'
             # 2026-09-18 三档口径：月支冲年命属"扣分不否决"档，低分纯粹由此造成时
             # （剔除后回到 50+）不转 suitable=False；阴府/月三煞等硬项已显式置位。
-            _score_excl_chong = analysis['score'] - analysis.get('_chong_penalty', 0)
+            # §63（2026-10-09 拍板）：月份不宜降级项（三煞占月/正阴府无制化/
+            # 月破犯坐山）同为扣分不否决档，一并隔离兜底阈值
+            _score_excl_chong = (analysis['score'] - analysis.get('_chong_penalty', 0)
+                                 - analysis.get('_mp_penalty', 0))
             if _score_excl_chong < 50:
                 analysis['suitable'] = False
         analysis.pop('_chong_penalty', None)
+        analysis.pop('_mp_penalty', None)
 
         return analysis
 
@@ -4907,6 +4934,11 @@ class Scorer:
         # 新增：年、月前置条件校验
         year = sizhu.get('year', 0)
         month = sizhu.get('month', 0)
+
+        # §63（2026-10-09 拍板：月份不宜E）：月份不宜降级项强扣分传导值
+        #（在外层初始化，四柱输入模式/无年份时不走月分析分支也不至未定义）
+        _month_penalty = 0
+        _month_penalty_detail = []
         
         # 尝试从四柱信息中提取年份
         if year == 0:
@@ -4939,7 +4971,7 @@ class Scorer:
                 # 分析月份吉凶（传递山向和动土方位用于分析）
                 # 使用四柱中的月支来确定农历月份，而不是公历月份
                 from datetime import date, timedelta
-                
+
                 # 获取立春日期（用于确定月序）
                 lichun = self._get_solar_term_date(year, '立春')
                 
@@ -4960,6 +4992,12 @@ class Scorer:
                 
                 month_analysis = self.analyze_month(month_date, event_type, owners, shan_xiang, direction,
                                                     day_sizhu=sizhu, zeli_mode=self._zeli_mode)  # _zm0915
+                # §63（2026-10-09 拍板：月份不宜E）：suitable=True 时提取降级项
+                # 强扣分（正阴府无制化/月破犯坐山），在下方五行评分处入账；
+                # suitable=False 仍走否决路径（月家飞星五黄等维持否决项）
+                if month_analysis['suitable']:
+                    _month_penalty = month_analysis.get('month_penalty', 0)
+                    _month_penalty_detail = month_analysis.get('month_penalty_detail', [])
                 if not month_analysis['suitable']:
                     # 2026-09-10 否决文案只列真实触发项：纯方位信息项（年三煞在X方/太岁在X方/
                     # 岁破在X方/月三煞在X方，未临坐山/动土方不否决）不再混入否决理由
@@ -5038,6 +5076,14 @@ class Scorer:
         if _fj_penalty:
             wu_xing_score += _fj_penalty
             score_breakdown['分金扣分'] = _fj_penalty
+
+        # §63（2026-10-09 拍板：月份不宜E）：月份不宜降级项（正阴府无制化/月破
+        # 犯坐山）强扣分入账，与 §62 分金扣分同构；三煞占月不传导（日课层
+        # year_sansha_month_fan -30 同一判定，防双扣）
+        if _month_penalty:
+            wu_xing_score += _month_penalty
+            score_breakdown['月份不宜扣分'] = _month_penalty
+            score_breakdown['月份不宜扣分明细'] = list(_month_penalty_detail)
         
         # 判断五行是否合格
         he_ge = wu_xing_score >= 60  # 五行评分低于60分为不合格
@@ -5082,7 +5128,10 @@ class Scorer:
                 _t = str(_j)
                 if '（有制化：' in _t:
                     _soft_items.append(_t)
-                elif (not _spv_mode) and self._is_pillar_sansha_item(_t):
+                elif (not _spv_mode) and (self._is_pillar_sansha_item(_t)
+                                          or '月三煞(山向)' in _t):
+                    # §63（2026-10-09 拍板：三煞D）：月三煞(山向)已降级强扣分，
+                    # 山向类下与四柱三煞项同为"扣分不否决"档，不列大忌
                     _soft_items.append(_t)
                 elif any(re.search(_k, _t) for _k in self._HARD_VETO_KEYWORDS):
                     _hard_items.append(_t)
