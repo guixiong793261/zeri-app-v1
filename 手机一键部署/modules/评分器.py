@@ -643,6 +643,19 @@ class Scorer:
             # Q4：本轮已制化正阴府干集合（供 _check_wu_xing 规则合并后清理
             # 年运/日月干静态忌项），随评分重置防跨日残留
             self._mitigated_yinfu_gans = set()
+            # §62（2026-10-09 拍板·方案二）：多人口家庭自动主次打标。
+            # 非婚嫁类事项且事主≥2 且无任何显式 _zaozhu_weight 打标时，自动按
+            # "首位=主事人1.0、其余=家眷0.5"打标：辅助成员被日支冲/自刑等
+            # [硬性门槛]降为半权重扣分，不再一票否决（复用作灶主事人既有机制）。
+            # 婚嫁类（嫁娶/订婚/纳采）双方皆主事人，全员默认1.0不打标；
+            # 作灶 UI 显式打标（已有 _zaozhu_weight 键）优先，不覆盖。
+            # 全年影响面实测（2024-2027×16事项×4人口，坤山艮向兼未）：各事项
+            # 否决率下降 +3~+19pp，单人口基线不变。
+            if (owners and len(owners) >= 2
+                    and event_type not in ('嫁娶', '订婚', '纳采')
+                    and not any('_zaozhu_weight' in _o for _o in owners)):
+                for _i, _o in enumerate(owners):
+                    _o['_zaozhu_weight'] = 1.0 if _i == 0 else 0.5
             # _zm0915：择日模式 pure=纯正五行（协纪辨方书；玄空飞星/年家五黄二黑紫白封禁不参与），
             # feixing=正五行+玄空飞星（2026-09-15前的混合规则）。引擎默认 feixing 保持向后兼容，
             # 主程序按界面选择显式传值（界面默认 pure）。
@@ -4650,6 +4663,11 @@ class Scorer:
                 _ji if isinstance(_ji, str) else str(_ji))
             if _t in _h1_skip or _h1_is_veto_reason(_t):
                 continue
+            # §62（2026-10-09 拍板）：分金/正体大凶改为强扣分后不再命中
+            # _h1_is_veto_reason 拦截词，须显式排除——扣分单列'分金扣分'键
+            # （通道真实分值），否则忌事-15+单列-35 双重扣分
+            if _t.startswith(('分金大凶', '正体大凶')):
+                continue
             bd['忌事得分'] -= 15
             sc -= 15
         if self.ji_list:
@@ -4794,9 +4812,13 @@ class Scorer:
                 _keep = _keep2
             self.ji_list = _keep
 
-        # 分金/正体大凶一票否决（选定山向时）：修造择日以山家为核心，
-        # 分金五行（纳音）受日课四柱克泄至"大凶"，或正向正体大凶，直接否决。
-        # 即使规则检查已否决（如岁破日），也评估分金并将原因并列显示
+        # 分金/正体大凶强扣分（选定山向时）：修造择日以山家为核心，
+        # 分金五行（纳音）受日课四柱克泄至"大凶"，或正向正体大凶，强扣分不否决。
+        # §62（2026-10-09 拍板）：由一票否决改为强扣分（通道真实分值，实测-34）——
+        # 全年审计（2024-2027×山向7事项）证明其与其他门槛共线（"仅因分金大凶被否"=0天），
+        # 否决权冗余；保留忌项标记，扣分计入五行评分。风险提示：本结论绑定
+        # 坤山艮向兼未×4组事主样本，换山向/仙命组合后需复核（issues_pending 挂账）。
+        _fj_penalty = 0
         if shan_xiang:
             try:
                 from .二十四山 import ZhengTiWuXingSelectorDB
@@ -4821,27 +4843,27 @@ class Scorer:
                             _fj_reason = (
                                 f"分金大凶：{_shan_name}山{_jianxiang}第{_fj.get('fengjin_index', '?')}分金"
                                 f"{_fj.get('fengjin_ganzhi', '')}（{_fj.get('nayin_name', '')}），"
-                                f"日课四柱克泄分金，得分{_fj.get('score', '')}，一票否决"
+                                f"日课四柱克泄分金，得分{_fj.get('score', '')}，强扣分"
                             )
                     else:
                         _zt = _selector.evaluate_by_name(_shan_name, *_sizhu_gz)
                         if _zt.get('success') and _zt.get('level') in ('大凶', '凶(犯大煞)'):
                             _fj_reason = (
                                 f"正体大凶：{_shan_name}山正体五行受日课四柱克泄"
-                                f"（得分{_zt.get('score', '')}），一票否决"
+                                f"（得分{_zt.get('score', '')}），强扣分"
                             )
                     if _fj_reason:
+                        # §62（2026-10-09 拍板）：强扣分不否决，扣分在正常路径
+                        # 计入五行评分（negative，通道真实分值）；保留忌项标记
                         if _fj_reason not in self.ji_list:
                             self.ji_list.append(_fj_reason)
-                        if veto:
-                            veto_reason = f"{veto_reason}；{_fj_reason}"
-                        else:
-                            veto = True
-                            veto_reason = _fj_reason
+                        _raw = (_fj.get('score', 0) if '兼' in shan_xiang
+                                else _zt.get('score', 0)) or 0
+                        _fj_penalty += -abs(_raw) if _raw else 0
             except ImportError:
                 pass
 
-        # 检查一票否决（规则否决 + 分金/正体大凶否决）
+        # 检查一票否决（规则否决；分金/正体大凶已改强扣分，不再参与否决 §62）
         if veto:
             details = self._generate_wu_xing_details(sizhu, owners)
             details['ji_list'] = self.ji_list
@@ -5010,6 +5032,12 @@ class Scorer:
         
         # 统一构建五行评分明细与五行分（含神煞/宜事/忌事/十二长生/地支/纳音；相主仅入明细键，不计入五行分）
         score_breakdown, wu_xing_score = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+
+        # §62（2026-10-09 拍板）：分金/正体大凶强扣分计入五行评分；
+        # 扣分单列 breakdown 键保持明细透明（0 时不加键，避免所有山向日多空键）
+        if _fj_penalty:
+            wu_xing_score += _fj_penalty
+            score_breakdown['分金扣分'] = _fj_penalty
         
         # 判断五行是否合格
         he_ge = wu_xing_score >= 60  # 五行评分低于60分为不合格
