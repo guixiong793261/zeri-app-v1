@@ -1,4 +1,4 @@
-# 问题跟踪 001：test_huangdao_truth 七项历史失败
+﻿# 问题跟踪 001：test_huangdao_truth 七项历史失败
 
 - **立项日期**：2026-09-07
 - **状态**：**已关闭（2026-09-18，七项全部处置完毕，L3C 7/7）**
@@ -5429,4 +5429,5 @@ verify_hongsha.py 7/7。神煞侧"红砂日"与嫁娶文案"红纱日"为异名�
   2 份历史缺失维持）。
 - 单文件重建：`integrate_single_file.py --smoke` SMOKE_OK。
 - commit：主仓 **125d400**（评分器三副本+verify+对账数据归档）；
-  台账/issues_pending 见下一 commit；统一版仓 hash 见台账补记。
+  台账/issues_pending 35efa50；统一版仓 **4a6f21a**（仅评分器根份，在途玄空项未混入）。
+
