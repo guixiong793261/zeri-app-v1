@@ -5316,6 +5316,8 @@ verify_hongsha.py 7/7。神煞侧"红砂日"与嫁娶文案"红纱日"为异名�
   **0809379e84e1**（改前基线 daf565e8，§61 记录）。
 - 单文件重建：`integrate_single_file.py --smoke` SMOKE_OK
   （依赖闭包 57 模块，冒烟产物已清理）。
-- commit：（待回填）
+- commit：主仓 f93a3d0（评分器三副本+verify+黄金锁）/ d8ae3b9
+  （001 §62 + issues_pending 挂账）；统一版仓 11a244d（仅评分器
+  根份，在途玄空项未混入）。
 
 
