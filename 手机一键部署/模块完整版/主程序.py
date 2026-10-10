@@ -5942,6 +5942,10 @@ class ZeriApp:
                 for detail_name, detail_score in marriage_details:
                     if detail_score != 0:
                         content += f"    {'├─' if score_breakdown else ''}{detail_name}：{detail_score:+d} 分\n"
+                    else:
+                        # 2026-10-11 B1：0 分＝信息行（本命三煞新郎未犯/新娘对照/
+                        # 新郎生年缺失提示），只展示不标分值，不进忌项与神煞加减分。
+                        content += f"    {'├─' if score_breakdown else ''}{detail_name}\n"
                 # 2026-09-17 归零透明化：嫁娶明细合计可能为负（如 -2），算法按 max(0,…)
                 # 兜底归零显示 0。此处明示归零前合计，避免"明细加总≠显示分"无法追溯。
                 _raw_wx = score_details.get('五行原始分')

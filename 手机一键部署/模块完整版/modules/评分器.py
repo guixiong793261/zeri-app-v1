@@ -631,6 +631,12 @@ class Scorer:
                 groom_bazi = {}
                 if 'sizhu' in owner:
                     sizhu_parts = owner['sizhu'].split()
+                    # 2026-10-11 B1：本命三煞依《陈子性藏书》页799只论男命，
+                    # 查新郎年支，故须提取新郎年柱（旧实现漏提，规则改查男命后
+                    # 会静默永不触发）。
+                    if len(sizhu_parts) >= 1:
+                        groom_bazi['year_gan'] = sizhu_parts[0][0]
+                        groom_bazi['year_zhi'] = sizhu_parts[0][1]
                     if len(sizhu_parts) >= 2:
                         groom_bazi['yue_gan'] = sizhu_parts[1][0]
                         groom_bazi['yue_zhi'] = sizhu_parts[1][1]
@@ -646,6 +652,8 @@ class Scorer:
                             owner.get('birth_minute', 0),
                             longitude=owner.get('birth_longitude')
                         )
+                        groom_bazi['year_gan'] = birth_sizhu['年柱'][0]
+                        groom_bazi['year_zhi'] = birth_sizhu['年柱'][1]
                         groom_bazi['yue_gan'] = birth_sizhu['月柱'][0]
                         groom_bazi['yue_zhi'] = birth_sizhu['月柱'][1]
                         groom_bazi['ri_gan'] = birth_sizhu['日柱'][0]
