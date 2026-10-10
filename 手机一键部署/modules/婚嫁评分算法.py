@@ -1039,48 +1039,33 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             score += _xo_score
             details.append((f'小黄道{_xn}日（宜嫁娶）', _xo_score))
         
-        # 凶神扣分（新娘本命三煞：申子辰煞南巳午未、寅午戌煞北亥子丑、
+        # 凶神扣分（本命三煞：申子辰煞南巳午未、寅午戌煞北亥子丑、
         # 亥卯未煞西申酉戌、巳酉丑煞东寅卯辰；组内依次为劫煞/灾煞/月煞。
-        # 真假三煞：三煞日天干克新娘年干＝真三煞，大凶-25宜避；
-        # 日干不克年干且得天德/月德化解＝假三煞，-10有吉神解厄可酌情；
-        # 不克但无吉神化解＝本命三煞，仍按-25）
+        # 2026-10-11 B-b 轨四判据(b)(c)修正（典据研究文档 §8.3/§8.4，
+        # 用户拍板 B1 分步第 1 步）：
+        #   ① 旧三档"日干克年干＝真三煞-25／不克且得天月德化解＝假三煞
+        #      -10／不克无德＝本命三煞-25"中，真/假三煞分档四书词频 0 载
+        #      （真三煞/假三煞/回头贡煞四书无载，宗镜"真杀/假杀"系真伪
+        #      凶神泛论、陈书"假杀为权"系斗首异语）；
+        #   ② 天月德化解系把月家日神层"德合仅足相抵"规则错配到本命层——
+        #      本命层《协纪辨方书》卷33 天罡四煞"吉不能制"、卷34 月吉神
+        #      总论"四德俱走天干不走地支，不能制地支方煞也"；馆臣驳论
+        #      许干制支亦仅限"庚辰月日时天干一气合乙为岁德"的修方造命格，
+        #      非日值天月德即可解本命三煞。故删真假分档与天月德减免，
+        #   本命三煞统一一档 -25（仅扣分通道，不直接置否决）。
+        # 注：查询性别修正（典据只论男命，应查新郎）与劫/灾/岁第三位
+        # "月煞→岁煞"正名为第 2 步（下一 commit）。
         if bride_bazi and bride_bazi.get('year_zhi'):
             if is_sansha(date_obj, bride_bazi['year_zhi']):
                 ny_zhi = bride_bazi['year_zhi']
-                ny_gan = bride_bazi.get('year_gan', '')
-                sd_gan, sd_zhi = get_day_ganzhi(date_obj)
+                _, sd_zhi = get_day_ganzhi(date_obj)
                 sha_fang = {'巳': '南', '午': '南', '未': '南', '亥': '北', '子': '北', '丑': '北',
                             '申': '西', '酉': '西', '戌': '西', '寅': '东', '卯': '东', '辰': '东'}.get(sd_zhi, '')
                 sha_ming = {'巳': '劫煞', '午': '灾煞', '未': '月煞', '亥': '劫煞', '子': '灾煞', '丑': '月煞',
                             '申': '劫煞', '酉': '灾煞', '戌': '月煞', '寅': '劫煞', '卯': '灾煞', '辰': '月煞'}.get(sd_zhi, '')
-                GAN_WX = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
-                          '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}
-                ke_map = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
-                zhen = bool(ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX
-                            and ke_map[GAN_WX[sd_gan]] == GAN_WX[ny_gan])
-                if zhen:
-                    penalty = -25
-                    label = (f"真三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}克年干{ny_gan}（"
-                             f"{GAN_WX.get(sd_gan,'?')}克{GAN_WX.get(ny_gan,'?')}），大凶宜避")
-                elif is_tiande_day(date_obj) or is_yuede_day(date_obj):
-                    penalty = -10
-                    _jie = '、'.join([n for n, f in (('天德', is_tiande_day), ('月德', is_yuede_day)) if f(date_obj)])
-                    # 2026-09-03 用户问题3修正：假三煞判定的制化条件（日干不克年干+得吉神化解）
-                    # 明确写入本段标签，不再与"庚日主失令（月令分析段）"同段混排，避免阅读时
-                    # 把月令判断"日主失令"误读为假三煞的归属依据。
-                    _ke_rel = (f"{GAN_WX.get(sd_gan,'?')}不克{GAN_WX.get(ny_gan,'?')}"
-                               if ny_gan and sd_gan in GAN_WX and ny_gan in GAN_WX and
-                                  ke_map[GAN_WX[sd_gan]] != GAN_WX[ny_gan]
-                               else f"日干{sd_gan}不克年干{ny_gan or '未知'}")
-                    label = (f"假三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位；判为'假'的依据："
-                             f"①{_ke_rel}（真三煞以三煞日天干克新娘年干为据），②得{_jie}化解。"
-                             f"不构成否决，但须谨慎择时，建议避开犯煞时辰")
-                else:
-                    penalty = -25
-                    label = (f"本命三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】：新娘年命{ny_zhi}本命三煞，"
-                             f"日支{sd_zhi}犯本命三煞之{sha_ming}位，日干{sd_gan}不克年干{ny_gan or '未知'}且无吉神化解")
+                penalty = -25
+                label = (f"本命三煞【本命三煞之{sha_ming}位·煞{sha_fang}，扣{penalty}分】："
+                         f"新娘年命{ny_zhi}本命三煞，日支{sd_zhi}犯本命三煞之{sha_ming}位")
                 score += penalty
                 details.append((label, penalty))
         

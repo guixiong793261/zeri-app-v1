@@ -1046,7 +1046,7 @@ class Scorer:
                             '基础分': self.base_score,
                             '嫁娶评分': marriage_result['score'],
                             # 嫁娶路径的"五行评分"即嫁娶专用评分（基础60＋利月/天德/黄道/
-                            # 三合等吉神、假三煞/夫星等凶煞，黄道已并入，不再单列）。
+                            # 三合等吉神、本命三煞/夫星等凶煞，黄道已并入，不再单列）。
                             # 补此键使详情页【五行评分】行取到真实分，而非缺省回退100。
                             '五行评分': marriage_result['score'],
                             '五行原始分': marriage_result.get('raw_score', marriage_result['score']),
@@ -1109,7 +1109,7 @@ class Scorer:
                                 )
 
                                 # 【E3 矛盾一/二修复】把 marriage_details 中的嫁娶凶煞项
-                                # （假三煞、夫星受克、逐夫月、逐妇月、孤辰寡宿等）加入
+                                # （本命三煞、夫星受克、逐夫月、逐妇月、孤辰寡宿等）加入
                                 # self.shensha_list，使【神煞信息】与【评分详情】一致。
                                 _mrg_d = marriage_result.get('details') or []
                                 for _md in _mrg_d:
@@ -1266,7 +1266,7 @@ class Scorer:
                                             'score': _ms
                                         })
                         
-                        # 生成综合评语（2026-09-03 问题4：格式化+分节，避免假三煞/月令混排）
+                        # 生成综合评语（2026-09-03 问题4：格式化+分节，避免本命三煞/月令混排）
                         # 结构：嫁娶评分要点 → 宜 → 忌 → 月令分析（独立小标题）
                         reason_parts = []
                         mrg_reason = str(marriage_result.get('reason') or '')
@@ -6573,7 +6573,7 @@ class Scorer:
             seg.append(f'综合判断：{veto_reason}，本日不宜嫁娶')
         elif self.ji_list or _md_neg:
             # 2026-10-02 修02-05问题3/4：嫁娶路径 ji_list 只含规则忌项，
-            # 假三煞/夫星受克等在 marriage_details 负分项，须合并为忌项数据源。
+            # 本命三煞/夫星受克等在 marriage_details 负分项，须合并为忌项数据源。
             _all_ji = []
             _seen = set()
             for _j in self.ji_list:
