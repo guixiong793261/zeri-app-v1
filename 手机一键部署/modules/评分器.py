@@ -306,6 +306,64 @@ class Scorer:
         三煞犯山向文本以"山向)"结尾，不匹配。山向类事项四柱临方扣分不否决。"""
         return bool(re.search(r'(?:三煞|叠犯)\s*[（(][^）)]*柱[）)]', str(txt)))
 
+    @staticmethod
+    def _is_dayhour_pillar_sansha_item(txt):
+        """§64（2026-10-09 拍板：B3 按柱分级+必修2 口径对齐）：日/时柱临三煞项
+        ——年三煞(日柱/时柱)、月三煞(日柱/时柱)、日三煞(时柱)、
+        月日三煞叠犯(时柱)，山向类与事主类统一为强扣分不否决。
+        年三煞(月柱)不匹配（事主类月柱维持否决；山向类按 §63 三煞占月降级）。"""
+        return bool(re.search(r'(?:三煞|叠犯)\s*[（(][^）)]*[日时]柱[）)]', str(txt)))
+
+    # §64（2026-10-09 拍板：D2）：作灶次级神煞从规则一票否决降级为强扣分。
+    # 扣分通道：天火/地火/土府——当日神煞通道命中时走神煞分（-15/-10/-20），
+    # 规则 ji 不重复忌事 -15；神煞未命中（两套公式存在差异）或灶君忌日
+    # （无神煞通道）时，规则 ji 走忌事 -15，保证"强扣分"必落一笔。
+    _S64_ZAO_DOWNGRADE_JI = ('灶君忌日忌作灶',)
+    _S64_ZAO_DOWNGRADE_SHENSHA = ('天火日', '地火日', '土府日')
+    # 规则 ji 文本 → 对应神煞名（None=无对应神煞，恒走忌事 -15）
+    _S64_ZAO_RULEJI_TO_SHENSHA = {
+        '天火日忌作灶': '天火日',
+        '地火日忌作灶': '地火日',
+        '土府日忌动土作灶': '土府日',
+        '灶君忌日忌作灶': None,
+    }
+
+    def _is_downgraded_ji_item(self, txt, spv_mode):
+        """§64 必修1：忌项是否属于"扣分不否决"降级档（其忌事 -15 在 30 分线
+        假低分回退时应予回退）。
+        - 日/时柱临三煞：两类事项统一降级（B3）；
+        - 山向类（spv_mode=False）：全部四柱临方项 + 月三煞(山向)/日三煞(山向)，
+          前者 §62/§63 已降级，后者本为既有"较轻不否决"扣分项；
+        - 灶君忌日：D2 降级，忌事通道 -15。
+        不在此列：年三煞(山向)（维持否决）、年三煞(月柱)（事主类维持否决）；
+        天火/地火/土府规则 ji 的回退按当日神煞实际命中由
+        _s64_zao_ruleji_refund 精确判定（防虚退）。"""
+        t = str(txt)
+        if self._is_dayhour_pillar_sansha_item(t):
+            return True
+        if spv_mode is False and (self._is_pillar_sansha_item(t)
+                                  or '月三煞(山向)' in t
+                                  or '日三煞(山向)' in t):
+            return True
+        if t in self._S64_ZAO_DOWNGRADE_JI:
+            return True
+        return False
+
+    def _s64_zao_shensha_hit_names(self):
+        """当日作灶神煞通道实际命中的 D2 神煞名集合。"""
+        return {s.get('name') for s in self.shensha_list
+                if isinstance(s, dict) and s.get('name') in self._S64_ZAO_DOWNGRADE_SHENSHA}
+
+    def _s64_zao_ruleji_refund(self, txt, hit_names):
+        """§64 D2 防双扣/回退共用判定：返回规则 ji 文本在忌事通道的实际应扣/应退分。
+        - 对应神煞当日命中：忌事 0（神煞分承担），返回 0；
+        - 否则：忌事 -15 实扣，回退判定时返回 15。
+        非 D2 规则 ji 文本返回 None（调用方按普通忌事处理）。"""
+        name = self._S64_ZAO_RULEJI_TO_SHENSHA.get(str(txt), False)
+        if name is False:
+            return None
+        return 0 if (name is not None and name in hit_names) else 15
+
     def __init__(self):
         self.base_score = 100
         self.final_score = 100
@@ -1299,10 +1357,13 @@ class Scorer:
             # 预先计算三煞信息（用于日课详情显示）
             self._current_event_type = event_type
             sansha_info = self._get_sansha_info(sizhu, full_shan_xiang)
-            # 三煞判定口径（2026-09-07 用户确认）：
+            # 三煞判定口径（2026-09-07 用户确认；2026-10-09 §64 B3 按柱分级）：
             #  山向中心事项（修造/动土/入宅/安葬等，以坐山修方为核心）用"仅坐山修方论"——
-            #    坐山/修方犯三煞一票否决；四柱月/日/时支临三煞方可制化，仅扣分不否决。
-            #  事主中心事项（嫁娶/订婚/纳采）沿用"四柱不犯"——月/日/时柱临三煞方皆否决。
+            #    坐山/修方犯三煞一票否决；四柱临三煞方仅扣分不否决
+            #    （年三煞(月柱)按 §63 三煞占月降级）。
+            #  事主中心事项（嫁娶/订婚/纳采等）按柱分级——
+            #    年三煞犯月柱维持否决（月建临煞主一月）；日/时柱临三煞方
+            #    §64 B3 降级强扣分（与山向类对齐）。
             _mountain_centered = _prof['mountain_center']
             if _mountain_centered:
                 sansha_info['sansha_pillar_veto'] = False
@@ -1313,7 +1374,7 @@ class Scorer:
                 sansha_info['sansha_pillar_veto'] = True
                 self._pillar_veto_mode = True
                 sansha_info['sansha_koujing'] = (
-                    '四柱不犯：年日月时四柱临三煞方皆忌，犯即否决')
+                    '按柱分级：年三煞犯月柱否决；日/时柱临三煞方强扣分不否决')
             
             # 三煞评分逻辑（根据避忌原则：年三煞最重，月三煞次之，日三煞又次之）
             total_sansha_penalty = 0
@@ -1545,18 +1606,22 @@ class Scorer:
             # 二黑到坐山/双干正阴府禁用/克山运（无制化）/乙庚合化金克木大凶/正体大凶。
             if not wu_xing_result['he_ge']:
                 _wx_sc = int(wu_xing_result.get('score') or 0)
+                # §64（2026-10-09 拍板：B3+必修2）：日/时柱临三煞两类事项统一
+                # 为强扣分不否决，硬煞过滤无条件放行；山向类（spv_mode=False）
+                # 另放行全部四柱临方项与月三煞(山向)（§62/§63 口径，维持）。
+                _spv_mode = sansha_info.get('sansha_pillar_veto', True)
+
+                def _hard_filter(_j):
+                    _jt = str(_j)
+                    if self._is_dayhour_pillar_sansha_item(_jt):
+                        return False
+                    if _spv_mode is False and (self._is_pillar_sansha_item(_jt)
+                                               or '月三煞(山向)' in _jt):
+                        return False
+                    return any(re.search(_k, _jt) for _k in self._HARD_VETO_KEYWORDS)
+
                 if _wx_sc >= 30:
-                    # 2026-09-11 fix: 山向中心事项按"仅坐山修方论"，三煞临年月日时柱
-                    # 仅扣分不否决（sansha_pillar_veto=False），"年三煞(日柱)"等四柱
-                    # 忌项不得当作未制化硬煞卡住放宽闸门——须与下方综合评定 _spv 口径、
-                    # 二十四山窗口"临三煞方扣分不否决"文案三处一致。
-                    _spv_mode = sansha_info.get('sansha_pillar_veto', True)
-                    _hard_hit = [j for j in self.ji_list
-                                 if any(re.search(_k, str(j))
-                                        for _k in self._HARD_VETO_KEYWORDS)
-                                 and not (_spv_mode is False
-                                          and (self._is_pillar_sansha_item(j)
-                                               or '月三煞(山向)' in str(j)))]
+                    _hard_hit = [j for j in self.ji_list if _hard_filter(j)]
                     _hard_need = [j for j in _hard_hit if '（有制化：' not in str(j)]
                     _mountain_bad = [str(b) for b in sansha_info.get('mountain_block_reasons', [])
                                      if isinstance(b, (str, dict))]
@@ -1586,6 +1651,73 @@ class Scorer:
                             _shown += '等'
                         wu_xing_result['ji_yu'] = (
                             f'五行严重不合格，犯大忌，坚决不用（大忌：{_shown}）')
+                elif str(wu_xing_result.get('ji_yu', '')).startswith('五行严重不合格'):
+                    # §64（2026-10-09 拍板：必修1）假低分豁免——区分真低分/假低分：
+                    #   真低分：回退全部"扣分不否决"降级项扣分后仍 <30，或存在未制化
+                    #           硬煞 → 维持否决；
+                    #   假低分：五行分原本可达放宽线，仅因 §62/§63/B3/D2 降级项扣分
+                    #           累积压穿 30 分线 → 不否决，保留"可用但带扣分"。
+                    # 仅作用于日课五行门槛自身（年份不宜/月份不宜/规则通道在
+                    # _check_wu_xing 内以各自文案提前返回，不经此豁免）。
+                    _hard_need = [j for j in self.ji_list
+                                  if _hard_filter(j) and '（有制化：' not in str(j)]
+                    _mountain_need = [
+                        str(b) for b in sansha_info.get('mountain_block_reasons', [])
+                        if isinstance(b, (str, dict)) and '（有制化：' not in str(b)]
+                    _refund = 0
+                    _refund_items = []
+                    _zao_hit = (self._s64_zao_shensha_hit_names()
+                                if event_type == '作灶' else set())
+                    # (a) 忌事通道实扣分回退：
+                    #     D2 作灶规则 ji 按当日神煞实际命中判定（命中则忌事 0，
+                    #     神煞分在 (c) 回退；未命中则忌事 -15）；
+                    #     其余降级三煞/山向项每条回退忌事 -15。
+                    for _j in self.ji_list:
+                        _jt = str(_j)
+                        _rj = (self._s64_zao_ruleji_refund(_jt, _zao_hit)
+                               if event_type == '作灶' else None)
+                        if _rj is not None:
+                            if _rj > 0:
+                                _refund += _rj
+                                _refund_items.append(_jt)
+                            continue
+                        if self._is_downgraded_ji_item(_jt, _spv_mode):
+                            _refund += 15
+                            _refund_items.append(_jt)
+                    # (b) 三煞通道分（年三煞日柱-30/时柱-20 等）只计入 final_score
+                    #     总分，不进 wu_xing 五行分（wu_xing=breakdown 合计-相主），
+                    #     本就不压 30 分线，故不在此回退（回退即虚退）。通道扣分在
+                    #     总分与等级中保留——B3"可用但带扣分"语义。
+                    # (c) D2 作灶天火/地火/土府神煞通道负分（当日实际命中；神煞分
+                    #     计入 breakdown 神煞得分，属五行分组成部分，压穿线时回退）
+                    if event_type == '作灶':
+                        for _ss in self.shensha_list:
+                            if (isinstance(_ss, dict)
+                                    and _ss.get('name') in self._S64_ZAO_DOWNGRADE_SHENSHA
+                                    and isinstance(_ss.get('score'), (int, float))
+                                    and _ss['score'] < 0):
+                                _refund += -_ss['score']
+                                _refund_items.append(
+                                    f"{_ss['name']}（神煞{int(_ss['score'])}分）")
+                    # (d) §63 月份不宜降级项（正阴府无制化-30/月破犯坐山-25）传导扣分
+                    _mp_v = (wu_xing_result.get('score_breakdown') or {}).get('月份不宜扣分', 0)
+                    if isinstance(_mp_v, (int, float)) and _mp_v < 0:
+                        _refund += -_mp_v
+                        _refund_items.append(f'月份不宜{int(_mp_v)}分')
+                    _adj = _wx_sc + _refund
+                    if _adj >= 30 and not _hard_need and not _mountain_need:
+                        wu_xing_result['he_ge'] = True
+                        wu_xing_result['_he_ge_note'] = (
+                            f"放宽合格：原得分{_wx_sc}分低于30分放宽线，但回退降级项"
+                            f"（扣分不否决档）扣分{_refund}分后为{_adj}分，达放宽线；"
+                            f"其余忌项无未制化硬煞，按正常加减分走，不否决"
+                            f"（降级项={len(_refund_items)}）"
+                        )
+                        wu_xing_result['ji_yu'] = (
+                            f"五行基本合格（原得分{_wx_sc}分，降级扣分项回退{_refund}分"
+                            f"后{_adj}分已放宽；降级项：{'、'.join(_refund_items[:3])}"
+                            + ('等' if len(_refund_items) > 3 else '') + '）')
+                    # else：真低分（回退后仍<30 或有未制化硬煞），维持否决
                 # 仍不合格 → 一票否决（保持严格模式）
             if not wu_xing_result['he_ge']:
                 # 计算完整评分详情（保持严格模式，但显示各项得分，让用户对比大凶日扣分来源）
@@ -1782,14 +1914,15 @@ class Scorer:
             # 根据择日学原则，犯三煞属于一票否决项
             sansha_fan_da_ji = False
             sansha_fan_reason = ''
-            # 三煞口径开关：True=四柱不犯（嫁娶），False=仅坐山修方论（山向类）
+            # 三煞口径开关：True=事主中心（四柱论命），False=山向中心（仅坐山修方论）
             _spv = sansha_info.get('sansha_pillar_veto', True)
 
-            # 年三煞犯日柱（大忌；山向类按仅坐山论，日柱临方扣分不否决）
-            if sansha_info.get('year_sansha_day_fan') and _spv:
-                sansha_fan_da_ji = True
-                sansha_fan_reason = '年三煞(日柱)'
-            
+            # §64（2026-10-09 拍板：B3 按柱分级 + 必修2 口径对齐）：
+            # 日/时柱临年三煞降级为强扣分（日犯三煞较轻，管一日/一时），
+            # 山向类与事主类统一不否决；扣分由 sansha_penalty 通道承担
+            # （年三煞(日柱)-30、年三煞(时柱)-20），此处不再置 veto。
+            # 月柱维持（事主类）：见下 year_sansha_month_fan 段。
+
             # 年三煞犯山向（大忌）
             if sansha_info.get('year_sansha_fan'):
                 sansha_fan_da_ji = True
@@ -1797,15 +1930,19 @@ class Scorer:
                     sansha_fan_reason += '、年三煞(山向)'
                 else:
                     sansha_fan_reason = '年三煞(山向)'
-            
+
             # §63（2026-10-09 拍板：三煞D）：月三煞犯山向从一票否决降级为强扣分，
             # 扣分由通用评分逻辑 sansha_penalty 通道承担（-20），此处不再置 veto；
             # 年三煞犯山向维持否决（上一段），日三煞犯山向维持扣分（更下段）
-            
+
             # 日三煞犯山向（较轻，不列为大忌）
             # 根据三煞避忌原则：日三煞管时柱，山向犯日三煞相对较轻，不一票否决
-            
-            # 年三煞犯月柱（大忌；山向类按仅坐山论，月柱临方扣分不否决）
+
+            # 年三煞犯月柱：事主中心（_spv=True，四柱论命）维持大忌否决
+            # ——月建临年三煞方主一月不利；山向中心（_spv=False）按 §63
+            # 拍板"三煞占月"降级强扣分（仅坐山修方论，由 -30 扣分通道承担）。
+            # 两类差异依据：修方论坐山（《协纪辨方书》三煞占月条 §63 拍板降级）
+            # vs 事主论命四柱不犯（2026-09-07 用户确认口径），台账 §64 留据。
             if sansha_info.get('year_sansha_month_fan') and _spv:
                 sansha_fan_da_ji = True
                 if sansha_fan_reason:
@@ -1813,15 +1950,7 @@ class Scorer:
                 else:
                     sansha_fan_reason = '年三煞(月柱)'
 
-            # 年三煞犯时柱（嫁娶等事主中心事项大忌，犯即否决；
-            # 修造/动土/入宅/安葬等山向中心事项按"仅坐山修方论"，时支临三煞方
-            # 如午年丑时临亥子丑方，坐山不犯即不否决，仅按三煞扣分制化）
-            if sansha_info.get('year_sansha_hour_fan') and _spv:
-                sansha_fan_da_ji = True
-                if sansha_fan_reason:
-                    sansha_fan_reason += '、年三煞(时柱)'
-                else:
-                    sansha_fan_reason = '年三煞(时柱)'
+            # §64 B3：年三煞犯时柱两类事项统一降级强扣分（-20），不再置 veto。
 
             # 硬性否决原因（供显示层明确提示，避免只显示模糊门槛文案）
             veto_reasons = []
@@ -4695,6 +4824,14 @@ class Scorer:
             # （通道真实分值），否则忌事-15+单列-35 双重扣分
             if _t.startswith(('分金大凶', '正体大凶')):
                 continue
+            # §64（2026-10-09 拍板：D2 防双扣）：天火/地火/土府规则 ji——
+            # 当日神煞通道命中时由神煞分承担（-15/-10/-20），忌事不重复 -15；
+            # 神煞未命中（规则/神煞两套公式存在差异）或灶君忌日（无神煞通道）
+            # 时仍走忌事 -15，保证强扣分必落一笔。与 30 分线回退共用同一判定。
+            if event_type == '作灶':
+                _zao_hit = self._s64_zao_shensha_hit_names()
+                if self._s64_zao_ruleji_refund(_t, _zao_hit) == 0:
+                    continue
             bd['忌事得分'] -= 15
             sc -= 15
         if self.ji_list:
@@ -5127,6 +5264,10 @@ class Scorer:
             for _j in self.ji_list:
                 _t = str(_j)
                 if '（有制化：' in _t:
+                    _soft_items.append(_t)
+                elif self._is_dayhour_pillar_sansha_item(_t):
+                    # §64（2026-10-09 拍板：B3）：日/时柱临三煞两类事项统一
+                    # 强扣分不否决，一律不列大忌
                     _soft_items.append(_t)
                 elif (not _spv_mode) and (self._is_pillar_sansha_item(_t)
                                           or '月三煞(山向)' in _t):

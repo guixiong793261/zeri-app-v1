@@ -2974,28 +2974,35 @@ class DayScoreWindow:
             if day_sansha:
                 self._insert_colored_text(f"   日三煞：{'、'.join(day_sansha)}\n")
             self._insert_colored_text("\n   【四柱三煞检查】\n")
+            # §64（2026-10-09 拍板：B3 按柱分级 + 必修2 口径对齐）：
+            #   年/月柱——事主类（sansha_pillar_veto=True）犯即否决（❌）；
+            #     山向类（False）三煞占月按 §63 降级强扣分（⚠）；
+            #   日/时柱——两类事项统一强扣分不否决（⚠）；
+            #   坐山/修方犯年三煞仍 ❌。
+            _pv = sansha_info.get('sansha_pillar_veto', True)
+            _mk_m = '❌' if _pv else '⚠'
             y_fan_month = sansha_info.get('year_sansha_month_fan', False)
             y_fan_day = sansha_info.get('year_sansha_day_fan', False)
             y_fan_hour = sansha_info.get('year_sansha_hour_fan', False)
             y_fan_shan = sansha_info.get('year_sansha_fan', False)
-            if y_fan_month: self._insert_colored_text("     ❌ 年三煞犯月柱\n")
-            if y_fan_day:   self._insert_colored_text("     ❌ 年三煞犯日柱\n")
-            if y_fan_hour:  self._insert_colored_text("     ❌ 年三煞犯时柱\n")
-            if y_fan_shan:  self._insert_colored_text("     ❌ 年三煞犯山向\n")
+            if y_fan_month: self._insert_colored_text(f"     {_mk_m} 年三煞犯月柱{'（一票否决）' if _pv else '（三煞占月，强扣分不否决）'}\n")
+            if y_fan_day:   self._insert_colored_text("     ⚠ 年三煞犯日柱（强扣分不否决）\n")
+            if y_fan_hour:  self._insert_colored_text("     ⚠ 年三煞犯时柱（强扣分不否决）\n")
+            if y_fan_shan:  self._insert_colored_text("     ❌ 年三煞犯山向（坐山修方，一票否决）\n")
             if not (y_fan_month or y_fan_day or y_fan_hour or y_fan_shan):
                 self._insert_colored_text("     ✅ 年三煞不犯\n")
             m_fan_day = sansha_info.get('month_sansha_day_fan', False)
             m_fan_hour = sansha_info.get('month_sansha_hour_fan', False)
             m_fan_shan = sansha_info.get('month_sansha_fan', False)
-            if m_fan_day:  self._insert_colored_text("     ❌ 月三煞犯日柱\n")
-            if m_fan_hour: self._insert_colored_text("     ❌ 月三煞犯时柱\n")
-            if m_fan_shan: self._insert_colored_text("     ❌ 月三煞犯山向\n")
+            if m_fan_day:  self._insert_colored_text("     ⚠ 月三煞犯日柱（强扣分不否决）\n")
+            if m_fan_hour: self._insert_colored_text("     ⚠ 月三煞犯时柱（强扣分不否决）\n")
+            if m_fan_shan: self._insert_colored_text("     ⚠ 月三煞犯山向（强扣分不否决）\n")
             if not (m_fan_day or m_fan_hour or m_fan_shan):
                 self._insert_colored_text("     ✅ 月三煞不犯\n")
             d_fan_hour = sansha_info.get('day_sansha_hour_fan', False)
             d_fan_shan = sansha_info.get('day_sansha_fan', False)
-            if d_fan_hour: self._insert_colored_text("     ❌ 日三煞犯时柱\n")
-            if d_fan_shan: self._insert_colored_text("     ❌ 日三煞犯山向\n")
+            if d_fan_hour: self._insert_colored_text("     ⚠ 日三煞犯时柱（轻，强扣分不否决）\n")
+            if d_fan_shan: self._insert_colored_text("     ⚠ 日三煞犯山向（轻，强扣分不否决）\n")
             if not (d_fan_hour or d_fan_shan):
                 self._insert_colored_text("     ✅ 日三煞不犯\n")
             # 年家五黄检查（详情展示宫位与坐山结论）
