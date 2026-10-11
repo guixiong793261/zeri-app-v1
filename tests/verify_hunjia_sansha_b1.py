@@ -124,6 +124,8 @@ neg, info = sansha_rows(r)
 check('A8 寅日双方不犯：无负分', len(neg) == 0)
 check('A9 出现"新郎未犯（依典据查男命）"信息行',
       any('新郎' in x and '未犯' in x and '陈子性藏书' in x for x in info), str(info))
+check('A12 未犯行注明新郎三煞位与"不在其位"（子局煞位巳午未，验收细节④）',
+      any('三煞位' in x and '巳午未' in x and '不在其位' in x for x in info), str(info))
 
 # 双方同犯（新郎丑? 取辰日：新郎子局不犯辰——换：新郎用巳酉丑局，辰日犯；新娘卯局辰不犯。
 # 改构造双方同犯：新郎子局+新娘寅午戌局，午日双方皆犯）
@@ -177,7 +179,8 @@ check('C 巳日命名劫煞', nn and '劫煞' in nn[0], str(nn))
 # ===== D. 反向/缺参断言 =====
 rr = score_marriage_day(D_WU, None, None)
 neg, info = sansha_rows(rr)
-check('D1 无双方八字：不产生任何三煞行', not neg and not info)
+check('D1 双方八字全缺：不误扣且给缺失提示行（防静默漏判，验收细节②）',
+      not neg and len(info) == 1 and '缺失' in info[0] and '陈子性藏书' in info[0], str(info))
 
 rr = score_marriage_day(D_WU, BRIDE_MAO, {'ri_gan': '庚'})  # 新郎无年柱
 neg, info = sansha_rows(rr)

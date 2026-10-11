@@ -1279,9 +1279,9 @@ class Scorer:
                         reason_parts = []
                         mrg_reason = str(marriage_result.get('reason') or '')
                         if mrg_reason:
-                            # 把分号分隔的"条目串"保留为嫁娶小节首段（包含利月/天德/假三煞/
-                            # 夫星等）。注意marriage_result里自带的"忌：xxx"会与宜/忌独立
-                            # 段落形成小标题重复，这里改为"扣分：xxx"保留条目但去除"忌"标题。
+                            # 把分号分隔的"条目串"保留为嫁娶小节首段（包含利月/天德/
+                            # 本命三煞/夫星等；2026-10-11 验收细节⑤跨轨清理：旧例举
+                            # "假三煞"已随 B1 删档不再产生，正名为本命三煞）。
                             mrg_reason = mrg_reason.replace('；忌：', '；扣分：').replace('；忌：', '；扣分：')
                             if mrg_reason.startswith('忌：'):
                                 mrg_reason = '扣分：' + mrg_reason[2:]

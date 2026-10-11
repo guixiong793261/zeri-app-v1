@@ -1057,6 +1057,12 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         _g_year_zhi = groom_bazi.get('year_zhi') if groom_bazi else None
         _b_year_zhi = bride_bazi.get('year_zhi') if bride_bazi else None
         _BENMING_CITE = '依《陈子性藏书》页799"本命三殺其例只论男命不论女命"'
+        # 生年局 → 三煞位三支（依次劫/灾/岁）：申子辰煞南巳午未、寅午戌煞北亥子丑、
+        # 巳酉丑煞东寅卯辰、亥卯未煞西申酉戌。用于"未犯"行向用户解释为何未犯。
+        _BENMING_SANWEI = {'申': '巳午未', '子': '巳午未', '辰': '巳午未',
+                           '寅': '亥子丑', '午': '亥子丑', '戌': '亥子丑',
+                           '巳': '寅卯辰', '酉': '寅卯辰', '丑': '寅卯辰',
+                           '亥': '申酉戌', '卯': '申酉戌', '未': '申酉戌'}
         if _g_year_zhi:
             _, sd_zhi = get_day_ganzhi(date_obj)
             sha_fang = {'巳': '南', '午': '南', '未': '南', '亥': '北', '子': '北', '丑': '北',
@@ -1076,15 +1082,23 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             else:
                 # 新郎不犯：明示一行（含典据说明），新娘若同犯则并列为 0 分对照
                 if _b_year_zhi and is_sansha(date_obj, _b_year_zhi):
-                    details.append((f"本命三煞：新郎年命{_g_year_zhi}未犯；新娘年命{_b_year_zhi}对照，"
-                                    f"日支{sd_zhi}犯其本命三煞之{sha_ming}位——{_BENMING_CITE}，"
-                                    f"女命不参与扣分，仅对照展示", 0))
+                    details.append((f"本命三煞：新郎年命{_g_year_zhi}"
+                                    f"（三煞位：{_BENMING_SANWEI.get(_g_year_zhi, '?')}）未犯；"
+                                    f"新娘年命{_b_year_zhi}对照，日支{sd_zhi}犯其本命三煞之{sha_ming}位"
+                                    f"——{_BENMING_CITE}，女命不参与扣分，仅对照展示", 0))
                 else:
-                    details.append((f"本命三煞：新郎年命{_g_year_zhi}未犯（{_BENMING_CITE}，查男命非查女命）", 0))
+                    # 未犯也向用户解释"为什么未犯"：标明新郎三煞位与本日日支的关系
+                    details.append((f"本命三煞：新郎年命{_g_year_zhi}"
+                                    f"（三煞位：{_BENMING_SANWEI.get(_g_year_zhi, '?')}），"
+                                    f"日支{sd_zhi}不在其位，未犯（{_BENMING_CITE}，查男命非查女命）", 0))
         elif _b_year_zhi:
             # 有新娘生年而缺新郎生年：无法按典据判定，明示以防静默漏判
             details.append(("本命三煞：新郎生年信息缺失，未作本命三煞判定"
                             "（依《陈子性藏书》页799本命三煞只论男命，请补全新郎生年后再判）", 0))
+        else:
+            # 双方生年信息均缺失：同样明示，防止用户把静默跳过误读为"没犯"（验收细节②）
+            details.append(("本命三煞：新郎、新娘生年信息均缺失，未作本命三煞判定"
+                            "（依《陈子性藏书》页799本命三煞只论男命，请补全生年四柱后再判）", 0))
         
         # 日支冲新娘生肖（年支）- 大凶
         # 2026-09-17 用户口径：日支之冲无法靠换吉时化解（时支冲由时辰表判禁用），
