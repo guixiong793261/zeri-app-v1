@@ -7,6 +7,10 @@
 2. 分金大凶：一票否决 → 强扣分（通道真实分值，实测 -34~-40），保留忌项标记；
    正体大凶同通道同处置（避免正向否决/兼向不否决倒挂）。
 
+§67（2026-10-12）：B6 断言按 §63 口径更新——月份不宜类（三煞占月=
+山家三煞忌子月）已降级强扣分不否决、落忌事明细，原断言否决串查'月份不宜'
+字面过期；共线否决改查相主硬门槛+五行大忌两条门槛（B6a-d 四断言）。
+
 退出码：全过 0，有失败 1。
 """
 import datetime as dt
@@ -109,12 +113,21 @@ check('B5 忌项文案为强扣分',
       any('分金大凶' in j and '强扣分' in j for j in jl),
       str([j for j in jl if '分金大凶' in j]))
 
-# B6 共线日仍由其他门槛否决（2027-12-10 坤山艮向兼未：月份不宜+相主，非分金）
+# B6 共线日仍由其他门槛否决（2027-12-10 坤山艮向兼未：相主自刑+五行大忌，非分金）。
+# §67（2026-10-12）按 §63 口径更新：月份不宜类（三煞占月=山家三煞忌子月）已
+# 降级强扣分不否决、落忌事明细；共线否决改查相主硬门槛+五行大忌。
 r2 = run(dt.date(2027, 12, 10), '修造', [dict(o) for o in OWN4])
 vrs2 = [str(v) for v in (r2.get('veto_reasons') or [])]
-check('B6 共线否决不受影响（月份不宜/相主仍在）',
-      any('月份不宜' in v for v in vrs2) and not any('分金大凶' in v for v in vrs2),
-      '; '.join(vrs2))
+mx2 = [str(x) for x in ((r2.get('wu_xing_result') or {}).get('score_breakdown') or {}).get('忌事明细') or []]
+check('B6a 月份类共线项降级强扣分保留（山家三煞忌子月，§63 拍板E）',
+      any('山家三煞' in x and '忌子月' in x for x in mx2),
+      str([x for x in mx2 if '山家三煞' in x]))
+check('B6b 共线否决仍在：相主硬门槛一票否决',
+      any('相主硬门槛' in v for v in vrs2), '; '.join(vrs2))
+check('B6c 共线否决仍在：五行大忌门槛',
+      any('五行' in v and '坚决不用' in v for v in vrs2), '; '.join(vrs2))
+check('B6d 分金非否决（§62 方案二语义保持）',
+      not any('分金大凶' in v for v in vrs2), '; '.join(vrs2))
 
 # ── C. 等价性：单事主普通日无分金触发时 breakdown 无分金键 ──
 r3 = run(dt.date(2024, 6, 8), '修造', [dict(o) for o in OWNER1])
