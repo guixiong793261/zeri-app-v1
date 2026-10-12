@@ -15,13 +15,18 @@
 - 必修2：日/时柱临三煞 spv 口径统一（山向类/事主类均不否决）；月柱差异保留
   有典据（修方论坐山 vs 事主四柱论命）。
 
+§68（2026-10-12）：①基建——sys.path 改相对定位（Path(__file__).parents[1]），
+worktree 跨版本对拍自此可信；②D2-4c 断言按 §66 后口径更新（§66 归零使
+score 26→51 跨 30 分线、回退分支切换为 60 分线制化放宽，行为殊途同归）。
+
 样本均为 12:00（午时）真实排盘 + Scorer.score 真实入口评分得出。
 退出码：全过 0，有失败 1。
 """
 import datetime as dt
 import sys
+from pathlib import Path
 
-sys.path.insert(0, r'd:\自编择日软件\专业级正五行择日软件')
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # §68 基建：相对定位，worktree 对拍可用
 from modules.四柱计算器 import calculate_sizhu
 from modules.评分器 import Scorer
 
@@ -154,9 +159,14 @@ check('D2-4a 灶君忌日不再否决', not any('灶君忌日' in x for x in _v)
 check('D2-4b 保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in _jl, str(_jl))
 # 当日降级忌项 4 条（年三煞日柱/日三煞时柱/日三煞山向/灶君忌日），回退 60 分；
 # jiyu 仅列前 3 项+"等"，故以回退总额与忌项存在性证明灶君忌事 -15 已纳入回退
-check('D2-4c 假低分回退含灶君忌事-15（4项共60分）',
-      wx(r).get('score') == 26 and '扣分60分' in (wx(r).get('_he_ge_note') or '')
-      and '（降级项=4）' in (wx(r).get('_he_ge_note') or ''),
+# D2-4c §68（2026-10-12）断言更新：§66 三煞归零后本日 wx.score 26→51（+25 恰为
+# 劫煞分差），跨过 30 分放宽线，必修1 假低分回退分支改走 60 分线制化放宽分支
+# （行为殊途同归：均放行 he_ge=True、无 veto，仅 note 文案与展示分不同）。
+# 灶君忌事-15 仍落忌事明细 4 条（防双扣语义由 D2-1d 保持）；"回退分支+灶君"
+# 组合覆盖由 §68 拍板 C 方案阶段2 扫样任务补充。
+check('D2-4c 60分线制化放宽（§66归零后分支切换：score51/未制化项=4）',
+      wx(r).get('score') == 51 and '放宽合格：原得分51未达60分' in (wx(r).get('_he_ge_note') or '')
+      and '（未制化项=4）' in (wx(r).get('_he_ge_note') or ''),
       wx(r).get('_he_ge_note'))
 
 # D2-5 反向：月破日维持否决（2024-01-08）
