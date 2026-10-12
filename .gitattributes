@@ -1,0 +1,8 @@
+# git 行尾策略（§69，2026-10-12 拍板：轻量版）
+# 仅声明文本规范化：仓库内统一 LF 存储，工作区随 core.autocrlf（当前=true，checkout CRLF）。
+# 不设 eol=lf —— 避免强制全仓工作区 LF、checkout 状态大变。
+# 手工编辑工具（Edit 类）写出 CRLF 时，提交时 clean 过滤自动归一为 LF，仓库对象不受影响。
+*.py text
+*.md text
+*.json text
+*.txt text
