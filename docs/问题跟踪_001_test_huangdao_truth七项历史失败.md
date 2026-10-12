@@ -6018,7 +6018,11 @@ wangming_nayin）、B 类相对定位 60+（含回归四件套）、C 类 fixtur
 - **D2-4c 断言**（s64）：`score==26+'扣分60分'+'（降级项=4）'` →
   `score==51+'放宽合格：原得分51未达60分'+'（未制化项=4）'`，改名
   "D2-4c 60分线制化放宽（§66归零后分支切换…）"，docstring 补 §68 说明。
-- **tests/fixtures/README.md** 新建（豁免说明+新 verify 写法要求）。
+- **tests/fixtures/README.md**：**误覆盖事故与恢复**——基建批 Write 误将既有
+  归档基线文档（2026-09-18 入库，21 文件案例索引+sha1 清单+变更记录，142 行）
+  覆盖为 6 行豁免说明（README 非新建，380c6a6 的 136 deletions 全部来自此处，
+  4 个 verify 实际各仅 2+/1- 干净改动）；验收阶段发现后从 380c6a6~1 恢复全文
+  并将 §68 豁免说明合并为变更记录一节，原始索引零丢失。
 
 ### 68.4 验证
 
@@ -6041,11 +6045,13 @@ A3 闭日 level 含降一格 / A5 闭日 reason 含降星说明 / D1 二级无�
 
 ### 68.6 commit 链
 
-- 主仓：**380c6a6**（基建 4 文件+fixtures README；注：该批 4 文件因 Edit
-  行尾规范化 diff 呈整文件级 140 行删改，语义仅 import 一行/文件，提交后
-  冒烟 4 verify 退出码不变）→ **aee0426**（D2-4c 断言更新+s64 同款 import，
-  diff 正常 14/4）→ **本 docs commit**（§68 台账+66.4/66.6 勘正
-  +issues_pending）。
+- 主仓：**380c6a6**（基建 4 文件+fixtures README；注：本批 136 deletions
+  系 README 误覆盖所致（验收阶段发现并恢复合并，见 68.3），**4 个 verify
+  实际各仅 2+/1- 干净改动，无行尾 diff 问题**——仓库内对象 §68 前后均为
+  LF（cat-file 实证），此前"行尾规范化 140 行删改"解释有误已更正）→
+  **aee0426**（D2-4c 断言更新+s64 同款 import，diff 正常 14/4）→
+  **{S68B_RESTORE_COMMIT}**（README 恢复合并：e588288）→ **本 docs commit**（§68 台账
+  勘正+66.4/66.6 勘正+issues_pending）。
 - 统一版仓无 s62/s63/s64/marriage/wangming_nayin 副本（§67 Test-Path
   实证口径同），无同步项。
 
