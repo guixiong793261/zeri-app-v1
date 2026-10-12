@@ -1429,6 +1429,17 @@ class ShenShaChecker:
                     score = _resolved
             except Exception:
                 pass
+            # 2026-10-12 ③（§66 拍板方案A）：三煞家族神煞通道「识别展示，不计分」收口。
+            # 年三煞(-18)/劫煞(-25)/灾煞(-25)/岁煞(-20) 的注册默认分与 SHENSHA_SCORES
+            # 表值在解析层统一置 0：典据收口（B-b 轨一 §9.10/§9.12）判定两口径均无典据，
+            # 且与评分器通道甲（三煞扣分体系 §63/§64）同日并存属双重计分（实测受影响日
+            # 三笔并存 -18+-15+-30）。注册保留、命中照常识别展示（description 追加标注）；
+            # 评分器通道甲、忌事通道（ji -15）原样不动，嫁娶路径本就仅展示不受影响。
+            # SHENSHA_SCORES 表值按对账惯例不回改，实际分值以本收口为准。
+            if name in ('年三煞', '劫煞', '灾煞', '岁煞'):
+                score = 0
+                if '（识别展示，不计分）' not in description:
+                    description += '（识别展示，不计分）'
             self.shensha_list.append({
                 'name': name,
                 'score': score,

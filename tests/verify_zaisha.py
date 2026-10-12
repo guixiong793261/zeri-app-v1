@@ -12,7 +12,8 @@
 
 双入口对照：
   ① modules/shensha/神煞基类.py ShenShaChecker._is_zaijiesha
-     —— 出行/修造/作灶/入宅/开业/通用神煞 继承计分（-25）
+     —— 出行/修造/作灶/入宅/开业/通用神煞 继承命中
+     （2026-10-12 §66 起识别展示不计分，score 置 0）
   ② modules/五行择日法.py NIAN_ZHI_XIONGSHEN['灾煞']
      —— 通书查表入口（get_nian_zhi_xiongshen）
 """
@@ -74,7 +75,7 @@ inputs = [(y, z) for y in DI_ZHI for z in DI_ZHI]
 case_base = ShenShaCase(
     name='灾煞(神煞基类·计分入口)',
     category='A',
-    description='年支查日支；继承给全部事项checker，-25分',
+    description='年支查日支；继承给全部事项checker；§66 起识别展示不计分',
     inputs=inputs, expected=expected, adapter=adapter_base, compare='bool',
 )
 case_table = ShenShaCase(
