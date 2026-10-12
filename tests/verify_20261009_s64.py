@@ -163,11 +163,33 @@ check('D2-4b 保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in _jl,
 # 劫煞分差），跨过 30 分放宽线，必修1 假低分回退分支改走 60 分线制化放宽分支
 # （行为殊途同归：均放行 he_ge=True、无 veto，仅 note 文案与展示分不同）。
 # 灶君忌事-15 仍落忌事明细 4 条（防双扣语义由 D2-1d 保持）；"回退分支+灶君"
-# 组合覆盖由 §68 拍板 C 方案阶段2 扫样任务补充。
+# 组合覆盖已由 D2-4d/e 补齐（§69 验收拍板A 2026-10-12）。
 check('D2-4c 60分线制化放宽（§66归零后分支切换：score51/未制化项=4）',
       wx(r).get('score') == 51 and '放宽合格：原得分51未达60分' in (wx(r).get('_he_ge_note') or '')
       and '（未制化项=4）' in (wx(r).get('_he_ge_note') or ''),
       wx(r).get('_he_ge_note'))
+
+# D2-4d/e §68 阶段2 组合覆盖（§69 验收拍板A 2026-10-12）："必修1 假低分
+# 回退分支+灶君"双样例。探测 1096 日（2024-01-01~2026-12-31，s64 同口径
+# 作灶×坤山艮向兼未）：五行<30 且忌事含灶君共 143 日，其中 141 日被
+# veto 噪声淹没（总分0/he_ge=False，无法承载组合断言），veto=0 且
+# he_ge=True（回退分支实际生效）仅 2 日：
+#   主样例 2025-09-20（五行=-21，负分边界——直击"扣到负值仍走回退"极限）
+#   备样例 2025-10-02（五行=10，正分普通场景；主样例因规则演进失效时顶上）
+# 注意：两样例绑定 §66 后规则版本——§65/§66/必修1 逻辑变化时分数漂移
+# 即 FAIL，需按探测脚本重扫验证样例有效性（tools/audit/s68_stage2_probe/）。
+r = run(dt.date(2025, 9, 20), '作灶', OWNER1, shan=KUN)
+_w = wx(r)
+check('D2-4d 主样例五行-21（负分边界锚定）', _w.get('score') == -21, _w.get('score'))
+check('D2-4d 主样例回退分支放行 he_ge=True', _w.get('he_ge') is True)
+check('D2-4d 主样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r), str(ji_of(r)))
+check('D2-4d 主样例无 veto', not vetos(r), '; '.join(vetos(r)))
+r = run(dt.date(2025, 10, 2), '作灶', OWNER1, shan=KUN)
+_w = wx(r)
+check('D2-4e 备样例五行10（正分场景锚定）', _w.get('score') == 10, _w.get('score'))
+check('D2-4e 备样例回退分支放行 he_ge=True', _w.get('he_ge') is True)
+check('D2-4e 备样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r), str(ji_of(r)))
+check('D2-4e 备样例无 veto', not vetos(r), '; '.join(vetos(r)))
 
 # D2-5 反向：月破日维持否决（2024-01-08）
 r = run(dt.date(2024, 1, 8), '作灶', OWNER1, shan=KUN)
