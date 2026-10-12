@@ -7,7 +7,8 @@
 """
 import sys, io, datetime as dt
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.path.insert(0, r'd:\自编择日软件\专业级正五行择日软件')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # §68 基建：相对定位，worktree 对拍可用
 
 from modules.四柱计算器 import calculate_sizhu
 from modules.评分器 import Scorer

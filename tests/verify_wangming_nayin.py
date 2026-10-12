@@ -18,8 +18,9 @@
 """
 import sys
 import datetime as dt
+from pathlib import Path
 
-sys.path.insert(0, r'd:\自编择日软件\专业级正五行择日软件')
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # §68 基建：相对定位，worktree 对拍可用
 
 FAILS = []
 
