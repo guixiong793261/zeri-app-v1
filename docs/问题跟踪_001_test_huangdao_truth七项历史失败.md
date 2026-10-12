@@ -6111,11 +6111,21 @@ verify_20261008_marriage.py 均 **exit 0 全 PASS**——"自引入即失败"定
 
 verify_20261008_marriage.py **ALL PASS**（exit 0，16 检查）。
 零产品代码变化（仅测试）。统一版仓无 marriage verify 副本，无同步项。
+§69 验收拍板（细节 2 加固）后：D 段补 D5a-b 行为等价断言（真实产品
+r_l2 过 E105 路径与合成 D1a/D1b 判定等价，等价范围=报/不报关键判定，
+不含 note 逐字），复跑 **ALL PASS（exit 0，18 检查）**。
 
 ### 69.5 测试基建配套（拍板 2/3）
 
 - **.gitattributes** 新建：`*.py/*.md/*.json/*.txt text`（仓库内统一 LF；
   不设 eol=lf，避免强制工作区 LF——autocrlf=true Windows 标准不变）。
+  **扩展理由附注（§69 验收拍板追认保留）**：拍板原文只加 `*.py text`，
+  实际写入 py/md/json/txt 四行——①autocrlf=true 本就对所有文本文件
+  规范化，text 标记只是固化该行为，零行为/零 checkout 变化；②覆盖
+  tests/README.md 等新增文档，防未来 autocrlf 配置漂移；③fixtures
+  sha1 基线按工作区字节算，不受 .gitattributes 影响。风险前瞻：未来
+  若有 *.json 由外部工具（npm 等）生成，可能与 text 标记冲突——当前
+  纯 Python+手写 JSON 无此问题，引入外部工具时重评。
 - **tests/README.md** 新建：verify 相对定位规范 + 对拍检查清单四步。
 
 ### 69.6 commit 链
