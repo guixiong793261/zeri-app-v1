@@ -177,19 +177,28 @@ check('D2-4c 60分线制化放宽（§66归零后分支切换：score51/未制�
 #   主样例 2025-09-20（五行=-21，负分边界——直击"扣到负值仍走回退"极限）
 #   备样例 2025-10-02（五行=10，正分普通场景；主样例因规则演进失效时顶上）
 # 注意：两样例绑定 §66 后规则版本——§65/§66/必修1 逻辑变化时分数漂移
-# 即 FAIL，需按探测脚本重扫验证样例有效性（tools/audit/s68_stage2_probe/）。
+# 即 FAIL（下方各条 detail 均拼重扫提示，仅 FAIL 时打印，零 PASS 噪声）。
+# 重扫工具：tools/audit/s68_stage2_probe/zuozao_below30_probe.py
+# 操作路径：规则变化 → 重跑该工具 → 样例失效则更新 D2-4d/e 样例日与分数锚定。
+_RESCAN = '；样例绑定§66后规则版本，漂移请重跑 tools/audit/s68_stage2_probe/zuozao_below30_probe.py 重扫'
 r = run(dt.date(2025, 9, 20), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
-check('D2-4d 主样例五行-21（负分边界锚定）', _w.get('score') == -21, _w.get('score'))
-check('D2-4d 主样例回退分支放行 he_ge=True', _w.get('he_ge') is True)
-check('D2-4d 主样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r), str(ji_of(r)))
-check('D2-4d 主样例无 veto', not vetos(r), '; '.join(vetos(r)))
+check('D2-4d 主样例五行-21（负分边界锚定）', _w.get('score') == -21,
+      f'五行={_w.get("score")}{_RESCAN}')
+check('D2-4d 主样例回退分支放行 he_ge=True', _w.get('he_ge') is True,
+      f'he_ge={_w.get("he_ge")}{_RESCAN}')
+check('D2-4d 主样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
+      f'{ji_of(r)}{_RESCAN}')
+check('D2-4d 主样例无 veto', not vetos(r), f'{"; ".join(vetos(r))}{_RESCAN}')
 r = run(dt.date(2025, 10, 2), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
-check('D2-4e 备样例五行10（正分场景锚定）', _w.get('score') == 10, _w.get('score'))
-check('D2-4e 备样例回退分支放行 he_ge=True', _w.get('he_ge') is True)
-check('D2-4e 备样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r), str(ji_of(r)))
-check('D2-4e 备样例无 veto', not vetos(r), '; '.join(vetos(r)))
+check('D2-4e 备样例五行10（正分场景锚定）', _w.get('score') == 10,
+      f'五行={_w.get("score")}{_RESCAN}')
+check('D2-4e 备样例回退分支放行 he_ge=True', _w.get('he_ge') is True,
+      f'he_ge={_w.get("he_ge")}{_RESCAN}')
+check('D2-4e 备样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
+      f'{ji_of(r)}{_RESCAN}')
+check('D2-4e 备样例无 veto', not vetos(r), f'{"; ".join(vetos(r))}{_RESCAN}')
 
 # D2-5 反向：月破日维持否决（2024-01-08）
 r = run(dt.date(2024, 1, 8), '作灶', OWNER1, shan=KUN)
