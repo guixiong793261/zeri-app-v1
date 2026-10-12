@@ -3,6 +3,13 @@
 
 走产品真实入口：Scorer.score()、lint_lesson()、常量表单；
 黄金日期/分值取自本轮审计真实管线结果与拍板，不反推实现。
+
+§69（2026-10-12）：①二级样例 2024-03-02→2025-04-03（§65 婚嫁本命三煞
+落地使原样例硬煞化，扫描实证换样，001 §69）；②E105 检查改合成 detail
+直测两分支（与评分样例解耦），原 D2 空洞断言加固为 D1a-f；③原"3 项
+自引入即失败"定性勘正为"§65 连带基线漂移"（806e6ff/eb858e5 可信对拍
+全 PASS，见 001 §69 对拍方法论）。
+
 退出码 0=全过。
 """
 import sys, io, datetime as dt
@@ -37,7 +44,10 @@ r_l1 = score_date('2026-02-22')   # 建除除日 → 一级
 check('A1 除日 level含犯忌嫁娶', '犯忌嫁娶' in str(r_l1['level']))
 check('A2 除日 reason含降格说明', '降格' in str(r_l1['reason']))
 
-r_l2 = score_date('2024-03-02')   # 建除闭日 → 二级
+r_l2 = score_date('2025-04-03')   # 建除闭日 → 二级
+# §69（2026-10-12）换样例：原 2024-03-02 被 §65 婚嫁本命三煞落地硬煞化
+# （新郎寅命日支丑犯本命三煞岁煞位，'❌ 凶（小忌，降一格）'→'❌ 凶'），
+# 2025-04-03 为扫描实证的唯一【建除闭日+二级降格+无本命三煞+宜不含嫁娶】日。
 check('A3 闭日 level含降一格', '降一格' in str(r_l2['level']))
 check('A4 闭日 yi不含嫁娶', '嫁娶' not in (r_l2['yi_list'] or []))
 check('A5 闭日 reason含降星说明', '降星' in str(r_l2['reason']))
@@ -88,13 +98,33 @@ check('C3 通用路径恒等式不符报issue(反向)',
       any(i.rule_id == 'E207' for i in _lr_b.issues))
 
 # ===== D. E105 两级说明检查 =====
+# §69（2026-10-12）阶段2：改合成 detail 直测 E105 两分支，与评分样例解耦
+# （样例日会被未来拍板硬煞化，合成测试不随规则演进漂移）；原 D2 为空洞
+# 断言（is_l2=False 时"not any"恒真，评分器陷阱#3），一并加固。
 print('D. E105')
-_lr_noexp = lint_lesson(r_l2, rendered_content='等级行：★ 平（小忌，降一格）')
-check('D1 二级无降星说明报WARN',
-      any(i.rule_id == 'E105' for i in _lr_noexp.issues))
-_lr_exp = lint_lesson(r_l2, rendered_content='等级降星一档说明')
-check('D2 二级有降星说明通过',
-      not any(i.rule_id == 'E105' for i in _lr_exp.issues))
+_base = {'reason': ''}
+_lr_n2 = lint_lesson(dict(_base, level='★ 平（小忌，降一格）'),
+                     rendered_content='等级行：★ 平（小忌，降一格）')
+check('D1a 二级无降星说明报WARN',
+      any(i.rule_id == 'E105' for i in _lr_n2.issues))
+_lr_e2 = lint_lesson(dict(_base, level='★ 平（小忌，降一格）'),
+                     rendered_content='等级降星一档说明')
+check('D1b 二级有降星说明通过',
+      not any(i.rule_id == 'E105' for i in _lr_e2.issues))
+_lr_n1 = lint_lesson(dict(_base, level='★ 平（犯忌嫁娶，慎用）'),
+                     rendered_content='等级行：★ 平（犯忌嫁娶，慎用）')
+check('D1c 一级无降格说明报WARN',
+      any(i.rule_id == 'E105' for i in _lr_n1.issues))
+_lr_e1 = lint_lesson(dict(_base, level='★ 平（犯忌嫁娶，慎用）'),
+                     rendered_content='等级因犯忌嫁娶降格说明')
+check('D1d 一级有降格说明通过',
+      not any(i.rule_id == 'E105' for i in _lr_e1.issues))
+_lr_nn = lint_lesson(dict(_base, level='★★★ 吉'),
+                     rendered_content='★★★ 吉')
+check('D1e 非降格级不报E105（反向）',
+      not any(i.rule_id == 'E105' for i in _lr_nn.issues))
+# 真实样例联动：二级日 level 确含"降一格"（保证 D 段合成前提与产品一致）
+check('D1f 真实二级样例 level 含降一格', '降一格' in str(r_l2['level']))
 _lr_l1no = lint_lesson(r_l1, rendered_content='等级行：★ 平（犯忌嫁娶，慎用）')
 check('D3 一级无降格说明报WARN',
       any(i.rule_id == 'E105' for i in _lr_l1no.issues))
