@@ -137,6 +137,9 @@ check('D1f 真实二级样例 level 含降一格', '降一格' in str(r_l2['leve
 # 字段更多，D1f 抓不到该类漂移）。等价范围=E105 报/不报关键判定
 # （is_l2 分支识别+说明有无），不含 note 文案/severity 逐字等价
 # （合成样例天生缺产品字段，全等价过强）。
+# D5 前提：r_l2 来自真实产品路径（Scorer.score 嫁娶样例，score_date
+# 构造）——若产品路径变化，r_l2 构造需同步；不得替换为合成数据，
+# 否则 D5 退化为"另一个合成测试"，行为等价验证失效。
 _lr_r2no = lint_lesson(r_l2, rendered_content='等级行：%s' % r_l2['level'])
 check('D5a 真实二级样例无降星说明报WARN（与D1a等价）',
       any(i.rule_id == 'E105' for i in _lr_r2no.issues))
