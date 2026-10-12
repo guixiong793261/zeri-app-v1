@@ -8,7 +8,10 @@
 落地使原样例硬煞化，扫描实证换样，001 §69）；②E105 检查改合成 detail
 直测两分支（与评分样例解耦），原 D2 空洞断言加固为 D1a-f；③原"3 项
 自引入即失败"定性勘正为"§65 连带基线漂移"（806e6ff/eb858e5 可信对拍
-全 PASS，见 001 §69 对拍方法论）。
+全 PASS，见 001 §69 对拍方法论）；④（§69 验收拍板）D5a-b 行为等价
+验证：真实产品 dict 过 E105 路径，判定结果与合成 D1a/D1b 等价（等价
+范围=E105 报/不报关键判定，不含 note 文案逐字）——堵"E105 改读 detail
+其他字段时合成样例静默脱节"盲区（合成 dict 仅 reason/level 两键）。
 
 退出码 0=全过。
 """
@@ -123,8 +126,23 @@ _lr_nn = lint_lesson(dict(_base, level='★★★ 吉'),
                      rendered_content='★★★ 吉')
 check('D1e 非降格级不报E105（反向）',
       not any(i.rule_id == 'E105' for i in _lr_nn.issues))
-# 真实样例联动：二级日 level 确含"降一格"（保证 D 段合成前提与产品一致）
+# D1f 前提锚点：真实二级样例 level 确含"降一格"——D 段合成 D1a-e 的
+# 前提与产品当前行为一致（样例日被硬煞化/降格文案漂移时在此报警）；
+# 合成≈产品的行为等价验证另见 D5。
 check('D1f 真实二级样例 level 含降一格', '降一格' in str(r_l2['level']))
+
+# D5 行为等价验证（§69 验收拍板 2026-10-12）：真实产品 r_l2 走 E105
+# 路径，判定结果与合成 D1a/D1b 等价——防"E105 改读 detail 其他字段
+# 时合成样例静默脱节"盲区（合成 dict 仅 reason/level 两键，产品 dict
+# 字段更多，D1f 抓不到该类漂移）。等价范围=E105 报/不报关键判定
+# （is_l2 分支识别+说明有无），不含 note 文案/severity 逐字等价
+# （合成样例天生缺产品字段，全等价过强）。
+_lr_r2no = lint_lesson(r_l2, rendered_content='等级行：%s' % r_l2['level'])
+check('D5a 真实二级样例无降星说明报WARN（与D1a等价）',
+      any(i.rule_id == 'E105' for i in _lr_r2no.issues))
+_lr_r2ok = lint_lesson(r_l2, rendered_content='等级降星一档说明')
+check('D5b 真实二级样例有降星说明通过（与D1b等价）',
+      not any(i.rule_id == 'E105' for i in _lr_r2ok.issues))
 _lr_l1no = lint_lesson(r_l1, rendered_content='等级行：★ 平（犯忌嫁娶，慎用）')
 check('D3 一级无降格说明报WARN',
       any(i.rule_id == 'E105' for i in _lr_l1no.issues))
