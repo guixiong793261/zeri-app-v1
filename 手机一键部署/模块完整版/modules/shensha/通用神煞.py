@@ -201,8 +201,8 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_fusheng(sizhu):
             self._add_shensha('福生', 10, '福生临日，百福骈臻')
 
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆临门，喜事连连')
+        # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
+        # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
 
         if self._is_yihou(sizhu):
             self._add_shensha('益后', 12, '益后嗣续，利子嗣')

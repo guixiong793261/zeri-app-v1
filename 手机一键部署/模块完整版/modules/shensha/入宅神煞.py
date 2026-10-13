@@ -272,9 +272,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_xushi(sizhu):
             self._add_shensha('续世', 10, '续世日主续嗣，入宅吉')
         
-        # 吉庆（吉庆之日）
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆日入宅吉')
+        # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
+        # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
         
         # 2026-10 A1：'鸣吠日'/'鸣吠对日' 同名重加删除（基类月作用域统一
         # 注册，旧名「鸣犬日/对」已正名，谓词收为 13/11 典载日柱）。

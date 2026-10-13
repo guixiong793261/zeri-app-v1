@@ -316,9 +316,8 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，婚嫁吉')
         
-        # 吉庆（吉庆之日）
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆日婚嫁吉')
+        # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
+        # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
         
         # ===== 补充缺失的凶煞检查 =====
         

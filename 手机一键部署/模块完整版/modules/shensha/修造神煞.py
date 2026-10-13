@@ -242,9 +242,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_xushi(sizhu):
             self._add_shensha('续世', 8, '续世日主续嗣，修造吉')
         
-        # 吉庆（吉庆之日）
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆日修造吉')
+        # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
+        # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
         
         # 2026-10 A1：'天恩' 同名重加删除——天恩已收口基类日作用域单点注册。
 
