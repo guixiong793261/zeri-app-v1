@@ -657,6 +657,37 @@ def is_xiangri_by_zhi(month_zhi, day_zhi):
     return day_zhi == _XIANGRI_ZHI_BY_MONTH.get(month_zhi)
 
 
+# ===== 守日权威表（2026-10 批3 批B F5 甲：钦定口径重建）=====
+# 权威口径：《协纪辨方书》卷五·义例三"王官守相民日"条——
+#   《历例》原表："守日者春酉夏子秋卯冬午"；钦定按语："守与牢二字相近
+#   而讹易之……今从之"——判历例原表为牢日，钦定守日＝春辰夏未秋戌冬丑
+#   （四序土旺）。卷十·用日篇按语"守日为四时旺土"（279228 L176）互证；
+#   立成"寅申月值守日"（279228 L313）与辰戌月组自洽。
+#   考原（359078 L137-138）纯抄历例原诀无辨正——三库分歧点，按层级
+#   以协纪为主锚（分歧仅标注不取舍）。
+# 即寅卯辰月辰、巳午未月未、申酉戌月戌、亥子丑月丑（四季土旺表），
+# 与王（寅巳申亥）/相（巳申亥寅）/官（卯午酉子）/民（午酉子卯）两两零交集。
+# 按拍板（F5 甲）：建单点出口但暂不注册发射。
+_SHOURI_ZHI_BY_MONTH = {
+    '寅': '辰', '卯': '辰', '辰': '辰',      # 春（寅卯辰月）取辰
+    '巳': '未', '午': '未', '未': '未',      # 夏（巳午未月）取未
+    '申': '戌', '酉': '戌', '戌': '戌',      # 秋（申酉戌月）取戌
+    '亥': '丑', '子': '丑', '丑': '丑',      # 冬（亥子丑月）取丑
+}
+
+
+def is_shouri_by_zhi(month_zhi, day_zhi):
+    """守日（《协纪》钦定口径，按语"守与牢二字相近而讹易之……今从之"
+    ＝春辰夏未秋戌冬丑四序土旺，月支查日支）。
+
+    单点出口：基类 _is_shouri 委托。按批3 拍板（F5 甲）暂不注册发射——
+    守日典载宜项为安抚边境等，软件事项体系暂无对应发射需求。
+    """
+    if not month_zhi or not day_zhi:
+        return False
+    return day_zhi == _SHOURI_ZHI_BY_MONTH.get(month_zhi)
+
+
 # ===== 四废权威表（2026-10 A6-1 修复：放宽口径 → 典载干支型）=====
 # 权威口径：《协纪辨方书》四废为四时衰废之气，被当令旺气所克：
 #   春（寅卯辰月）木旺金废 → 庚申、辛酉
@@ -2348,20 +2379,18 @@ class ShenShaChecker:
     # 2026-10 批1（001 §70）：_is_jiqing 谓词删除——《协纪》卷三十六·辨讹
     # 「满德吉庆」条钦定判伪（《选择宗镜》「为伪吉日……毋庸深辨」）。
     
-    def _is_shouriminri(self, sizhu):
-        """守日/民日（四季旺日）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '寅'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '午'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '申'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '亥'
-        return False
-    
+    # 2026-10 批3 批B（001 §72）：_is_shouriminri 死函数删除——Initial
+    # commit（9e2b864）遗留，内容为旧王日表复制（春寅夏午秋申冬亥，与批A
+    # 修正前 _is_wangri 同表，非牢日口径——牢日表为历例守日原表春酉夏子
+    # 秋卯冬午），全库零调用（批2 探测确认）。钦定守日口径重建见模块级
+    # is_shouri_by_zhi；按拍板（F5 甲）暂不注册发射，仅留委托谓词备查。
+
+    def _is_shouri(self, sizhu):
+        """守日（钦定口径：春辰夏未秋戌冬丑，月支查日支）。
+        2026-10 批3 批B 建立并委托 is_shouri_by_zhi，不注册发射（F5 甲）。"""
+        return is_shouri_by_zhi(sizhu.get('month_zhi', ''),
+                                sizhu.get('day_zhi', ''))
+
     def _is_guanri(self, sizhu):
         """官日（2026-10 A8 修复：原"三合中神"值域错，仅仲月巧合；
         现委托模块级唯一实现 is_guanri_by_zhi——《历例》春卯夏午秋酉冬子）。"""
