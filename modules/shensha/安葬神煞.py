@@ -126,9 +126,9 @@ class BurialShenShaChecker(ShenShaChecker):
         # 2026-10 A1：'月空' 同名重加删除（基类月作用域统一注册，
         # 月神比日干典载口径）。
 
-        # 吉期
-        if self._is_jiqi(sizhu):
-            self._add_shensha('吉期', 10, '吉期吉日，利于安葬')
+        # 2026-10 批4（001 §74）：'吉期' 重加删除——基类月作用域已统一
+        # 注册 '吉期' +10（E3 修正后委托典载《历例》"常居月建前一辰"表），
+        # 本块 super 先行后同名重加被 _add_shensha 先到先得去重，从未生效。
         
         # 益后
         if self._is_yihou(sizhu):
