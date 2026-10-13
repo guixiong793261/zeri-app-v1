@@ -296,9 +296,11 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_yangde(sizhu):
             self._add_shensha('阳德', 10, '阳德吉日，婚嫁吉')
         
-        # 吉期（吉庆之期，宜嫁娶）
-        if self._is_jiqi(sizhu):
-            self._add_shensha('吉期', 12, '吉期宜嫁娶')
+        # 2026-10 批4（001 §74）：'吉期' 重加删除——基类月作用域已统一
+        # 注册 '吉期' +10（E3 修正后委托典载《历例》"常居月建前一辰"表），
+        # 本块 super 先行后同名重加（+12）被 _add_shensha 先到先得去重，
+        # 从未生效；《协纪》卷十按语明载"谓吉期宜结婚姻，於义无取，故删"，
+        # 嫁娶总分由 score_marriage_day 独立计算，本删除零分差。
         
         # 要安（安宁之日，利婚嫁）
         if self._is_yaoan(sizhu):

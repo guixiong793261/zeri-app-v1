@@ -104,9 +104,9 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩日主恩泽')
         
-        # 吉期
-        if self._is_jiqi(sizhu):
-            self._add_shensha('吉期', 10, '吉期主吉庆')
+        # 2026-10 批4（001 §74）：'吉期' 重加删除——基类月作用域已统一
+        # 注册 '吉期' +10（E3 修正后委托典载《历例》"常居月建前一辰"表），
+        # 本块 super 先行后同名重加被 _add_shensha 先到先得去重，从未生效。
         
         # 王日
         if self._is_wangri(sizhu):
