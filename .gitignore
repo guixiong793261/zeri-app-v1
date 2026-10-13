@@ -37,3 +37,12 @@ data/owners_plans.json
 # 未来新生成的基线文件不入库（已跟踪文件不受 gitignore 影响）
 data/llm_baseline_*.json
 data/tmp/
+
+# 审计可复现大数据（2026-10-13 拍板：脚本+manifest+SEED 在仓即可复现，
+# raw/per_event/agg/compare 等大体积产物不进仓；工作区本地保留）。
+# 例外：s63_veto_tuning/veto_audit_old|new.json 为不可复现校准基线，保留在仓。
+tools/audit/**/veto_remain_raw_*.json
+tools/audit/**/veto_remain_per_event_*.json
+tools/audit/**/veto_remain_agg_*.json
+tools/audit/**/s64_compare_*.json
+tools/audit/**/compare_console.txt
