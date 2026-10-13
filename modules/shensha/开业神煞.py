@@ -116,9 +116,8 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_guanri(sizhu):
             self._add_shensha('官日', 8, '官日主官禄')
         
-        # 吉庆
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆主吉庆')
+        # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
+        # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
         
         # 月厌
         if self._is_yueyan(sizhu):

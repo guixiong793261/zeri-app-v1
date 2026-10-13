@@ -1219,8 +1219,8 @@ class ShenShaChecker:
             # （典载除神非"百事皆宜"，2021-12-03 乙酉基准漂移实证）。
             self._add_shensha('除神', 0, '除神主除旧布新，宜解除、扫舍宇、求医疗病')
 
-        if self._is_jiqing(sizhu):
-            self._add_shensha('吉庆', 10, '吉庆主吉庆')
+        # 2026-10 批1（001 §70）：'吉庆' 全删——《协纪》卷三十六·辨讹「满德吉庆」
+        # 条钦定判伪（《选择宗镜》「为伪吉日……毋庸深辨」），谓词与 14 事项注册一并移除。
         if self._is_yihou(sizhu):
             self._add_shensha('益后', 12, '益后主益后代')
         if self._is_xushi(sizhu):
@@ -2284,16 +2284,8 @@ class ShenShaChecker:
         }
         return day_zhi == fusheng_map.get(month_zhi)
     
-    def _is_jiqing(self, sizhu):
-        """吉庆（正月戊、二月己、三月庚、四月辛、五月壬、六月癸、七月甲、八月乙、九月丙、十月丁、十一月戊、十二月己）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_gan = sizhu.get('day_gan', '')
-        jiqing_map = {
-            '寅': '戊', '卯': '己', '辰': '庚', '巳': '辛',
-            '午': '壬', '未': '癸', '申': '甲', '酉': '乙',
-            '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'
-        }
-        return day_gan == jiqing_map.get(month_zhi)
+    # 2026-10 批1（001 §70）：_is_jiqing 谓词删除——《协纪》卷三十六·辨讹
+    # 「满德吉庆」条钦定判伪（《选择宗镜》「为伪吉日……毋庸深辨」）。
     
     def _is_shouriminri(self, sizhu):
         """守日/民日（四季旺日）"""
