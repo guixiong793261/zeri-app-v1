@@ -684,26 +684,13 @@ class RuZhaiShenShaChecker(ShenShaChecker):
 
         return day_zhi in mucang_map.get(month_zhi, [])
     
-    def _is_xiangri(self, sizhu):
-        """相日
-        注：传统相日映射与当前实现可能不符。
-        传统相日：春（寅卯辰月）午未、夏（巳午未月）申酉、秋（申酉戌月）亥子、冬（亥子丑月）寅卯。
-        当前实现可能错误，仅供参考。
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
+    # 2026-10 批3 批A（001 §72）：_is_xiangri 子类重写删除——Initial commit
+    # （9e2b864）遗留的民间帝旺表（寅卯月→卯、辰巳午月→午、未申酉月→酉、
+    # 戌亥子月→子；docstring 自认"传统相日映射与当前实现可能不符……当前
+    # 实现可能错误"），覆盖基类委托谓词，致入宅/移徙「相日」脱离《历例》
+    # 典载口径（春巳夏申秋亥冬寅），且与官日表（阴支帝旺）大量同支双命中。
+    # 现继承基类 _is_xiangri（委托模块级 is_xiangri_by_zhi 一支版）。
 
-        xiangri_map = {
-            '寅': '卯', '卯': '卯',
-            '辰': '午', '巳': '午',
-            '午': '午', '未': '酉',
-            '申': '酉', '酉': '酉',
-            '戌': '子', '亥': '子',
-            '子': '子', '丑': '卯'
-        }
-
-        return day_zhi == xiangri_map.get(month_zhi)
-    
     # ========== 宅主相关判断 ==========
     
     def _shengxiao_to_zhi(self, shengxiao):
