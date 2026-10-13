@@ -6553,3 +6553,36 @@ vs 吉庆=己日干），疑 §65 本命三煞落地/§69 婚姻翻案系样例�
   总计 216/13/238 91%、待翻书裁断列表摘除吉期。
 - 待翻书清单：§5.2 回填报批4 落地（候选 B 判定+四例定性+回归摘要）、
   §六表 row2 改 ✅ 已修。
+
+### 74.4 收尾拍板登记（2026-10-13）：level 跨档 337 处置 + 审计 JSON 可复现性
+
+**一、level 跨档 337 处置（定稿）：观察项，不设门禁，不修展示层。**
+
+- 机制归因已实锤：wx 恒等 ±10（74.2），wx 变化自然带动 level 重算，
+  跨档是 ±10 平移跨档界切点的正常涟漪，非规则错位；names/veto/忌语
+  三层核验全部通过（74.2）。
+- 方向安全性已核（74.2 末条）：F→T 安全收紧，T→F 解除后 level 多仍
+  凶/低档，无推荐面扩大。
+- 处置依据：批3 §72 王相 ±10 同前例——同为"神煞通道 ±10 经 wx 加权
+  平移跨档界"，彼时拍板即观察项不设门禁；本次同性质同处置。
+- 若未来要求 wx 级跨档冻结，需先给"档界切点缓冲带"设计（属展示层
+  平滑需求，非本次修表缺陷），另行立项。
+
+**二、tools/audit 审计 JSON 可复现性判断（四步法）与处置（commit b1e79e8）。**
+
+四步：①入仓清单核实（git ls-files，21 项）→②生成/下游脚本检查
+（veto_remain_audit.py SEED 内嵌 L36-52 在仓；S63_BASELINE 硬依赖
+veto_audit_new.json；per_event_summary.py/compare_s63_s64.py 输入
+raw 自洽）→③逐个判断→④gitignore+rm --cached。
+
+判断结果（26MB 通用）：
+| 组 | 文件 | 判定 | 处置 |
+|---|---|---|---|
+| 可复现产物 | s63_remain raw/per_event/agg（11.5MB）、s64 raw/per_event/s64_compare/agg/console（10.3MB），共 8 项约 21.8MB | 可复现（脚本+SEED+manifest 在仓） | git rm --cached+gitignore，工作区保留 |
+| 不可复现校准基线 | s63_veto_tuning/veto_audit_old|new.json（5.6MB） | 不可复现（临时探针已删）+在仓脚本硬依赖作 §63 校准基线 | 保留在仓 |
+| 锚点/脚本/文档 | manifest×2（含 SEED+scorer_sha256_16）、脚本×5、对照表.md、marriage_cap×2、s68×1 | 复现链必需 | 保留在仓 |
+
+复现方法：按 manifest.scorer_sha256_16（s63=4e53832db7401e42，
+s64=b70b061aac42a1cf）定位历史评分器版本 → 重跑 veto_remain_audit.py
+（SEED 内嵌）→ per_event_summary.py → compare_s63_s64.py。
+
