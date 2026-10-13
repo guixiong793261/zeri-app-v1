@@ -1136,22 +1136,13 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         return day_zhi in mucang_map.get(month_zhi, [])
     
-    def _is_wangri(self, sizhu):
-        """是否旺日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        wangri_map = {
-            '寅': '卯', '卯': '卯',
-            '辰': '午', '巳': '午',
-            '午': '午', '未': '酉',
-            '申': '酉', '酉': '酉',
-            '戌': '子', '亥': '子',
-            '子': '子', '丑': '卯'
-        }
-        
-        return day_zhi == wangri_map.get(month_zhi)
-    
+    # 2026-10 批3 批A（001 §72）：_is_wangri 子类重写删除——Initial commit
+    # （9e2b864）遗留的民间帝旺表（寅卯月→卯、辰巳午月→午、未申酉月→酉、
+    # 戌亥子月→子，与原入宅 _is_xiangri 同表），覆盖基类委托谓词，致嫁娶
+    # 「旺日」脱离《历例》王日典载口径（春寅夏巳秋申冬亥，钦定按语
+    # "君用阳而臣用隂"）。帝旺≠王日（卷十："子午卯酉日为三合帝旺所宜并
+    # 同王日"——宜同而名异）。现继承基类 _is_wangri（委托 is_wangri_by_zhi）。
+
     # ===== 新人相关检查 =====
     
     def _is_chong_bride(self, sizhu):
