@@ -6804,4 +6804,17 @@ s64=b70b061aac42a1cf）定位历史评分器版本 → 重跑 veto_remain_audit.
   不报错但不可比"精准——本批探针 check(sizhu, {}) 与审计 owners=[]
   对齐生产路径，未重犯 75.5 教训。
 
+### 76.6 sync 补记
+
+- 批6' sync（commit 见 git log）：手机一键部署两层同步批6' E6/F4 四文件
+  ——神煞基类.py（四相干表+母仓基类表唯一化）/神煞验证与校准.py（L77
+  校准副本更正）/嫁娶神煞.py+入宅神煞.py（母仓 override 删除收敛）。
+- SHA256 三份一致（主仓 / 手机一键部署 / 模块完整版）：
+  神煞基类 A79AB266…DE74D19、神煞验证与校准 7E1B3209…4AA704、
+  嫁娶神煞 2CBD4199…0DB369、入宅神煞 F04A3C75…A2A6D3。
+  仓B＝GitHub 远程随 push 项处理；统一版/构建产物副本历次 sync 口径
+  不动（cfed141 已移出跟踪）。tests/verify_b6_mucang_sixiang.py 仅主仓
+  （惯例：verify 脚本不随手机端同步）。
+
+
 
