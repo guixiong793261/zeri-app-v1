@@ -264,14 +264,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_suihe(sizhu):
             self._add_shensha('岁合', 12, '岁合主和合，入宅吉')
         
-        # 益后（利于后代）
-        if self._is_yihou(sizhu):
-            self._add_shensha('益后', 12, '益后日主益后代，入宅吉')
-        
-        # 续世（利于续嗣）
-        if self._is_xushi(sizhu):
-            self._add_shensha('续世', 10, '续世日主续嗣，入宅吉')
-        
+        # 2026-10 批7b（001 §80.8）：'益后'/'续世' 日块同名重加删除——基类
+        # 月作用域已统一注册 +12/+10（批7a 委托典载表，经本类月块 super 先
+        # 行发射），本块同名重加被 _add_shensha 先到先得去重，从未生效（死
+        # 链）。删除零行为差，运行时实证见 001 §80.8。
+
         # 2026-10 批1（001 §70）：'吉庆' 删除——《协纪》卷三十六·辨讹钦定判伪
         # （《选择宗镜》「满德吉庆为伪吉日……毋庸深辨」）。
         

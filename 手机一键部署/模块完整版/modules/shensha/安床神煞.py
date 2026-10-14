@@ -91,13 +91,10 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yinde(sizhu):
             self._add_shensha('阴德', 10, '阴德日，主阴德，安床吉')
 
-        # 益后
-        if self._is_yihou(sizhu):
-            self._add_shensha('益后', 12, '益后日，主益后代，安床吉')
-
-        # 续世
-        if self._is_xushi(sizhu):
-            self._add_shensha('续世', 10, '续世日，主续嗣，安床吉')
+        # 2026-10 批7b（001 §80.8）：'益后'/'续世' 重加删除——基类
+        # _check_month_shensha 已统一注册 +12/+10（批7a 委托典载表），本块
+        # 同方法 super 先行后同名重加被 _add_shensha 先到先得去重，从未生
+        # 效（死链）。删除零行为差，运行时实证见 001 §80.8。
 
         # 要安
         if self._is_yaoan(sizhu):

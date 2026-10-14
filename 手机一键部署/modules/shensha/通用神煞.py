@@ -405,11 +405,11 @@ class CommonShenShaChecker(ShenShaChecker):
         # 谓词 _is_yaoan 登记同名条目，_add_shensha 去重使此处永远不生效
         # （死分支）。要安唯一生效点保留在上方月作用域。
 
-        if self._is_yihou(sizhu):
-            self._add_shensha('益后', 12, '益后嗣续，利子嗣')
-
-        if self._is_xushi(sizhu):
-            self._add_shensha('续世', 10, '续世绵延，利嗣续')
+        # 2026-10 批7b（001 §80.8）：'益后'/'续世' 日块同名重加删除——本类
+        # 月块已按同一谓词各发射 +12/+10（通用 override 月块不调 super，基类
+        # 月块对本类不执行，月块为唯一活发射；check 月先日后），日块重加被
+        # _add_shensha 先到先得去重，从未生效（死链）。删除零行为差，
+        # 运行时实证见 001 §80.8。
 
         if self._is_wuhe(sizhu):
             self._add_shensha('五合', 10, '五合之日，合和美好')
