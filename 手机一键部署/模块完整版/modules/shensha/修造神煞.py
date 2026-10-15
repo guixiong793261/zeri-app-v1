@@ -489,6 +489,14 @@ class ConstructionShenShaChecker(ShenShaChecker):
         典载口径（《神枢经》/《历例》"土於四立之前各旺一十八日"）：委托
         模块级单点出口 is_tuwang_yongshi_by_date，按公历日期查距下一个四立
         的天数∈[1, 18]。
+
+        ⚠ 架构约束（批8b 验收补记）：本方法是**跨事项共享方法**——虽定义于
+        修造神煞类，但经 MRO 继承被动土神煞（_check_month_shensha L111）、
+        拆舍神煞（_check_month_shensha L58）调用，发射「土王用事 -40」。
+        修造自身 check 不调用本方法（修造走土瘟表 -18 路径），故本方法对
+        修造输出零影响、对动土/拆舍输出有实质影响。**禁止**将本方法误判为
+        「修造专属私有方法」而删除/重命名/内联，否则动土/拆舍的土王用事
+        -40 将失联。调用面盘点见 grep `_is_tuwang_yongshi`。
         """
         return is_tuwang_yongshi_by_date(
             sizhu.get('year'), sizhu.get('month'), sizhu.get('day'))
