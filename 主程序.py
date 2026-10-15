@@ -3434,6 +3434,14 @@ class ZeriApp:
                                         {'details': _md_real,
                                          'warnings': score_result.get('warnings') or []})
                                     score_result['level'] = _lv_new
+                                    # 2026-10-15 四数同源修复（2026-04-28审查S1）：合局差额
+                                    # 既改 score_details 与 score_result，顶部(result)与五行
+                                    # 分析段(wu_xing_result['score'])必须同步刷新，否则同一份
+                                    # 报告出现 122/113/115/124 四个数字打架。
+                                    result['score'] = score_result['score']
+                                    result['level'] = _lv_new
+                                    if isinstance(_wr3, dict) and isinstance(_sd, dict):
+                                        _wr3['score'] = _sd.get('五行评分') or 0
                                     _capped_real = '犯忌嫁娶' in _lv_new
                                     _minor_real = '降一格' in _lv_new
                                     # "嫁娶要点"行同步替换旧合局名
