@@ -993,19 +993,26 @@ GOLD_JQ_20260222_HUANGDAO = {
 # 其余分项（月令5/喜用0/太阳0/黄道None/相主None/has_deduction=False）均未漂移。
 GOLD_JQ_20260222_DETAILS = {
     # 2026-10 A6-4 批B：不将日 +25 → +15（与 SHENSHA_SCORES 全事项 15 统一），
-    # 本日为丁卯日（寅月不将日），五行评分 38→28、总分 43→33。
-    '五行评分': 28, '月令得分': 5, '喜用神得分': 0,
+    # 本日为丁卯日（寅月不将日）。嫁娶基础分=60（婚嫁评分算法.py L957，自始未变），
+    # 嫁娶明细求和：60(基础)+15(不将日)+15(天德)-15(大黄道)-5(小黄道)-20(冲子星)
+    # -20(耗夫星)+8(半合) = 38；总分=38+月令5 = 43。
+    # 2026-10-15 批9 勘正：旧 gold 手算误用基础分=50 得 28/33，实为 38/43。
+    '五行评分': 38, '月令得分': 5, '喜用神得分': 0,
     '黄道得分_IS_NONE': True,    # 嫁娶类该项应为 None（True：None→0；若漂移为数字立即FAIL）
     '相主得分_IS_NONE': True,
-    '太阳太阴得分': 0, '总分': 33,
+    '太阳太阴得分': 0, '总分': 43,
 }
 GOLD_JQ_20260222_LEVEL = '❌ 凶（犯忌嫁娶，慎用）'
 
 
 def _nodeduct_strict_check_jq(score_result):
-    """**与 主程序.py F2 修复完全同构** 的严格无扣分 10 维判定。
+    """**与 单文件版 F2（无扣分过滤）同构** 的严格无扣分判定。
        返回 (should_skip:bool, skip_reasons:list[str])
-       修改主程序过滤条件但不同步本函数 → 本测试用例立即 FAIL（同构锁死）。"""
+       F2 凶煞判据＝神煞名称含「凶」字（择日软件_完整单文件版_小窗口.py L2197
+       `has_xiong_shen = any('凶' in item ...)`），**非** score<0。
+       负分但名不含「凶」者（如大黄道黑道日/冲子星/耗夫星）属普通扣分，
+       不触发凶煞跳过；仅作展示。2026-10-15 批9 勘正：旧版误用 score<0
+       导致 J-04 reasons 多出「神煞列表存在负分项」。"""
     def _I(v):
         try: return int(v)
         except (TypeError, ValueError):
@@ -1022,8 +1029,10 @@ def _nodeduct_strict_check_jq(score_result):
     sansha_info = score_result.get('sansha_info', {})
     sansha_penalty_v = _I(sansha_info.get('sansha_penalty', 0))
     shensha_list = score_result.get('shensha_list', []) or []
-    has_xiong_shen_koufen = any(
-        isinstance(s, dict) and _I(s.get('score', 0)) < 0 for s in shensha_list)
+    # F2 凶煞判据：名称含「凶」字（与单文件版 L2197 同构），非 score<0
+    has_xiong_shen = any(
+        isinstance(s, dict) and '凶' in str(s.get('name', '') or s.get('description', ''))
+        for s in shensha_list)
     ji_list = score_result.get('ji_list', []) or []
     has_ji_list_not_empty = len([j for j in ji_list if str(j).strip()]) > 0
     reasons = []
@@ -1034,7 +1043,7 @@ def _nodeduct_strict_check_jq(score_result):
     if xiangzhu_score_v < 0: reasons.append(f"相主得分={xiangzhu_score_v}")
     if sun_moon_score_v < 0: reasons.append(f"太阳太阴得分={sun_moon_score_v}")
     if sansha_penalty_v < 0: reasons.append(f"三煞扣分={sansha_penalty_v}")
-    if has_xiong_shen_koufen: reasons.append('神煞列表存在负分项')
+    if has_xiong_shen: reasons.append('神煞列表存在凶煞')
     if has_ji_list_not_empty: reasons.append(f"忌列表非空({len(ji_list)}项)")
     return (len(reasons) > 0, reasons)
 
@@ -1112,13 +1121,13 @@ class TestJiaQu20260222(unittest.TestCase):
         wxr = r.get('wu_xing_result') or {}
         hd = wxr.get('has_deduction') if isinstance(wxr, dict) else getattr(wxr, 'has_deduction', None)
         self.assertFalse(bool(hd), "嫁娶类 wu_xing_result.has_deduction 应为 False（F2正例前置），实际=%r" % (hd,))
-        # 神煞无负分 + ji_list 空
-        def _I(x):
-            try: return int(x)
-            except: return 0
+        # 神煞无「凶煞」（F2 口径：名含「凶」字方为凶煞；负分但名不含凶者
+        # 如大黄道黑道日/冲子星/耗夫星属普通扣分，允许存在）+ ji_list 校验
         sl = r.get('shensha_list') or []
-        bad_scores = [s for s in sl if isinstance(s, dict) and _I(s.get('score', 0)) < 0]
-        self.assertEqual(bad_scores, [], "嫁娶类神煞不应有负分项，实际=%r" % (bad_scores,))
+        xiong_items = [s for s in sl if isinstance(s, dict)
+                       and '凶' in str(s.get('name', '') or s.get('description', ''))]
+        self.assertEqual(xiong_items, [],
+            "嫁娶类神煞不应含凶煞（名含「凶」字），实际=%r" % (xiong_items,))
         jl = r.get('ji_list') or []
         # 2026-09-16 修正：本题日为丁卯=建除「除」日，按用户报告2拍板口径
         # "除日忌嫁娶"（与 modules/黄道.py XIAO_HUANG_DAO_YIJI['除']['ji'] 含'嫁娶'、
