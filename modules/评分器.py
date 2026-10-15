@@ -6437,6 +6437,58 @@ class Scorer:
         
         return '；'.join(reason)
 
+    def _build_ji_huajie_note(self, ji_items, good_shensha, marriage_details,
+                              details):
+        """E206 综合判断化解说明（2026-10-16 S3 方案A拍板，台账001 §92）。
+
+        按化解机制分类（不按煞名）：
+          A  事忌不相干——仅限小黄道/建除层事忌（"…忌出行"类），忌事非嫁娶：
+             免德神，写"所忌乃X之忌，与嫁娶不相碍"（E206 放行词已增"不相碍/
+             无关/不相干"，2026-10-16 拍板）；
+          B2 合局类——三煞/岁破/六冲/日柱冲新人日柱等合可解冲煞，三合或
+             六合在场即算有制（沿用 2026-10-04 宽集口径），写"得X合住"；
+          B1 制化类——其余凶煞，需德神（天德/月德/岁德/天乙/福星/天赦/天愿）
+             在场，写"得X化解"；
+          本命三煞动态归类：当课有合局归 B2，无合局归 B1。
+        只写既成事实（得X化解/得X合住），不写"须化解"类要求句式——E206 会
+        先抹除要求句式再判既成事实。只认在场吉神，不虚构。
+
+        返回说明字符串；任一 B 类忌项无在场对症化解 → 返回 None，由调用方
+        走降级"须慎用"式（无化解不写可用，等级与分值不动）。
+        """
+        import re as _re
+        _names = [str(s.get('name', '')) for s in (good_shensha or [])
+                  if isinstance(s, dict)]
+        _names += [str(d[0]) for d in (marriage_details or [])
+                   if isinstance(d, (list, tuple)) and len(d) >= 2
+                   and isinstance(d[1], (int, float)) and d[1] > 0]
+        _blob = '、'.join(_names)
+        _rel = '；'.join(str(x) for x in (details.get('地支关系') or []))
+        _deshen = [k for k in ('天德', '月德', '岁德', '天乙', '福星',
+                               '天赦', '天愿') if k in _blob]
+        _heju = ([k for k in ('三合', '六合') if k in _blob]
+                 or [k for k in ('三合', '六合') if k in _rel])
+        _a_shi, _notes = [], []
+        for _j in ji_items:
+            _m = _re.search(r'忌([^，、；]{1,6})$', _j)
+            _is_a = (bool(_m)
+                     and not any(w in _m.group(1) for w in ('嫁', '娶', '婚'))
+                     and ('小黄道' in _j or '建除' in _j))
+            _is_chong = (any(w in _j for w in ('三煞', '岁破', '六冲'))
+                         or (_j.startswith('日柱') and '冲' in _j))
+            if _is_a:
+                if _m.group(1) not in _a_shi:
+                    _a_shi.append(_m.group(1))
+            elif _is_chong and _heju:
+                _notes.append(f'{_j}得{"、".join(_heju)}合住')
+            else:
+                if not _deshen:
+                    return None
+                _notes.append(f'{_j}得{"、".join(_deshen[:2])}化解')
+        if _a_shi:
+            _notes.insert(0, f'所忌乃{"、".join(_a_shi)}之忌，与嫁娶不相碍')
+        return '，'.join(_notes) if _notes else None
+
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
                                    marriage_details=None, veto_reason=None,
@@ -6639,8 +6691,18 @@ class Scorer:
                 seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
                            f'嫁娶须慎用，宜择吉时{_tail}')
             else:
-                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
-                           f'嫁娶可用，须于十二时辰中择吉时{_tail}')
+                # 2026-10-16 S3（E206 化解说明，方案A拍板，台账001 §92）：
+                # 「并见+可用」必须附所忌的化解/不相碍说明；无在场对症化解
+                # 不得写"可用"，降级"须慎用"（等级与分值不动）。
+                _huajie = self._build_ji_huajie_note(
+                    _all_ji, good_shensha, marriage_details, details)
+                if _huajie is None:
+                    seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，'
+                               f'{_good_names}并见而无对症化解，'
+                               f'嫁娶须慎用，宜择吉时{_tail}')
+                else:
+                    seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                               f'{_huajie}，嫁娶可用，须于十二时辰中择吉时{_tail}')
         else:
             _tail = ''
             if yueling_score < 0 and xishen_score > 0:
