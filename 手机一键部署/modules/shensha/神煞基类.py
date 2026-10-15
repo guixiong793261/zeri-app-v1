@@ -2898,20 +2898,8 @@ class ShenShaChecker:
             return day_zhi == '寅'
         return False
     
-    def _is_futou(self, sizhu):
-        """斧头煞（春午、夏酉、秋子、冬卯）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '午'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '酉'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '子'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '卯'
-        return False
-    
+    # F6 斧头煞：谓词删除（协纪/考原无载，表＝民日表窜用，名实错）
+
     def _is_muma(self, sizhu):
         """木马煞（春未、夏戌、秋丑、冬辰）"""
         month_zhi = sizhu.get('month_zhi', '')

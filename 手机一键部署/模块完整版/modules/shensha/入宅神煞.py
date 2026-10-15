@@ -277,9 +277,7 @@ class RuZhaiShenShaChecker(ShenShaChecker):
 
         # 2026-10 A1：'天恩' 同名重加删除——天恩已收口基类日作用域单点注册。
         
-        # 旺日
-        if self._is_wangri(sizhu):
-            self._add_shensha('旺日', 10, '旺日入宅吉')
+        # E7 旺日：删除'旺日'异名注册（D=0，alias 归一为'王日'，基类已注册）
         
         # ===== 补充缺失的凶煞检查 =====
         

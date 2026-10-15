@@ -272,9 +272,7 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_mucang(sizhu):
             self._add_shensha('母仓日', 10, '母仓日婚嫁吉')
         
-        # 旺日
-        if self._is_wangri(sizhu):
-            self._add_shensha('旺日', 10, '旺日婚嫁吉')
+        # E7 旺日：删除'旺日'异名注册（D=0，alias 归一为'王日'，基类已注册）
         
         # ===== 补充缺失的吉神检查 =====
 
@@ -884,31 +882,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         }
         return huangsha_map.get(month_zhi) == day_zhi
     
-    def _is_shenhao(self, sizhu):
-        """是否神号日"""
-        lunar_month = 0
-        try:
-            date_obj = self._get_date_from_sizhu(sizhu)
-            if date_obj:
-                from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(date_obj)
-                if lunar_info and 'month' in lunar_info:
-                    lunar_month = self._parse_chinese_month(lunar_info['month'])
-            elif 'lunar_month' in sizhu:
-                lunar_month = sizhu['lunar_month']
-        except:
-            pass
-        
-        day_zhi = sizhu.get('day_zhi', '')
-        
-        shenhao_map = {
-            1: ['戌'], 2: ['亥'], 3: ['子'], 4: ['丑'],
-            5: ['寅'], 6: ['卯'], 7: ['辰'], 8: ['巳'],
-            9: ['午'], 10: ['未'], 11: ['申'], 12: ['酉']
-        }
-        
-        return lunar_month in shenhao_map and day_zhi in shenhao_map[lunar_month]
-    
+    # D2 神号：删除嫁娶 override（农历月查日支版，三库无载＋except:pass 静默降级）。
+    # 现继承基类 _is_shenhao（年支查月支版，协纪有载条目）。
+    # 嫁娶注册 '神号日' -15 保留（嫁娶重忌口径）。
+
     def _is_guiru(self, sizhu):
         """是否鬼哭日"""
         lunar_month = 0

@@ -295,10 +295,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_daozhen(sizhu):
             self._add_shensha('刀砧煞', -20, '刀砧煞忌修造，主伤工匠')
         
-        # 斧头煞
-        if self._is_futou(sizhu):
-            self._add_shensha('斧头煞', -18, '斧头煞忌修造')
-        
+        # F6 斧头煞：删除（协纪/考原无载，表＝民日表窜用，名实错）
         # 木马煞
         if self._is_muma(sizhu):
             self._add_shensha('木马煞', -15, '木马煞忌修造')

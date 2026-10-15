@@ -392,8 +392,7 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_minri(sizhu):
             self._add_shensha('民日', 8, '民日顺行，宜用民事')
 
-        if self._is_wangri(sizhu):
-            self._add_shensha('旺日', 10, '旺日当令，诸事亨通')
+        # E7 旺日：删除'旺日'异名注册（D=0，alias 归一为'王日'，基类已注册）
 
         if self._is_shangji(sizhu):
             self._add_shensha('上吉日', 12, '上吉之日，百事皆宜')
