@@ -31,10 +31,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker
+    from .神煞基类 import ShenShaChecker, is_tuwang_yongshi_by_date
     from ..工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
 except ImportError:
-    from 神煞基类 import ShenShaChecker
+    from 神煞基类 import ShenShaChecker, is_tuwang_yongshi_by_date
     from 工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
 
 
@@ -483,23 +483,15 @@ class ConstructionShenShaChecker(ShenShaChecker):
         return False
     
     def _is_tuwang_yongshi(self, sizhu):
-        """是否土王用事
-        土王用事：四季最后十八天，土王当权，忌动土
-        春辰月、夏未月、秋戌月、冬丑月的最后18天
+        """是否土王用事（2026-10 批8a 修正：原实现把节气月支映射到公历月号
+        ＋ monthrange 取公历月天数，节气月跨公历月导致判定失真）。
+
+        典载口径（《神枢经》/《历例》"土於四立之前各旺一十八日"）：委托
+        模块级单点出口 is_tuwang_yongshi_by_date，按公历日期查距下一个四立
+        的天数∈[1, 18]。
         """
-        month_zhi = sizhu['month_zhi']
-        day = sizhu.get('day', 0)
-        
-        tuwang_months = {'辰': 3, '未': 6, '戌': 9, '丑': 12}
-        tuwang_month = tuwang_months.get(month_zhi)
-        
-        if tuwang_month:
-            year = sizhu.get('year', 2026)
-            import calendar
-            _, last_day = calendar.monthrange(year, tuwang_month)
-            if day > last_day - 18:
-                return True
-        return False
+        return is_tuwang_yongshi_by_date(
+            sizhu.get('year'), sizhu.get('month'), sizhu.get('day'))
     
     def _is_dahao(self, sizhu):
         """是否大耗

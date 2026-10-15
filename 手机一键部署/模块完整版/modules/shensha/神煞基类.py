@@ -16,6 +16,15 @@ except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
+# 尝试导入 sxtwl 库（土王用事边界精确判定用；2026-10 批8a）
+try:
+    import sxtwl
+    import functools
+    sxtwl.getJieQiByYear = functools.lru_cache(maxsize=64)(sxtwl.getJieQiByYear)
+    HAS_SXTWL = True
+except ImportError:
+    HAS_SXTWL = False
+
 
 # 天干顺序（上朔日推算用）
 _GAN_ORDER = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
@@ -984,6 +993,60 @@ def is_xushi_by_zhi(month_zhi, day_zhi):
     if not month_zhi or not day_zhi:
         return False
     return day_zhi == _XUSHI_ZHI_BY_MONTH.get(month_zhi)
+
+
+# ===== 土王用事权威判定（2026-10 批8a 收口：全项目唯一实现）=====
+# 典载口径（《神枢经》/《历例》，协纪卷一·五行；考原逐字同载）：
+#   "土於四立之前各旺一十八日"——立春/立夏/立秋/立冬 之前各 18 日。
+# 馆臣按：四季月 30 日内前 12 日归本令、后 18 日土王用事，与"四立前 18
+# 日"同一口径两面。即命中＝距下一个四立的天数∈[1, 18]（四立当日归本令）。
+# 四立索引（sxtwl.getJieQiByYear 返回 24 节气，序立春起）：0=立春、6=立夏、
+# 12=立秋、18=立冬。跨年覆盖：12 月日期需查次年立春。
+_SILIQ_INDICES = (0, 6, 12, 18)
+
+
+def _jd_to_date(jd):
+    """sxtwl 儒略日 → datetime.date。"""
+    import datetime as _dt
+    dd = sxtwl.JD2DD(jd)
+    return _dt.date(int(dd.Y), int(dd.M), int(dd.D))
+
+
+_TUWANG_SILI_CACHE = {}
+
+
+def _sili_dates(year):
+    """返回 year 与 year+1 的四个立日（date 列表，已排序）。"""
+    if year not in _TUWANG_SILI_CACHE:
+        import datetime as _dt
+        out = []
+        for y in (year, year + 1):
+            lst = sxtwl.getJieQiByYear(y)
+            for i in _SILIQ_INDICES:
+                out.append(_jd_to_date(lst[i].jd))
+        _TUWANG_SILI_CACHE[year] = sorted(out)
+    return _TUWANG_SILI_CACHE[year]
+
+
+def is_tuwang_yongshi_by_date(year, month, day):
+    """土王用事判定（2026-10 批8a 单点出口）：四立之前各 18 日。
+
+    典载口径：距下一个四立（立春/立夏/立秋/立冬）的天数∈[1, 18] 即命中
+    （四立当日归本令、不算土王；四立前 18 日起算）。
+    sxtwl 未安装时回退 False（不影响主链路，但 verify 会要求 sxtwl）。
+    """
+    if not HAS_SXTWL:
+        return False
+    import datetime as _dt
+    try:
+        today = _dt.date(int(year), int(month), int(day))
+    except (TypeError, ValueError):
+        return False
+    for L in _sili_dates(today.year):
+        delta = (L - today).days
+        if 1 <= delta <= 18:
+            return True
+    return False
 
 
 # ===== 不将日权威表（2026-10 A6-4 批B 收敛：全项目唯一实现）=====
