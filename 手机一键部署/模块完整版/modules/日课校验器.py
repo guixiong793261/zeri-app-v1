@@ -1027,16 +1027,18 @@ def rule_e103(ctx):
                 source='旺衰段 vs reason 月令句',
                 suggestion='相地（如酉月壬水）应写「得生得助，日主相旺」，'
                            '不得写「得令」')
-    elif '休囚' in wang or '受克' in wang:
+    elif '失令偏弱' in wang or '日主休' in wang:
         # 仅拦截"明确旺断"固定措辞；'休囚泄气，得生扶有根不弱'这类
         # 有保留的软描述不属矛盾，不得以'得生'子串误判。
+        # （2026-10-15 S2：匹配词随旺衰文案十二长生口径同步，
+        #   囚/死档新文案以"失令偏弱"收尾、休档以"日主休"收尾。）
         if ('得令' in yue_sentence or '日主旺相' in yue_sentence
                 or '日主相旺' in yue_sentence):
             ctx.issue(
                 'E103',
                 f'旺衰段为「{wang}」，月令评语却为「{yue_sentence}」',
                 source='旺衰段 vs reason 月令句',
-                suggestion='休囚受克不得写得令/旺相')
+                suggestion='失令偏弱/日主休不得写得令/旺相')
     return None
 
 
@@ -1360,7 +1362,7 @@ def rule_e204(ctx):
         return '可判定段落不足2段'
 
     STRONG = ('得令', '旺相', '得力', '旺', '得生而相', '得生', '相地')
-    WEAK = ('失令', '休囚', '受克', '乏力', '弱', '囚', '死', '墓')
+    WEAK = ('失令', '休囚', '受克', '乏力', '弱', '囚', '死', '墓', '日主休')
     # 排除混合措辞（"失令但得生扶有根不弱"等软描述）
     MIXED = ('有根不弱', '得生扶', '得助不弱')
 
@@ -1368,7 +1370,11 @@ def rule_e204(ctx):
     for name, text in texts.items():
         if not text:
             continue
-        has_strong = any(k in text for k in STRONG)
+        # 2026-10-15 S2：新旺衰文案"土旺克水/金旺耗木"类机制说明中的"旺"
+        # 是月令五行之旺，非日主之旺，判定 STRONG 前须剔除"旺克/旺耗"，
+        # 否则弱文案被误判为强弱并存而漏报。
+        _t_strong = text.replace('旺克', '').replace('旺耗', '')
+        has_strong = any(k in _t_strong for k in STRONG)
         has_weak = any(k in text for k in WEAK)
         has_mixed = any(k in text for k in MIXED)
         if has_mixed:
@@ -1485,8 +1491,12 @@ def rule_e206(ctx):
     _probe = _re.sub(
         r'[须需要应][^，；。]{0,6}(?:制化|化解|制伏|制住|克制|合住|合去)',
         '', verdict_line)
+    # 2026-10-16 S3 拍板：放行词增「不相碍/无关/不相干」——事忌不相干类
+    # （小黄道/建除层忌出行等非嫁娶事）以"与嫁娶不相碍"作既成事实判断，
+    # 非要求句式，符合放行逻辑。
     RESOLVED_FACT = ('合住', '合去', '制伏', '制住', '克制', '化解',
-                     '合化', '有制', '得制', '已制')
+                     '合化', '有制', '得制', '已制',
+                     '不相碍', '无关', '不相干')
     if any(k in _probe for k in RESOLVED_FACT):
         return '结论已含既成制化/化解说明'
 

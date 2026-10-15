@@ -894,7 +894,9 @@ class Scorer:
                             # （下方 score_details['月令详细']）同口径，避免月令得分无分项。
                             score_details['月令详细'] = {
                                 '旺衰得分': self._calculate_wangxiang(sizhu),
-                                '支支关系得分': self._calculate_zhizhi_relation(sizhu)
+                                '支支关系得分': self._calculate_zhizhi_relation(sizhu),
+                                '旺衰依据': self._yueling_wangshuai_note(sizhu),
+                                '支支依据': self._zhizhi_relation_note(sizhu)
                             }
 
                             # 【D3 问题二修复】统一大利月分值：嫁娶神煞检查器(self.shensha_list)
@@ -1076,7 +1078,9 @@ class Scorer:
                         zhizhi_score = self._calculate_zhizhi_relation(sizhu)
                         score_details['月令详细'] = {
                             '旺衰得分': wangxiang_score,
-                            '支支关系得分': zhizhi_score
+                            '支支关系得分': zhizhi_score,
+                            '旺衰依据': self._yueling_wangshuai_note(sizhu),
+                            '支支依据': self._zhizhi_relation_note(sizhu)
                         }
                         
                         # 生成五行分析详情（地支关系、吉神等）
@@ -4187,6 +4191,35 @@ class Scorer:
         
         return 0
     
+    def _yueling_wangshuai_note(self, sizhu):
+        """L1 旺衰得分依据文案（2026-10-16 第4批，台账001 §93）：
+        纯展示层，按得分反推档位（+10旺/+5相/0休/-5囚/-10死，分值一一对应
+        无歧义），不入算法、不改分值。"""
+        day_gan = sizhu.get('day_gan', '')
+        month_zhi = sizhu.get('月柱', '')[1:2]
+        if not day_gan or not month_zhi:
+            return ''
+        _wx = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+               '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}.get(day_gan, '')
+        _lv = {10: ('旺', '得令'), 5: ('相', '得生'), 0: ('休', '泄气'),
+               -5: ('囚', '失令'), -10: ('死', '失令')}.get(
+                   self._calculate_wangxiang(sizhu))
+        if not _lv:
+            return ''
+        return f"{day_gan}{_wx}在{month_zhi}月处{_lv[0]}地，{_lv[1]}"
+
+    def _zhizhi_relation_note(self, sizhu):
+        """L1 支支关系得分依据文案（同批）：月支与日支关系名（+8六合/+5三合/
+        -15六冲（月破）/-5六害/0无特殊关系），纯展示层，不入算法。"""
+        month_zhi = sizhu.get('月柱', '')[1:2]
+        day_zhi = sizhu.get('日柱', '')[1:2]
+        if not month_zhi or not day_zhi:
+            return ''
+        _rel = {8: '六合', 5: '三合', -15: '六冲（月破）', -5: '六害',
+                0: '无特殊关系'}.get(
+                    self._calculate_zhizhi_relation(sizhu), '无特殊关系')
+        return f"月支{month_zhi}与日支{day_zhi}{_rel}"
+
     def _calculate_zhizhi_relation(self, sizhu):
         """
         计算月令与日支的关系评分
@@ -4268,13 +4301,12 @@ class Scorer:
         正五行择日法核心理念：日课四柱如同为事主"造命"，
         必须补益事主八字中的用神，才能达到催吉的效果。
 
-        评分逻辑：
-        1. 日课天干五行与事主用神相同：+8分
-        2. 日课天干五行与事主喜神相同：+5分
-        3. 日课地支藏干包含用神：+3分
-        4. 日课地支藏干包含喜神：+2分
-        5. 日课五行克事主用神：-10分（大忌）
-        6. 日课五行与事主用神相冲：-8分
+        评分逻辑（实际实现）：
+        1. 日课天干五行 = 事主用神：+5分（同一五行只计一次，不重复加分）
+        2. 日课天干五行 = 事主喜神：+3分
+        3. 日课地支藏干含事主用神：+2分
+        4. 日课地支藏干含事主喜神：+1分
+        5. 单个事主喜用神得分上限 15 分
 
         Args:
             sizhu: 日课四柱信息
@@ -4349,11 +4381,11 @@ class Scorer:
             for wx in sizhu_wuxing:
                 if wx in owner_yongshen_list and wx not in matched_wuxing:
                     owner_score += 5  # 天干为用神：+5分（降低分数）
-                    match_details.append(f"天干五行{wx}与用神匹配")
+                    match_details.append(f"天干{wx}=用神+5")
                     matched_wuxing.add(wx)
                 elif wx in owner_xishen_list and wx not in matched_wuxing:
                     owner_score += 3  # 天干为喜神：+3分（降低分数）
-                    match_details.append(f"天干五行{wx}与喜神匹配")
+                    match_details.append(f"天干{wx}=喜神+3")
                     matched_wuxing.add(wx)
 
             # 2. 检查日课藏干与用神匹配
@@ -4361,11 +4393,11 @@ class Scorer:
             for wx in sizhu_canggan:
                 if wx in owner_yongshen_list and wx not in matched_canggan:
                     owner_score += 2  # 藏干为用神：+2分（降低分数）
-                    match_details.append(f"藏干五行{wx}与用神匹配")
+                    match_details.append(f"藏干{wx}=用神+2")
                     matched_canggan.add(wx)
                 elif wx in owner_xishen_list and wx not in matched_canggan:
                     owner_score += 1  # 藏干为喜神：+1分（降低分数）
-                    match_details.append(f"藏干五行{wx}与喜神匹配")
+                    match_details.append(f"藏干{wx}=喜神+1")
                     matched_canggan.add(wx)
             
             # 限制单个事主喜用神得分上限
@@ -5441,6 +5473,10 @@ class Scorer:
         from collections import Counter
         zhi_counter = Counter(zhi_list)
 
+        # 2026-10-16 第4批 L4：合局类（三合/半合/拱合）统一注记——
+        # 合局分值已计入五行评分，与推荐时柱(5')合局重算块不双计，防同类项口径不一致。
+        _heju_note = '（合局计分已并入五行评分，与推荐时柱合局不双计，分值详见评分详情）'
+
         for group, ju in sanhe_groups.items():
             # 获取该组中存在的不同地支
             present_zhis = [z for z in group if z in zhi_counter]
@@ -5450,7 +5486,7 @@ class Scorer:
             if unique_count == 3:
                 # 三支齐备（2026-09-01 用户规范：主体在前+列齐三支）："年柱亥、日柱未、时柱卯 三合木局（亥卯未）"
                 _cols = '、'.join([z[0]+z[1] for z in zhis if z[1] in group])
-                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）")
+                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）{_heju_note}")
             elif unique_count == 2:
                 # 两个不同地支：按宫位区分生地半合(长生+帝旺)/墓地半合(帝旺+墓)/拱合(长生+墓)
                 missing_zhi = [z for z in group if z not in zhi_counter][0]
@@ -5460,13 +5496,13 @@ class Scorer:
                 _pair = f"{_za} 与 {_zb}"
                 if _pos == [0, 1]:
                     # 生地半合（长生+帝旺），力量较强
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
                 elif _pos == [1, 2]:
                     # 墓地半合（帝旺+墓），力量较弱
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
                 else:
                     # 生地+墓（长生+墓库）：拱合，不称半合
-                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）{_heju_note}")
 
         # 伏吟/自刑（独立检测以免漏报）：同一地支出现多次——
         #   两柱干支完全相同 = 伏吟；仅地支相同：辰午酉亥同支为自刑，
@@ -5689,16 +5725,29 @@ class Scorer:
             
             if day_gan in wangxiang_table:
                 table = wangxiang_table[day_gan]
+                # 2026-10-15 S2 旺衰文案十二长生口径统一（2026-04-28审查·术语错误修复）：
+                # 状态字 Z 取 get_zhangsheng（与【十二长生】段同源），机制说明按
+                # 月支五行 W 与日干五行 X 的生克关系（休=X生W泄气、囚=W旺耗X、
+                # 死=W旺克X），结论词按内部旺衰判定；旺相休囚死表仅作内部判定
+                # 参考，不再作为文案出口；旺衰得分逻辑不变。
+                # 边界情形：戊己随丙丁，故戊在寅/卯为长生/沐浴、庚在巳/午为长生/沐浴、
+                # 丁在申/酉为沐浴/长生——Z 与结论看似违和，但 Z 与【十二长生】段
+                # 同源同值，两套体系各自自洽；改 get_zhangsheng 会引发连锁变更，
+                # 非本批范围（台账 001 §91）。
+                _z_state = get_zhangsheng(day_gan, month_zhi)
+                _z_txt = f"为{_z_state}，" if _z_state and _z_state != '未知' else ''
+                _month_wx = zhi_wuxing.get(month_zhi, '')
+                _day_wx = gan_wuxing.get(day_gan, '')
                 if month_zhi in table['旺']:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中得令而旺"
                 elif month_zhi in table['相']:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中得生而相"
                 elif month_zhi in table['休']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中休囚"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_day_wx}生{_month_wx}泄气，日主休"
                 elif month_zhi in table['囚']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中受克而囚"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_month_wx}旺耗{_day_wx}，日主失令偏弱"
                 elif month_zhi in table['死']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中受克而死"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_month_wx}旺克{_day_wx}，日主失令偏弱"
                 else:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中状态一般"
         
@@ -6214,6 +6263,8 @@ class Scorer:
         """月令评语（2026-10-02 口径修复）：强弱以旺衰判定（与"日主旺衰"段同源）
         为准，帮扶程度以月令得分为准。旧实现仅按分数档位（>0 即"日主得力"），
         会与旺衰段"日主丙在月令戌中休囚"并存成"休囚却又得力"的自相矛盾。
+        （2026-10-15 S2：匹配词随旺衰文案十二长生口径同步——休档识别"日主休"，
+        囚/死档统一识别"失令偏弱"；囚档系日主克月令，输出语去"受克"以兼容两档。）
         """
         ws = str(wangshuai_text or '')
         if '得令而旺' in ws:
@@ -6224,16 +6275,16 @@ class Scorer:
             if yueling_score > 0:
                 return '月令：得生得助，日主相旺'
             return '月令：得生，日主相旺'
-        if '休囚' in ws:
+        if '日主休' in ws:
             if yueling_score > 0:
                 return '月令：休囚泄气，得生扶有根不弱'
             if yueling_score == 0:
                 return '月令：休囚泄气，生扶平平'
             return '月令：休囚泄气，日主乏力'
-        if '受克而囚' in ws or '受克而死' in ws:
+        if '失令偏弱' in ws:
             if yueling_score > 0:
-                return '月令：失令受克，赖生扶支撑'
-            return '月令：失令受克，日主乏力'
+                return '月令：失令，赖生扶支撑'
+            return '月令：失令，日主乏力'
         # 旺衰未明/状态一般：退回分数档位
         if yueling_score > 5:
             return '月令：得助偏旺'
@@ -6421,6 +6472,58 @@ class Scorer:
             reason.append('忌：' + '、'.join(self.ji_list))
         
         return '；'.join(reason)
+
+    def _build_ji_huajie_note(self, ji_items, good_shensha, marriage_details,
+                              details):
+        """E206 综合判断化解说明（2026-10-16 S3 方案A拍板，台账001 §92）。
+
+        按化解机制分类（不按煞名）：
+          A  事忌不相干——仅限小黄道/建除层事忌（"…忌出行"类），忌事非嫁娶：
+             免德神，写"所忌乃X之忌，与嫁娶不相碍"（E206 放行词已增"不相碍/
+             无关/不相干"，2026-10-16 拍板）；
+          B2 合局类——三煞/岁破/六冲/日柱冲新人日柱等合可解冲煞，三合或
+             六合在场即算有制（沿用 2026-10-04 宽集口径），写"得X合住"；
+          B1 制化类——其余凶煞，需德神（天德/月德/岁德/天乙/福星/天赦/天愿）
+             在场，写"得X化解"；
+          本命三煞动态归类：当课有合局归 B2，无合局归 B1。
+        只写既成事实（得X化解/得X合住），不写"须化解"类要求句式——E206 会
+        先抹除要求句式再判既成事实。只认在场吉神，不虚构。
+
+        返回说明字符串；任一 B 类忌项无在场对症化解 → 返回 None，由调用方
+        走降级"须慎用"式（无化解不写可用，等级与分值不动）。
+        """
+        import re as _re
+        _names = [str(s.get('name', '')) for s in (good_shensha or [])
+                  if isinstance(s, dict)]
+        _names += [str(d[0]) for d in (marriage_details or [])
+                   if isinstance(d, (list, tuple)) and len(d) >= 2
+                   and isinstance(d[1], (int, float)) and d[1] > 0]
+        _blob = '、'.join(_names)
+        _rel = '；'.join(str(x) for x in (details.get('地支关系') or []))
+        _deshen = [k for k in ('天德', '月德', '岁德', '天乙', '福星',
+                               '天赦', '天愿') if k in _blob]
+        _heju = ([k for k in ('三合', '六合') if k in _blob]
+                 or [k for k in ('三合', '六合') if k in _rel])
+        _a_shi, _notes = [], []
+        for _j in ji_items:
+            _m = _re.search(r'忌([^，、；]{1,6})$', _j)
+            _is_a = (bool(_m)
+                     and not any(w in _m.group(1) for w in ('嫁', '娶', '婚'))
+                     and ('小黄道' in _j or '建除' in _j))
+            _is_chong = (any(w in _j for w in ('三煞', '岁破', '六冲'))
+                         or (_j.startswith('日柱') and '冲' in _j))
+            if _is_a:
+                if _m.group(1) not in _a_shi:
+                    _a_shi.append(_m.group(1))
+            elif _is_chong and _heju:
+                _notes.append(f'{_j}得{"、".join(_heju)}合住')
+            else:
+                if not _deshen:
+                    return None
+                _notes.append(f'{_j}得{"、".join(_deshen[:2])}化解')
+        if _a_shi:
+            _notes.insert(0, f'所忌乃{"、".join(_a_shi)}之忌，与嫁娶不相碍')
+        return '，'.join(_notes) if _notes else None
 
     def _build_marriage_reason_tail(self, wu_xing_result, yueling_analysis,
                                    yueling_score, xishen_score, shensha_list=None,
@@ -6624,8 +6727,18 @@ class Scorer:
                 seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
                            f'嫁娶须慎用，宜择吉时{_tail}')
             else:
-                seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
-                           f'嫁娶可用，须于十二时辰中择吉时{_tail}')
+                # 2026-10-16 S3（E206 化解说明，方案A拍板，台账001 §92）：
+                # 「并见+可用」必须附所忌的化解/不相碍说明；无在场对症化解
+                # 不得写"可用"，降级"须慎用"（等级与分值不动）。
+                _huajie = self._build_ji_huajie_note(
+                    _all_ji, good_shensha, marriage_details, details)
+                if _huajie is None:
+                    seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，'
+                               f'{_good_names}并见而无对症化解，'
+                               f'嫁娶须慎用，宜择吉时{_tail}')
+                else:
+                    seg.append(f'综合判断：{_ji_brief}{_ji_more}须避，然{_good_names}并见，'
+                               f'{_huajie}，嫁娶可用，须于十二时辰中择吉时{_tail}')
         else:
             _tail = ''
             if yueling_score < 0 and xishen_score > 0:

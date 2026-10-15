@@ -3434,6 +3434,14 @@ class ZeriApp:
                                         {'details': _md_real,
                                          'warnings': score_result.get('warnings') or []})
                                     score_result['level'] = _lv_new
+                                    # 2026-10-15 四数同源修复（2026-04-28审查S1）：合局差额
+                                    # 既改 score_details 与 score_result，顶部(result)与五行
+                                    # 分析段(wu_xing_result['score'])必须同步刷新，否则同一份
+                                    # 报告出现 122/113/115/124 四个数字打架。
+                                    result['score'] = score_result['score']
+                                    result['level'] = _lv_new
+                                    if isinstance(_wr3, dict) and isinstance(_sd, dict):
+                                        _wr3['score'] = _sd.get('五行评分') or 0
                                     _capped_real = '犯忌嫁娶' in _lv_new
                                     _minor_real = '降一格' in _lv_new
                                     # "嫁娶要点"行同步替换旧合局名
@@ -5560,7 +5568,9 @@ class ZeriApp:
         
         # 如果是婚嫁择日，显示大利月/小利月信息
         if event_type in MARRIAGE_EVENTS and daliyue_info != '-':
-            text.insert(tk.END, f"\n利月：{daliyue_info}")
+            # 2026-10-16 第4批 L5：普通月份补括注，与【嫁娶择日分析】「非大利月，无加分」口径一致
+            _ly_txt = '普通月份（非大利月，无利月加分）' if daliyue_info == '普通月份' else daliyue_info
+            text.insert(tk.END, f"\n利月：{_ly_txt}")
 
         # 2026-09 作灶主事人模式标注（随模式切换文案）
         _zaozhu_mode_rpt = None
@@ -5959,8 +5969,11 @@ class ZeriApp:
             # 月令详细得分
             yueling_detail = score_details.get('月令详细', {})
             if yueling_detail:
-                content += f"    ├─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分\n"
-                content += f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分\n"
+                # 2026-10-16 第4批 L1：旺衰/支支得分补依据文案（取分口径来自评分器，纯展示拼接）
+                _ws_note = yueling_detail.get('旺衰依据', '')
+                _zz_note = yueling_detail.get('支支依据', '')
+                content += f"    ├─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分{('（' + _ws_note + '）') if _ws_note else ''}\n"
+                content += f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分{('（' + _zz_note + '）') if _zz_note else ''}\n"
             
             content += f"  喜用神得分：{xishen_score:+d} 分\n"
             
@@ -5979,12 +5992,14 @@ class ZeriApp:
                 for m in owner_matches:
                     if isinstance(m, dict):
                         name = m.get('name') or m.get('owner') or m.get('姓名', '事主')
-                        rmk = m.get('remark') or m.get('说明') or m.get('match_detail', '')
+                        # 2026-10-16 第4批 L2：渲染 details 明细（带分值），空则回退旧 remark 通道
+                        _dets = m.get('details') or []
+                        rmk = '，'.join(_dets) if _dets else (m.get('remark') or m.get('说明') or m.get('match_detail', ''))
                         sc  = m.get('score', m.get('得分', 0))
                         if sc or rmk:
                             _wt = m.get('weight', 1.0)
                             _wtag = '（辅·半权重）' if isinstance(_wt, (int, float)) and _wt < 1.0 else ''
-                            content += f"    • {name}{_wtag}：{rmk}（{sc:+d}分）\n"
+                            content += f"    • {name}{_wtag}：（{sc:+d}分）{rmk}\n"
                     else:
                         content += f"    • {m}\n"
             
@@ -5995,7 +6010,14 @@ class ZeriApp:
                 # 婚嫁路径：黄道得分已并入婚嫁评分（即五行评分行内的大黄道/小黄道明细），不重复计
                 content += "  黄道得分：已并入五行评分（大黄道/小黄道明细见五行评分项内）\n"
             sun_moon_score = score_details.get('太阳太阴得分', 0)
-            content += f"  太阳太阴得分：{sun_moon_score:+d} 分\n"
+            # 2026-10-16 第4批 L3：太阳太阴 +0 补解释——修造神煞档单轨登记，嫁娶无山向不适用，防双轨
+            if sun_moon_score == 0 and not shan_xiang:
+                _sm_note = '（到山到向仅适用修造类山向事项，本事项不适用；其加分由修造神煞档单轨登记，本项恒 0）'
+            elif sun_moon_score == 0:
+                _sm_note = '（本日太阳太阴未到山到向）'
+            else:
+                _sm_note = ''
+            content += f"  太阳太阴得分：{sun_moon_score:+d} 分{_sm_note}\n"
             # 时柱地支关系得分（2026-09-01 用户确认：推荐时柱参与的地支关系应计分）
             hour_rel_score = score_details.get('时柱关系得分', 0) or 0
             hour_rel_details = score_details.get('时柱关系明细', [])
