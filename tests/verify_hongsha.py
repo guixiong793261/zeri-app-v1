@@ -223,6 +223,21 @@ _notes.append('嫁娶内部一致性：2026 逐日 shensha_list 红砂日 ↔ ji
 assert len(AUTH_2026) == 29 and len(AUTH_2025) == 33
 _notes.append('黄金清单：2026 公历年 29 天 / 2025 公历年 33 天（节气月支版）')
 
+# 边界7：婚嫁评分算法红砂日扣分回归锁（D3 阶段3 修复）
+# D3 阶段2 改 HONGSHA 键为节气月支后，婚嫁评分算法仍用农历月查键，
+# 导致红砂日在嫁娶总分中永久失效（-20→0）。此处锁定修复后 -20 生效。
+from modules.婚嫁评分算法 import score_marriage_day as _smd
+_hs_day = _d('2026-02-24')  # 寅月巳日，红砂日
+_non_hs = _d('2026-02-20')  # 寅月卯日，非红砂
+_r_hs = _smd(_hs_day, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
+_r_non = _smd(_non_hs, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
+assert any('红纱' in x[0] for x in _r_hs['details']), '红砂日应在嫁娶评分 details 中'
+_hs_score = next(x[1] for x in _r_hs['details'] if '红纱' in x[0])
+assert _hs_score == -20, f'婚嫁评分红砂日应 -20，实际 {_hs_score}'
+assert not any('红纱' in x[0] for x in _r_non['details']), '非红砂日不应含红纱扣分'
+assert _r_non['score'] - _r_hs['score'] == 20, f'红砂日应比非红砂日少 20 分，差 {_r_non["score"] - _r_hs["score"]}'
+_notes.append('婚嫁评分算法回归锁：红砂日 -20 生效，非红砂日无扣分（修复 HONGSHA 节气月支查键）')
+
 
 cases = [
     ShenShaCase(name='红砂(修造扩展·继承基类节气月支·2026穷举)', category='B',
