@@ -209,6 +209,10 @@ class TravelShenShaChecker(ShenShaChecker):
         # 出行吉时
         if self._is_chuxing_jishi(sizhu):
             self._add_shensha('出行吉时', 8, '适合出行的时辰')
+
+        # 截路空亡时（D4 A1 重建：原路空日正名为时辰凶煞）
+        if self._is_jielu_kongwang(sizhu):
+            self._add_shensha('截路空亡', -15, '截路空亡时不宜出行')
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（出行者）生肖与日课的冲合"""
@@ -329,7 +333,29 @@ class TravelShenShaChecker(ShenShaChecker):
             '戊': ['子', '丑'], '癸': ['子', '丑']
         }
         return day_zhi in lukong.get(day_gan, [])
-    
+
+    def _is_jielu_kongwang(self, sizhu):
+        """截路空亡时（《协纪》卷七·义例五，时辰凶煞）
+
+        典据：《历例》"甲己日申酉时，乙庚日午未时，丙辛日辰巳时，
+        丁壬日寅卯时，戊癸日子丑戌亥时"；《考原》五鼠遁起甲子，
+        得壬申癸酉之时为截路空亡（壬癸属水，行路遇水不可行）。
+
+        D4 A1 重建：原"路空日"误作日支神煞，现正名为时辰神煞。
+        """
+        day_gan = sizhu.get('day_gan', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        if not day_gan or not hour_zhi:
+            return False
+        jielu = {
+            '甲': ['申', '酉'], '己': ['申', '酉'],
+            '乙': ['午', '未'], '庚': ['午', '未'],
+            '丙': ['辰', '巳'], '辛': ['辰', '巳'],
+            '丁': ['寅', '卯'], '壬': ['寅', '卯'],
+            '戊': ['子', '丑', '戌', '亥'], '癸': ['子', '丑', '戌', '亥']
+        }
+        return hour_zhi in jielu.get(day_gan, [])
+
     def _is_chuxing_jishi(self, sizhu):
         """是否出行吉时"""
         hour_zhi = sizhu['hour_zhi']
