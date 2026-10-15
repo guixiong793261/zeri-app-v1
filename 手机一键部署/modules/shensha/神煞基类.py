@@ -2709,9 +2709,23 @@ class ShenShaChecker:
         return False
     
     def _is_mucang(self, sizhu):
-        """母仓日（春亥子、夏寅卯、秋辰戌丑未、冬申酉）"""
+        """母仓日（春亥子、夏寅卯、秋辰戌丑未、冬申酉）。
+
+        2026-10 批8b 甲案②：土王用事段（四立前各 18 日）内巳午日**添**
+        母仓（《协纪辨方书》卷三·义例二母仓条引《神枢经》"土王用事後
+        忌修造动土巳午日"，四季月立成同诀）。口径＝并集非替换：季节表
+        段内命中仍保留，巳午为土王段叠加项（巳午与四季月季节表零重叠，
+        故添段＝纯新增无翻转）。
+        """
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
+        # 土王用事段内巳午日添母仓（并集）
+        if day_zhi in ('巳', '午'):
+            _y = sizhu.get('year')
+            _m = sizhu.get('month')
+            _d = sizhu.get('day')
+            if _y and _m and _d and is_tuwang_yongshi_by_date(_y, _m, _d):
+                return True
         if month_zhi in ['寅', '卯', '辰']:
             return day_zhi in ['亥', '子']
         elif month_zhi in ['巳', '午', '未']:
