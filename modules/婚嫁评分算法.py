@@ -1271,11 +1271,15 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         _lm = _lunar.getLunarMonth()
         _is_leap_m = _lm < 0
         _lunar_month_num = abs(_lm)
-        _m_gz = _lunar.getMonthGZ()
-        _month_zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][_m_gz.dz]
     except Exception:
         _lunar_month_num = 0
-        _month_zhi = ''
+    # 节气月支取 calculate_sizhu（与 shensha_list/嫁娶规则同源，避免节气交接日
+    # sxtwl 月支与产品月支偏差；红砂权威清单以产品月支为准）
+    try:
+        from .四柱计算器 import calculate_sizhu as _csz
+    except ImportError:
+        from 四柱计算器 import calculate_sizhu as _csz
+    _month_zhi = _csz(date_obj, 12, 0).get('month_zhi', '')
     _day_gan_m, _day_zhi_m = get_day_ganzhi(date_obj)
     _day_gz_m = _day_gan_m + _day_zhi_m
 

@@ -238,6 +238,21 @@ assert not any('红纱' in x[0] for x in _r_non['details']), '非红砂日不应
 assert _r_non['score'] - _r_hs['score'] == 20, f'红砂日应比非红砂日少 20 分，差 {_r_non["score"] - _r_hs["score"]}'
 _notes.append('婚嫁评分算法回归锁：红砂日 -20 生效，非红砂日无扣分（修复 HONGSHA 节气月支查键）')
 
+# 边界8：两套路径口径一致性（shensha_list IFF 婚嫁评分算法扣分）
+# 2025-2026 共 730 天逐日断言：shensha_list 含红砂日 ↔ 评分算法 details 含红纱日
+from modules.婚嫁评分算法 import score_marriage_day as _smd2
+for _yr, _auth in [(2025, AUTH_2025), (2026, AUTH_2026)]:
+    for _d in _daterange(_yr, 1, 1, _yr, 12, 31):
+        _sz = calculate_sizhu(_d, 12, 0)
+        _sz['date'] = _d
+        _mc2 = MarriageShenShaChecker()
+        _mc2.check(_sz)
+        _s_hit = any(isinstance(x, dict) and x.get('name') == '红砂日' for x in _mc2.shensha_list)
+        _r2 = _smd2(_d, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
+        _sc_hit = any('红纱' in x[0] for x in _r2['details'])
+        assert _s_hit == _sc_hit, f'{_d} 两套路径不一致: shensha={_s_hit} score={_sc_hit}'
+_notes.append('两套路径口径一致：2025-2026 共 730 天 shensha_list 红砂日 ↔ 评分算法红纱日 完全同步')
+
 
 cases = [
     ShenShaCase(name='红砂(修造扩展·继承基类节气月支·2026穷举)', category='B',

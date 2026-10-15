@@ -1261,9 +1261,10 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     except ImportError:
         from modules.rules.嫁娶规则 import MarriageRuleChecker as _MRC
 
-    # 农历月/日/闰月（红纱/神号/鬼哭按农历月；闰月不计红纱）
+    # 农历月/日/闰月（神号/鬼哭按农历月；红纱改用节气月支，闰月不适用）
     _lunar_month_num = 0
     _is_leap_m = False
+    _month_zhi = ''
     try:
         import sxtwl as _sxtwl
         _lunar = _sxtwl.fromSolar(date_obj.year, date_obj.month, date_obj.day)
@@ -1272,6 +1273,13 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         _lunar_month_num = abs(_lm)
     except Exception:
         _lunar_month_num = 0
+    # 节气月支取 calculate_sizhu（与 shensha_list/嫁娶规则同源，避免节气交接日
+    # sxtwl 月支与产品月支偏差；红砂权威清单以产品月支为准）
+    try:
+        from .四柱计算器 import calculate_sizhu as _csz
+    except ImportError:
+        from 四柱计算器 import calculate_sizhu as _csz
+    _month_zhi = _csz(date_obj, 12, 0).get('month_zhi', '')
     _day_gan_m, _day_zhi_m = get_day_ganzhi(date_obj)
     _day_gz_m = _day_gan_m + _day_zhi_m
 
@@ -1291,9 +1299,10 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             details.append((f'女命忌嫁日（{_bride_zx}相忌{_day_zhi_m}日）', _sc))
             result['warnings'].append(f'女命忌嫁日：{_bride_zx}相忌{_day_zhi_m}日，忌嫁娶')
 
-    # 红纱日（《协纪》辨讹正解：孟巳仲酉季丑；闰月不计）
-    if not _is_leap_m and _lunar_month_num in _MRC.HONGSHA:
-        if _day_zhi_m in _MRC.HONGSHA[_lunar_month_num]:
+    # 红纱日（节气月支版：四孟寅申巳亥月逢巳、四仲子午卯酉月逢酉、四季辰戌丑未月逢丑；
+    # 2026-10-15 D3 阶段3 修复回归：原农历月查键因 HONGSHA 改节气月支键而永久失效）
+    if _month_zhi in _MRC.HONGSHA:
+        if _day_zhi_m in _MRC.HONGSHA[_month_zhi]:
             _sc = _shensha_score('嫁娶', '红纱日', -20)
             score += _sc
             details.append(('红纱日', _sc))
