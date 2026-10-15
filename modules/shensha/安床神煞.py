@@ -296,35 +296,6 @@ class BedShenShaChecker(ShenShaChecker):
         """
         return is_yanggongji_by_lunar(sizhu)
 
-    def _is_hongsha(self, sizhu):
-        """是否红砂日（《玉匣记》口诀"四孟金鸡四仲蛇，四季逢丑是红纱"，
-        农历月版，与嫁娶规则/修造扩展口径一致；闰月不计——2026-09-20
-        通用规则。
-
-        2026-09-20 专项修复：原实现不看月、日支∈{酉,巳,丑}即命中，把
-        "按月命中"错成"按日命中"——2026 实测命中 91 天（正确 29 天），
-        误扣 62 天，属活错表（第六种失效模式家族，与嫁娶/修造孟仲对调
-        同源）。基类 _check_day_shensha 经 self 分派到本 override，安床
-        自有同名分支已删（_add_shensha 同名保留首次，该分支本就是死代码）。
-        """
-        if 'date' not in sizhu:
-            return False
-        from ..四柱计算器 import get_lunar_date
-        lunar = get_lunar_date(sizhu['date'])
-        ms = str(lunar.get('month', ''))
-        if '闰' in ms:   # 闰月不计（通用规则）
-            return False
-        month_map = {'正': 1, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-                     '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, '冬': 11, '腊': 12}
-        month = month_map.get(ms.replace('月', ''), 0)
-        hongsha = {
-            1: ['巳'], 4: ['巳'], 7: ['巳'], 10: ['巳'],
-            2: ['酉'], 5: ['酉'], 8: ['酉'], 11: ['酉'],
-            3: ['丑'], 6: ['丑'], 9: ['丑'], 12: ['丑']
-        }
-        day_zhi = sizhu.get('day_zhi', '')
-        return month in hongsha and day_zhi in hongsha[month]
-
     def _check_owner_anchuang_match(self, sizhu, owner):
         """检查事主与安床日是否相合"""
         # 简化判断
