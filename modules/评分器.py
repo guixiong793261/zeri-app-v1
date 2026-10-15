@@ -5689,16 +5689,29 @@ class Scorer:
             
             if day_gan in wangxiang_table:
                 table = wangxiang_table[day_gan]
+                # 2026-10-15 S2 旺衰文案十二长生口径统一（2026-04-28审查·术语错误修复）：
+                # 状态字 Z 取 get_zhangsheng（与【十二长生】段同源），机制说明按
+                # 月支五行 W 与日干五行 X 的生克关系（休=X生W泄气、囚=W旺耗X、
+                # 死=W旺克X），结论词按内部旺衰判定；旺相休囚死表仅作内部判定
+                # 参考，不再作为文案出口；旺衰得分逻辑不变。
+                # 边界情形：戊己随丙丁，故戊在寅/卯为长生/沐浴、庚在巳/午为长生/沐浴、
+                # 丁在申/酉为沐浴/长生——Z 与结论看似违和，但 Z 与【十二长生】段
+                # 同源同值，两套体系各自自洽；改 get_zhangsheng 会引发连锁变更，
+                # 非本批范围（台账 001 §91）。
+                _z_state = get_zhangsheng(day_gan, month_zhi)
+                _z_txt = f"为{_z_state}，" if _z_state and _z_state != '未知' else ''
+                _month_wx = zhi_wuxing.get(month_zhi, '')
+                _day_wx = gan_wuxing.get(day_gan, '')
                 if month_zhi in table['旺']:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中得令而旺"
                 elif month_zhi in table['相']:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中得生而相"
                 elif month_zhi in table['休']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中休囚"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_day_wx}生{_month_wx}泄气，日主休"
                 elif month_zhi in table['囚']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中受克而囚"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_month_wx}旺耗{_day_wx}，日主失令偏弱"
                 elif month_zhi in table['死']:
-                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中受克而死"
+                    details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中{_z_txt}{_month_wx}旺克{_day_wx}，日主失令偏弱"
                 else:
                     details['日主旺衰'] = f"日主{day_gan}在月令{month_zhi}中状态一般"
         
@@ -6214,6 +6227,8 @@ class Scorer:
         """月令评语（2026-10-02 口径修复）：强弱以旺衰判定（与"日主旺衰"段同源）
         为准，帮扶程度以月令得分为准。旧实现仅按分数档位（>0 即"日主得力"），
         会与旺衰段"日主丙在月令戌中休囚"并存成"休囚却又得力"的自相矛盾。
+        （2026-10-15 S2：匹配词随旺衰文案十二长生口径同步——休档识别"日主休"，
+        囚/死档统一识别"失令偏弱"；囚档系日主克月令，输出语去"受克"以兼容两档。）
         """
         ws = str(wangshuai_text or '')
         if '得令而旺' in ws:
@@ -6224,16 +6239,16 @@ class Scorer:
             if yueling_score > 0:
                 return '月令：得生得助，日主相旺'
             return '月令：得生，日主相旺'
-        if '休囚' in ws:
+        if '日主休' in ws:
             if yueling_score > 0:
                 return '月令：休囚泄气，得生扶有根不弱'
             if yueling_score == 0:
                 return '月令：休囚泄气，生扶平平'
             return '月令：休囚泄气，日主乏力'
-        if '受克而囚' in ws or '受克而死' in ws:
+        if '失令偏弱' in ws:
             if yueling_score > 0:
-                return '月令：失令受克，赖生扶支撑'
-            return '月令：失令受克，日主乏力'
+                return '月令：失令，赖生扶支撑'
+            return '月令：失令，日主乏力'
         # 旺衰未明/状态一般：退回分数档位
         if yueling_score > 5:
             return '月令：得助偏旺'
