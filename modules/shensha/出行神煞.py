@@ -313,6 +313,10 @@ class TravelShenShaChecker(ShenShaChecker):
         得壬申癸酉之时为截路空亡（壬癸属水，行路遇水不可行）。
 
         D4 A1 重建：原"路空日"误作日支神煞，现正名为时辰神煞。
+
+        墓碑（旧路空日推法，已删除，勿复活）：
+            日干五合查日支：甲己→申酉 / 乙庚→午未 / 丙辛→辰巳 /
+            丁壬→寅卯 / 戊癸→子丑。与标准旬空法 2026 年零重叠，维度错位。
         """
         day_gan = sizhu.get('day_gan', '')
         hour_zhi = sizhu.get('hour_zhi', '')

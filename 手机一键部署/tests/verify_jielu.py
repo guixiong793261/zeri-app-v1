@@ -87,6 +87,19 @@ jl2 = [x for x in _c2.shensha_list if isinstance(x, dict) and x.get('name') == '
 assert len(jl2) == 0, '甲日子时不应发射截路空亡'
 _notes.append('反向断言：甲日子时不发射截路空亡')
 
+# 边界5：吉时+截路空亡共存（同一时辰可既有吉时+8又有截路空亡-15）
+# 甲己日酉时：酉在吉时表(子寅卯巳午酉)且在截路空亡(甲己申酉)
+sz3 = {'day_gan': '甲', 'hour_zhi': '酉', 'day_zhi': '子',
+       'month_zhi': '寅', 'year_zhi': '午'}
+_c3 = TravelShenShaChecker()
+_c3.check(sz3)
+js = [x for x in _c3.shensha_list if isinstance(x, dict) and x.get('name') == '出行吉时']
+jl3 = [x for x in _c3.shensha_list if isinstance(x, dict) and x.get('name') == '截路空亡']
+assert len(js) == 1 and len(jl3) == 1, f'甲日酉时应同时发射吉时+截路空亡，实际吉时{len(js)}截路{len(jl3)}'
+coexist_score = js[0].get('score', 0) + jl3[0].get('score', 0)
+assert coexist_score == -7, f'吉时+截路空亡合计应 -7，实际 {coexist_score}'
+_notes.append('共存断言：甲日酉时同时发射出行吉时(+8)与截路空亡(-15)，合计 -7')
+
 cases = [
     ShenShaCase(name='截路空亡(谓词层·10干×12支穷举)', category='B',
                 description='《协纪》卷七：甲己申酉/乙庚午未/丙辛辰巳/丁壬寅卯/戊癸子丑戌亥',
