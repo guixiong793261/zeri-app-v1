@@ -136,9 +136,12 @@ class TravelShenShaChecker(ShenShaChecker):
         # 作用域以正名 '天马' 注册；旧日作用域 '天马日' 与其同日双扣（各 +10），
         # ('出行','天马日') 分值键同步从 SHENSHA_SCORES 删除。
 
-        # 路空日
-        if self._is_lukong(sizhu):
-            self._add_shensha('路空日', -15, '路空日不宜出行')
+        # 路空日（D4 阶段1 止损：名实错位待重建）
+        # 当前 _is_lukong 按日干五合查日支（甲己申酉、乙庚午未…），与标准
+        # 旬空法零重叠（2026 年当前实现 60 天 vs 旬空 50 天，交集 0），
+        # 推法待《协纪》核实。止损禁用发射，避免出行评分含错误 -15。
+        # if self._is_lukong(sizhu):
+        #     self._add_shensha('路空日', -15, '路空日不宜出行')
         
         # 天德
         if self._is_tiande(sizhu):
