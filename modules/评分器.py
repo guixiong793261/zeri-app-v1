@@ -894,7 +894,9 @@ class Scorer:
                             # （下方 score_details['月令详细']）同口径，避免月令得分无分项。
                             score_details['月令详细'] = {
                                 '旺衰得分': self._calculate_wangxiang(sizhu),
-                                '支支关系得分': self._calculate_zhizhi_relation(sizhu)
+                                '支支关系得分': self._calculate_zhizhi_relation(sizhu),
+                                '旺衰依据': self._yueling_wangshuai_note(sizhu),
+                                '支支依据': self._zhizhi_relation_note(sizhu)
                             }
 
                             # 【D3 问题二修复】统一大利月分值：嫁娶神煞检查器(self.shensha_list)
@@ -1076,7 +1078,9 @@ class Scorer:
                         zhizhi_score = self._calculate_zhizhi_relation(sizhu)
                         score_details['月令详细'] = {
                             '旺衰得分': wangxiang_score,
-                            '支支关系得分': zhizhi_score
+                            '支支关系得分': zhizhi_score,
+                            '旺衰依据': self._yueling_wangshuai_note(sizhu),
+                            '支支依据': self._zhizhi_relation_note(sizhu)
                         }
                         
                         # 生成五行分析详情（地支关系、吉神等）
@@ -4187,6 +4191,35 @@ class Scorer:
         
         return 0
     
+    def _yueling_wangshuai_note(self, sizhu):
+        """L1 旺衰得分依据文案（2026-10-16 第4批，台账001 §93）：
+        纯展示层，按得分反推档位（+10旺/+5相/0休/-5囚/-10死，分值一一对应
+        无歧义），不入算法、不改分值。"""
+        day_gan = sizhu.get('day_gan', '')
+        month_zhi = sizhu.get('月柱', '')[1:2]
+        if not day_gan or not month_zhi:
+            return ''
+        _wx = {'甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+               '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'}.get(day_gan, '')
+        _lv = {10: ('旺', '得令'), 5: ('相', '得生'), 0: ('休', '泄气'),
+               -5: ('囚', '失令'), -10: ('死', '失令')}.get(
+                   self._calculate_wangxiang(sizhu))
+        if not _lv:
+            return ''
+        return f"{day_gan}{_wx}在{month_zhi}月处{_lv[0]}地，{_lv[1]}"
+
+    def _zhizhi_relation_note(self, sizhu):
+        """L1 支支关系得分依据文案（同批）：月支与日支关系名（+8六合/+5三合/
+        -15六冲（月破）/-5六害/0无特殊关系），纯展示层，不入算法。"""
+        month_zhi = sizhu.get('月柱', '')[1:2]
+        day_zhi = sizhu.get('日柱', '')[1:2]
+        if not month_zhi or not day_zhi:
+            return ''
+        _rel = {8: '六合', 5: '三合', -15: '六冲（月破）', -5: '六害',
+                0: '无特殊关系'}.get(
+                    self._calculate_zhizhi_relation(sizhu), '无特殊关系')
+        return f"月支{month_zhi}与日支{day_zhi}{_rel}"
+
     def _calculate_zhizhi_relation(self, sizhu):
         """
         计算月令与日支的关系评分
@@ -4268,13 +4301,12 @@ class Scorer:
         正五行择日法核心理念：日课四柱如同为事主"造命"，
         必须补益事主八字中的用神，才能达到催吉的效果。
 
-        评分逻辑：
-        1. 日课天干五行与事主用神相同：+8分
-        2. 日课天干五行与事主喜神相同：+5分
-        3. 日课地支藏干包含用神：+3分
-        4. 日课地支藏干包含喜神：+2分
-        5. 日课五行克事主用神：-10分（大忌）
-        6. 日课五行与事主用神相冲：-8分
+        评分逻辑（实际实现）：
+        1. 日课天干五行 = 事主用神：+5分（同一五行只计一次，不重复加分）
+        2. 日课天干五行 = 事主喜神：+3分
+        3. 日课地支藏干含事主用神：+2分
+        4. 日课地支藏干含事主喜神：+1分
+        5. 单个事主喜用神得分上限 15 分
 
         Args:
             sizhu: 日课四柱信息
@@ -4349,11 +4381,11 @@ class Scorer:
             for wx in sizhu_wuxing:
                 if wx in owner_yongshen_list and wx not in matched_wuxing:
                     owner_score += 5  # 天干为用神：+5分（降低分数）
-                    match_details.append(f"天干五行{wx}与用神匹配")
+                    match_details.append(f"天干{wx}=用神+5")
                     matched_wuxing.add(wx)
                 elif wx in owner_xishen_list and wx not in matched_wuxing:
                     owner_score += 3  # 天干为喜神：+3分（降低分数）
-                    match_details.append(f"天干五行{wx}与喜神匹配")
+                    match_details.append(f"天干{wx}=喜神+3")
                     matched_wuxing.add(wx)
 
             # 2. 检查日课藏干与用神匹配
@@ -4361,11 +4393,11 @@ class Scorer:
             for wx in sizhu_canggan:
                 if wx in owner_yongshen_list and wx not in matched_canggan:
                     owner_score += 2  # 藏干为用神：+2分（降低分数）
-                    match_details.append(f"藏干五行{wx}与用神匹配")
+                    match_details.append(f"藏干{wx}=用神+2")
                     matched_canggan.add(wx)
                 elif wx in owner_xishen_list and wx not in matched_canggan:
                     owner_score += 1  # 藏干为喜神：+1分（降低分数）
-                    match_details.append(f"藏干五行{wx}与喜神匹配")
+                    match_details.append(f"藏干{wx}=喜神+1")
                     matched_canggan.add(wx)
             
             # 限制单个事主喜用神得分上限
@@ -5441,6 +5473,10 @@ class Scorer:
         from collections import Counter
         zhi_counter = Counter(zhi_list)
 
+        # 2026-10-16 第4批 L4：合局类（三合/半合/拱合）统一注记——
+        # 合局分值已计入五行评分，与推荐时柱(5')合局重算块不双计，防同类项口径不一致。
+        _heju_note = '（合局计分已并入五行评分，与推荐时柱合局不双计，分值详见评分详情）'
+
         for group, ju in sanhe_groups.items():
             # 获取该组中存在的不同地支
             present_zhis = [z for z in group if z in zhi_counter]
@@ -5450,7 +5486,7 @@ class Scorer:
             if unique_count == 3:
                 # 三支齐备（2026-09-01 用户规范：主体在前+列齐三支）："年柱亥、日柱未、时柱卯 三合木局（亥卯未）"
                 _cols = '、'.join([z[0]+z[1] for z in zhis if z[1] in group])
-                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）")
+                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）{_heju_note}")
             elif unique_count == 2:
                 # 两个不同地支：按宫位区分生地半合(长生+帝旺)/墓地半合(帝旺+墓)/拱合(长生+墓)
                 missing_zhi = [z for z in group if z not in zhi_counter][0]
@@ -5460,13 +5496,13 @@ class Scorer:
                 _pair = f"{_za} 与 {_zb}"
                 if _pos == [0, 1]:
                     # 生地半合（长生+帝旺），力量较强
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
                 elif _pos == [1, 2]:
                     # 墓地半合（帝旺+墓），力量较弱
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
                 else:
                     # 生地+墓（长生+墓库）：拱合，不称半合
-                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）")
+                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）{_heju_note}")
 
         # 伏吟/自刑（独立检测以免漏报）：同一地支出现多次——
         #   两柱干支完全相同 = 伏吟；仅地支相同：辰午酉亥同支为自刑，
