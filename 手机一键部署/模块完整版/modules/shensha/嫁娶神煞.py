@@ -159,9 +159,7 @@ class MarriageShenShaChecker(ShenShaChecker):
             self._add_shensha('逐妇月', -12, '逐妇月不利新娘')
     
     def _check_day_shensha(self, sizhu, **kwargs):
-        """检查日神煞"""
-        super()._check_day_shensha(sizhu, **kwargs)
-        
+        """检查日神煞（嫁娶特有神煞先于基类发射，确保加重分值生效）"""
         day_gan = sizhu['day_gan']
         day_zhi = sizhu['day_zhi']
         month_zhi = sizhu['month_zhi']
@@ -361,6 +359,9 @@ class MarriageShenShaChecker(ShenShaChecker):
         # 魁罡日（主聪明但婚姻不顺）
         if self._is_kuigang(sizhu):
             self._add_shensha('魁罡日', -15, '魁罡日聪明但婚姻不顺')
+        
+        # 基类通用日神煞（同名去重保留首次，嫁娶加重分值已先注册）
+        super()._check_day_shensha(sizhu, **kwargs)
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞（与新人相关）"""
@@ -715,25 +716,6 @@ class MarriageShenShaChecker(ShenShaChecker):
         idx = zh_list.index(month_zhi)
         yuepo = zh_list[(idx + 6) % 12]
         return day_zhi == yuepo
-    
-    def _is_hongsha(self, sizhu):
-        """
-        是否红砂日（按孟仲季月）
-        《协纪辨方书》辨讹：四孟月巳，四仲月酉，四季月丑
-        孟月：正月、四月、七月、十月（寅巳申亥）
-        仲月：二月、五月、八月、十一月（子午卯酉）
-        季月：三月、六月、九月、十二月（辰戌丑未）
-        2026-09-21 纠正孟巳仲酉（原孟酉仲巳为相传误）。
-        """
-        month = sizhu['month_zhi']
-        day = sizhu['day_zhi']
-        meng = ['寅','巳','申','亥']
-        zhong = ['子','午','卯','酉']
-        ji = ['辰','戌','丑','未']
-        if month in meng and day == '巳': return True
-        if month in zhong and day == '酉': return True
-        if month in ji and day == '丑': return True
-        return False
     
     def _is_yanggongji(self, sizhu):
         """
