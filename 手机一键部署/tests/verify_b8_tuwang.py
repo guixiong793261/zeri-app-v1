@@ -110,6 +110,26 @@ for y in range(2024, 2029):
 check('边界：[L-18,L-1] 命中、L-19 与四立当日不命中（%d 立×4 点）'
       % (len(range(2024, 2029)) * 4), not bad, '; '.join(bad[:5]))
 
+# ── 2b. 跨年边界（12 月末→次年立春，缓存含次年四立）─────────────
+bad_xy = []
+for y in range(2024, 2028):
+    lichun_next = jd_to_date(sxtwl.getJieQiByYear(y + 1)[0].jd)
+    # 距立春 ≤18 的 12 月末日期应命中；>18 不命中；立春当日不命中
+    for offset in range(-25, 2):  # 12 月中 → 立春前 1 日
+        dd = lichun_next + dt.timedelta(days=offset)
+        if dd.year != y:
+            continue  # 只查 12 月段（跨年到次年的由每年 72 天硬锁覆盖）
+        delta = (lichun_next - dd).days
+        expect = 1 <= delta <= 18
+        got = is_tuwang_yongshi_by_date(dd.year, dd.month, dd.day)
+        if got != expect:
+            bad_xy.append('%s delta=%d expect=%s got=%s' % (dd, delta, expect, got))
+    # 立春当日归本令，不命中
+    if is_tuwang_yongshi_by_date(lichun_next.year, lichun_next.month, lichun_next.day):
+        bad_xy.append('立春当日 %s 误命中' % lichun_next)
+check('跨年边界：12 月末段距次年立春 [1,18] 命中、立春当日不命中（%d 年）'
+      % len(range(2024, 2028)), not bad_xy, '; '.join(bad_xy[:5]))
+
 # ── 3. 每年 72 天硬锁 ＋ 独立公式 0 误 0 漏 ──────────────────
 SZ_CACHE = {}
 
