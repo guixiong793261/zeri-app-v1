@@ -800,6 +800,9 @@ def rule_e207(ctx):
         def _is_num(v):
             return isinstance(v, (int, float)) and not isinstance(v, bool)
 
+        def _sgn(v):
+            return f'{v:+g}'  # 自带正负号，避免 "53+-5" 双符号
+
         if not all(_is_num(v) for v in parts):
             return ('嫁娶路径已启用轻量总分恒等式（score_details 键不齐，'
                     '无法加总，留档核对）')
@@ -810,15 +813,15 @@ def rule_e207(ctx):
         if not _is_num(claimed) or int(expected) != int(claimed):
             ctx.issue(
                 'E207',
-                f'嫁娶总分恒等式不符：嫁娶评分{parts[0]:g}+月令{parts[1]:g}'
-                f'+喜用{parts[2]:g}+太阳太阴{parts[3]:g}={expected:g}，'
+                f'嫁娶总分恒等式不符：嫁娶评分{parts[0]:g}{_sgn(parts[1])}'
+                f'{_sgn(parts[2])}{_sgn(parts[3])}={expected:g}，'
                 f'总分记{claimed if _is_num(claimed) else "<缺>"}',
                 source='score_details 轻量总分恒等式独立加总',
                 suggestion='核对嫁娶评分/月令/喜用/太阳太阴是否漏计或重复计')
             return None
         return (f'嫁娶路径已启用轻量总分恒等式'
-                f'（{parts[0]:g}+{parts[1]:g}+{parts[2]:g}+{parts[3]:g}'
-                f'={expected:g}，校验通过）')
+                f'（{parts[0]:g}{_sgn(parts[1])}{_sgn(parts[2])}'
+                f'{_sgn(parts[3])}={expected:g}，校验通过）')
 
     sz = ctx.detail.get('sizhu')
     if not isinstance(sz, dict):
