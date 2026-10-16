@@ -6161,6 +6161,19 @@ class ZeriApp:
                         content += f"    加权公式：正五行{_zhengwu_raw}×0.7 + (50+飞星{fx_score:+d}={50+fx_score})×0.3 = {total_score}\n"
                 except Exception:
                     content += f"    加权公式：正五行{_zhengwu_raw}×0.7 + (50+飞星{fx_score:+d}={50+fx_score})×0.3 = {total_score}\n"
+            else:
+                # A2a/b 占位说明（2026-10-16 第5批T2）：feixing_info 仅在评分器
+                # 四条件齐备时生成（评分器.py：zeli_mode=='feixing' + 画像含飞星
+                # + 非否决课 + 已填坐山），不渲染时在此补原因占位，消除「段缺失」
+                # 观感。四分支优先序与生成条件镜像：非山向→无坐山→否决→pure。
+                if event_type not in FEIXING_EVENTS:
+                    content += "  玄空飞星：本事项非山向类，玄空飞星段不适用\n"
+                elif not shan_xiang:
+                    content += "  玄空飞星：本事项无坐山，玄空飞星段不适用\n"
+                elif detail.get('veto_reasons'):
+                    content += "  玄空飞星：本课已否决，玄空飞星段不展开\n"
+                else:
+                    content += "  玄空飞星：本模式默认不显示玄空飞星段，如需查看请切换至对应模式\n"
         else:
             content += "  暂无详细得分数据\n"
         
