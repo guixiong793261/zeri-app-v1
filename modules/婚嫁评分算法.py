@@ -603,7 +603,8 @@ def check_liuhai_penalty(sizhu):
             z2_name, z2 = zhis[j]
             if z1 and z2:
                 if (z1, z2) in liuhai_pairs or (z2, z1) in liuhai_pairs:
-                    total_penalty -= 5  # 每处六害扣5分
+                    # P1-C-1-a（2026-10-16 拍板）：嫁娶课式六害 -5→-6，与通用四柱六对口径（日课校验器 E207）统一
+                    total_penalty -= 6  # 每处六害扣6分
                     reasons.append(f"六害: {z1_name}{z1}害{z2_name}{z2}")
     
     return total_penalty, reasons
@@ -1362,7 +1363,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     if liuhai_score != 0:
         score += liuhai_score
         for reason in liuhai_reasons:
-            details.append((reason, -5))  # 每处六害扣5分
+            # P1-C-1-a：与函数内累加值同步，每处六害 -6
+            details.append((reason, -6))
     
     # 4.7 三刑检查（排除示例时柱）
     sanxing_score, sanxing_reasons = check_sanxing_penalty(sizhu_no_hour)
