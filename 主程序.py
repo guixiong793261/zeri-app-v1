@@ -5937,6 +5937,9 @@ class ZeriApp:
                         content += f"      • {_nl}\n"
                 # 2026-09-10 归零透明化（2025-10-28坤山案例）：一票否决把五行评分强制
                 # 归零时，在明细末尾明示归零前合计，避免“明细正常、结果归零”无从追溯
+                # U1（2026-10-16 第6批拍板）：明细层归零注统一叙述式句式
+                # 「五行明细合计 X 分，<机制>归零为 0 分」，机制名保留区分
+                # （一票否决 vs 按规则负分），与嫁娶路径 L596x 同构。
                 if wu_xing_result.get('he_ge') is False and wuxing_score == 0:
                     _bd_sum = 0
                     for _bk in ('基础分', '神煞得分', '宜事得分', '忌事得分',
@@ -5944,7 +5947,7 @@ class ZeriApp:
                         _bv = score_breakdown.get(_bk, 0)
                         if isinstance(_bv, (int, float)):
                             _bd_sum += int(_bv)
-                    content += f"    └─ 一票否决强制归零：五行明细合计 {_bd_sum} → 0 分\n"
+                    content += f"    └─ 五行明细合计 {_bd_sum} 分，一票否决归零为 0 分\n"
             
             # 显示婚嫁评分详情（夫星受克等）
             marriage_details = detail.get('marriage_details', [])
