@@ -5963,6 +5963,13 @@ class ZeriApp:
                     _veto_tag = '（本日另触发一票否决，总分归零）' if score_details.get('否决原因') else ''
                     content += (f"    └─ 五行明细合计 {int(_raw_wx):+d} 分，"
                                 f"按规则负分归零为 0 分{_veto_tag}\n")
+                # A4b 纳音说明（2026-10-16 第5批T4）：嫁娶评分体系（婚嫁评分算法
+                # 基础60＋利月/神煞/合局）不含纳音匹配分项，纳音行仅存在于正五行
+                # 路径（12 事项）。此处补一行说明，防审查把跨路径差异误读为渲染
+                # 缺陷（属 #2 两套评分架构差异，算法变更归该议题，本批不动分值）。
+                _mrx_prefix = '├─' if score_breakdown else ''
+                content += (f"    {_mrx_prefix}纳音匹配：嫁娶评分体系不含此分项，"
+                            "属评分架构差异\n")
             
             content += f"  月令得分：{yueling_score:+d} 分\n"
             
