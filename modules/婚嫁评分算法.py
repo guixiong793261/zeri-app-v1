@@ -664,7 +664,8 @@ def check_sanxing_penalty(sizhu):
     for zhi in zixing_zhi:
         if zhi_counter.get(zhi, 0) >= 2:
             matching_zhis = [f"{z_name}{z}" for z_name, z in zhis_with_name if z == zhi]
-            total_penalty -= 6  # 自刑扣6分
+            # P1-C-1-b（2026-10-16 拍板）：嫁娶课式自刑 -6→-8，与通用四柱六对口径（日课校验器 E207）及三刑 -8 统一
+            total_penalty -= 8  # 自刑扣8分
             reasons.append(f"自刑: {', '.join(matching_zhis)}")
     
     return total_penalty, reasons
@@ -1375,7 +1376,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             if '无恩之刑' in reason or '恃势之刑' in reason or '无礼之刑' in reason:
                 details.append((reason, -8))
             elif '自刑' in reason:
-                details.append((reason, -6))
+                # P1-C-1-b：与函数内累加值同步，自刑 -8
+                details.append((reason, -8))
     
     # 5. 日课年月日柱内部合局评分（排除示例时柱）
     zhiju_score, zhiju_reason = get_zhiju_score(
