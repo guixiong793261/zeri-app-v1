@@ -778,14 +778,47 @@ def rule_e207(ctx):
         六合+8/半合+6/六冲-15/六害-6/相刑-8/相破-4；伏吟0分。
     枚举与原语调用在本规则内独立完成，不读取评分器算出的明细。
 
-    嫁娶路径不适用（2026-10-08 拍板，裁定1=B）：该路径
-    score_breakdown 结构性为空 dict（评分器.py 正常/否决两路径硬置），
-    且合局分值家族不同（嫁娶六合+10/半合+8，本规则+8/+6），
-    即使补字段也无法对账。明确跳过而非"缺键被动跳过"，不再假装检查；
-    分值家族统一随"两套评分架构"另案处理，到期改回本规则覆盖。
+    嫁娶路径（2026-10-16 P1-C-1-c 拍板，#2 两套评分架构·部分统一 1-C）：
+    由显式跳过改为轻量总分恒等式校验——
+        总分 = 嫁娶评分 + 月令得分 + 喜用神得分 + 太阳太阴得分
+    键取 score_details，不引入地支关系分项、不补 score_breakdown：
+      - 一票否决日（veto_reasons 非空）：总分强制归零，恒等式不适用，留注；
+      - 非否决且四键齐备为数值：独立加总比对，相符留“已启用…校验通过”注，
+        不符报 E207 issue；
+      - 键不齐：留注（防御，结构异常不硬判）。
+    历史：2026-10-08 裁定1=B 曾判“不适用，随架构另案统一”；1-C 部分统一
+    落地（P1-C-1-a/b 课式六害/自刑常数对齐）后改回本规则覆盖（轻量口径）。
     """
     if 'marriage_details' in ctx.detail:
-        return '嫁娶路径不适用（无恒等式，2026-10-08拍板，随架构另案统一）'
+        # P1-C-1-c：嫁娶轻量总分恒等式（不读 score_breakdown，不引入地支分项）
+        if ctx.veto:
+            return ('嫁娶路径已启用轻量总分恒等式（一票否决日总分强制归零，'
+                    '恒等式不适用）')
+        _keys = ('嫁娶评分', '月令得分', '喜用神得分', '太阳太阴得分')
+        parts = [ctx.sd.get(k) for k in _keys]
+
+        def _is_num(v):
+            return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+        if not all(_is_num(v) for v in parts):
+            return ('嫁娶路径已启用轻量总分恒等式（score_details 键不齐，'
+                    '无法加总，留档核对）')
+        expected = parts[0] + parts[1] + parts[2] + parts[3]
+        claimed = ctx.sd.get('总分')
+        if not _is_num(claimed):
+            claimed = ctx.detail.get('score')
+        if not _is_num(claimed) or int(expected) != int(claimed):
+            ctx.issue(
+                'E207',
+                f'嫁娶总分恒等式不符：嫁娶评分{parts[0]:g}+月令{parts[1]:g}'
+                f'+喜用{parts[2]:g}+太阳太阴{parts[3]:g}={expected:g}，'
+                f'总分记{claimed if _is_num(claimed) else "<缺>"}',
+                source='score_details 轻量总分恒等式独立加总',
+                suggestion='核对嫁娶评分/月令/喜用/太阳太阴是否漏计或重复计')
+            return None
+        return (f'嫁娶路径已启用轻量总分恒等式'
+                f'（{parts[0]:g}+{parts[1]:g}+{parts[2]:g}+{parts[3]:g}'
+                f'={expected:g}，校验通过）')
 
     sz = ctx.detail.get('sizhu')
     if not isinstance(sz, dict):

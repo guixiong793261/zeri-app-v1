@@ -82,11 +82,38 @@ check('B2 合住属既成事实放行(无E206 issue)',
 check('B3 事实类跳过文案',
       any(rid == 'E206' and '既成制化' in rs for rid, rs in _lr2.skipped))
 
-# ===== C. E207 嫁娶跳过 / 通用对账 =====
+# ===== C. E207 嫁娶轻量总分恒等式 / 通用对账 =====
+# §96 P1-C-1-c（2026-10-16）：嫁娶路径由显式跳过改为轻量总分恒等式
+# 总分=嫁娶评分+月令+喜用+太阳太阴；不引入地支分项、不补 score_breakdown。
 print('C. E207')
-_lr_m = lint_lesson(r_l2)
-check('C1 嫁娶路径E207明确跳过',
-      any(rid == 'E207' and '嫁娶路径不适用' in rs for rid, rs in _lr_m.skipped))
+_lr_m = lint_lesson(r_l2)  # 2025-04-03 闭日二级降格，非否决：62=62+0+0+0
+check('C1 嫁娶非否决E207无issue(恒等式通过)',
+      not any(i.rule_id == 'E207' for i in _lr_m.issues))
+check('C1b 嫁娶路径留"已启用轻量总分恒等式"注',
+      any(rid == 'E207' and '嫁娶路径已启用轻量总分恒等式' in rs
+          for rid, rs in _lr_m.skipped))
+
+# C1c 反向：真实 detail 篡改总分（62→99）→ 恒等式不符必报 E207
+_r_tamper = dict(r_l2)
+_sd_t = dict(r_l2.get('score_details') or {})
+_sd_t['总分'] = 99
+_r_tamper['score_details'] = _sd_t
+_lr_t = lint_lesson(_r_tamper)
+check('C1c 篡改嫁娶总分E207必报(反向)',
+      any(i.rule_id == 'E207' and '嫁娶总分恒等式不符' in i.message
+          for i in _lr_t.issues))
+
+# C1d 否决日：总分强制归零，恒等式不适用，留否决注（不报 issue）
+_r_veto = {'veto_reasons': ['婚嫁大忌：测试（一票否决）'],
+           'score': 0,
+           'score_details': {'嫁娶评分': 45, '月令得分': 0,
+                             '喜用神得分': 16, '太阳太阴得分': 0, '总分': 0},
+           'marriage_details': []}
+_lr_v = lint_lesson(_r_veto)
+check('C1d 否决日E207不报issue留否决注',
+      not any(i.rule_id == 'E207' for i in _lr_v.issues)
+      and any(rid == 'E207' and '一票否决' in rs
+              for rid, rs in _lr_v.skipped))
 
 _good = {'sizhu': {'年柱': '甲子', '月柱': '乙丑', '日柱': '丙寅', '时柱': '癸亥'},
          'wu_xing_result': {'score_breakdown': {'地支关系得分': 12}}}

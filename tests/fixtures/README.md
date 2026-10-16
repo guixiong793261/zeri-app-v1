@@ -96,14 +96,14 @@
 ```
 2023-01-11_嫁娶_乙丑时/_probe_0111.py                    1682  a17d170abcac502f1a99d013eeaf68ff303efbc3
 2023-01-11_嫁娶_乙丑时/_verify_inject_0111.py            2856  940ea5bfc0759e816497fc0ef55c0768584556a4
-2023-01-11_嫁娶_乙丑时/detail_0111_new.txt              11381  c5ab1d9f10e3dcd6882d6e2b864aa690c6865ce8
-2023-01-11_嫁娶_乙丑时/detail_mrg_0111.txt               13788  64cf15fae7915e7cfbf3b00d6b779e6fa69c3bac
+2023-01-11_嫁娶_乙丑时/detail_0111_new.txt              11401  82753b7e175b06b112b7bc94e43d8b09d714af09
+2023-01-11_嫁娶_乙丑时/detail_mrg_0111.txt               13808  bb69096352b8d889f8637ae55d6d79c471e153cb
 2023-01-11_嫁娶_乙丑时/owners_0111.json                   182  4da03b6205dabb63859940144887f0bd8cd8749f
 2023-01-12_嫁娶_丁丑时/_verify_0112.py                    3296  279f00142e3519a10120cc804b3896fd85d5e3b3
-2023-01-12_嫁娶_丁丑时/detail_0112_new.txt              12662  1e87f5c25e74426a74bbbf05717954cff30938ef
+2023-01-12_嫁娶_丁丑时/detail_0112_new.txt              12682  bed8ead75a441ef3f8774bb90dd94f01b1ca420a
 2023-01-29_嫁娶_推荐时柱/_verify_0129_v2.py              3044  5cc4050cc803ee7573383ccd06eac97bcb62ca46
 2023-01-29_嫁娶_推荐时柱/_verify_reason_dedup_0129.py    3643  6f709762ef621a627a0fef37d62f77b413f45fa0
-2023-01-29_嫁娶_推荐时柱/detail_0129_new.txt            10796  4d67925a3d7c14d8f84f28d3df2d2f5afd9d7b67
+2023-01-29_嫁娶_推荐时柱/detail_0129_new.txt            10816  934ae44ae0eefac7f9ae96d5775f900c6f114a1e
 2023-01-29_嫁娶_推荐时柱/detail_0129_you.txt             7010  3a92a1e683e8eacec38b770455ba99948438eab8
 2023-01-29_嫁娶_推荐时柱/detail_mrg_0129.txt             6669  2539fa2786db529297709cfab02d4afc9d0d1268
 2023-01-29_嫁娶_推荐时柱/detail_mrg_0129_v2.txt          6669  2539fa2786db529297709cfab02d4afc9d0d1268
@@ -167,3 +167,17 @@
   3. `verify_fixtures.py`：A 段 0112 期望 28→27；B 段 0111 基线 88→87；
      新 size/sha1 见上方清单。范围外未动：月令 `_calculate_zhizhi_relation`
      月日单对 -5（通用 12 事项共用），不属课式六害族。
+
+- **2026-10-16（P1-C-1-c 拍板：E207 嫁娶路径由显式跳过改为轻量总分恒等式）**：
+  1. `modules/日课校验器.py` rule_e207：恒等式
+     `总分=嫁娶评分+月令得分+喜用神得分+太阳太阴得分`（键取 score_details，
+     不引入地支关系分项、不补 score_breakdown）；否决日（veto_reasons 非空）
+     留"总分强制归零不适用"注，非否决键齐则加总比对（不符报 E207 issue，
+     相符留"已启用…校验通过"注），缺键留防御注。
+  2. `tests/verify_20261008_marriage.py` C 段：C1 改锁"无 issue+已启用注"，
+     新增 C1c 反向断言（真实 detail 篡改总分 62→99 必报）、C1d 否决日注；
+     通用路径 C2/C3 原样；ALL PASS。
+  3. 沙箱回写 4 存档，每文件仅 E207 跳过行文案变化（跳过计数 11/10 不变）：
+     0111_new/mrg_0111/0112_new/0129_new 均为否决注；新 size/sha1 见清单。
+     `detail_0129_you.txt` 为 2026-09-17 历史快照（verify 不断言其校验段文本），
+     仍含旧 E207 文案，本批有意不刷。
