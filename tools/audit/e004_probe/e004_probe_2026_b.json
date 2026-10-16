@@ -1,0 +1,57 @@
+{
+ "meta": {
+  "probe": "probe_e004_2026_b (第5批T1补充)"
+ },
+ "sets": {
+  "空事主": {
+   "total": 365,
+   "positive": 365,
+   "no_positive": 0,
+   "warn": 0,
+   "zero": 0,
+   "norec": 0,
+   "cross_bug": 0,
+   "warn_days": [],
+   "norec_days": []
+  },
+  "欢文旺(挂账同源)": {
+   "total": 365,
+   "positive": 365,
+   "no_positive": 0,
+   "warn": 0,
+   "zero": 0,
+   "norec": 0,
+   "cross_bug": 0,
+   "warn_days": [],
+   "norec_days": []
+  },
+  "冲禁压力组(辰新娘+酉新郎)": {
+   "total": 365,
+   "positive": 365,
+   "no_positive": 0,
+   "warn": 0,
+   "zero": 0,
+   "norec": 0,
+   "cross_bug": 0,
+   "warn_days": [],
+   "norec_days": []
+  }
+ },
+ "sample_yisi": {
+  "day": "2026-02-22",
+  "hour": 10,
+  "sizhu": [
+   "丙午",
+   "庚寅",
+   "丁卯",
+   "乙巳"
+  ],
+  "e004_messages": [
+   {
+    "severity": "WARN",
+    "message": "推荐时柱「巳」时辰表评分为负（-15分）：刑害月支（巳刑寅）、大黄道朱雀、建除执",
+    "suggestion": "推荐时柱宜取正分吉时"
+   }
+  ]
+ }
+}
