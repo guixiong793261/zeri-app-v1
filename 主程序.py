@@ -6060,10 +6060,10 @@ class ZeriApp:
                 else:
                     content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d} = {raw_total} 分\n"
             # _fc0915：一票否决日公式分项合计仅供追溯、总分强制归零，明示口径
+            # 2026-10-16 U2：S2 公式层注统一为叙述式主句式（机制以括注保留）
             if detail.get('veto_reasons'):
-                content += (f"  注：本日触发一票否决（详见【一票否决】），"
-                            f"上方公式分项合计 {raw_total + sansha_penalty} 分仅供追溯，"
-                            f"总分强制归零。\n")
+                content += (f"  注：总分强制归零（一票否决，明细如实保留，仅供追溯），"
+                            f"详见【一票否决】。\n")
             # 2026-02-05：删除“满分上限限制：X → Y”提示行——分项键值已全部修正，
             # （五行评分取嫁娶评分、时柱关系得分注入同步总分分键），公式合计必然等于总分分；
             # 若仍有差额说明是代码缺陷，应在数据层修正，而非用“满分上限”措辞掩盖。
