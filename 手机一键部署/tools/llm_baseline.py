@@ -53,8 +53,39 @@ def build_report(date_str, event):
         print(f'⚠ 重选/注入失败，使用午时初值: {e}')
 
     ck, _ = build_checker(event, None, '')
-    lucky = ck.get_lucky_hours(result.get('sizhu') or sz)
+    lucky = ck.get_lucky_hours(_norm_sizhu_for_lucky(result.get('sizhu'))
+                               or _norm_sizhu_for_lucky(sz))
     return result, lucky
+
+
+def _norm_sizhu_for_lucky(s):
+    """归一化 sizhu 供 get_lucky_hours 使用（与主程序 norm_sizhu 口径一致）。
+
+    calculate_score 的 result['sizhu'] 在部分日期缺失（如 2026-01-04，
+    评分器某返回分支未带该键），回退对象的键集也不稳定；而
+    get_lucky_hours 直接下标访问 day_gan/day_zhi，缺键即 KeyError。
+    此处统一从中文键（年柱/月柱/日柱/时柱，必定存在）重建小写键；
+    已有完整小写键则原样返回。
+    """
+    if not isinstance(s, dict):
+        return None
+    _need = ('year_gan', 'year_zhi', 'month_gan', 'month_zhi',
+             'day_gan', 'day_zhi', 'hour_gan', 'hour_zhi')
+    if all(k in s for k in _need):
+        return s
+
+    def _g2(v):
+        v = str(v or '')
+        return (v[:1], v[1:2]) if len(v) >= 2 else ('', '')
+
+    yg, yz = _g2(s.get('年柱'))
+    mg, mz = _g2(s.get('月柱'))
+    dg, dz = _g2(s.get('日柱'))
+    hg, hz = _g2(s.get('时柱'))
+    n = dict(s)
+    n.update({'year_gan': yg, 'year_zhi': yz, 'month_gan': mg, 'month_zhi': mz,
+              'day_gan': dg, 'day_zhi': dz, 'hour_gan': hg, 'hour_zhi': hz})
+    return n
 
 
 def mock_llm_api(prompt):

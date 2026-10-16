@@ -5937,6 +5937,9 @@ class ZeriApp:
                         content += f"      • {_nl}\n"
                 # 2026-09-10 归零透明化（2025-10-28坤山案例）：一票否决把五行评分强制
                 # 归零时，在明细末尾明示归零前合计，避免“明细正常、结果归零”无从追溯
+                # U1（2026-10-16 第6批拍板）：明细层归零注统一叙述式句式
+                # 「五行明细合计 X 分，<机制>归零为 0 分」，机制名保留区分
+                # （一票否决 vs 按规则负分），与嫁娶路径 L596x 同构。
                 if wu_xing_result.get('he_ge') is False and wuxing_score == 0:
                     _bd_sum = 0
                     for _bk in ('基础分', '神煞得分', '宜事得分', '忌事得分',
@@ -5944,7 +5947,7 @@ class ZeriApp:
                         _bv = score_breakdown.get(_bk, 0)
                         if isinstance(_bv, (int, float)):
                             _bd_sum += int(_bv)
-                    content += f"    └─ 一票否决强制归零：五行明细合计 {_bd_sum} → 0 分\n"
+                    content += f"    └─ 五行明细合计 {_bd_sum} 分，一票否决归零为 0 分\n"
             
             # 显示婚嫁评分详情（夫星受克等）
             marriage_details = detail.get('marriage_details', [])
@@ -5963,6 +5966,13 @@ class ZeriApp:
                     _veto_tag = '（本日另触发一票否决，总分归零）' if score_details.get('否决原因') else ''
                     content += (f"    └─ 五行明细合计 {int(_raw_wx):+d} 分，"
                                 f"按规则负分归零为 0 分{_veto_tag}\n")
+                # A4b 纳音说明（2026-10-16 第5批T4）：嫁娶评分体系（婚嫁评分算法
+                # 基础60＋利月/神煞/合局）不含纳音匹配分项，纳音行仅存在于正五行
+                # 路径（12 事项）。此处补一行说明，防审查把跨路径差异误读为渲染
+                # 缺陷（属 #2 两套评分架构差异，算法变更归该议题，本批不动分值）。
+                _mrx_prefix = '├─' if score_breakdown else ''
+                content += (f"    {_mrx_prefix}纳音匹配：嫁娶评分体系不含此分项，"
+                            "属评分架构差异\n")
             
             content += f"  月令得分：{yueling_score:+d} 分\n"
             
@@ -6050,10 +6060,10 @@ class ZeriApp:
                 else:
                     content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d} = {raw_total} 分\n"
             # _fc0915：一票否决日公式分项合计仅供追溯、总分强制归零，明示口径
+            # 2026-10-16 U2：S2 公式层注统一为叙述式主句式（机制以括注保留）
             if detail.get('veto_reasons'):
-                content += (f"  注：本日触发一票否决（详见【一票否决】），"
-                            f"上方公式分项合计 {raw_total + sansha_penalty} 分仅供追溯，"
-                            f"总分强制归零。\n")
+                content += (f"  注：总分强制归零（一票否决，明细如实保留，仅供追溯），"
+                            f"详见【一票否决】。\n")
             # 2026-02-05：删除“满分上限限制：X → Y”提示行——分项键值已全部修正，
             # （五行评分取嫁娶评分、时柱关系得分注入同步总分分键），公式合计必然等于总分分；
             # 若仍有差额说明是代码缺陷，应在数据层修正，而非用“满分上限”措辞掩盖。
@@ -6161,6 +6171,19 @@ class ZeriApp:
                         content += f"    加权公式：正五行{_zhengwu_raw}×0.7 + (50+飞星{fx_score:+d}={50+fx_score})×0.3 = {total_score}\n"
                 except Exception:
                     content += f"    加权公式：正五行{_zhengwu_raw}×0.7 + (50+飞星{fx_score:+d}={50+fx_score})×0.3 = {total_score}\n"
+            else:
+                # A2a/b 占位说明（2026-10-16 第5批T2）：feixing_info 仅在评分器
+                # 四条件齐备时生成（评分器.py：zeli_mode=='feixing' + 画像含飞星
+                # + 非否决课 + 已填坐山），不渲染时在此补原因占位，消除「段缺失」
+                # 观感。四分支优先序与生成条件镜像：非山向→无坐山→否决→pure。
+                if event_type not in FEIXING_EVENTS:
+                    content += "  玄空飞星：本事项非山向类，玄空飞星段不适用\n"
+                elif not shan_xiang:
+                    content += "  玄空飞星：本事项无坐山，玄空飞星段不适用\n"
+                elif detail.get('veto_reasons'):
+                    content += "  玄空飞星：本课已否决，玄空飞星段不展开\n"
+                else:
+                    content += "  玄空飞星：本模式默认不显示玄空飞星段，如需查看请切换至对应模式\n"
         else:
             content += "  暂无详细得分数据\n"
         

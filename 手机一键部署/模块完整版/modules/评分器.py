@@ -888,7 +888,8 @@ class Scorer:
                                 '事主匹配': owner_matches,
                                 '总分': 0,
                                 '否决原因': veto_reasons,
-                                '说明': '一票否决：' + '；'.join(veto_reasons) + '，得分=0，但各项扣分项已完整显示用于对比'
+                                # 2026-10-16 U2：归零句式统一为叙述式主句式（S1 改写不删键）
+                                '说明': '总分强制归零（一票否决，明细如实保留，仅供追溯）'
                             }
                             # 2026-09-17：否决日补齐月令旺衰/支支明细，与正常嫁娶路径
                             # （下方 score_details['月令详细']）同口径，避免月令得分无分项。
@@ -1116,8 +1117,7 @@ class Scorer:
                                 score_details['总分'] = 0
                                 score_details['否决原因'] = [veto_reason] if veto_reason else []
                                 score_details['说明'] = (
-                                    '一票否决：' + (veto_reason or '') +
-                                    '，得分=0，但各项扣分项已完整显示用于对比'
+                                    '总分强制归零（一票否决，明细如实保留，仅供追溯）'
                                 )
 
                                 # 【E3 矛盾一/二修复】把 marriage_details 中的嫁娶凶煞项
@@ -1766,7 +1766,7 @@ class Scorer:
                     '事主匹配': owner_matches,
                     '神煞得分': shensha_score,
                     '总分': 0,  # 一票否决，总分仍为0，但6分项显示完整
-                    '说明': '一票否决：正五行门槛未通过（三杀/冲山等大忌），总分强制=0，但各项扣分项完整显示用于对比'
+                    '说明': '总分强制归零（正五行门槛未通过，明细如实保留，仅供追溯）'
                 }
                 # 补齐与正常日一致的明细键，确保否决日详情弹窗可完整追溯评分过程
                 try:
@@ -2245,6 +2245,39 @@ class Scorer:
                         self.final_score = 0
                         self.level = '❌ 凶'
                         score_details['总分'] = 0
+
+            # A3a 坐山三煞劫煞/灾煞位出处登记（2026-10-16 第5批T3，score=0 仅展示）：
+            # 二十四山择吉天机按 f'{位置}{煞类型}' 生成「年/月/日/时劫煞（灾煞）」
+            # 山家警告——有制化只进 mountain_warnings_mitigated、无制化进忌项扣分，
+            # 两通道在神煞信息段均无对应条目（审查多轮暴露「时劫煞」无出处）。
+            # 此处按 sansha_info['mountain_warnings'] 回填同名条目：不参与评分、
+            # 仅展示；并注明 SANSHA_TYPE_MAP 属坐山三煞独立映射，与标准年三煞表不同系。
+            _mws = sansha_info.get('mountain_warnings') or []
+            _ss_names = {str(_x.get('name', '')) for _x in self.shensha_list
+                         if isinstance(_x, dict)}
+            for _mw in _mws:
+                if isinstance(_mw, dict):
+                    _mt = str(_mw.get('说明', '') or '')
+                elif isinstance(_mw, str):
+                    _mt = _mw
+                else:
+                    continue
+                _mp = re.match(r'^([年月日时])(劫煞|灾煞)（', _mt)
+                if not _mp:
+                    continue
+                _mname = _mp.group(1) + _mp.group(2)
+                if _mname in _ss_names:
+                    continue
+                _ss_names.add(_mname)
+                _mnote = '有制化' if '（有制化：' in _mt else '无制化'
+                self.shensha_list.append({
+                    'name': _mname,
+                    'description': (
+                        f"{_mp.group(1)}柱触坐山三煞{_mp.group(2)}位（{_mnote}），"
+                        "score=0 仅展示；坐山三煞按 SANSHA_TYPE_MAP 独立映射，"
+                        "与标准年三煞表不同系"),
+                    'score': 0,
+                })
 
             return {
                 'score': self.final_score,

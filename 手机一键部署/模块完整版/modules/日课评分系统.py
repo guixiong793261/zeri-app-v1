@@ -2702,12 +2702,13 @@ class DayScoreWindow:
 
                 self._insert_colored_text(formula_line)
                 result_veto_reasons = result.get('veto_reasons') or []
+                # 2026-10-16 U2：三句箭头式统一为叙述式主句式（机制以括注保留）
                 if is_calc_error or has_exception_info:
-                    self._insert_colored_text(f"  计算异常强制归零：{raw_total} → 0 分（详见下方一票否决横幅+综合评语堆栈）\n")
+                    self._insert_colored_text(f"  总分强制归零（计算异常，明细如实保留，仅供追溯；详见下方一票否决横幅+综合评语堆栈）\n")
                 elif result_veto_reasons:
-                    self._insert_colored_text(f"  一票否决强制归零：{raw_total} → 0 分（{'；'.join(str(x) for x in result_veto_reasons)}）\n")
+                    self._insert_colored_text(f"  总分强制归零（一票否决：{'；'.join(str(x) for x in result_veto_reasons)}，明细如实保留，仅供追溯）\n")
                 elif is_hege_false:
-                    self._insert_colored_text(f"  一票否决(正五行门槛未过)强制归零：{raw_total} → 0 分\n")
+                    self._insert_colored_text(f"  总分强制归零（正五行门槛未过，明细如实保留，仅供追溯）\n")
                 elif raw_total > 150 and total_score == 150:
                     self._insert_colored_text(f"  满分上限限制：{raw_total} → {total_score} 分\n")
                 else:

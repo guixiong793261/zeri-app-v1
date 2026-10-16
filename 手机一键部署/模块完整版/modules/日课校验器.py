@@ -483,7 +483,17 @@ def rule_e003(ctx):
 
 @register_rule('E004', SEVERITY_ERROR, '推荐时柱在时辰表中不禁用')
 def rule_e004(ctx):
-    """推荐时柱对应时辰不得为禁用；负分须 WARN 提示。"""
+    """推荐时柱对应时辰不得为禁用；推荐柱负分须 WARN 提示。
+
+    A1c（2026-10-16 第6批拍板）触发条件修正：
+    - detail['_auth_sizhu']=True（扫日注入/详情授权）时，sizhu['时柱']即系统
+      推荐柱——推荐柱为负分属兜底异常，保留 WARN；
+    - 无授权标记时，sizhu['时柱']为用户/跑批自带时辰——日课自带负分时辰
+      降为 INFO「供参考」（原 WARN 文案把自带时辰误称「推荐时柱」，2026-02-22
+      乙巳时回跑挂账即此误报；探针证实推荐柱与时辰表同源、2026 全年嫁娶
+      推荐柱从不为负）；
+    - 禁用时辰无论授权与否均为 ERROR（不可用时辰，须改选）。
+    """
     if ctx.lucky_hours is None:
         return '缺十二时辰表数据'
     dsize = ctx.detail.get('sizhu')
@@ -515,15 +525,24 @@ def rule_e004(ctx):
             source=f'lucky_hours[{hour_zhi}]',
             suggestion='推荐时柱不得取禁用时辰，应改选吉时')
     elif _num(item.get('分值')) < 0:
-        # 负分按本规则文档口径为 WARN（时辰表与推荐时柱本为两套标准，
-        # 推荐柱在表中负分提示但不阻断交付；“禁用”才是 ERROR）
-        ctx.issue(
-            'E004',
-            f'推荐时柱「{hour_zhi}」时辰表评分为负（{item.get("分值")}分）：'
-            f'{"、".join(item.get("说明", []))}',
-            source=f'lucky_hours[{hour_zhi}]',
-            suggestion='推荐时柱宜取正分吉时',
-            severity=SEVERITY_WARN)
+        if ctx.detail.get('_auth_sizhu'):
+            # 时柱经授权=系统推荐柱：推荐柱为负分属兜底异常，WARN（原口径）
+            ctx.issue(
+                'E004',
+                f'推荐时柱「{hour_zhi}」时辰表评分为负（{item.get("分值")}分）：'
+                f'{"、".join(item.get("说明", []))}',
+                source=f'lucky_hours[{hour_zhi}]',
+                suggestion='推荐时柱宜取正分吉时',
+                severity=SEVERITY_WARN)
+        else:
+            # 日课自带时辰（未授权）：负分仅提示供参考，INFO（A1c 降级）
+            ctx.issue(
+                'E004',
+                f'所选时辰「{hour_zhi}」在时辰表中为负分（{item.get("分值")}分），'
+                f'供参考：{"、".join(item.get("说明", []))}',
+                source=f'lucky_hours[{hour_zhi}]',
+                suggestion='可参考【十二时辰吉凶】表中的正分吉时',
+                severity=SEVERITY_INFO)
     return None
 
 

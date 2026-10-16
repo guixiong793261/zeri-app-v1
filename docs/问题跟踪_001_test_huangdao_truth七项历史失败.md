@@ -8757,3 +8757,8 @@ ot shan_xiang → 「玄空飞星：本事项无坐山，玄空飞星段不适�
 ### 94.15 第 7 批：部署副本三件套统一重建（U2 收口后一次到位）
 
 - 按第 6 批批复节奏：U2 本批做 → 三件套统一重建一次；手机一键部署副本同步、单文件版重建 + --smoke SMOKE_OK、zip 重打、三副本 SHA 与主仓根份对比（结果见本节 commit 后补记）。
+- **副本同步**：三向对比前置探查差异 7 = 本批 3 文件（主程序.py / modules\评分器.py / modules\日课评分系统.py）+ 第 6 批未同步 2 文件（modules\日课校验器.py / tools\llm_baseline.py）+ 运行时产物 2 个（择日记录.json / 评分模块.log，三方各异，不同步）；5 个产品文件拷贝覆盖至 手机一键部署\ 与 手机一键部署\模块完整版\（各 5 处共 10 处）。
+- **三向 SHA 复跑**（C:\Temp\u2_tri_diff.py）：共有文件 77，产品文件 DIFF=0；剩余差异仅 2 个运行时产物（择日记录.json、评分模块.log，属预期）；仅主仓 1533（.trae/docs/tools/审查结果 等不属部署范围）、仅手机 4（run.py / 启动择日软件.py / 单文件版生成物）、仅完整版 9（run.py / 启动脚本 / modules\__init__.py / modules\shensha\marriage_scorer.py / 日课 txt×5），均副本固有，与前置探查一致。
+- **单文件版**：`integrate_single_file.py --smoke` 预验 SMOKE_OK；正式产物重建（无参运行）→ 手机一键部署\单文件版\择日软件完整版.py 1,312,847 字节，依赖闭包 57 模块（seeds 48 + 派发表动态并入），py_compile 通过，内置冒烟全链路 **SMOKE_OK**（内嵌 import 链 + 动态派发 10+10 检查器 + 立春换柱）。
+- **zip 重打**：`打包一键部署包.py` → 手机一键部署包.zip **2363.25 KB**（第 6 批为 2356.61 KB；zip 与单文件版产物均 .gitignore 排除，不入库）。
+- **commit**：见 git log（两副本 10 个产品文件同步 + 本节补记）。
