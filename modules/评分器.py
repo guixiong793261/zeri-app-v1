@@ -2246,6 +2246,39 @@ class Scorer:
                         self.level = '❌ 凶'
                         score_details['总分'] = 0
 
+            # A3a 坐山三煞劫煞/灾煞位出处登记（2026-10-16 第5批T3，score=0 仅展示）：
+            # 二十四山择吉天机按 f'{位置}{煞类型}' 生成「年/月/日/时劫煞（灾煞）」
+            # 山家警告——有制化只进 mountain_warnings_mitigated、无制化进忌项扣分，
+            # 两通道在神煞信息段均无对应条目（审查多轮暴露「时劫煞」无出处）。
+            # 此处按 sansha_info['mountain_warnings'] 回填同名条目：不参与评分、
+            # 仅展示；并注明 SANSHA_TYPE_MAP 属坐山三煞独立映射，与标准年三煞表不同系。
+            _mws = sansha_info.get('mountain_warnings') or []
+            _ss_names = {str(_x.get('name', '')) for _x in self.shensha_list
+                         if isinstance(_x, dict)}
+            for _mw in _mws:
+                if isinstance(_mw, dict):
+                    _mt = str(_mw.get('说明', '') or '')
+                elif isinstance(_mw, str):
+                    _mt = _mw
+                else:
+                    continue
+                _mp = re.match(r'^([年月日时])(劫煞|灾煞)（', _mt)
+                if not _mp:
+                    continue
+                _mname = _mp.group(1) + _mp.group(2)
+                if _mname in _ss_names:
+                    continue
+                _ss_names.add(_mname)
+                _mnote = '有制化' if '（有制化：' in _mt else '无制化'
+                self.shensha_list.append({
+                    'name': _mname,
+                    'description': (
+                        f"{_mp.group(1)}柱触坐山三煞{_mp.group(2)}位（{_mnote}），"
+                        "score=0 仅展示；坐山三煞按 SANSHA_TYPE_MAP 独立映射，"
+                        "与标准年三煞表不同系"),
+                    'score': 0,
+                })
+
             return {
                 'score': self.final_score,
                 'level': self.level,
