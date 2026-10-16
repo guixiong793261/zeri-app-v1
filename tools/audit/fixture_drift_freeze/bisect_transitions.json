@@ -1,0 +1,50 @@
+{
+  "anchors": {
+    "good": "103a20fc38f13b2dc2f8b4854ff49b7e7dc70901",
+    "mid": "23198da73ecd30473ceb22487eea10b695791730",
+    "bad": "d31cd3262e79e1e9a52627f4da681d780307fe10"
+  },
+  "transitions": [
+    {
+      "label": "边界①0111:73→63",
+      "case": "0111",
+      "from_commit": "0cdcfb39caa3909cbdd4465f846ec7246eb44fe5",
+      "to_commit": "fde238b4faf0c19f89d37d6ac4a18d043edcfa30",
+      "from_val": 73,
+      "to_val": 63,
+      "from_info": "0cdcfb3 09-27 22:56 I1 阳错直连 D：谓词下沉模块级单点出口，嫁娶端到端扣 -15",
+      "to_info": "fde238b 09-27 23:01 I1 厌对直连 D：谓词下沉模块级单点出口，嫁娶端到端扣 -10"
+    },
+    {
+      "label": "边界②0111:63→88",
+      "case": "0111",
+      "from_commit": "159837fd78af199951d40a810c2ecc3cbe46f8e7",
+      "to_commit": "c56d6d761f514966a2815c4a56e063fd8f6cf5db",
+      "from_val": 63,
+      "to_val": 88,
+      "from_info": "159837f 10-11 00:38 fix(婚嫁): 删本命三煞真假档与天月德化解，统一-25（B1第1步/共2步）",
+      "to_info": "c56d6d7 10-11 00:44 fix(婚嫁): 本命三煞改查新郎男命+岁煞正名+文案对照（B1第2步/共2步）"
+    },
+    {
+      "label": "边界③0112:18→28",
+      "case": "0112",
+      "from_commit": "a2f253bb1fdbe5d428aad0736c288688a14b1922",
+      "to_commit": "159837fd78af199951d40a810c2ecc3cbe46f8e7",
+      "from_val": 18,
+      "to_val": 3,
+      "from_info": "a2f253b 10-11 00:18 B-b 轨四（Q8 婚嫁本命三煞）四判据取证成稿，只读零改动",
+      "to_info": "159837f 10-11 00:38 fix(婚嫁): 删本命三煞真假档与天月德化解，统一-25（B1第1步/共2步）"
+    },
+    {
+      "label": "边界③0112:18→28",
+      "case": "0112",
+      "from_commit": "159837fd78af199951d40a810c2ecc3cbe46f8e7",
+      "to_commit": "c56d6d761f514966a2815c4a56e063fd8f6cf5db",
+      "from_val": 3,
+      "to_val": 28,
+      "from_info": "159837f 10-11 00:38 fix(婚嫁): 删本命三煞真假档与天月德化解，统一-25（B1第1步/共2步）",
+      "to_info": "c56d6d7 10-11 00:44 fix(婚嫁): 本命三煞改查新郎男命+岁煞正名+文案对照（B1第2步/共2步）"
+    }
+  ],
+  "probe_count": 22
+}
