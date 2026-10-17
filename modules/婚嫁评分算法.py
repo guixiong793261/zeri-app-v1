@@ -1001,12 +1001,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             details.append(('不将日', _bujiang_score))
         
         if is_tiande_day(date_obj):
-            score += 15  # 天德
-            details.append(('天德', 15))
-        
+            # P1-C-3a（2026-10-17 拍板）：嫁娶天德 15→20，与通用口径统一（B 族残差清零）
+            score += 20  # 天德
+            details.append(('天德', 20))
+
         if is_yuede_day(date_obj):
-            score += 15  # 月德
-            details.append(('月德', 15))
+            # P1-C-3a：嫁娶月德 15→18，与通用口径统一
+            score += 18  # 月德
+            details.append(('月德', 18))
         
         # 大黄道（十二神值日）/小黄道（建除十二神）计分
         # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
@@ -1123,14 +1125,15 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         
         # 天罡日（妨翁）检查 - 嫁娶大忌
         if is_tiangang_day(date_obj):
-            score -= 40  # 天罡日，妨翁
-            details.append(('天罡日（妨翁）', -40))
+            # P1-C-3a：-40→-10，与通用（入学/求医/签约）口径统一
+            score -= 10  # 天罡日，妨翁
+            details.append(('天罡日（妨翁）', -10))
             result['warnings'].append("天罡日：对新郎父亲不利")
-        
         # 河魁日（妨姑）检查 - 嫁娶大忌
         if is_hekui_day(date_obj):
-            score -= 40  # 河魁日，妨姑
-            details.append(('河魁日（妨姑）', -40))
+            # P1-C-3a：-40→-10，与通用口径统一
+            score -= 10  # 河魁日，妨姑
+            details.append(('河魁日（妨姑）', -10))
             result['warnings'].append("河魁日：对新郎母亲不利")
         
         # 夫星、子星检查（年干通书口径，与头示"夫星/子星"一致）
@@ -1193,10 +1196,10 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     except ImportError:
         from 事项标准 import shensha_score as _shensha_score
 
-    # 月破（-40分）
+    # 月破（P1-C-3a：-40→-30，与通用口径统一）
     if is_month_break(date_obj, sizhu):
-        score -= 40
-        details.append(('月破', -40))
+        score -= 30
+        details.append(('月破', -30))
         result['warnings'].append('月破：月支冲日支，大凶之日，慎用')
     
     # 上朔日（-35分）
