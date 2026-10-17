@@ -178,25 +178,32 @@ def is_liuhe(zhi1, zhi2):
           ('辰', '酉'), ('酉', '辰'), ('巳', '申'), ('申', '巳'), ('午', '未'), ('未', '午')}
     return (zhi1, zhi2) in he
 
+# 三合四局按宫位序（长生→帝旺→墓）排列：P1-C-2 修复（2026-10-16 拍板）。
+# 原 set 字面量 + list(set) 输出顺序受 PYTHONHASHSEED 影响跨进程可翻转
+# （§96.5 挂账：0111 案拱合局 (巳,丑)↔(丑,巳)，fixture 会无故漂移），
+# 改为宫位序元组 + 序内过滤，输出与进程无关；属测试基建修正，非业务口径变更。
+_SANHE_GONGXU = [
+    ('申', '子', '辰'),  # 水局：申长生 子帝旺 辰墓
+    ('寅', '午', '戌'),  # 火局：寅长生 午帝旺 戌墓
+    ('巳', '酉', '丑'),  # 金局：巳长生 酉帝旺 丑墓
+    ('亥', '卯', '未'),  # 木局：亥长生 卯帝旺 未墓
+]
+
 def is_sanhe(zhi_list):
     """检查是否构成三合局（三个不同地支）"""
-    sanhe_groups = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-    # 使用 set 去重，确保只有不同的地支才算
     unique_zhis = set(zhi_list) - {None, ''}
-    for group in sanhe_groups:
-        if group.issubset(unique_zhis):
-            return True, list(group)
+    for group in _SANHE_GONGXU:
+        if set(group).issubset(unique_zhis):
+            return True, list(group)  # 宫位序（长生→帝旺→墓），输出稳定
     return False, None
 
 def is_banhe(zhi_list):
     """检查是否构成半合局（两个不同地支）"""
-    sanhe_groups = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-    # 使用 set 去重，确保只有不同的地支才算
     unique_zhis = set(zhi_list) - {None, ''}
-    for group in sanhe_groups:
-        common = unique_zhis & group
+    for group in _SANHE_GONGXU:
+        common = unique_zhis.intersection(group)
         if len(common) == 2:
-            return True, list(common)
+            return True, [z for z in group if z in common]  # 宫位序，输出稳定
     return False, None
 
 # ==================== 日课四柱内部合局评分 ====================
