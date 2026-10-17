@@ -1,0 +1,52 @@
+{
+ "generated_at": "2026-10-18 00:33:37",
+ "git_head": "d8c7d10baf8f43109fbed97b9f7582393307ee92",
+ "python": "3.11.9",
+ "command": "python docs/土符修表_快照与回扫/snapshot_tufu_before_fix.py",
+ "date_range": [
+  "2026-01-01",
+  "2026-12-31"
+ ],
+ "wrong_map": {
+  "寅": "戌",
+  "卯": "亥",
+  "辰": "子",
+  "巳": "丑",
+  "午": "寅",
+  "未": "卯",
+  "申": "辰",
+  "酉": "巳",
+  "戌": "午",
+  "亥": "未",
+  "子": "申",
+  "丑": "酉"
+ },
+ "correct_map": {
+  "寅": "丑",
+  "卯": "巳",
+  "辰": "酉",
+  "巳": "寅",
+  "午": "午",
+  "未": "戌",
+  "申": "卯",
+  "酉": "未",
+  "戌": "亥",
+  "亥": "辰",
+  "子": "申",
+  "丑": "子"
+ },
+ "files": {
+  "snapshot_tufu_before_fix.py": "4380478ed44b7876d95caea326f2076b5a54463fd1c81ca72a7f207133252278",
+  "snapshot_tufu_before_fix_2026.json": "908ae58f74f068cac6ce3c774f196388aaab5d70da75e7269cd29e231a92c08f",
+  "snapshot_tufu_before_fix_2026.md": "e506f596b8c9366e635dd99e859a003be5a0ecc9c5ed9c223ce2cb0d947942ce"
+ },
+ "checks_passed": true,
+ "summary": {
+  "total_days": 365,
+  "wrong_trigger_count": 29,
+  "wrong_false_positive": 27,
+  "wrong_overlap": 2,
+  "correct_trigger_count": 29,
+  "correct_missed_by_wrong": 27
+ }
+}
