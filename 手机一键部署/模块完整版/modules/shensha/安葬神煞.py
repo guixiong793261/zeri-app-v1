@@ -33,6 +33,9 @@ except ImportError:
     from 工具函数 import DI_ZHI
 
 class BurialShenShaChecker(ShenShaChecker):
+    # P1-5（2026-10-18）：安葬不忌土瘟（陈书 p748「止忌破土不忌安葬」+协纪卷十一
+    # 安葬忌列无土族煞）——关闭基类通用链土瘟发射；docs/P1-5_安葬土瘟_对勘.md，001 §117
+    _TUWEN_DISABLED = True
     """安葬神煞检查器"""
     
     def _check_year_shensha(self, sizhu, **kwargs):
@@ -197,11 +200,12 @@ class BurialShenShaChecker(ShenShaChecker):
         # 伏断日由基类月作用域统一注册（A6-3 同名分支删除，super 先注册必被去重）
 
         # ===== 凶煞 =====
-        
-        # 土瘟
-        if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -20, '土瘟日不宜安葬')
-        
+
+        # 土瘟条目已删（2026-10-18 P1-5 零典据删除：陈书 p748「土禁土府土瘟土符
+        # 止忌破土不忌安葬」明言不忌；协纪全书土瘟仅建除满日小吉语境2处、考原1处
+        # 均无「忌安葬」，卷十一安葬忌列不含任何土族煞；docs/P1-5_安葬土瘟_对勘.md，
+        # 001 §112）
+
         # 八座日
         if self._is_bazuori(sizhu):
             self._add_shensha('八座日', -12, '八座日不宜安葬')

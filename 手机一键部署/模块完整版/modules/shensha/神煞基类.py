@@ -1585,7 +1585,10 @@ class ShenShaChecker:
             self._add_shensha('月刑', -15, '月刑主刑伤')
         if self._is_yuehai(sizhu):
             self._add_shensha('月害', -15, '月害主妨害')
-        if self._is_tuwen(sizhu):
+        # 土瘟：通用链发射。P1-5（2026-10-18）：安葬通道关闭（陈书 p748「止忌破土
+        # 不忌安葬」+协纪卷十一安葬忌列无土族煞，docs/P1-5_安葬土瘟_对勘.md，001 §117）；
+        # 其余事项维持现状（P1-5 P2 续取证，docs/P1-5_土瘟注册范围取证.md）。
+        if self._is_tuwen(sizhu) and not getattr(self, '_TUWEN_DISABLED', False):
             self._add_shensha('土瘟', -20, '土瘟忌用')
         if self._is_dashi(sizhu):
             self._add_shensha('大时', -12, '大时忌用')
