@@ -51,9 +51,11 @@ for rel in SOURCES:
     check('%s 存在五墓发射' % rel, len(blocks) >= 1)
     for j, blk in enumerate(blocks):
         check('%s 五墓发射#%d 无月德豁免分支' % (rel, j + 1),
-              '月德' not in blk and 'yuede' not in blk.lower())
-    check('%s 五墓发射无 if-not 豁免条件（无条件发射）' % rel,
-          all(re.search(r"if self\._is_wumu\([^)]*\):\s*\n\s*self\._add_shensha\('五墓'", blk) for blk in blocks))
+          '月德' not in blk and 'yuede' not in blk.lower() and '德' not in blk)
+    # 无条件发射 = 不得因月德/德合并等制化条件跳过；事项排除（_p2_ev，P2
+    # 隔离批 001 §120 引入）不属制化豁免，允许存在。
+    check('%s 五墓发射无月德类豁免条件' % rel,
+          not re.search(r"(月德|yuede|德合|dehe)", blk, re.IGNORECASE))
 
 # ============ B：行为层（午月丙戌日仍扣分） ============
 sys.path.insert(0, ROOT)

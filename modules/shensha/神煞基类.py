@@ -1583,7 +1583,15 @@ class ShenShaChecker:
             self._add_shensha('月虚', -10, '月虚主虚耗')
         if self._is_yuexing(sizhu):
             self._add_shensha('月刑', -15, '月刑主刑伤')
-        if self._is_yuehai(sizhu):
+        # ===== P2 删除候选事项排除（2026-10-18 隔离批，001 §120）=====
+        # 月家P2 续取证批准删除候选（docs/月家P2_月害大时往亡五墓_续取证.md §六/§七）：
+        #   月害×入宅/出行/动土/拆舍 -15（三库无载；动土/拆舍系逐字重提更正诊断漏标）
+        #   大时×作灶/安葬 -12（协纪卷十忌列+卷十一两事条双向无载）
+        #   五墓×作灶 -12（协纪无用事条+陈书作灶条 p625-627 无载）
+        # 隔离=排除事项不计入扣减；删除批清理死链与键（有载确认项不受影响：
+        # 月害×安葬/开业、大时×修造/开业/出行、五墓×安葬照常）。
+        _p2_ev = getattr(self, '_std_event', None)
+        if self._is_yuehai(sizhu) and _p2_ev not in ('入宅', '出行', '动土', '拆舍'):
             self._add_shensha('月害', -15, '月害主妨害')
         # 土瘟：通用链发射。P1-5（2026-10-18）：安葬通道关闭（陈书 p748「止忌破土
         # 不忌安葬」+协纪卷十一安葬忌列无土族煞，docs/P1-5_安葬土瘟_对勘.md，001 §117）；
@@ -1592,7 +1600,7 @@ class ShenShaChecker:
             # P1-5 正名（2026-10-18）：限定词「四季土旺日」+忌动土入 UI 文案；
             # 与协纪/考原建除「满为土瘟小吉」同名异实，分名不合并（docs/P1-5_土瘟注册范围取证.md §六）
             self._add_shensha('土瘟', -20, '土瘟（四季土旺日），忌动土')
-        if self._is_dashi(sizhu):
+        if self._is_dashi(sizhu) and _p2_ev not in ('作灶', '安葬'):
             self._add_shensha('大时', -12, '大时忌用')
         if self._is_tianli(sizhu):
             self._add_shensha('天吏', -15, '天吏主致死')
@@ -1600,7 +1608,7 @@ class ShenShaChecker:
             self._add_shensha('四废', -15, '四废日凶')
         if self._is_flyinglian(sizhu):
             self._add_shensha('飞廉', -12, '飞廉主虚惊')
-        if self._is_wumu(sizhu):
+        if self._is_wumu(sizhu) and _p2_ev not in ('作灶',):
             self._add_shensha('五墓', -12, '五墓主死丧')
         if self._is_fuduan(sizhu):
             self._add_shensha('伏断日', -15, '伏断日忌用')
