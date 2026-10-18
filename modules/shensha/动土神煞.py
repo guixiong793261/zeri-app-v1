@@ -138,11 +138,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_yuexing(sizhu):
             self._add_shensha('月刑', -15, '月刑日，忌动土修造')
         
-        # 月害——P2 删除候选隔离（2026-10-18，001 §120）：月害×动土三库无载
-        # （系逐字重提更正诊断漏标，docs/月家P2_月害大时往亡五墓_续取证.md §六），
-        # 基类通用链已按事项排除；本行原为死链，基类排除后将复活，故一并注释。
-        # if self._is_yuehai(sizhu):
-        #     self._add_shensha('月害', -15, '月害日，忌动土修造')
+        # 月害条目已删（2026-10-18 P2 删除批，001 §122）：月害×动土三库无载
+        # （系逐字重提更正诊断漏标，docs/月家P2_月害大时往亡五墓_续取证.md §六）；
+        # 本行原为死链，基类通用链事项排除后隔离（001 §120）。
 
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""

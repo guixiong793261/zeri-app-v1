@@ -103,11 +103,9 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_yuexing(sizhu):
             self._add_shensha('月刑', -15, '月刑日不宜出行')
         
-        # 月害——P2 删除候选隔离（2026-10-18，001 §120）：月害×出行三库无载
-        # （docs/月家P2_月害大时往亡五墓_续取证.md §六），基类通用链已按事项排除；
-        # 本行原为死链（super 先行占位），基类排除后若不隔离将复活，故一并注释。
-        # if self._is_yuehai(sizhu):
-        #     self._add_shensha('月害', -15, '月害日不宜出行')
+        # 月害条目已删（2026-10-18 P2 删除批，001 §122）：月害×出行三库无载
+        # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链
+        # （super 先行占位），基类通用链事项排除后隔离（001 §120）。
         
         # 大时（咸池）
         if self._is_dashi(sizhu):
