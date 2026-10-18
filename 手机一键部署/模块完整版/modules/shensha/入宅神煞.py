@@ -69,9 +69,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_yuepo(sizhu):
             self._add_shensha('月破', -30, '月破日诸事不宜，入宅大忌')
         
-        # 土符（忌动土，入宅搬动家具亦忌）
-        if self._is_tufu(sizhu):
-            self._add_shensha('土符', -20, '土符日不宜动土、入宅')
+        # 土符条目已删（2026-10-18 零典据删除：三库全卷扫 44 命中无「土符×入宅/移徙」
+        # 明文，判据(b)五档判定—无载，docs/典据研究_土符入宅_(b)所忌事项范围_取证.md §4）
         
         # 地囊
         if self._is_dinang(sizhu):

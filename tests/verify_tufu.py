@@ -15,13 +15,15 @@
      错表（11/12 不符）→ 三库正表；
   2. modules/神煞验证与校准.py L102 展示表：旧「子午月在丑…」错表（0/12 合）
      → 三库正表口诀。
-  评分层土符注册分值（入宅/移徙/修造/动土/拆舍 -20、通用与入学/求医/签约 -15）
-  与「忌动土、入宅」文案一律不动（待判据 b-e 取证后另行拍板）。
+  3. 2026-10-18 判据(b)拍板落地：入宅/移徙/入学/求医/签约五事项土符条目
+     零典据删除（入宅神煞/通用神煞 checker 块＋SHENSHA_SCORES 5 键），
+     修造/动土/拆舍 -20 典据通道保留（拆舍文案正名另批）。
 
 检查项：
   1. 黄金矩阵：12月支×12日支=144 点 _is_tufu ≡ 典据真值函数，0 错；
-  2. 多通道对账：入宅/修造/动土/拆舍 checker 触发日发射「土符 -20」、
-     通用 checker 发射「土符 -15」；锚点非触发日均不发射；
+  2. 多通道对账：修造/动土/拆舍 checker 触发日发射「土符 -20」；
+     入宅（含移徙）/通用（含入学/求医/签约）checker 触发日零发射；
+     SHENSHA_SCORES 零典据 5 键已删、典据 3 键 -20 保留；
   3. 校准.py 展示表逐字断言：含正表口诀、不含旧错串「子午月在丑」；
   4. 独立交叉参照：2026 全年实扫触发日 == 修表前快照正表清单（29 天）；
      与快照错表清单对称差 54 天（27 作废＋27 新增）、交集 2 天（子月重合）；
@@ -43,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from modules.四柱计算器 import calculate_sizhu
+from modules.事项标准 import SHENSHA_SCORES
 from modules.shensha.神煞基类 import ShenShaChecker, is_tufu_by_zhi
 from modules.shensha.入宅神煞 import RuZhaiShenShaChecker
 from modules.shensha.修造神煞 import ConstructionShenShaChecker
@@ -103,12 +106,14 @@ for mz in ZHI12:
 check('黄金矩阵 144 点 ≡ 典据真值', not bad,
       '；'.join(bad[:5]) if bad else '144/144 一致')
 
-# ---------- 2. 多通道对账（checker 发射） ----------
+# ---------- 2. 多通道对账（checker 发射；判据(b)落地后口径） ----------
 snap = json.loads(SNAPSHOT.read_text(encoding='utf-8'))
 correct_dates = [r['date'] for r in snap['triggers_correct_table']]
 wrong_dates = [r['date'] for r in snap['triggers_wrong_table']]
-channels20 = [('入宅', RuZhaiShenShaChecker), ('修造', ConstructionShenShaChecker),
+channels20 = [('修造', ConstructionShenShaChecker),
               ('动土', DiggingShenShaChecker), ('拆舍', DemolitionShenShaChecker)]
+channels_none = [('入宅(含移徙)', RuZhaiShenShaChecker),
+                 ('通用(入学/求医/签约)', CommonShenShaChecker)]
 c2_bad = []
 for ev, cls in channels20:
     for ds in correct_dates:
@@ -120,16 +125,21 @@ for ev, cls in channels20:
     hits = emitted(cls(), sizhu_of(dt.date(2026, 11, 4)))
     if hits:
         c2_bad.append('%s 2026-11-04 误发射=%s' % (ev, hits))
-for ds in correct_dates:
-    d = dt.date.fromisoformat(ds)
-    hits = emitted(CommonShenShaChecker(), sizhu_of(d))
-    if not (len(hits) == 1 and hits[0].get('score') == -15):
-        c2_bad.append('通用 %s 发射=%s' % (ds, hits))
-hits = emitted(CommonShenShaChecker(), sizhu_of(dt.date(2026, 11, 4)))
-if hits:
-    c2_bad.append('通用 2026-11-04 误发射=%s' % hits)
-check('多通道对账：4×-20 通道＋通用-15 通道（29 触发日＋锚点）',
-      not c2_bad, '；'.join(c2_bad[:5]) if c2_bad else '5 通道全部正确')
+for ev, cls in channels_none:
+    for ds in correct_dates:
+        d = dt.date.fromisoformat(ds)
+        hits = emitted(cls(), sizhu_of(d))
+        if hits:
+            c2_bad.append('%s %s 零典据误发射=%s' % (ev, ds, hits))
+check('多通道对账：3×-20 典据通道＋2 删除通道零发射（29 触发日＋锚点）',
+      not c2_bad, '；'.join(c2_bad[:5]) if c2_bad else '3 典据通道正确、2 删除通道零发射')
+gone = [k for k in [('入宅', '土符'), ('移徙', '土符'), ('入学', '土符'),
+                    ('求医', '土符'), ('签约', '土符')] if k in SHENSHA_SCORES]
+kept = [k for k in [('修造', '土符'), ('动土', '土符'), ('拆舍', '土符')]
+        if SHENSHA_SCORES.get(k) == -20]
+check('SHENSHA_SCORES：零典据 5 键已删、典据 3 键 -20 保留',
+      not gone and len(kept) == 3,
+      '误存=%s 保留=%d/3' % (gone, len(kept)) if (gone or len(kept) != 3) else '删5键、留3键')
 
 # ---------- 3. 校准.py 展示表逐字 ----------
 src = (ROOT / 'modules' / '神煞验证与校准.py').read_text(encoding='utf-8')

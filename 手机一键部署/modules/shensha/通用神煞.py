@@ -247,9 +247,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_siji(sizhu):
             self._add_shensha('四击', -12, '四击之辰，当避')
 
-        if self._is_tufu(sizhu):
-            self._add_shensha('土符', -15, '土符之日，忌动土')
-
+        # 土符条目已删（2026-10-18 零典据删除：通用通道服务入学/求医/签约等非土工
+        # 事项，无典据支持；「土符忌动土」由动土/修造/拆舍专用通道 -20 承载，判据(b) §4）
+        
         if self._is_tufu2(sizhu):
             self._add_shensha('土府', -15, '土府忌日，忌动土')
 
