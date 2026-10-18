@@ -287,8 +287,8 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟日忌动土修造')
         
-        # 土王用事
-        if self._is_tuwang(sizhu):
+        # 土王用事（四立前各18日，与动土/拆舍统一口径；2026-10-18 P1-1 修：原委托土瘟推排致双发射）
+        if self._is_tuwang_yongshi(sizhu):
             self._add_shensha('土王用事', -18, '土王用事忌动土')
         
         # 刀砧煞

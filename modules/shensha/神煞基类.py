@@ -2880,10 +2880,6 @@ class ShenShaChecker:
     
     # ============ 修造专用检查方法 ============
     
-    def _is_tuwang(self, sizhu):
-        """土王用事（四季土旺日，即土瘟）"""
-        return self._is_tuwen(sizhu)
-    
     def _is_daozhen(self, sizhu):
         """刀砧煞（春巳、夏申、秋亥、冬寅）"""
         month_zhi = sizhu.get('month_zhi', '')
