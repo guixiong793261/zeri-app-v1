@@ -166,8 +166,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yuexing(sizhu):
             self._add_shensha('月刑', -15, '与月建相刑，诸事不利')
 
-        # 月害
-        if self._is_yuehai(sizhu):
+        # 月害——P2 部分匹配拆分（2026-10-18，001 §123）：月害×通用逐子项
+        # 判定（docs/月家P2_月害大时往亡五墓_续取证.md §六）：求医✅（卷十忌列
+        # +卷十一求医疗病条）、签约✅（立劵交易条）、入学❌（卷十一入学条无月害）
+        # ——入学子项删除，按 _std_event 拆分。
+        if self._is_yuehai(sizhu) and getattr(self, '_std_event', None) != '入学':
             self._add_shensha('月害', -15, '与月建相害，诸事不顺')
 
         # ===== 吉神 =====
@@ -277,7 +280,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_fuduan(sizhu):
             self._add_shensha('伏断日', -15, '伏断之日，切忌用事')
 
-        if self._is_wangwang(sizhu):
+        # 往亡——P2 部分匹配拆分（2026-10-18，001 §123）：往亡×通用逐子项
+        # 判定（docs/月家P2_月害大时往亡五墓_续取证.md §六）：求医✅（卷十一
+        # 求医疗病条+陈书 p696）、入学❌（入学条无往亡）、签约❌（立劵交易条
+        # 无往亡）——入学/签约子项删除，按 _std_event 拆分。
+        if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) not in ('入学', '签约'):
             self._add_shensha('往亡', -20, '往亡之日，大忌远行')
 
         if self._is_guiji(sizhu):
@@ -426,7 +433,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死之日，大忌')
 
-        if self._is_wangwang(sizhu):
+        # 往亡日——P2 部分匹配拆分双链补拦（2026-10-18，001 §123）：本块发射名
+        # 「往亡日」经 _SHENSHA_ALIAS_KEY 归一为「往亡」，与上方月块「往亡」构成
+        # 双活链（同名先到先得互为占位）——仅拦月块则打戳后日块顶上，行为回弹
+        # （实测 2026 全年往亡 30 天×3 事项零消失后定位）。入学/签约子项删除。
+        if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) not in ('入学', '签约'):
             self._add_shensha('往亡日', -20, '往亡之日，大忌远行')
 
         if self._is_guchen_guasu(sizhu):
