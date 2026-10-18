@@ -74,7 +74,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # 地囊
         if self._is_dinang(sizhu):
-            self._add_shensha('地囊', -25, '地囊日忌动土、入宅')
+            # P1-4 待证·零典据支持：地囊协纪卷十无忌入宅，取证后删除
+            pass  # self._add_shensha('地囊', -25, '地囊日忌动土、入宅')
         
         # 天贼（主盗贼损耗）
         if self._is_tianzei(sizhu):
