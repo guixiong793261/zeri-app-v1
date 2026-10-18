@@ -118,9 +118,12 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_yuexing(sizhu):
             self._add_shensha('月刑', -15, '月刑日不宜入宅')
         
-        # 月害
-        if self._is_yuehai(sizhu):
-            self._add_shensha('月害', -15, '月害日不宜入宅')
+        # 月害——P2 删除候选隔离（2026-10-18，001 §120）：月害×入宅三库无载
+        # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链（基类
+        # 通用链占位），基类按事项排除后将复活，故一并注释。
+        # 大时/五墓（下文）系语义等价项（般移【移徙同】有据），待语义裁断，保留不动。
+        # if self._is_yuehai(sizhu):
+        #     self._add_shensha('月害', -15, '月害日不宜入宅')
         
         # ===== 补充缺失的凶煞检查 =====
         
