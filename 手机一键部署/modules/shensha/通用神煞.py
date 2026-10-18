@@ -245,17 +245,13 @@ class CommonShenShaChecker(ShenShaChecker):
 
         # 土符条目已删（2026-10-18 零典据删除：通用通道服务入学/求医/签约等非土工
         # 事项，无典据支持；「土符忌动土」由动土/修造/拆舍专用通道 -20 承载，判据(b) §4）
-        
-        if self._is_tufu2(sizhu):
-            # P1-4 待证·零典据支持：土府协纪卷十忌修造动土类，非通用全事项，取证后删除
-            pass  # self._add_shensha('土府', -15, '土府忌日，忌动土')
+
+        # 土府/地囊条目已删（2026-10-18 P1-4 零典据确认后删除：协纪卷十一入学忌无、
+        # 求医疗病/立券交易忌列无土符地囊，且协纪「土府」仅作月建别名无独立煞；
+        # docs/P1-4_土府地囊_对勘.md，001 §111）
 
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟临日，大忌动土')
-
-        if self._is_dinang(sizhu):
-            # P1-4 待证·零典据支持：地囊协纪卷十忌修造动土类，非通用全事项，取证后删除
-            pass  # self._add_shensha('地囊', -25, '地囊之日，忌破土')
 
         if self._is_dahao(sizhu):
             self._add_shensha('大耗', -20, '大耗临身，破财耗气')
