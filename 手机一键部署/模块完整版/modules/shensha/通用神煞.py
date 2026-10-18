@@ -251,7 +251,7 @@ class CommonShenShaChecker(ShenShaChecker):
         # docs/P1-4_土府地囊_对勘.md，001 §111）
 
         if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -20, '土瘟临日，大忌动土')
+            self._add_shensha('土瘟', -20, '土瘟（四季土旺日）临日，大忌动土')
 
         if self._is_dahao(sizhu):
             self._add_shensha('大耗', -20, '大耗临身，破财耗气')

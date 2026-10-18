@@ -112,7 +112,7 @@ class BedShenShaChecker(ShenShaChecker):
 
         # 土瘟
         if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -20, '土瘟日不宜安床')
+            self._add_shensha('土瘟', -20, '土瘟（四季土旺日）不宜安床')
 
         # 月厌
         if self._is_yueyan(sizhu):
