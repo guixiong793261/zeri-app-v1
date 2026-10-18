@@ -1471,8 +1471,8 @@ class ShenShaChecker:
             self._add_shensha('蚕官', -10, '蚕官主蚕灾')
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼主耗散')
-        if self._is_dasha(sizhu):
-            self._add_shensha('大煞', -12, '大煞忌用')
+        # 大煞发射已删（2026-10-18 月家P1：协纪卷十仅忌军事「安抚边境选将训兵
+        # 出师」，软件无军事事项，全部注册超范围；docs/月家P1_大煞八专四击_对勘.md）
         # 金神：年神方位煞，不用于日课评分（见 _get_jinshen_positions，山向事项接入）
         if self._is_pobai(sizhu):
             self._add_shensha('破败', -10, '破败主破败')

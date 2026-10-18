@@ -273,16 +273,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 月虚（主虚耗）
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚日主虚耗，忌修造')
-        
-        # 八专（主消耗）
-        if self._is_bazhuan(sizhu):
-            self._add_shensha('八专', -15, '八专日主消耗，忌修造')
-        
-        # 四击（《协纪》卷五「春戌夏丑秋辰冬未」，月神比日支；
-        # 2026-10 A6-5 由注册名「四忌」改名归宗为典载正名「四击」）
-        if self._is_siji(sizhu):
-            self._add_shensha('四击', -12, '四击日忌修造')
-        
+
+        # 八专/四击发射已删（2026-10-18 月家P1：协纪卷十一两煞仅忌军事
+        # 「安抚边境选将训兵出师」（八专另忌结婚姻纳采问名嫁娶，由嫁娶通道承载），
+        # 修造/拆舍注册超范围；docs/月家P1_大煞八专四击_对勘.md）
+
         # 土瘟（四季土旺日）
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟日忌动土修造')

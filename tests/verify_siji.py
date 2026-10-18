@@ -261,8 +261,12 @@ def _assert_extra():
     assert shensha_score('安葬', '四忌', None) == -12
     for ev in OTHER_EVENTS:
         assert shensha_score(ev, '四忌', None) is None, ev
-    # 四击分值仍为 -12（归宗不变值），且四忌/四击在表中各自独立
-    assert shensha_score('修造', '四击', None) == -12
+    # 四击注册已删（2026-10-18 月家P1：协纪卷十仅忌军事「安抚边境选将训兵出师」，
+    # 软件无军事事项，全部注册超范围；docs/月家P1_大煞八专四击_对勘.md）——
+    # 谓词 is_siji_by_zhi 保留供 A2 穷举与文献口径核验，评分层无注册
+    assert shensha_score('修造', '四击', None) is None
+    for ev in OTHER_EVENTS:
+        assert shensha_score(ev, '四击', None) is None, ev
 
 
 if __name__ == '__main__':

@@ -98,10 +98,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 五鬼
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼日，忌动土修造')
-        
-        # 大煞
-        if self._is_dasha(sizhu):
-            self._add_shensha('大煞', -12, '大煞日，忌动土修造')
+
+        # 大煞发射已删（2026-10-18 月家P1：协纪卷十仅忌军事，动土超范围；
+        # docs/月家P1_大煞八专四击_对勘.md）
 
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""

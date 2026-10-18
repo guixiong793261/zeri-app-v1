@@ -193,8 +193,8 @@ CASES = [
 
 def _assert_extra():
     """1) 计数锁：每年恰 30 命中、三年每柱各 18 次；
-    2) 分值现状锁：八专非嫁娶专属——9 事项键+通配均 -15（与阳错/厌对
-       的专属反向断言刻意不同，防未来误改专属化）；
+    2) 分值现状锁：八专嫁娶专属化——仅嫁娶键 -15（2026-10-18 月家P1：
+       协纪仅忌军事+嫁娶，9 事项键+通配已删；docs/月家P1_大煞八专四击_对勘.md）；
     3) D 反事实：关闭分支后命中日总分差精确符合 -15 经 max(0) 截断
        理论公式，非命中日零变化；
     4) 嫁娶 checker 黄金日恰一条八专 -15。"""
@@ -211,14 +211,14 @@ def _assert_extra():
 
     from modules.事项标准 import shensha_score
     assert shensha_score('嫁娶', '八专', None) == -15
-    assert shensha_score('*', '八专', None) == -15, '通配键应为 -15'
+    # 月家P1 删除后：通配与其余 13 事项均无键（防未来误回填）
+    assert shensha_score('*', '八专', None) is None, '通配键应已删除'
     for ev in ('修造', '拆舍', '入宅', '作灶', '移徙', '入学', '求医', '签约'):
         v = shensha_score(ev, '八专', None)
-        assert v == -15, f'{ev} 八专现状应 -15（非专属）: {v}'
-    # 无键事项回落通配 -15（八专通配兜底，区别于阳错/厌对）
+        assert v is None, f'{ev} 八专键应已删除: {v}'
     for ev in ('安葬', '出行', '开业', '动土', '安床'):
-        assert shensha_score(ev, '八专', None) == -15, \
-            f'{ev} 应回落通配 -15: {shensha_score(ev, "八专", None)}'
+        assert shensha_score(ev, '八专', None) is None, \
+            f'{ev} 八专键应已删除: {shensha_score(ev, "八专", None)}'
 
     import modules.婚嫁评分算法 as _H
     _orig = _H.is_bazhuan

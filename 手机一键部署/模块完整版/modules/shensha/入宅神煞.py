@@ -304,15 +304,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 月虚（主虚耗）
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚日主虚耗，忌入宅')
-        
-        # 八专（主消耗）
-        if self._is_bazhuan(sizhu):
-            self._add_shensha('八专', -15, '八专日主消耗，忌入宅')
-        
-        # 四击（《协纪》卷五「春戌夏丑秋辰冬未」，月神比日支；
-        # 2026-10 A6-5 由注册名「四忌」改名归宗为典载正名「四击」）
-        if self._is_siji(sizhu):
-            self._add_shensha('四击', -12, '四击日忌入宅')
+
+        # 八专/四击发射已删（2026-10-18 月家P1：协纪仅忌军事（八专另忌嫁娶族），
+        # 入宅/移徙注册超范围；docs/月家P1_大煞八专四击_对勘.md）
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理宅主（家长）生肖与日课的冲合"""

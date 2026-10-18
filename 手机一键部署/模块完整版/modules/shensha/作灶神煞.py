@@ -227,11 +227,10 @@ class StoveShenShaChecker(ShenShaChecker):
         # 月虚
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚日主虚耗，忌作灶')
-        
-        # 八专
-        if self._is_bazhuan(sizhu):
-            self._add_shensha('八专', -15, '八专日主消耗，忌作灶')
-    
+
+        # 八专发射已删（2026-10-18 月家P1：协纪仅忌军事+嫁娶，作灶超范围；
+        # docs/月家P1_大煞八专四击_对勘.md）
+
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（宅主）生肖与日课的冲合"""
         zaoxiang = kwargs.get('zaoxiang')

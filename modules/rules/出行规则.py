@@ -45,7 +45,9 @@ class TravelRuleChecker(EventRuleChecker):
     CHUXING_YI_DAYS = ['天德', '月德', '不将日', '鸣犬日', '要安日', '六合日', '天赦日']
 
     # 出行专用凶日
-    CHUXING_JI_DAYS = ['月破', '岁破', '大煞', '四离四绝', '往亡', '朱雀', '白虎', '玄武']
+    # 「大煞」已删（2026-10-18 月家P1：协纪卷十仅忌军事，出行注册超范围；
+    # docs/月家P1_大煞八专四击_对勘.md）
+    CHUXING_JI_DAYS = ['月破', '岁破', '四离四绝', '往亡', '朱雀', '白虎', '玄武']
 
     # 地支对应方位
     ZHI_TO_DIRECTION = {
@@ -194,7 +196,8 @@ class TravelRuleChecker(EventRuleChecker):
                 else:
                     ji_text = str(jieri)
 
-                for xiongsa in ['四离', '四绝', '往亡', '朱雀', '白虎', '玄武', '大煞']:
+                # 「大煞」已删（2026-10-18 月家P1：协纪仅忌军事，超范围）
+                for xiongsa in ['四离', '四绝', '往亡', '朱雀', '白虎', '玄武']:
                     if xiongsa in ji_text or xiongsa in str(date_obj):
                         ji_list.append(f'{xiongsa}日忌出行')
             except Exception:

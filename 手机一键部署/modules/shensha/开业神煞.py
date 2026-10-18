@@ -65,11 +65,10 @@ class OpeningShenShaChecker(ShenShaChecker):
         # 亡神
         if self._is_fubing(sizhu):
             self._add_shensha('亡神', -12, '亡神主凶亡')
-        
-        # 大煞
-        if self._is_dasha(sizhu):
-            self._add_shensha('大煞', -12, '大煞主破败')
-        
+
+        # 大煞发射已删（2026-10-18 月家P1：协纪卷十仅忌军事，开业超范围；
+        # docs/月家P1_大煞八专四击_对勘.md）
+
         # 五鬼
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼主耗散')

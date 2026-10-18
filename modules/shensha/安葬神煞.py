@@ -77,11 +77,10 @@ class BurialShenShaChecker(ShenShaChecker):
         # 五鬼
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼主灾祸，凶')
-        
-        # 大煞
-        if self._is_dasha(sizhu):
-            self._add_shensha('大煞', -12, '大煞主凶险，凶')
-        
+
+        # 大煞发射已删（2026-10-18 月家P1：协纪卷十仅忌军事，安葬超范围；
+        # docs/月家P1_大煞八专四击_对勘.md）
+
         # 力士
         if self._is_lishi(sizhu):
             self._add_shensha('力士', -10, '力士主阻碍，凶')

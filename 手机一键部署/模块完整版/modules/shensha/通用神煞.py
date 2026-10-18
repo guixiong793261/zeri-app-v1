@@ -116,8 +116,8 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_wugui(sizhu):
             self._add_shensha('五鬼', -15, '五鬼缠身，破财耗气')
 
-        if self._is_dasha(sizhu):
-            self._add_shensha('大煞', -12, '大煞当令，慎勿轻动')
+        # 大煞发射已删（2026-10-18 月家P1：协纪卷十仅忌军事，软件无军事事项；
+        # docs/月家P1_大煞八专四击_对勘.md）
 
         # 金神：年神方位煞，不用于日课评分（见基类 _get_jinshen_positions）
 
@@ -239,13 +239,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚之日，虚耗不实')
 
-        if self._is_bazhuan(sizhu):
-            self._add_shensha('八专', -15, '八专日，阴阳失衡')
-
-        # 四击（《协纪》卷五「春戌夏丑秋辰冬未」，月神比日支；
-        # 2026-10 A6-5 由注册名「四忌」改名归宗为典载正名「四击」）
-        if self._is_siji(sizhu):
-            self._add_shensha('四击', -12, '四击之辰，当避')
+        # 八专/四击发射已删（2026-10-18 月家P1：协纪两煞仅忌军事（八专另忌
+        # 嫁娶族，由嫁娶通道承载），通用通道服务入学/求医/签约等非军事事项，
+        # 注册超范围；docs/月家P1_大煞八专四击_对勘.md）
 
         # 土符条目已删（2026-10-18 零典据删除：通用通道服务入学/求医/签约等非土工
         # 事项，无典据支持；「土符忌动土」由动土/修造/拆舍专用通道 -20 承载，判据(b) §4）
