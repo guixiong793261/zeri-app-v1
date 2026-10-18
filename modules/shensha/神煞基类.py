@@ -1589,7 +1589,9 @@ class ShenShaChecker:
         # 不忌安葬」+协纪卷十一安葬忌列无土族煞，docs/P1-5_安葬土瘟_对勘.md，001 §117）；
         # 其余事项维持现状（P1-5 P2 续取证，docs/P1-5_土瘟注册范围取证.md）。
         if self._is_tuwen(sizhu) and not getattr(self, '_TUWEN_DISABLED', False):
-            self._add_shensha('土瘟', -20, '土瘟忌用')
+            # P1-5 正名（2026-10-18）：限定词「四季土旺日」+忌动土入 UI 文案；
+            # 与协纪/考原建除「满为土瘟小吉」同名异实，分名不合并（docs/P1-5_土瘟注册范围取证.md §六）
+            self._add_shensha('土瘟', -20, '土瘟（四季土旺日），忌动土')
         if self._is_dashi(sizhu):
             self._add_shensha('大时', -12, '大时忌用')
         if self._is_tianli(sizhu):

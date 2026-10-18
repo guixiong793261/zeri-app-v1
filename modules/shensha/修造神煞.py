@@ -77,9 +77,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_tufu2(sizhu):
             self._add_shensha('土府', -20, '忌动土，犯之主败')
         
-        # 土瘟
+        # 土瘟（四季土旺日；P1-5 正名限定词，与建除满日「土瘟小吉」分名不合并）
         if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -20, '忌动土、修造，犯之主病')
+            self._add_shensha('土瘟', -20, '土瘟（四季土旺日），忌动土修造，犯之主病')
         
         # 地囊
         if self._is_dinang(sizhu):
@@ -280,7 +280,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
 
         # 土瘟（四季土旺日）
         if self._is_tuwen(sizhu):
-            self._add_shensha('土瘟', -20, '土瘟日忌动土修造')
+            self._add_shensha('土瘟', -20, '土瘟（四季土旺日）忌动土修造')
         
         # 土王用事（四立前各18日，与动土/拆舍统一口径；2026-10-18 P1-1 修：原委托土瘟推排致双发射）
         if self._is_tuwang_yongshi(sizhu):
