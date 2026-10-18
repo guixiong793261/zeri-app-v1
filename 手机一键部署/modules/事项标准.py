@@ -190,7 +190,17 @@ def get_shensha_checker(event_type):
     canonical = canonical_event(event_type)
     spec = SHENSHA_CHECKER_CLASSES.get(canonical)
     if spec is None:
-        return _instantiate(GENERIC_SHENSHA_CLASS[0], GENERIC_SHENSHA_CLASS[1], 'modules')
+        checker = _instantiate(GENERIC_SHENSHA_CLASS[0], GENERIC_SHENSHA_CLASS[1], 'modules')
+        # P2 部分匹配拆分（2026-10-18，001 §123）：通用检查器同样打 _std_event 戳。
+        # ①使通用链按事项拆分条件生效（月害/往亡×入学删除子项，001 §123）；
+        # ②取分链由 ('*', name) 通配改走 (canonical, name) 专属键——表内通用
+        # 事项专属键（346 键）此前因无戳从未命中，属休眠键；打戳前后行为经
+        # 2026 全年逐日三事项 check 全量对比验证，差异仅限本批删除子项。
+        try:
+            checker._std_event = canonical
+        except Exception:
+            pass
+        return checker
     checker = _instantiate(spec[0], spec[1], 'modules')
     # 标注规范事项，供神煞基类从分值单一表取数
     try:
@@ -1258,10 +1268,10 @@ SHENSHA_SCORES = {
     ('入学', '岁禄'): 15,
     ('入学', '年三煞'): -18,
     ('入学', '归忌'): -15,
-    ('入学', '往亡'): -20,
+    # ('入学', '往亡') 已删（2026-10-18 P2 部分匹配拆分 001 §123：卷十一入学条无往亡）
     ('入学', '日破时'): -10,
     ('入学', '月刑'): -15,
-    ('入学', '月害'): -15,
+    # ('入学', '月害') 已删（2026-10-18 P2 部分匹配拆分 001 §123：卷十一入学条无月害）
     ('入学', '月德'): 18,
     ('入学', '月恩'): 10,
     ('入学', '月破'): -30,
@@ -1495,7 +1505,8 @@ SHENSHA_SCORES = {
     ('签约', '岁禄'): 15,
     ('签约', '年三煞'): -18,
     ('签约', '归忌'): -15,
-    ('签约', '往亡'): -20,
+    # ('签约', '往亡') 已删（2026-10-18 P2 部分匹配拆分 001 §123：卷十一立劵交易条无往亡；
+    # 签约月害系有载子项保留）
     ('签约', '日破时'): -10,
     ('签约', '月刑'): -15,
     ('签约', '月害'): -15,
