@@ -1,0 +1,9787 @@
+{
+ "manifest": [
+  {
+   "book": "协纪辨方书",
+   "chap": "279216",
+   "juan": "?",
+   "sha256": "6247ae001cee61a07404567e83c650f0a268519a1317534a83f1ef7327327527",
+   "chars": 892
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279217",
+   "juan": "?",
+   "sha256": "e3f6add5dc4b1471279d133271cf8536fe28512adb11225c77611d543d183ba4",
+   "chars": 10519
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279218",
+   "juan": "?",
+   "sha256": "57408a50a500fb0309e1bc5a50afe3fdb8b065b2be6cfb8eae9b320d7b3004ad",
+   "chars": 1138
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279219",
+   "juan": "卷一本原一朱子曰本图书原卦画",
+   "sha256": "4138a54daa10fc1689ab9421f8ecbd7d75944e56038b8f9945c257ce6eea7d09",
+   "chars": 15076
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279220",
+   "juan": "卷二本原二二十四方位正五行中",
+   "sha256": "9dcdb2d0678f7ef4d18618b7f0516da9250a480b5e291eaa639b6e485e59cf61",
+   "chars": 9953
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "sha256": "0f82e4b7c6b363f8c6c0daf9fbbf41d69e6d834fe641cc2c60b7d35b4b6a27d1",
+   "chars": 11900
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279222",
+   "juan": "卷四义例二建除十二神建除同位",
+   "sha256": "ddf9b0b5131e233011e7efb3b935881e7fca799eb293d74bb7277814dacd6387",
+   "chars": 13905
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279223",
+   "juan": "卷五义例三天道天德月德天德合",
+   "sha256": "5f30493150a4992b9e6b044d5d507d7a716ca7ec850441bc8841642a22a183a2",
+   "chars": 13426
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "sha256": "a50adbb1d79c8368ff72920c911ed0259e6f42f909f9cfbb4f542cd96bfd191c",
+   "chars": 12629
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279225",
+   "juan": "卷七义例五黄道黑道天乙贵人天",
+   "sha256": "6a5e3e410ac282523a04d861867b3a9a12a3429a8dcd131885c6a659d550290b",
+   "chars": 8844
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279226",
+   "juan": "卷八义例六岁禄飞天禄飞天马飞",
+   "sha256": "a854f1aed43eed6ea456d049efa00ff00331ff11d6fe6e9dc62016a2d6165ec8",
+   "chars": 9906
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279227",
+   "juan": "卷九立成神煞之所由起义例备矣",
+   "sha256": "f12357ce1ec9196e66c4d06bc5ed3fc8a1b842e62ef45959d998de1a2b6447a4",
+   "chars": 2521
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "sha256": "2083346c191244605fe527b6bf3fe5b24b9f4fbc142b375369a4eb4d8013dbb5",
+   "chars": 19139
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "sha256": "cc90b33a02796da8f26df4c9edbbc933fcdb517bc2ddd8e91e36f94a90b0ff94",
+   "chars": 5525
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279230",
+   "juan": "卷十二公规一司天之职首重气候推",
+   "sha256": "3cc91583334f72524843204a32ed909582a311f61d1ded740a5671e7e24a03ef",
+   "chars": 6652
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279231",
+   "juan": "卷十三公规二更漏中星星图步天歌",
+   "sha256": "6418f61e2681f399508aa86e10ff13a7c1701d5af2c4b33e9a1af542614d2bab",
+   "chars": 13880
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279232",
+   "juan": "?",
+   "sha256": "27a165c0e86ab153aff9dec6c70a8a99db651a284f6a2b1e0bb6025f81aef6da",
+   "chars": 7146
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279233",
+   "juan": "卷十五上一章返回目录下一章中华",
+   "sha256": "5f644a59aae5246c3e87e856437b40e2514cead2c6b8b9b6e4776b9c535746ed",
+   "chars": 7095
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279234",
+   "juan": "卷十六年表三甲申至癸巳太岁甲申",
+   "sha256": "a635fada3f174f2ca0f8c49f020dec153ddc79cbba2d27788e22623207688996",
+   "chars": 7108
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279235",
+   "juan": "卷十七年表四甲午至癸卯太岁甲午",
+   "sha256": "ab045b008f2949eb1166d831b611639b8b3eb47106cb3343e84a3a9884b13471",
+   "chars": 7252
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279236",
+   "juan": "卷十八年表五甲辰至癸丑太岁甲辰",
+   "sha256": "f6b2427e54338ada667d1b5973a0c155b0ca8c236982d4efc17baacf03214587",
+   "chars": 7244
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279237",
+   "juan": "卷十九年表六甲寅至癸亥太岁甲寅",
+   "sha256": "42a7e4111062731ddbaef7926f47c1a7ec3f7a1843e5d13730d4cae33e976bf9",
+   "chars": 7295
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279238",
+   "juan": "卷二十月表一岁有十二月月有六十",
+   "sha256": "00e3413fb6d2943c7d4fef3d579e34a9bd2f57ee1a13b913f6218253f42b062b",
+   "chars": 1215
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279239",
+   "juan": "卷二十一月表二二月惊蛰二月节天道",
+   "sha256": "e8fa5b5d58148a84528668e8365879dc6bd6844ee61423bdfdcdb72fe32877e0",
+   "chars": 1169
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279240",
+   "juan": "卷二十二月表三三月清明三月节天道",
+   "sha256": "ea0c0e52bd507830bbdd531a76af26f933f37ad81e7d0f4f04db379998b1aac6",
+   "chars": 1156
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279241",
+   "juan": "卷二十三月表四四月立夏四月节天道",
+   "sha256": "bd4c50c8095b873c03f179b811077515aba79b0099cf28725eabd0d04a665f83",
+   "chars": 1147
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279242",
+   "juan": "卷二十四月表五五月芒种五月节天道",
+   "sha256": "45827a6bbcb87df32ef6e47bc98099fd48597c271b872e58e2054a6580cb6afd",
+   "chars": 1146
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279243",
+   "juan": "卷二十五月表六六月小暑六月节天道",
+   "sha256": "b32ae806fbecc34c5a290dfdb66ee2219d1536eee18d4d75c15fe5f68d290447",
+   "chars": 1147
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279244",
+   "juan": "卷二十六上一章返回目录下一章中华",
+   "sha256": "447c8bfdaeaf05034bd48949c2584aa376d34cbeacdfd83f7db031229c34ea68",
+   "chars": 1147
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279245",
+   "juan": "卷二十七上一章返回目录下一章中华",
+   "sha256": "66be0ab66b35ea31d4744ab0b0036be6cc1f0258a4e7d48af0d8eec1e4784588",
+   "chars": 1157
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279246",
+   "juan": "卷二十八月表九九月九月寒露九月节",
+   "sha256": "e28de2129f3786e89051eceb831c5d256c442e0c3d4daa02afc85a160eb273e2",
+   "chars": 1168
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279247",
+   "juan": "卷二十九月表十十月十月立冬十月节",
+   "sha256": "fb9524f72c1afb1aa8b476af192251f8b4eaa7dea4b705bb306458569b6b608a",
+   "chars": 1163
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279248",
+   "juan": "卷三十月表十一十一月大雪十一月",
+   "sha256": "4282bf5acfd836399a451c46f9e2a1a46491728e7a836f09cac56f0229268819",
+   "chars": 1149
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279249",
+   "juan": "卷三十一月表十二十二月小寒十二月",
+   "sha256": "703241bf768e7f3528302bec36d923805dfa65f5e798e7d24ae89e96cd5af5f7",
+   "chars": 1163
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279250",
+   "juan": "卷三十二日表由年而月而日神煞备矣",
+   "sha256": "3045ea6c272b889adbee8ef881fbacf25a1d13ef8de780f08b4435ac38f2b944",
+   "chars": 16842
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279251",
+   "juan": "卷三十三上一章返回目录下一章中华",
+   "sha256": "3e8ae1d9d3577d5832de6f92a4846844851170983b3a7eae36b14e43a96ae5cc",
+   "chars": 13805
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279252",
+   "juan": "卷三十四利用二年神总论月吉神总论",
+   "sha256": "934fb343dd5fc5c8d92668b1f243f5f673fd7a5cdabf049b4d3bba087e758fa0",
+   "chars": 14616
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "sha256": "362bd620c82d2eb66159e29572b9094222af99adda0726b663d7bc84be646a87",
+   "chars": 16791
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279254",
+   "juan": "卷三十六辨譌术士好奇而嗜利譌言繁",
+   "sha256": "88d1f89ae2fad8320d61a4abbf9d29b39a80a34ea43494519210a678f6630887",
+   "chars": 11058
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359075",
+   "juan": "提要",
+   "sha256": "b8a43613cdc55e5a892269cfa3494e9ff1e73747e388657676e9728a021f2487",
+   "chars": 997
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359076",
+   "juan": "卷一",
+   "sha256": "1d6725bdb47deb3c3eebdcb2d17ad0b14aeff17c6aa5324f33761edf4d11b453",
+   "chars": 14720
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359077",
+   "juan": "卷二",
+   "sha256": "fa621ee0bf97695c193ba2c7dd5ecb6d73e5811f3292fdb9582712615330c6e4",
+   "chars": 8854
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359078",
+   "juan": "卷三",
+   "sha256": "00e5064171ac571961dbb8dbcdd3dce59256284512aca03fee0799fd28b7b5f9",
+   "chars": 13829
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "sha256": "fea277a6b29898027094ee32a987dfc6e3f53ef48593e6496ab5f42a4a5c9df3",
+   "chars": 13474
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359080",
+   "juan": "卷五",
+   "sha256": "a8f03b44e48a682f84d4767a4520a1b7479be3a186934787225c920cc84b3f94",
+   "chars": 10810
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359081",
+   "juan": "卷六",
+   "sha256": "911e0902d2496fcbbaa6257fd8e6fb21d0a5a4766cd6649644d57adc8f7272c6",
+   "chars": 8870
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p2",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p3",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p4",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p5",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p6",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p7",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p8",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p9",
+   "juan": "",
+   "sha256": null,
+   "chars": 44
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p10",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p11",
+   "juan": "",
+   "sha256": null,
+   "chars": 69
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p12",
+   "juan": "",
+   "sha256": null,
+   "chars": 83
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p13",
+   "juan": "",
+   "sha256": null,
+   "chars": 89
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p14",
+   "juan": "",
+   "sha256": null,
+   "chars": 77
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p15",
+   "juan": "",
+   "sha256": null,
+   "chars": 84
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p16",
+   "juan": "",
+   "sha256": null,
+   "chars": 83
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p17",
+   "juan": "",
+   "sha256": null,
+   "chars": 76
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p18",
+   "juan": "",
+   "sha256": null,
+   "chars": 61
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p19",
+   "juan": "",
+   "sha256": null,
+   "chars": 33
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p20",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p21",
+   "juan": "",
+   "sha256": null,
+   "chars": 145
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p22",
+   "juan": "",
+   "sha256": null,
+   "chars": 159
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p23",
+   "juan": "",
+   "sha256": null,
+   "chars": 85
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p24",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p25",
+   "juan": "",
+   "sha256": null,
+   "chars": 126
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p26",
+   "juan": "",
+   "sha256": null,
+   "chars": 257
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p27",
+   "juan": "",
+   "sha256": null,
+   "chars": 242
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p28",
+   "juan": "",
+   "sha256": null,
+   "chars": 232
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p29",
+   "juan": "",
+   "sha256": null,
+   "chars": 275
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p30",
+   "juan": "",
+   "sha256": null,
+   "chars": 277
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p31",
+   "juan": "",
+   "sha256": null,
+   "chars": 282
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p32",
+   "juan": "",
+   "sha256": null,
+   "chars": 303
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p33",
+   "juan": "",
+   "sha256": null,
+   "chars": 278
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p34",
+   "juan": "",
+   "sha256": null,
+   "chars": 221
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p35",
+   "juan": "",
+   "sha256": null,
+   "chars": 225
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p36",
+   "juan": "",
+   "sha256": null,
+   "chars": 243
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p37",
+   "juan": "",
+   "sha256": null,
+   "chars": 247
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p38",
+   "juan": "",
+   "sha256": null,
+   "chars": 134
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p39",
+   "juan": "",
+   "sha256": null,
+   "chars": 222
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p40",
+   "juan": "",
+   "sha256": null,
+   "chars": 239
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p41",
+   "juan": "",
+   "sha256": null,
+   "chars": 215
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p42",
+   "juan": "",
+   "sha256": null,
+   "chars": 187
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p43",
+   "juan": "",
+   "sha256": null,
+   "chars": 226
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p44",
+   "juan": "",
+   "sha256": null,
+   "chars": 238
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p45",
+   "juan": "",
+   "sha256": null,
+   "chars": 228
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p46",
+   "juan": "",
+   "sha256": null,
+   "chars": 232
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p47",
+   "juan": "",
+   "sha256": null,
+   "chars": 233
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p48",
+   "juan": "",
+   "sha256": null,
+   "chars": 224
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p49",
+   "juan": "",
+   "sha256": null,
+   "chars": 240
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p50",
+   "juan": "",
+   "sha256": null,
+   "chars": 238
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p51",
+   "juan": "",
+   "sha256": null,
+   "chars": 224
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p52",
+   "juan": "",
+   "sha256": null,
+   "chars": 223
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p53",
+   "juan": "",
+   "sha256": null,
+   "chars": 209
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p54",
+   "juan": "",
+   "sha256": null,
+   "chars": 196
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p55",
+   "juan": "",
+   "sha256": null,
+   "chars": 216
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p56",
+   "juan": "",
+   "sha256": null,
+   "chars": 207
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p57",
+   "juan": "",
+   "sha256": null,
+   "chars": 241
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p58",
+   "juan": "",
+   "sha256": null,
+   "chars": 216
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p59",
+   "juan": "",
+   "sha256": null,
+   "chars": 225
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p60",
+   "juan": "",
+   "sha256": null,
+   "chars": 225
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p61",
+   "juan": "",
+   "sha256": null,
+   "chars": 221
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p62",
+   "juan": "",
+   "sha256": null,
+   "chars": 228
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p63",
+   "juan": "",
+   "sha256": null,
+   "chars": 235
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p64",
+   "juan": "",
+   "sha256": null,
+   "chars": 99
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p65",
+   "juan": "",
+   "sha256": null,
+   "chars": 142
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p66",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p67",
+   "juan": "",
+   "sha256": null,
+   "chars": 10
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p68",
+   "juan": "",
+   "sha256": null,
+   "chars": 74
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p69",
+   "juan": "",
+   "sha256": null,
+   "chars": 97
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p70",
+   "juan": "",
+   "sha256": null,
+   "chars": 360
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p71",
+   "juan": "",
+   "sha256": null,
+   "chars": 331
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p72",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p73",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p74",
+   "juan": "",
+   "sha256": null,
+   "chars": 98
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p75",
+   "juan": "",
+   "sha256": null,
+   "chars": 421
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p76",
+   "juan": "",
+   "sha256": null,
+   "chars": 462
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p77",
+   "juan": "",
+   "sha256": null,
+   "chars": 353
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p78",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p79",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p80",
+   "juan": "",
+   "sha256": null,
+   "chars": 303
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p81",
+   "juan": "",
+   "sha256": null,
+   "chars": 249
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p82",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p83",
+   "juan": "",
+   "sha256": null,
+   "chars": 390
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p84",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p85",
+   "juan": "",
+   "sha256": null,
+   "chars": 62
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p86",
+   "juan": "",
+   "sha256": null,
+   "chars": 78
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p87",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p88",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p89",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p90",
+   "juan": "",
+   "sha256": null,
+   "chars": 26
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p91",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p92",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p93",
+   "juan": "",
+   "sha256": null,
+   "chars": 266
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p94",
+   "juan": "",
+   "sha256": null,
+   "chars": 279
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p95",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p96",
+   "juan": "",
+   "sha256": null,
+   "chars": 479
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p97",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p98",
+   "juan": "",
+   "sha256": null,
+   "chars": 353
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p99",
+   "juan": "",
+   "sha256": null,
+   "chars": 418
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p100",
+   "juan": "",
+   "sha256": null,
+   "chars": 423
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p101",
+   "juan": "",
+   "sha256": null,
+   "chars": 407
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p102",
+   "juan": "",
+   "sha256": null,
+   "chars": 412
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p103",
+   "juan": "",
+   "sha256": null,
+   "chars": 129
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p104",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p105",
+   "juan": "",
+   "sha256": null,
+   "chars": 252
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p106",
+   "juan": "",
+   "sha256": null,
+   "chars": 195
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p107",
+   "juan": "",
+   "sha256": null,
+   "chars": 411
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p108",
+   "juan": "",
+   "sha256": null,
+   "chars": 419
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p109",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p110",
+   "juan": "",
+   "sha256": null,
+   "chars": 365
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p111",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p112",
+   "juan": "",
+   "sha256": null,
+   "chars": 1
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p113",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p114",
+   "juan": "",
+   "sha256": null,
+   "chars": 378
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p115",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p116",
+   "juan": "",
+   "sha256": null,
+   "chars": 363
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p117",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p118",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p119",
+   "juan": "",
+   "sha256": null,
+   "chars": 461
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p120",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p121",
+   "juan": "",
+   "sha256": null,
+   "chars": 394
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p122",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p123",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p124",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p125",
+   "juan": "",
+   "sha256": null,
+   "chars": 425
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p126",
+   "juan": "",
+   "sha256": null,
+   "chars": 439
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p127",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p128",
+   "juan": "",
+   "sha256": null,
+   "chars": 752
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p129",
+   "juan": "",
+   "sha256": null,
+   "chars": 924
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p130",
+   "juan": "",
+   "sha256": null,
+   "chars": 812
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p131",
+   "juan": "",
+   "sha256": null,
+   "chars": 872
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p132",
+   "juan": "",
+   "sha256": null,
+   "chars": 910
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p133",
+   "juan": "",
+   "sha256": null,
+   "chars": 925
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p134",
+   "juan": "",
+   "sha256": null,
+   "chars": 622
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p135",
+   "juan": "",
+   "sha256": null,
+   "chars": 812
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p136",
+   "juan": "",
+   "sha256": null,
+   "chars": 877
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p137",
+   "juan": "",
+   "sha256": null,
+   "chars": 909
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p138",
+   "juan": "",
+   "sha256": null,
+   "chars": 795
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p139",
+   "juan": "",
+   "sha256": null,
+   "chars": 755
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p140",
+   "juan": "",
+   "sha256": null,
+   "chars": 893
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p141",
+   "juan": "",
+   "sha256": null,
+   "chars": 754
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p142",
+   "juan": "",
+   "sha256": null,
+   "chars": 906
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p143",
+   "juan": "",
+   "sha256": null,
+   "chars": 617
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p144",
+   "juan": "",
+   "sha256": null,
+   "chars": 912
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p145",
+   "juan": "",
+   "sha256": null,
+   "chars": 813
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p146",
+   "juan": "",
+   "sha256": null,
+   "chars": 850
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p147",
+   "juan": "",
+   "sha256": null,
+   "chars": 815
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p148",
+   "juan": "",
+   "sha256": null,
+   "chars": 918
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p149",
+   "juan": "",
+   "sha256": null,
+   "chars": 910
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p150",
+   "juan": "",
+   "sha256": null,
+   "chars": 938
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p151",
+   "juan": "",
+   "sha256": null,
+   "chars": 916
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p152",
+   "juan": "",
+   "sha256": null,
+   "chars": 931
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p153",
+   "juan": "",
+   "sha256": null,
+   "chars": 931
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p154",
+   "juan": "",
+   "sha256": null,
+   "chars": 931
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p155",
+   "juan": "",
+   "sha256": null,
+   "chars": 934
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p156",
+   "juan": "",
+   "sha256": null,
+   "chars": 909
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p157",
+   "juan": "",
+   "sha256": null,
+   "chars": 750
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p158",
+   "juan": "",
+   "sha256": null,
+   "chars": 790
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p159",
+   "juan": "",
+   "sha256": null,
+   "chars": 871
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p160",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p161",
+   "juan": "",
+   "sha256": null,
+   "chars": 349
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p162",
+   "juan": "",
+   "sha256": null,
+   "chars": 312
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p163",
+   "juan": "",
+   "sha256": null,
+   "chars": 255
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p164",
+   "juan": "",
+   "sha256": null,
+   "chars": 269
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p165",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p166",
+   "juan": "",
+   "sha256": null,
+   "chars": 406
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p167",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p168",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p169",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p170",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p171",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p172",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p173",
+   "juan": "",
+   "sha256": null,
+   "chars": 197
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p174",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p175",
+   "juan": "",
+   "sha256": null,
+   "chars": 14
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p176",
+   "juan": "",
+   "sha256": null,
+   "chars": 438
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p177",
+   "juan": "",
+   "sha256": null,
+   "chars": 413
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p178",
+   "juan": "",
+   "sha256": null,
+   "chars": 395
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p179",
+   "juan": "",
+   "sha256": null,
+   "chars": 393
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p180",
+   "juan": "",
+   "sha256": null,
+   "chars": 444
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p181",
+   "juan": "",
+   "sha256": null,
+   "chars": 401
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p182",
+   "juan": "",
+   "sha256": null,
+   "chars": 376
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p183",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p184",
+   "juan": "",
+   "sha256": null,
+   "chars": 324
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p185",
+   "juan": "",
+   "sha256": null,
+   "chars": 358
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p186",
+   "juan": "",
+   "sha256": null,
+   "chars": 375
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p187",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p188",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p189",
+   "juan": "",
+   "sha256": null,
+   "chars": 426
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p190",
+   "juan": "",
+   "sha256": null,
+   "chars": 349
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p191",
+   "juan": "",
+   "sha256": null,
+   "chars": 403
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p192",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p193",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p194",
+   "juan": "",
+   "sha256": null,
+   "chars": 411
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p195",
+   "juan": "",
+   "sha256": null,
+   "chars": 408
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p196",
+   "juan": "",
+   "sha256": null,
+   "chars": 425
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p197",
+   "juan": "",
+   "sha256": null,
+   "chars": 377
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p198",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p199",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p200",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p201",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p202",
+   "juan": "",
+   "sha256": null,
+   "chars": 293
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p203",
+   "juan": "",
+   "sha256": null,
+   "chars": 382
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p204",
+   "juan": "",
+   "sha256": null,
+   "chars": 443
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p205",
+   "juan": "",
+   "sha256": null,
+   "chars": 223
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p206",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p207",
+   "juan": "",
+   "sha256": null,
+   "chars": 243
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p208",
+   "juan": "",
+   "sha256": null,
+   "chars": 405
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p209",
+   "juan": "",
+   "sha256": null,
+   "chars": 428
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p210",
+   "juan": "",
+   "sha256": null,
+   "chars": 416
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p211",
+   "juan": "",
+   "sha256": null,
+   "chars": 416
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p212",
+   "juan": "",
+   "sha256": null,
+   "chars": 453
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p213",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p214",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p215",
+   "juan": "",
+   "sha256": null,
+   "chars": 405
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p216",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p217",
+   "juan": "",
+   "sha256": null,
+   "chars": 395
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p218",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p219",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p220",
+   "juan": "",
+   "sha256": null,
+   "chars": 413
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p221",
+   "juan": "",
+   "sha256": null,
+   "chars": 370
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p222",
+   "juan": "",
+   "sha256": null,
+   "chars": 378
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p223",
+   "juan": "",
+   "sha256": null,
+   "chars": 379
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p224",
+   "juan": "",
+   "sha256": null,
+   "chars": 366
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p225",
+   "juan": "",
+   "sha256": null,
+   "chars": 326
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p226",
+   "juan": "",
+   "sha256": null,
+   "chars": 297
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p227",
+   "juan": "",
+   "sha256": null,
+   "chars": 353
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p228",
+   "juan": "",
+   "sha256": null,
+   "chars": 386
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p229",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p230",
+   "juan": "",
+   "sha256": null,
+   "chars": 360
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p231",
+   "juan": "",
+   "sha256": null,
+   "chars": 448
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p232",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p233",
+   "juan": "",
+   "sha256": null,
+   "chars": 402
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p234",
+   "juan": "",
+   "sha256": null,
+   "chars": 441
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p235",
+   "juan": "",
+   "sha256": null,
+   "chars": 418
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p236",
+   "juan": "",
+   "sha256": null,
+   "chars": 395
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p237",
+   "juan": "",
+   "sha256": null,
+   "chars": 454
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p238",
+   "juan": "",
+   "sha256": null,
+   "chars": 450
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p239",
+   "juan": "",
+   "sha256": null,
+   "chars": 435
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p240",
+   "juan": "",
+   "sha256": null,
+   "chars": 293
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p241",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p242",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p243",
+   "juan": "",
+   "sha256": null,
+   "chars": 319
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p244",
+   "juan": "",
+   "sha256": null,
+   "chars": 307
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p245",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p246",
+   "juan": "",
+   "sha256": null,
+   "chars": 122
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p247",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p248",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p249",
+   "juan": "",
+   "sha256": null,
+   "chars": 377
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p250",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p251",
+   "juan": "",
+   "sha256": null,
+   "chars": 374
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p252",
+   "juan": "",
+   "sha256": null,
+   "chars": 420
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p253",
+   "juan": "",
+   "sha256": null,
+   "chars": 117
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p254",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p255",
+   "juan": "",
+   "sha256": null,
+   "chars": 204
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p256",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p257",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p258",
+   "juan": "",
+   "sha256": null,
+   "chars": 393
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p259",
+   "juan": "",
+   "sha256": null,
+   "chars": 428
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p260",
+   "juan": "",
+   "sha256": null,
+   "chars": 408
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p261",
+   "juan": "",
+   "sha256": null,
+   "chars": 404
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p262",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p263",
+   "juan": "",
+   "sha256": null,
+   "chars": 441
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p264",
+   "juan": "",
+   "sha256": null,
+   "chars": 457
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p265",
+   "juan": "",
+   "sha256": null,
+   "chars": 542
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p266",
+   "juan": "",
+   "sha256": null,
+   "chars": 453
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p267",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p268",
+   "juan": "",
+   "sha256": null,
+   "chars": 368
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p269",
+   "juan": "",
+   "sha256": null,
+   "chars": 393
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p270",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p271",
+   "juan": "",
+   "sha256": null,
+   "chars": 361
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p272",
+   "juan": "",
+   "sha256": null,
+   "chars": 393
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p273",
+   "juan": "",
+   "sha256": null,
+   "chars": 479
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p274",
+   "juan": "",
+   "sha256": null,
+   "chars": 454
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p275",
+   "juan": "",
+   "sha256": null,
+   "chars": 408
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p276",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p277",
+   "juan": "",
+   "sha256": null,
+   "chars": 539
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p278",
+   "juan": "",
+   "sha256": null,
+   "chars": 411
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p279",
+   "juan": "",
+   "sha256": null,
+   "chars": 395
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p280",
+   "juan": "",
+   "sha256": null,
+   "chars": 206
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p281",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p282",
+   "juan": "",
+   "sha256": null,
+   "chars": 203
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p283",
+   "juan": "",
+   "sha256": null,
+   "chars": 202
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p284",
+   "juan": "",
+   "sha256": null,
+   "chars": 203
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p285",
+   "juan": "",
+   "sha256": null,
+   "chars": 290
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p286",
+   "juan": "",
+   "sha256": null,
+   "chars": 377
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p287",
+   "juan": "",
+   "sha256": null,
+   "chars": 451
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p288",
+   "juan": "",
+   "sha256": null,
+   "chars": 425
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p289",
+   "juan": "",
+   "sha256": null,
+   "chars": 9
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p290",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p291",
+   "juan": "",
+   "sha256": null,
+   "chars": 674
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p292",
+   "juan": "",
+   "sha256": null,
+   "chars": 356
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p293",
+   "juan": "",
+   "sha256": null,
+   "chars": 75
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p294",
+   "juan": "",
+   "sha256": null,
+   "chars": 1
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p295",
+   "juan": "",
+   "sha256": null,
+   "chars": 46
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p296",
+   "juan": "",
+   "sha256": null,
+   "chars": 90
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p297",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p298",
+   "juan": "",
+   "sha256": null,
+   "chars": 325
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p299",
+   "juan": "",
+   "sha256": null,
+   "chars": 273
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p300",
+   "juan": "",
+   "sha256": null,
+   "chars": 377
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p301",
+   "juan": "",
+   "sha256": null,
+   "chars": 28
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p302",
+   "juan": "",
+   "sha256": null,
+   "chars": 90
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p303",
+   "juan": "",
+   "sha256": null,
+   "chars": 316
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p304",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p305",
+   "juan": "",
+   "sha256": null,
+   "chars": 37
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p306",
+   "juan": "",
+   "sha256": null,
+   "chars": 390
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p307",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p308",
+   "juan": "",
+   "sha256": null,
+   "chars": 392
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p309",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p310",
+   "juan": "",
+   "sha256": null,
+   "chars": 397
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p311",
+   "juan": "",
+   "sha256": null,
+   "chars": 392
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p312",
+   "juan": "",
+   "sha256": null,
+   "chars": 662
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p313",
+   "juan": "",
+   "sha256": null,
+   "chars": 543
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p314",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p315",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p316",
+   "juan": "",
+   "sha256": null,
+   "chars": 59
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p317",
+   "juan": "",
+   "sha256": null,
+   "chars": 205
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p318",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p319",
+   "juan": "",
+   "sha256": null,
+   "chars": 160
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p320",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p321",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p322",
+   "juan": "",
+   "sha256": null,
+   "chars": 402
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p323",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p324",
+   "juan": "",
+   "sha256": null,
+   "chars": 330
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p325",
+   "juan": "",
+   "sha256": null,
+   "chars": 341
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p326",
+   "juan": "",
+   "sha256": null,
+   "chars": 379
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p327",
+   "juan": "",
+   "sha256": null,
+   "chars": 383
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p328",
+   "juan": "",
+   "sha256": null,
+   "chars": 303
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p329",
+   "juan": "",
+   "sha256": null,
+   "chars": 214
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p330",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p331",
+   "juan": "",
+   "sha256": null,
+   "chars": 413
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p332",
+   "juan": "",
+   "sha256": null,
+   "chars": 300
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p333",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p334",
+   "juan": "",
+   "sha256": null,
+   "chars": 210
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p335",
+   "juan": "",
+   "sha256": null,
+   "chars": 318
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p336",
+   "juan": "",
+   "sha256": null,
+   "chars": 344
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p337",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p338",
+   "juan": "",
+   "sha256": null,
+   "chars": 438
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p339",
+   "juan": "",
+   "sha256": null,
+   "chars": 319
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p340",
+   "juan": "",
+   "sha256": null,
+   "chars": 14
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p341",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p342",
+   "juan": "",
+   "sha256": null,
+   "chars": 340
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p343",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p344",
+   "juan": "",
+   "sha256": null,
+   "chars": 397
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p345",
+   "juan": "",
+   "sha256": null,
+   "chars": 187
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p346",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p347",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p348",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p349",
+   "juan": "",
+   "sha256": null,
+   "chars": 4
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p350",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p351",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p352",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p353",
+   "juan": "",
+   "sha256": null,
+   "chars": 295
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p354",
+   "juan": "",
+   "sha256": null,
+   "chars": 374
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p355",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p356",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p357",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p358",
+   "juan": "",
+   "sha256": null,
+   "chars": 366
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p359",
+   "juan": "",
+   "sha256": null,
+   "chars": 26
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p360",
+   "juan": "",
+   "sha256": null,
+   "chars": 277
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p361",
+   "juan": "",
+   "sha256": null,
+   "chars": 519
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p362",
+   "juan": "",
+   "sha256": null,
+   "chars": 552
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p363",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p364",
+   "juan": "",
+   "sha256": null,
+   "chars": 167
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p365",
+   "juan": "",
+   "sha256": null,
+   "chars": 516
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p366",
+   "juan": "",
+   "sha256": null,
+   "chars": 540
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p367",
+   "juan": "",
+   "sha256": null,
+   "chars": 382
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p368",
+   "juan": "",
+   "sha256": null,
+   "chars": 163
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p369",
+   "juan": "",
+   "sha256": null,
+   "chars": 471
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p370",
+   "juan": "",
+   "sha256": null,
+   "chars": 537
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p371",
+   "juan": "",
+   "sha256": null,
+   "chars": 371
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p372",
+   "juan": "",
+   "sha256": null,
+   "chars": 142
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p373",
+   "juan": "",
+   "sha256": null,
+   "chars": 529
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p374",
+   "juan": "",
+   "sha256": null,
+   "chars": 502
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p375",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p376",
+   "juan": "",
+   "sha256": null,
+   "chars": 133
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p377",
+   "juan": "",
+   "sha256": null,
+   "chars": 496
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p378",
+   "juan": "",
+   "sha256": null,
+   "chars": 530
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p379",
+   "juan": "",
+   "sha256": null,
+   "chars": 363
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p380",
+   "juan": "",
+   "sha256": null,
+   "chars": 150
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p381",
+   "juan": "",
+   "sha256": null,
+   "chars": 496
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p382",
+   "juan": "",
+   "sha256": null,
+   "chars": 493
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p383",
+   "juan": "",
+   "sha256": null,
+   "chars": 333
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p384",
+   "juan": "",
+   "sha256": null,
+   "chars": 155
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p385",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p386",
+   "juan": "",
+   "sha256": null,
+   "chars": 520
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p387",
+   "juan": "",
+   "sha256": null,
+   "chars": 330
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p388",
+   "juan": "",
+   "sha256": null,
+   "chars": 174
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p389",
+   "juan": "",
+   "sha256": null,
+   "chars": 530
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p390",
+   "juan": "",
+   "sha256": null,
+   "chars": 499
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p391",
+   "juan": "",
+   "sha256": null,
+   "chars": 354
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p392",
+   "juan": "",
+   "sha256": null,
+   "chars": 150
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p393",
+   "juan": "",
+   "sha256": null,
+   "chars": 500
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p394",
+   "juan": "",
+   "sha256": null,
+   "chars": 491
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p395",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p396",
+   "juan": "",
+   "sha256": null,
+   "chars": 169
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p397",
+   "juan": "",
+   "sha256": null,
+   "chars": 470
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p398",
+   "juan": "",
+   "sha256": null,
+   "chars": 481
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p399",
+   "juan": "",
+   "sha256": null,
+   "chars": 310
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p400",
+   "juan": "",
+   "sha256": null,
+   "chars": 138
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p401",
+   "juan": "",
+   "sha256": null,
+   "chars": 567
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p402",
+   "juan": "",
+   "sha256": null,
+   "chars": 525
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p403",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p404",
+   "juan": "",
+   "sha256": null,
+   "chars": 159
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p405",
+   "juan": "",
+   "sha256": null,
+   "chars": 496
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p406",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p407",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p408",
+   "juan": "",
+   "sha256": null,
+   "chars": 140
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p409",
+   "juan": "",
+   "sha256": null,
+   "chars": 402
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p410",
+   "juan": "",
+   "sha256": null,
+   "chars": 448
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p411",
+   "juan": "",
+   "sha256": null,
+   "chars": 167
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p412",
+   "juan": "",
+   "sha256": null,
+   "chars": 483
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p413",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p414",
+   "juan": "",
+   "sha256": null,
+   "chars": 413
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p415",
+   "juan": "",
+   "sha256": null,
+   "chars": 446
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p416",
+   "juan": "",
+   "sha256": null,
+   "chars": 457
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p417",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p418",
+   "juan": "",
+   "sha256": null,
+   "chars": 380
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p419",
+   "juan": "",
+   "sha256": null,
+   "chars": 221
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p420",
+   "juan": "",
+   "sha256": null,
+   "chars": 137
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p421",
+   "juan": "",
+   "sha256": null,
+   "chars": 437
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p422",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p423",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p424",
+   "juan": "",
+   "sha256": null,
+   "chars": 381
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p425",
+   "juan": "",
+   "sha256": null,
+   "chars": 49
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p426",
+   "juan": "",
+   "sha256": null,
+   "chars": 94
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p427",
+   "juan": "",
+   "sha256": null,
+   "chars": 590
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p428",
+   "juan": "",
+   "sha256": null,
+   "chars": 436
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p429",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p430",
+   "juan": "",
+   "sha256": null,
+   "chars": 353
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p431",
+   "juan": "",
+   "sha256": null,
+   "chars": 422
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p432",
+   "juan": "",
+   "sha256": null,
+   "chars": 434
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p433",
+   "juan": "",
+   "sha256": null,
+   "chars": 417
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p434",
+   "juan": "",
+   "sha256": null,
+   "chars": 418
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p435",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p436",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p437",
+   "juan": "",
+   "sha256": null,
+   "chars": 455
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p438",
+   "juan": "",
+   "sha256": null,
+   "chars": 446
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p439",
+   "juan": "",
+   "sha256": null,
+   "chars": 462
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p440",
+   "juan": "",
+   "sha256": null,
+   "chars": 454
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p441",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p442",
+   "juan": "",
+   "sha256": null,
+   "chars": 380
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p443",
+   "juan": "",
+   "sha256": null,
+   "chars": 209
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p444",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p445",
+   "juan": "",
+   "sha256": null,
+   "chars": 445
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p446",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p447",
+   "juan": "",
+   "sha256": null,
+   "chars": 420
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p448",
+   "juan": "",
+   "sha256": null,
+   "chars": 70
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p449",
+   "juan": "",
+   "sha256": null,
+   "chars": 417
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p450",
+   "juan": "",
+   "sha256": null,
+   "chars": 417
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p451",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p452",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p453",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p454",
+   "juan": "",
+   "sha256": null,
+   "chars": 322
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p455",
+   "juan": "",
+   "sha256": null,
+   "chars": 419
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p456",
+   "juan": "",
+   "sha256": null,
+   "chars": 381
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p457",
+   "juan": "",
+   "sha256": null,
+   "chars": 473
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p458",
+   "juan": "",
+   "sha256": null,
+   "chars": 458
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p459",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p460",
+   "juan": "",
+   "sha256": null,
+   "chars": 347
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p461",
+   "juan": "",
+   "sha256": null,
+   "chars": 417
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p462",
+   "juan": "",
+   "sha256": null,
+   "chars": 451
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p463",
+   "juan": "",
+   "sha256": null,
+   "chars": 478
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p464",
+   "juan": "",
+   "sha256": null,
+   "chars": 487
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p465",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p466",
+   "juan": "",
+   "sha256": null,
+   "chars": 341
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p467",
+   "juan": "",
+   "sha256": null,
+   "chars": 367
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p468",
+   "juan": "",
+   "sha256": null,
+   "chars": 518
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p469",
+   "juan": "",
+   "sha256": null,
+   "chars": 451
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p470",
+   "juan": "",
+   "sha256": null,
+   "chars": 457
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p471",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p472",
+   "juan": "",
+   "sha256": null,
+   "chars": 367
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p473",
+   "juan": "",
+   "sha256": null,
+   "chars": 463
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p474",
+   "juan": "",
+   "sha256": null,
+   "chars": 447
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p475",
+   "juan": "",
+   "sha256": null,
+   "chars": 438
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p476",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p477",
+   "juan": "",
+   "sha256": null,
+   "chars": 308
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p478",
+   "juan": "",
+   "sha256": null,
+   "chars": 449
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p479",
+   "juan": "",
+   "sha256": null,
+   "chars": 492
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p480",
+   "juan": "",
+   "sha256": null,
+   "chars": 516
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p481",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p482",
+   "juan": "",
+   "sha256": null,
+   "chars": 350
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p483",
+   "juan": "",
+   "sha256": null,
+   "chars": 370
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p484",
+   "juan": "",
+   "sha256": null,
+   "chars": 424
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p485",
+   "juan": "",
+   "sha256": null,
+   "chars": 447
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p486",
+   "juan": "",
+   "sha256": null,
+   "chars": 417
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p487",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p488",
+   "juan": "",
+   "sha256": null,
+   "chars": 445
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p489",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p490",
+   "juan": "",
+   "sha256": null,
+   "chars": 319
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p491",
+   "juan": "",
+   "sha256": null,
+   "chars": 383
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p492",
+   "juan": "",
+   "sha256": null,
+   "chars": 470
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p493",
+   "juan": "",
+   "sha256": null,
+   "chars": 465
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p494",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p495",
+   "juan": "",
+   "sha256": null,
+   "chars": 309
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p496",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p497",
+   "juan": "",
+   "sha256": null,
+   "chars": 452
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p498",
+   "juan": "",
+   "sha256": null,
+   "chars": 458
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p499",
+   "juan": "",
+   "sha256": null,
+   "chars": 465
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p500",
+   "juan": "",
+   "sha256": null,
+   "chars": 458
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p501",
+   "juan": "",
+   "sha256": null,
+   "chars": 412
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p502",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p503",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p504",
+   "juan": "",
+   "sha256": null,
+   "chars": 424
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p505",
+   "juan": "",
+   "sha256": null,
+   "chars": 481
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p506",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p507",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p508",
+   "juan": "",
+   "sha256": null,
+   "chars": 358
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p509",
+   "juan": "",
+   "sha256": null,
+   "chars": 486
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p510",
+   "juan": "",
+   "sha256": null,
+   "chars": 482
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p511",
+   "juan": "",
+   "sha256": null,
+   "chars": 569
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p512",
+   "juan": "",
+   "sha256": null,
+   "chars": 416
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p513",
+   "juan": "",
+   "sha256": null,
+   "chars": 348
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p514",
+   "juan": "",
+   "sha256": null,
+   "chars": 434
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p515",
+   "juan": "",
+   "sha256": null,
+   "chars": 516
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p516",
+   "juan": "",
+   "sha256": null,
+   "chars": 459
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p517",
+   "juan": "",
+   "sha256": null,
+   "chars": 439
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p518",
+   "juan": "",
+   "sha256": null,
+   "chars": 350
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p519",
+   "juan": "",
+   "sha256": null,
+   "chars": 423
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p520",
+   "juan": "",
+   "sha256": null,
+   "chars": 258
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p521",
+   "juan": "",
+   "sha256": null,
+   "chars": 425
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p522",
+   "juan": "",
+   "sha256": null,
+   "chars": 416
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p523",
+   "juan": "",
+   "sha256": null,
+   "chars": 436
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p524",
+   "juan": "",
+   "sha256": null,
+   "chars": 480
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p525",
+   "juan": "",
+   "sha256": null,
+   "chars": 438
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p526",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p527",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p528",
+   "juan": "",
+   "sha256": null,
+   "chars": 529
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p529",
+   "juan": "",
+   "sha256": null,
+   "chars": 18
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p530",
+   "juan": "",
+   "sha256": null,
+   "chars": 416
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p531",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p532",
+   "juan": "",
+   "sha256": null,
+   "chars": 354
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p533",
+   "juan": "",
+   "sha256": null,
+   "chars": 31
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p534",
+   "juan": "",
+   "sha256": null,
+   "chars": 447
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p535",
+   "juan": "",
+   "sha256": null,
+   "chars": 460
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p536",
+   "juan": "",
+   "sha256": null,
+   "chars": 510
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p537",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p538",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p539",
+   "juan": "",
+   "sha256": null,
+   "chars": 357
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p540",
+   "juan": "",
+   "sha256": null,
+   "chars": 412
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p541",
+   "juan": "",
+   "sha256": null,
+   "chars": 238
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p542",
+   "juan": "",
+   "sha256": null,
+   "chars": 437
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p543",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p544",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p545",
+   "juan": "",
+   "sha256": null,
+   "chars": 39
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p546",
+   "juan": "",
+   "sha256": null,
+   "chars": 12
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p547",
+   "juan": "",
+   "sha256": null,
+   "chars": 458
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p548",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p549",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p550",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p551",
+   "juan": "",
+   "sha256": null,
+   "chars": 496
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p552",
+   "juan": "",
+   "sha256": null,
+   "chars": 480
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p553",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p554",
+   "juan": "",
+   "sha256": null,
+   "chars": 35
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p555",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p556",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p557",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p558",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p559",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p560",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p561",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p562",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p563",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p564",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p565",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p566",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p567",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p568",
+   "juan": "",
+   "sha256": null,
+   "chars": 3
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p569",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p570",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p571",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p572",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p573",
+   "juan": "",
+   "sha256": null,
+   "chars": 499
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p574",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p575",
+   "juan": "",
+   "sha256": null,
+   "chars": 180
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p576",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p577",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p578",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p579",
+   "juan": "",
+   "sha256": null,
+   "chars": 325
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p580",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p581",
+   "juan": "",
+   "sha256": null,
+   "chars": 264
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p582",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p583",
+   "juan": "",
+   "sha256": null,
+   "chars": 503
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p584",
+   "juan": "",
+   "sha256": null,
+   "chars": 320
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p585",
+   "juan": "",
+   "sha256": null,
+   "chars": 479
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p586",
+   "juan": "",
+   "sha256": null,
+   "chars": 311
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p587",
+   "juan": "",
+   "sha256": null,
+   "chars": 424
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p588",
+   "juan": "",
+   "sha256": null,
+   "chars": 415
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p589",
+   "juan": "",
+   "sha256": null,
+   "chars": 447
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p590",
+   "juan": "",
+   "sha256": null,
+   "chars": 379
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p591",
+   "juan": "",
+   "sha256": null,
+   "chars": 163
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p592",
+   "juan": "",
+   "sha256": null,
+   "chars": 386
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p593",
+   "juan": "",
+   "sha256": null,
+   "chars": 458
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p594",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p595",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p596",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p597",
+   "juan": "",
+   "sha256": null,
+   "chars": 39
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p598",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p599",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p600",
+   "juan": "",
+   "sha256": null,
+   "chars": 365
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p601",
+   "juan": "",
+   "sha256": null,
+   "chars": 426
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p602",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p603",
+   "juan": "",
+   "sha256": null,
+   "chars": 388
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p604",
+   "juan": "",
+   "sha256": null,
+   "chars": 386
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p605",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p606",
+   "juan": "",
+   "sha256": null,
+   "chars": 279
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p607",
+   "juan": "",
+   "sha256": null,
+   "chars": 405
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p608",
+   "juan": "",
+   "sha256": null,
+   "chars": 339
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p609",
+   "juan": "",
+   "sha256": null,
+   "chars": 5
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p610",
+   "juan": "",
+   "sha256": null,
+   "chars": 370
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p611",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p612",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p613",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p614",
+   "juan": "",
+   "sha256": null,
+   "chars": 301
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p615",
+   "juan": "",
+   "sha256": null,
+   "chars": 341
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p616",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p617",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p618",
+   "juan": "",
+   "sha256": null,
+   "chars": 196
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p619",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p620",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p621",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p622",
+   "juan": "",
+   "sha256": null,
+   "chars": 411
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p623",
+   "juan": "",
+   "sha256": null,
+   "chars": 353
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p624",
+   "juan": "",
+   "sha256": null,
+   "chars": 394
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p625",
+   "juan": "",
+   "sha256": null,
+   "chars": 376
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p626",
+   "juan": "",
+   "sha256": null,
+   "chars": 32
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p627",
+   "juan": "",
+   "sha256": null,
+   "chars": 392
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p628",
+   "juan": "",
+   "sha256": null,
+   "chars": 308
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p629",
+   "juan": "",
+   "sha256": null,
+   "chars": 80
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p630",
+   "juan": "",
+   "sha256": null,
+   "chars": 310
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p631",
+   "juan": "",
+   "sha256": null,
+   "chars": 367
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p632",
+   "juan": "",
+   "sha256": null,
+   "chars": 382
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p633",
+   "juan": "",
+   "sha256": null,
+   "chars": 307
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p634",
+   "juan": "",
+   "sha256": null,
+   "chars": 366
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p635",
+   "juan": "",
+   "sha256": null,
+   "chars": 365
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p636",
+   "juan": "",
+   "sha256": null,
+   "chars": 46
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p637",
+   "juan": "",
+   "sha256": null,
+   "chars": 410
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p638",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p639",
+   "juan": "",
+   "sha256": null,
+   "chars": 308
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p640",
+   "juan": "",
+   "sha256": null,
+   "chars": 380
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p641",
+   "juan": "",
+   "sha256": null,
+   "chars": 356
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p642",
+   "juan": "",
+   "sha256": null,
+   "chars": 366
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p643",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p644",
+   "juan": "",
+   "sha256": null,
+   "chars": 237
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p645",
+   "juan": "",
+   "sha256": null,
+   "chars": 295
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p646",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p647",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p648",
+   "juan": "",
+   "sha256": null,
+   "chars": 281
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p649",
+   "juan": "",
+   "sha256": null,
+   "chars": 250
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p650",
+   "juan": "",
+   "sha256": null,
+   "chars": 24
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p651",
+   "juan": "",
+   "sha256": null,
+   "chars": 9
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p652",
+   "juan": "",
+   "sha256": null,
+   "chars": 403
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p653",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p654",
+   "juan": "",
+   "sha256": null,
+   "chars": 375
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p655",
+   "juan": "",
+   "sha256": null,
+   "chars": 319
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p656",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p657",
+   "juan": "",
+   "sha256": null,
+   "chars": 325
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p658",
+   "juan": "",
+   "sha256": null,
+   "chars": 311
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p659",
+   "juan": "",
+   "sha256": null,
+   "chars": 358
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p660",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p661",
+   "juan": "",
+   "sha256": null,
+   "chars": 282
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p662",
+   "juan": "",
+   "sha256": null,
+   "chars": 283
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p663",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p664",
+   "juan": "",
+   "sha256": null,
+   "chars": 307
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p665",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p666",
+   "juan": "",
+   "sha256": null,
+   "chars": 363
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p667",
+   "juan": "",
+   "sha256": null,
+   "chars": 403
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p668",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p669",
+   "juan": "",
+   "sha256": null,
+   "chars": 85
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p670",
+   "juan": "",
+   "sha256": null,
+   "chars": 453
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p671",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p672",
+   "juan": "",
+   "sha256": null,
+   "chars": 355
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p673",
+   "juan": "",
+   "sha256": null,
+   "chars": 283
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p674",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p675",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p676",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p677",
+   "juan": "",
+   "sha256": null,
+   "chars": 314
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p678",
+   "juan": "",
+   "sha256": null,
+   "chars": 420
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p679",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p680",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p681",
+   "juan": "",
+   "sha256": null,
+   "chars": 233
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p682",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p683",
+   "juan": "",
+   "sha256": null,
+   "chars": 249
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p684",
+   "juan": "",
+   "sha256": null,
+   "chars": 406
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p685",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p686",
+   "juan": "",
+   "sha256": null,
+   "chars": 162
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p687",
+   "juan": "",
+   "sha256": null,
+   "chars": 356
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p688",
+   "juan": "",
+   "sha256": null,
+   "chars": 321
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p689",
+   "juan": "",
+   "sha256": null,
+   "chars": 421
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p690",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p691",
+   "juan": "",
+   "sha256": null,
+   "chars": 295
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p692",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p693",
+   "juan": "",
+   "sha256": null,
+   "chars": 296
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p694",
+   "juan": "",
+   "sha256": null,
+   "chars": 186
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p695",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p696",
+   "juan": "",
+   "sha256": null,
+   "chars": 366
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p697",
+   "juan": "",
+   "sha256": null,
+   "chars": 331
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p698",
+   "juan": "",
+   "sha256": null,
+   "chars": 288
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p699",
+   "juan": "",
+   "sha256": null,
+   "chars": 1
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p700",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p701",
+   "juan": "",
+   "sha256": null,
+   "chars": 367
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p702",
+   "juan": "",
+   "sha256": null,
+   "chars": 380
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p703",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p704",
+   "juan": "",
+   "sha256": null,
+   "chars": 380
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p705",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p706",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p707",
+   "juan": "",
+   "sha256": null,
+   "chars": 30
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p708",
+   "juan": "",
+   "sha256": null,
+   "chars": 337
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p709",
+   "juan": "",
+   "sha256": null,
+   "chars": 409
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p710",
+   "juan": "",
+   "sha256": null,
+   "chars": 356
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p711",
+   "juan": "",
+   "sha256": null,
+   "chars": 346
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p712",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p713",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p714",
+   "juan": "",
+   "sha256": null,
+   "chars": 271
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p715",
+   "juan": "",
+   "sha256": null,
+   "chars": 273
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p716",
+   "juan": "",
+   "sha256": null,
+   "chars": 274
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p717",
+   "juan": "",
+   "sha256": null,
+   "chars": 431
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p718",
+   "juan": "",
+   "sha256": null,
+   "chars": 301
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p719",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p720",
+   "juan": "",
+   "sha256": null,
+   "chars": 382
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p721",
+   "juan": "",
+   "sha256": null,
+   "chars": 421
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p722",
+   "juan": "",
+   "sha256": null,
+   "chars": 499
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p723",
+   "juan": "",
+   "sha256": null,
+   "chars": 630
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p724",
+   "juan": "",
+   "sha256": null,
+   "chars": 548
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p725",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p726",
+   "juan": "",
+   "sha256": null,
+   "chars": 475
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p727",
+   "juan": "",
+   "sha256": null,
+   "chars": 297
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p728",
+   "juan": "",
+   "sha256": null,
+   "chars": 134
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p729",
+   "juan": "",
+   "sha256": null,
+   "chars": 390
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p730",
+   "juan": "",
+   "sha256": null,
+   "chars": 354
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p731",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p732",
+   "juan": "",
+   "sha256": null,
+   "chars": 435
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p733",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p734",
+   "juan": "",
+   "sha256": null,
+   "chars": 415
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p735",
+   "juan": "",
+   "sha256": null,
+   "chars": 467
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p736",
+   "juan": "",
+   "sha256": null,
+   "chars": 476
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p737",
+   "juan": "",
+   "sha256": null,
+   "chars": 462
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p738",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p739",
+   "juan": "",
+   "sha256": null,
+   "chars": 453
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p740",
+   "juan": "",
+   "sha256": null,
+   "chars": 467
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p741",
+   "juan": "",
+   "sha256": null,
+   "chars": 553
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p742",
+   "juan": "",
+   "sha256": null,
+   "chars": 482
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p743",
+   "juan": "",
+   "sha256": null,
+   "chars": 700
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p744",
+   "juan": "",
+   "sha256": null,
+   "chars": 302
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p745",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p746",
+   "juan": "",
+   "sha256": null,
+   "chars": 48
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p747",
+   "juan": "",
+   "sha256": null,
+   "chars": 432
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p748",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p749",
+   "juan": "",
+   "sha256": null,
+   "chars": 340
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p750",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p751",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p752",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p753",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p754",
+   "juan": "",
+   "sha256": null,
+   "chars": 7
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p755",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p756",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p757",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p758",
+   "juan": "",
+   "sha256": null,
+   "chars": 206
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p759",
+   "juan": "",
+   "sha256": null,
+   "chars": 7
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p760",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p761",
+   "juan": "",
+   "sha256": null,
+   "chars": 339
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p762",
+   "juan": "",
+   "sha256": null,
+   "chars": 280
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p763",
+   "juan": "",
+   "sha256": null,
+   "chars": 138
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p764",
+   "juan": "",
+   "sha256": null,
+   "chars": 107
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p765",
+   "juan": "",
+   "sha256": null,
+   "chars": 71
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p766",
+   "juan": "",
+   "sha256": null,
+   "chars": 407
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p767",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p768",
+   "juan": "",
+   "sha256": null,
+   "chars": 462
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p769",
+   "juan": "",
+   "sha256": null,
+   "chars": 333
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p770",
+   "juan": "",
+   "sha256": null,
+   "chars": 315
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p771",
+   "juan": "",
+   "sha256": null,
+   "chars": 286
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p772",
+   "juan": "",
+   "sha256": null,
+   "chars": 355
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p773",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p774",
+   "juan": "",
+   "sha256": null,
+   "chars": 331
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p775",
+   "juan": "",
+   "sha256": null,
+   "chars": 296
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p776",
+   "juan": "",
+   "sha256": null,
+   "chars": 374
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p777",
+   "juan": "",
+   "sha256": null,
+   "chars": 381
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p778",
+   "juan": "",
+   "sha256": null,
+   "chars": 315
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p779",
+   "juan": "",
+   "sha256": null,
+   "chars": 7
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p780",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p781",
+   "juan": "",
+   "sha256": null,
+   "chars": 72
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p782",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p783",
+   "juan": "",
+   "sha256": null,
+   "chars": 296
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p784",
+   "juan": "",
+   "sha256": null,
+   "chars": 269
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p785",
+   "juan": "",
+   "sha256": null,
+   "chars": 61
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p786",
+   "juan": "",
+   "sha256": null,
+   "chars": 340
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p787",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p788",
+   "juan": "",
+   "sha256": null,
+   "chars": 290
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p789",
+   "juan": "",
+   "sha256": null,
+   "chars": 323
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p790",
+   "juan": "",
+   "sha256": null,
+   "chars": 363
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p791",
+   "juan": "",
+   "sha256": null,
+   "chars": 425
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p792",
+   "juan": "",
+   "sha256": null,
+   "chars": 405
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p793",
+   "juan": "",
+   "sha256": null,
+   "chars": 282
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p794",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p795",
+   "juan": "",
+   "sha256": null,
+   "chars": 350
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p796",
+   "juan": "",
+   "sha256": null,
+   "chars": 408
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p797",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p798",
+   "juan": "",
+   "sha256": null,
+   "chars": 436
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p799",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p800",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p801",
+   "juan": "",
+   "sha256": null,
+   "chars": 362
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p802",
+   "juan": "",
+   "sha256": null,
+   "chars": 479
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p803",
+   "juan": "",
+   "sha256": null,
+   "chars": 299
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p804",
+   "juan": "",
+   "sha256": null,
+   "chars": 407
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p805",
+   "juan": "",
+   "sha256": null,
+   "chars": 397
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p806",
+   "juan": "",
+   "sha256": null,
+   "chars": 138
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p807",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p808",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p809",
+   "juan": "",
+   "sha256": null,
+   "chars": 431
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p810",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p811",
+   "juan": "",
+   "sha256": null,
+   "chars": 383
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p812",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p813",
+   "juan": "",
+   "sha256": null,
+   "chars": 290
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p814",
+   "juan": "",
+   "sha256": null,
+   "chars": 150
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p815",
+   "juan": "",
+   "sha256": null,
+   "chars": 180
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p816",
+   "juan": "",
+   "sha256": null,
+   "chars": 360
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p817",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p818",
+   "juan": "",
+   "sha256": null,
+   "chars": 256
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p819",
+   "juan": "",
+   "sha256": null,
+   "chars": 392
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p820",
+   "juan": "",
+   "sha256": null,
+   "chars": 370
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p821",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p822",
+   "juan": "",
+   "sha256": null,
+   "chars": 390
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p823",
+   "juan": "",
+   "sha256": null,
+   "chars": 437
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p824",
+   "juan": "",
+   "sha256": null,
+   "chars": 363
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p825",
+   "juan": "",
+   "sha256": null,
+   "chars": 335
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p826",
+   "juan": "",
+   "sha256": null,
+   "chars": 319
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p827",
+   "juan": "",
+   "sha256": null,
+   "chars": 392
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p828",
+   "juan": "",
+   "sha256": null,
+   "chars": 341
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p829",
+   "juan": "",
+   "sha256": null,
+   "chars": 48
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p830",
+   "juan": "",
+   "sha256": null,
+   "chars": 421
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p831",
+   "juan": "",
+   "sha256": null,
+   "chars": 302
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p832",
+   "juan": "",
+   "sha256": null,
+   "chars": 309
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p833",
+   "juan": "",
+   "sha256": null,
+   "chars": 402
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p834",
+   "juan": "",
+   "sha256": null,
+   "chars": 318
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p835",
+   "juan": "",
+   "sha256": null,
+   "chars": 148
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p836",
+   "juan": "",
+   "sha256": null,
+   "chars": 424
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p837",
+   "juan": "",
+   "sha256": null,
+   "chars": 317
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p838",
+   "juan": "",
+   "sha256": null,
+   "chars": 339
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p839",
+   "juan": "",
+   "sha256": null,
+   "chars": 294
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p840",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p841",
+   "juan": "",
+   "sha256": null,
+   "chars": 15
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p842",
+   "juan": "",
+   "sha256": null,
+   "chars": 50
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p843",
+   "juan": "",
+   "sha256": null,
+   "chars": 317
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p844",
+   "juan": "",
+   "sha256": null,
+   "chars": 361
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p845",
+   "juan": "",
+   "sha256": null,
+   "chars": 406
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p846",
+   "juan": "",
+   "sha256": null,
+   "chars": 314
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p847",
+   "juan": "",
+   "sha256": null,
+   "chars": 23
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p848",
+   "juan": "",
+   "sha256": null,
+   "chars": 174
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p849",
+   "juan": "",
+   "sha256": null,
+   "chars": 164
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p850",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p851",
+   "juan": "",
+   "sha256": null,
+   "chars": 259
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p852",
+   "juan": "",
+   "sha256": null,
+   "chars": 194
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p853",
+   "juan": "",
+   "sha256": null,
+   "chars": 200
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p854",
+   "juan": "",
+   "sha256": null,
+   "chars": 19
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p855",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p856",
+   "juan": "",
+   "sha256": null,
+   "chars": 296
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p857",
+   "juan": "",
+   "sha256": null,
+   "chars": 334
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p858",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p859",
+   "juan": "",
+   "sha256": null,
+   "chars": 322
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p860",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p861",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p862",
+   "juan": "",
+   "sha256": null,
+   "chars": 251
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p863",
+   "juan": "",
+   "sha256": null,
+   "chars": 295
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p864",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p865",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p866",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p867",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p868",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p869",
+   "juan": "",
+   "sha256": null,
+   "chars": 149
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p870",
+   "juan": "",
+   "sha256": null,
+   "chars": 186
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p871",
+   "juan": "",
+   "sha256": null,
+   "chars": 177
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p872",
+   "juan": "",
+   "sha256": null,
+   "chars": 180
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p873",
+   "juan": "",
+   "sha256": null,
+   "chars": 189
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p874",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p875",
+   "juan": "",
+   "sha256": null,
+   "chars": 161
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p876",
+   "juan": "",
+   "sha256": null,
+   "chars": 144
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p877",
+   "juan": "",
+   "sha256": null,
+   "chars": 140
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p878",
+   "juan": "",
+   "sha256": null,
+   "chars": 70
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p879",
+   "juan": "",
+   "sha256": null,
+   "chars": 102
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p880",
+   "juan": "",
+   "sha256": null,
+   "chars": 128
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p881",
+   "juan": "",
+   "sha256": null,
+   "chars": 297
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p882",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p883",
+   "juan": "",
+   "sha256": null,
+   "chars": 332
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p884",
+   "juan": "",
+   "sha256": null,
+   "chars": 479
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p885",
+   "juan": "",
+   "sha256": null,
+   "chars": 408
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p886",
+   "juan": "",
+   "sha256": null,
+   "chars": 220
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p887",
+   "juan": "",
+   "sha256": null,
+   "chars": 324
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p888",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p889",
+   "juan": "",
+   "sha256": null,
+   "chars": 390
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p890",
+   "juan": "",
+   "sha256": null,
+   "chars": 347
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p891",
+   "juan": "",
+   "sha256": null,
+   "chars": 502
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p892",
+   "juan": "",
+   "sha256": null,
+   "chars": 438
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p893",
+   "juan": "",
+   "sha256": null,
+   "chars": 322
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p894",
+   "juan": "",
+   "sha256": null,
+   "chars": 426
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p895",
+   "juan": "",
+   "sha256": null,
+   "chars": 398
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p896",
+   "juan": "",
+   "sha256": null,
+   "chars": 63
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p897",
+   "juan": "",
+   "sha256": null,
+   "chars": 266
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p898",
+   "juan": "",
+   "sha256": null,
+   "chars": 368
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p899",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p900",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p901",
+   "juan": "",
+   "sha256": null,
+   "chars": 351
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p902",
+   "juan": "",
+   "sha256": null,
+   "chars": 342
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p903",
+   "juan": "",
+   "sha256": null,
+   "chars": 437
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p904",
+   "juan": "",
+   "sha256": null,
+   "chars": 403
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p905",
+   "juan": "",
+   "sha256": null,
+   "chars": 389
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p906",
+   "juan": "",
+   "sha256": null,
+   "chars": 434
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p907",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p908",
+   "juan": "",
+   "sha256": null,
+   "chars": 439
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p909",
+   "juan": "",
+   "sha256": null,
+   "chars": 419
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p910",
+   "juan": "",
+   "sha256": null,
+   "chars": 434
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p911",
+   "juan": "",
+   "sha256": null,
+   "chars": 198
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p912",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p913",
+   "juan": "",
+   "sha256": null,
+   "chars": 428
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p914",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p915",
+   "juan": "",
+   "sha256": null,
+   "chars": 412
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p916",
+   "juan": "",
+   "sha256": null,
+   "chars": 350
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p917",
+   "juan": "",
+   "sha256": null,
+   "chars": 303
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p918",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p919",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p920",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p921",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p922",
+   "juan": "",
+   "sha256": null,
+   "chars": 3
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p923",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p924",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p925",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p926",
+   "juan": "",
+   "sha256": null,
+   "chars": 224
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p927",
+   "juan": "",
+   "sha256": null,
+   "chars": 420
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p928",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p929",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p930",
+   "juan": "",
+   "sha256": null,
+   "chars": 288
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p931",
+   "juan": "",
+   "sha256": null,
+   "chars": 284
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p932",
+   "juan": "",
+   "sha256": null,
+   "chars": 372
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p933",
+   "juan": "",
+   "sha256": null,
+   "chars": 314
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p934",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p935",
+   "juan": "",
+   "sha256": null,
+   "chars": 313
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p936",
+   "juan": "",
+   "sha256": null,
+   "chars": 348
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p937",
+   "juan": "",
+   "sha256": null,
+   "chars": 291
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p938",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p939",
+   "juan": "",
+   "sha256": null,
+   "chars": 323
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p940",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p941",
+   "juan": "",
+   "sha256": null,
+   "chars": 406
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p942",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p943",
+   "juan": "",
+   "sha256": null,
+   "chars": 241
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p944",
+   "juan": "",
+   "sha256": null,
+   "chars": 415
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p945",
+   "juan": "",
+   "sha256": null,
+   "chars": 337
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p946",
+   "juan": "",
+   "sha256": null,
+   "chars": 335
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p947",
+   "juan": "",
+   "sha256": null,
+   "chars": 289
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p948",
+   "juan": "",
+   "sha256": null,
+   "chars": 309
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p949",
+   "juan": "",
+   "sha256": null,
+   "chars": 282
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p950",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p951",
+   "juan": "",
+   "sha256": null,
+   "chars": 236
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p952",
+   "juan": "",
+   "sha256": null,
+   "chars": 320
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p953",
+   "juan": "",
+   "sha256": null,
+   "chars": 249
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p954",
+   "juan": "",
+   "sha256": null,
+   "chars": 318
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p955",
+   "juan": "",
+   "sha256": null,
+   "chars": 267
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p956",
+   "juan": "",
+   "sha256": null,
+   "chars": 270
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p957",
+   "juan": "",
+   "sha256": null,
+   "chars": 332
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p958",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p959",
+   "juan": "",
+   "sha256": null,
+   "chars": 223
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p960",
+   "juan": "",
+   "sha256": null,
+   "chars": 365
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p961",
+   "juan": "",
+   "sha256": null,
+   "chars": 328
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p962",
+   "juan": "",
+   "sha256": null,
+   "chars": 283
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p963",
+   "juan": "",
+   "sha256": null,
+   "chars": 263
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p964",
+   "juan": "",
+   "sha256": null,
+   "chars": 262
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p965",
+   "juan": "",
+   "sha256": null,
+   "chars": 324
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p966",
+   "juan": "",
+   "sha256": null,
+   "chars": 344
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p967",
+   "juan": "",
+   "sha256": null,
+   "chars": 359
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p968",
+   "juan": "",
+   "sha256": null,
+   "chars": 315
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p969",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p970",
+   "juan": "",
+   "sha256": null,
+   "chars": 294
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p971",
+   "juan": "",
+   "sha256": null,
+   "chars": 247
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p972",
+   "juan": "",
+   "sha256": null,
+   "chars": 364
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p973",
+   "juan": "",
+   "sha256": null,
+   "chars": 241
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p974",
+   "juan": "",
+   "sha256": null,
+   "chars": 258
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p975",
+   "juan": "",
+   "sha256": null,
+   "chars": 301
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p976",
+   "juan": "",
+   "sha256": null,
+   "chars": 258
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p977",
+   "juan": "",
+   "sha256": null,
+   "chars": 310
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p978",
+   "juan": "",
+   "sha256": null,
+   "chars": 375
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p979",
+   "juan": "",
+   "sha256": null,
+   "chars": 255
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p980",
+   "juan": "",
+   "sha256": null,
+   "chars": 220
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p981",
+   "juan": "",
+   "sha256": null,
+   "chars": 238
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p982",
+   "juan": "",
+   "sha256": null,
+   "chars": 210
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p983",
+   "juan": "",
+   "sha256": null,
+   "chars": 221
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p984",
+   "juan": "",
+   "sha256": null,
+   "chars": 237
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p985",
+   "juan": "",
+   "sha256": null,
+   "chars": 270
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p986",
+   "juan": "",
+   "sha256": null,
+   "chars": 243
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p987",
+   "juan": "",
+   "sha256": null,
+   "chars": 284
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p988",
+   "juan": "",
+   "sha256": null,
+   "chars": 430
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p989",
+   "juan": "",
+   "sha256": null,
+   "chars": 327
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p990",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p991",
+   "juan": "",
+   "sha256": null,
+   "chars": 418
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p992",
+   "juan": "",
+   "sha256": null,
+   "chars": 12
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p993",
+   "juan": "",
+   "sha256": null,
+   "chars": 336
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p994",
+   "juan": "",
+   "sha256": null,
+   "chars": 348
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p995",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p996",
+   "juan": "",
+   "sha256": null,
+   "chars": 433
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p997",
+   "juan": "",
+   "sha256": null,
+   "chars": 368
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p998",
+   "juan": "",
+   "sha256": null,
+   "chars": 368
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p999",
+   "juan": "",
+   "sha256": null,
+   "chars": 394
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1000",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1001",
+   "juan": "",
+   "sha256": null,
+   "chars": 303
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1002",
+   "juan": "",
+   "sha256": null,
+   "chars": 454
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1003",
+   "juan": "",
+   "sha256": null,
+   "chars": 7
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1004",
+   "juan": "",
+   "sha256": null,
+   "chars": 404
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1005",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1006",
+   "juan": "",
+   "sha256": null,
+   "chars": 320
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1007",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1008",
+   "juan": "",
+   "sha256": null,
+   "chars": 332
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1009",
+   "juan": "",
+   "sha256": null,
+   "chars": 270
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1010",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1011",
+   "juan": "",
+   "sha256": null,
+   "chars": 272
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1012",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1013",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1014",
+   "juan": "",
+   "sha256": null,
+   "chars": 478
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1015",
+   "juan": "",
+   "sha256": null,
+   "chars": 478
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1016",
+   "juan": "",
+   "sha256": null,
+   "chars": 460
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1017",
+   "juan": "",
+   "sha256": null,
+   "chars": 460
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1018",
+   "juan": "",
+   "sha256": null,
+   "chars": 313
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1019",
+   "juan": "",
+   "sha256": null,
+   "chars": 295
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1020",
+   "juan": "",
+   "sha256": null,
+   "chars": 312
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1021",
+   "juan": "",
+   "sha256": null,
+   "chars": 349
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1022",
+   "juan": "",
+   "sha256": null,
+   "chars": 419
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1023",
+   "juan": "",
+   "sha256": null,
+   "chars": 485
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1024",
+   "juan": "",
+   "sha256": null,
+   "chars": 485
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1025",
+   "juan": "",
+   "sha256": null,
+   "chars": 225
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1026",
+   "juan": "",
+   "sha256": null,
+   "chars": 225
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1027",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1028",
+   "juan": "",
+   "sha256": null,
+   "chars": 1
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1029",
+   "juan": "",
+   "sha256": null,
+   "chars": 13
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1030",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1031",
+   "juan": "",
+   "sha256": null,
+   "chars": 190
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1032",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1033",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1034",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1035",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1036",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1037",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1038",
+   "juan": "",
+   "sha256": null,
+   "chars": 1
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1039",
+   "juan": "",
+   "sha256": null,
+   "chars": 200
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1040",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1041",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1042",
+   "juan": "",
+   "sha256": null,
+   "chars": 220
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1043",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1044",
+   "juan": "",
+   "sha256": null,
+   "chars": 400
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1045",
+   "juan": "",
+   "sha256": null,
+   "chars": 459
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1046",
+   "juan": "",
+   "sha256": null,
+   "chars": 459
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1047",
+   "juan": "",
+   "sha256": null,
+   "chars": 396
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1048",
+   "juan": "",
+   "sha256": null,
+   "chars": 394
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1049",
+   "juan": "",
+   "sha256": null,
+   "chars": 394
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1050",
+   "juan": "",
+   "sha256": null,
+   "chars": 511
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1051",
+   "juan": "",
+   "sha256": null,
+   "chars": 377
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1052",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1053",
+   "juan": "",
+   "sha256": null,
+   "chars": 305
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1054",
+   "juan": "",
+   "sha256": null,
+   "chars": 427
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1055",
+   "juan": "",
+   "sha256": null,
+   "chars": 138
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1056",
+   "juan": "",
+   "sha256": null,
+   "chars": 138
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1057",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1058",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1059",
+   "juan": "",
+   "sha256": null,
+   "chars": 399
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1060",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1061",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1062",
+   "juan": "",
+   "sha256": null,
+   "chars": 352
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1063",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1064",
+   "juan": "",
+   "sha256": null,
+   "chars": 338
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1065",
+   "juan": "",
+   "sha256": null,
+   "chars": 93
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1066",
+   "juan": "",
+   "sha256": null,
+   "chars": 93
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1067",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1068",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1069",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1070",
+   "juan": "",
+   "sha256": null,
+   "chars": 384
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1071",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1072",
+   "juan": "",
+   "sha256": null,
+   "chars": 343
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1073",
+   "juan": "",
+   "sha256": null,
+   "chars": 464
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1074",
+   "juan": "",
+   "sha256": null,
+   "chars": 464
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1075",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1076",
+   "juan": "",
+   "sha256": null,
+   "chars": 429
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1077",
+   "juan": "",
+   "sha256": null,
+   "chars": 423
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1078",
+   "juan": "",
+   "sha256": null,
+   "chars": 423
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1079",
+   "juan": "",
+   "sha256": null,
+   "chars": 16
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1080",
+   "juan": "",
+   "sha256": null,
+   "chars": 16
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1081",
+   "juan": "",
+   "sha256": null,
+   "chars": 32
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1082",
+   "juan": "",
+   "sha256": null,
+   "chars": 32
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1083",
+   "juan": "",
+   "sha256": null,
+   "chars": 182
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1084",
+   "juan": "",
+   "sha256": null,
+   "chars": 182
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1085",
+   "juan": "",
+   "sha256": null,
+   "chars": 464
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1086",
+   "juan": "",
+   "sha256": null,
+   "chars": 464
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1087",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1088",
+   "juan": "",
+   "sha256": null,
+   "chars": 369
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1089",
+   "juan": "",
+   "sha256": null,
+   "chars": 315
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1090",
+   "juan": "",
+   "sha256": null,
+   "chars": 315
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1091",
+   "juan": "",
+   "sha256": null,
+   "chars": 374
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1092",
+   "juan": "",
+   "sha256": null,
+   "chars": 374
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1093",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1094",
+   "juan": "",
+   "sha256": null,
+   "chars": 391
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1095",
+   "juan": "",
+   "sha256": null,
+   "chars": 294
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1096",
+   "juan": "",
+   "sha256": null,
+   "chars": 294
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1097",
+   "juan": "",
+   "sha256": null,
+   "chars": 326
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1098",
+   "juan": "",
+   "sha256": null,
+   "chars": 326
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1099",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1100",
+   "juan": "",
+   "sha256": null,
+   "chars": 373
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1101",
+   "juan": "",
+   "sha256": null,
+   "chars": 365
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1102",
+   "juan": "",
+   "sha256": null,
+   "chars": 728
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1103",
+   "juan": "",
+   "sha256": null,
+   "chars": 728
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1104",
+   "juan": "",
+   "sha256": null,
+   "chars": 387
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1105",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1106",
+   "juan": "",
+   "sha256": null,
+   "chars": 345
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1107",
+   "juan": "",
+   "sha256": null,
+   "chars": 378
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1108",
+   "juan": "",
+   "sha256": null,
+   "chars": 378
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1109",
+   "juan": "",
+   "sha256": null,
+   "chars": 324
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1110",
+   "juan": "",
+   "sha256": null,
+   "chars": 324
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1111",
+   "juan": "",
+   "sha256": null,
+   "chars": 275
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1112",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1113",
+   "juan": "",
+   "sha256": null,
+   "chars": 385
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1114",
+   "juan": "",
+   "sha256": null,
+   "chars": 301
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1115",
+   "juan": "",
+   "sha256": null,
+   "chars": 96
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1116",
+   "juan": "",
+   "sha256": null,
+   "chars": 96
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1117",
+   "juan": "",
+   "sha256": null,
+   "chars": 306
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1118",
+   "juan": "",
+   "sha256": null,
+   "chars": 58
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1119",
+   "juan": "",
+   "sha256": null,
+   "chars": 559
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1120",
+   "juan": "",
+   "sha256": null,
+   "chars": 559
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1121",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1122",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1123",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1124",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1125",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1126",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1127",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1128",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1129",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p1130",
+   "juan": "",
+   "sha256": null,
+   "chars": 0
+  }
+ ],
+ "totals": {
+  "协纪辨方书": {
+   "移徙": 24,
+   "入宅": 14,
+   "般移": 35,
+   "复合": 1,
+   "归火": 5
+  },
+  "御定星历考原": {
+   "移徙": 14,
+   "入宅": 1
+  },
+  "陈子性藏书": {
+   "入宅": 27,
+   "归火": 21,
+   "移徙": 9,
+   "复合": 2
+  }
+ },
+ "hits": [
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 2641,
+   "line": 179,
+   "ctx": "子神枢经谓国家巡狩省方出师略地营造宫阙开拓封疆不可向之向之云者与太岁对则身居岁破之地也又曰若黎庶修造则并须回避者太岁君象其方固上吉之方而非下民之所敢用犹月忌日为中宫五黄民间须避是日同一义也故又谓之堆黄煞古人谓之岁下对方则亦曰岁破汉王充论衡载移徙法曰徙抵太岁凶负太岁亦凶抵太岁名曰岁下负太岁名曰岁破是也⏎⏎广圣历曰岁破者太岁所冲之辰也其地不可兴造移徙嫁娶远行犯者主损财物及害家长惟战伐向之吉○明时总要曰岁破者子年在午顺行十二辰是也按岁破为最凶之神而广圣历云战伐向之吉者盖向岁破即坐太岁而"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 2693,
+   "line": 181,
+   "ctx": "须回避者太岁君象其方固上吉之方而非下民之所敢用犹月忌日为中宫五黄民间须避是日同一义也故又谓之堆黄煞古人谓之岁下对方则亦曰岁破汉王充论衡载移徙法曰徙抵太岁凶负太岁亦凶抵太岁名曰岁下负太岁名曰岁破是也⏎⏎广圣历曰岁破者太岁所冲之辰也其地不可兴造移徙嫁娶远行犯者主损财物及害家长惟战伐向之吉○明时总要曰岁破者子年在午顺行十二辰是也按岁破为最凶之神而广圣历云战伐向之吉者盖向岁破即坐太岁而敌人乃居岁破之位也然则仍是用太岁非用岁破也⏎⏎大耗⏎⏎历例曰大耗者岁中虚耗之神也所理之地不可营造仓库纳财"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7166,
+   "line": 253,
+   "ctx": "午火相尅故灾煞在午也巳酉丑年合金局金絶於寅故劫煞在寅胎於卯又金与卯木相尅故灾煞在卯也余仿此⏎⏎神枢经曰岁煞者隂气尤毒谓之煞也常居四季谓四季之隂气能游天上○李鼎祚曰寅午戌煞在丑巳酉丑煞在辰申子辰煞在未亥卯未煞在戌○广圣历曰岁煞之地不可穿凿修营移徙犯之者伤子孙六畜○曹震圭曰月煞者三合五行成形之位所谓养是也大抵物之成形母必有伤故曰煞○考原曰劫煞灾煞岁煞是为三煞如曹氏说则三合五行絶胎养之位也絶胎养者墓库以後长生以前神枢经所谓隂气是也或谓三煞者三合五行当旺之冲故有宜向不宜坐之说如申子辰合水"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 8937,
+   "line": 267,
+   "ctx": "也天地之交而日月之冲也故太岁在四正则太岁自当之名太岁则大煞不足云矣犹天子自理其畿内也若太岁在孟季则正位亦成大煞大煞云者亚於太岁而重於官符白虎也故历例有刺史之称盖古刺史得生杀一方也⏎⏎神枢经曰飞廉者岁之廉察使君之象亦名大煞所理之方不可兴工动土移徙嫁娶犯之主官府口舌疾病遗亡○广圣历曰子年在申丑年在酉寅年在戌卯年在巳辰年在午巳年在未午年在寅未年在卯申年在辰酉年在亥戌年在子亥年在丑也⏎⏎按飞廉者力士也事纣以善走名古之力士多矣而取象於飞廉者喻恶煞也三合之序由生而旺由旺而墓由墓而生四时之序由"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279221",
+   "juan": "卷三义例一选择神煞古有建除堪",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 9435,
+   "line": 271,
+   "ctx": "又名大煞者在岁名飞廉在月名大煞变其名使不紊也又按子丑寅午未申年飞廉即是白虎卯辰巳酉戌亥年飞廉即是丧门然则飞廉之神亦与黄?豹尾同可有可无者也⏎⏎洪范篇曰金神者太白之精白兽之神主兵戈丧乱水旱瘟疫所理之地忌筑城池建宫室竖楼阁广园林兴工上梁出军征伐移徙嫁娶远行赴任若犯干神者其忌尤甚○堪舆经曰甲己之年在午未申酉乙庚之年在辰巳丙辛之年在子丑寅卯午未丁壬之年在寅卯戌亥戊癸之年在申酉子丑也○曹震圭曰金神者以年干五虎元历之逢庚辛及纳音金之位者是也假如甲巳之年起丙寅顺行得庚午辛未又壬申癸酉纳音为剑锋"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279222",
+   "juan": "卷四义例二建除十二神建除同位",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7748,
+   "line": 221,
+   "ctx": "雌右行五月合午谋刑十一月合子谋德隂建所居辰为厌日厌日不可以举百事堪舆徐行雄以意知雌故为奇辰数从甲子始子母相求所合之处为会十日十二辰周六十日凡八会会於岁前则死亡会於岁後则无殃○天宝历曰月厌者隂建之辰也所理之方可以禳灾祈福避病所值之日忌远行归家移徙婚嫁○历例曰月厌者正月在戌逆行十二辰○曹震圭曰月厌者厌魅之神也其性暗昧私邪不正故各忌之盖十一月建子隂阳气争冬至前隂气极冬至後阳气生故自建子之月阳建顺历丑寅卯一十二辰隂建逆历亥戌酉一十二辰至五月夏至二气又同建而相争也亦名曰隂建按月建者斗柄所建"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279222",
+   "juan": "卷四义例二建除十二神建除同位",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 12732,
+   "line": 391,
+   "ctx": "⏎孤阳⏎⏎纯阳⏎⏎岁薄⏎⏎逐阵⏎⏎隂阳交破⏎⏎隂阳击冲⏎⏎阳破隂冲⏎⏎隂位⏎⏎隂道冲阳⏎⏎三隂⏎⏎阳错⏎⏎隂错⏎⏎隂阳俱错⏎⏎絶隂⏎⏎絶阳⏎⏎曹震圭曰以上诸日虽遇天德月德玉堂生气黄道吉星值日亦不可用集正所谓隂阳不足之辰是也忌兴造嫁娶上官赴任入宅迁移出行交易合药问病百事不宜⏎⏎按大小会所领日考原依历事明原所载堪舆经列之曹震圭既以大小会为上吉之日比和之辰则其所领必亦以为吉日也今按淮南之言大小会既为凶日则所领日当亦非吉然周礼汉郑康成注有八会之目而唐贾公彦谓堪舆大会有八小会亦有八然则大小"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279223",
+   "juan": "卷五义例三天道天德月德天德合",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 5591,
+   "line": 179,
+   "ctx": "之所由生者亦财也以母仓之辰而纳财一以见藏于生我之方则其原不匮也一以见生我之方之宜致养焉以是为报本返始也一以见财者所以养人而多藏则尅我之所由生转以为我害矣非所以为养也母仓之义大矣哉⏎⏎五行论曰月恩者阳建所生之干也子母相从谓之月恩其日宜营造婚姻移徙祭祀上官纳财○历例曰月恩者正月丙二月丁三月庚四月巳五月戊六月辛七月壬八月癸九月庚十月乙十一月甲十二月辛○曹震圭曰月恩者子母相从是月建反生於彼盖母生我我生子之义○历神原始曰寅木生丙火卯木生丁火辰戌土生庚金丑未土生辛金巳火生巳土午火生戊土申金生"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279223",
+   "juan": "卷五义例三天道天德月德天德合",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 5941,
+   "line": 181,
+   "ctx": "者也母仓为本月之母本月为月恩之母寅生丙即甲生丙也卯生丁即乙生丁也辰戌生庚即戊生庚也子平家谓之食神寅卯辰犹母也丙丁庚犹男子也从地支以生天干犹母之生子也故结婚姻则宜子营造上官无所不宜⏎⏎总要历曰四相者四时王相之辰也其日宜修营起工养育生财栽植种莳移徙远行○历例曰春丙丁夏戊巳秋壬癸冬甲乙○曹震圭曰四相者养育之道母生子也春木王生丙丁夏火王生戊巳秋金王生壬癸冬水王生甲乙惟庚辛者金也能杀万物故不用⏎⏎按四相无庚辛此非人之所能为也木相本是火火相本是土金相本是水水相本是木五行之自然而然者也相者辅我"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 10480,
+   "line": 281,
+   "ctx": "忌旺之退归於生也辰未戌丑四墓之月归忌在子是忌墓之退归於旺也故其日忌远逥移徙广圣历谓并忌嫁娶者盖以妇人谓嫁曰归而忌之夫谓嫁曰归明从夫之义云耳非远行之归也易渐卦彖辞曰女归吉渐进也非退也诗曰女子有行行亦进也非退也汉书注及他通书亦无忌嫁娶之说应止忌般移远逥不忌嫁娶⏎⏎堪舆经曰往者去也亡者无也其日忌拜官上任远行归家出军征讨嫁娶寻医○历例曰往亡者正月在寅二月在巳三月在申四月在亥五月在卯六月在午七月在酉八月在子九月在辰十月在未十一月在戌十二月在丑○曹震圭曰往亡者往而不反之意也孟者初也仲者中也季"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 1150,
+   "line": 173,
+   "ctx": "为文白虎为武隂後而阳前左文而右武也阳月前左取官符隂月後右取白虎别名之为临日盖隂阳不得其位则官符白虎皆为害於人隂阳各得其位则官符白虎皆为人除害者也是宜为临民受讼之吉占乃枢要历以为忌者盖误也⏎⏎神枢经曰驿马者驿骑也其日宜封赠官爵诏命公卿远行赴任移徙迁居○李鼎祚曰驿马者正月起申逆行四孟○总要历曰天后者月中福神也其日宜求医疗病祈福礼神○历例曰天后与驿马同位○储泳祛疑说曰今世之所谓驿马者先天三合数也先天寅七午九而戌五合数二十有一故自子顺至申凡二十有一而为火局之驿马亥卯未之数四六八合为十八故"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 9795,
+   "line": 275,
+   "ctx": "万物者也寅巳申亥长生之位则以丑寅卯辰为其长生之符子卯午酉帝旺之位则以巳午未申为其帝旺之符辰未戌丑收藏之位则以酉戌亥子为其收藏之符故曰土符也其有所忌者亦犹月建之为土府尊之故不敢犯也⏎⏎神枢经曰大煞者月中亷察也所值之日忌出军征讨嫁娶纳财竖柱上梁移徙置室○李鼎祚曰大煞者正月在戌二月在巳三月在午四月在未五月在寅六月在卯七月在辰八月在亥九月在子十月在丑十一月在申十二月在酉○曹震圭曰东方之位生育万物南方之位成熟万物西方之位杀伐万物北方之位收藏万物大煞者月中廉察也子丑寅月历西方申酉戌者盖谓阳气"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10045,
+   "line": 279,
+   "ctx": "察西方无以妄杀也卯辰巳月历南方巳午未者谓万物生长之时故巡察南方使有成熟也午未申月历东方寅卯辰者谓万物成熟宜在养育也酉戌亥月历北方亥子丑者谓万物收成使有敛藏也⏎⏎按月之大煞即岁之飞廉其义亦相同见第三卷⏎⏎广圣历曰归忌者月内凶神也其日忌远行归家移徙娶妇○历例曰孟月丑仲月寅季月子○曹震圭曰子者一阳丑乃二阳寅乃三阳盖此三辰阳气始盛主动於外不可反归於内也○考原曰孟月忌丑仲月忌寅季月忌子者皆忌退後一辰所谓归忌也如子为仲丑为季寅为孟故孟月忌退归於季仲月忌退归於孟季月忌退归於仲也⏎⏎後汉书郭镇传"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279224",
+   "juan": "卷六义例四三合临日驿马【天后",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10395,
+   "line": 281,
+   "ctx": "丑卯退於寅是逆阳之道也故为归忌余月仿此又按归忌与飞廉同义子丑寅为支辰之始子旺之始也丑墓之始也寅生之始也寅申巳亥四生之月归忌在丑是忌生之退归於墓也卯午酉子四旺之月归忌在寅是忌旺之退归於生也辰未戌丑四墓之月归忌在子是忌墓之退归於旺也故其日忌远逥移徙广圣历谓并忌嫁娶者盖以妇人谓嫁曰归而忌之夫谓嫁曰归明从夫之义云耳非远行之归也易渐卦彖辞曰女归吉渐进也非退也诗曰女子有行行亦进也非退也汉书注及他通书亦无忌嫁娶之说应止忌般移远逥不忌嫁娶⏎⏎堪舆经曰往者去也亡者无也其日忌拜官上任远行归家出军征讨"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279225",
+   "juan": "卷七义例五黄道黑道天乙贵人天",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 488,
+   "line": 113,
+   "ctx": "⏎⏎截路空亡⏎⏎[子部,术数类,阴阳五行之属,钦定协纪辨方书,卷七⏎⏎神枢经曰青龙明堂金匮天德玉堂司命皆月内天黄道之神也所值之日皆宜兴衆务不避太岁将军月刑一切凶恶自然避之天刑朱雀白虎天牢元武勾陈者月中黑道也所理之方所值之日皆不可兴土功营屋舍移徙远行嫁娶出军○李鼎祚曰青龙正月起子金匮正月起辰司命正月起戌皆顺行六阳辰也明堂正月起丑天德正月起巳玉堂正月起未皆顺行六隂辰也天刑者正月起寅白虎者正月起午天牢者正月起申皆顺行六阳辰也朱雀者正月起卯元武者正月起酉勾陈者正月起亥皆顺行六隂辰也○曹震"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279225",
+   "juan": "卷七义例五黄道黑道天乙贵人天",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7668,
+   "line": 213,
+   "ctx": "子部,术数类,阴阳五行之属,钦定协纪辨方书,卷七⏎⏎[子部,术数类,阴阳五行之属,钦定协纪辨方书,卷七⏎⏎金匮经曰乙者雷电始发之日戊巳者北辰下位之日辛者万物决断之日壬者三光不照之日子午卯酉四仲之辰日月之门隂阳之界五干临此四辰其日不可出军嫁娶移徙筑室○曹震圭曰卯酉为日月出入之门子午为隂阳交争之界乙为六合辛为太隂壬为元武己为六贼戊为勾陈故此五干加此四辰名曰丑又以五干四辰其共数九故以名之○指掌赋曰乙戊己辛壬同四仲名曰九丑天地归殃注凡戊子戊午壬子壬午乙卯己卯辛卯乙酉己酉辛酉日而大吉又临日"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279226",
+   "juan": "卷八义例六岁禄飞天禄飞天马飞",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 4876,
+   "line": 209,
+   "ctx": ",钦定协纪辨方书,卷八⏎⏎通书曰天上三奇乙丙丁者出於贵人之干德游行十二支辰以阳贵顺行则乙德在丑丙德在寅丁德在卯三干之德相聨而无间断以隂贵逆行则乙德在未丙德在午丁德在巳亦相联而无间断又以其随贵人在天故谓之天上三奇能制煞发祥中宫坐向得之上官嫁娶入宅移居修造营葬并吉余如戊己庚辛壬癸随贵人所涉或间罗网或间天空皆不相聨也○选择宗镜曰八节三奇从八节本宫起甲子阳遁顺飞九宫隂遁逆飞九宫寻见本年太岁泊何宫便於其宫起本年虎遁依八节顺逆飞寻三奇分布取用如庚申年冬至节用事从坎一宫起甲子顺飞九宫寻见太岁庚"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279226",
+   "juan": "卷八义例六岁禄飞天禄飞天马飞",
+   "canon": "复合",
+   "word": "入宅移居",
+   "pos": 4876,
+   "line": 209,
+   "ctx": ",钦定协纪辨方书,卷八⏎⏎通书曰天上三奇乙丙丁者出於贵人之干德游行十二支辰以阳贵顺行则乙德在丑丙德在寅丁德在卯三干之德相聨而无间断以隂贵逆行则乙德在未丙德在午丁德在巳亦相联而无间断又以其随贵人在天故谓之天上三奇能制煞发祥中宫坐向得之上官嫁娶入宅移居修造营葬并吉余如戊己庚辛壬癸随贵人所涉或间罗网或间天空皆不相聨也○选择宗镜曰八节三奇从八节本宫起甲子阳遁顺飞九宫隂遁逆飞九宫寻见本年太岁泊何宫便於其宫起本年虎遁依八节顺逆飞寻三奇分布取用如庚申年冬至节用事从坎一宫起甲子顺飞九宫寻见太岁庚申在"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 1169,
+   "line": 283,
+   "ctx": "德　月德　天德合　月德合⏎⏎宜祭祀祈福求嗣上册进表章【上册受封上表章同】颁诏覃恩肆赦施恩封拜【袭爵受封同後仿此】诏命公卿招贤举正直施恩惠恤孤惸宣政事行惠爱雪寃枉缓刑狱庆赐赏贺宴会行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶般移解除求医疗病裁制营建宫室缮城郭兴造动土竖柱上梁修仓库栽种牧养纳畜安葬⏎⏎忌畋猎取鱼⏎⏎按天德月德乃月建三合旺气天德合月德合与旺气作五合皆上吉之日故所宜应如此忌畋猎取鱼者恐伤生气也旧本天德止宜兴土工营宫室缮城郭月德并宜上官宴乐天德合宜祭祀祈福"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 1707,
+   "line": 305,
+   "ctx": "所会之辰并宜修营会之云者则非专指天恩故曰与修造吉神并尤宜兴作⏎⏎天赦⏎⏎宜祭祀祈福求嗣上册进表章颁诏覃恩肆赦施恩封拜诏命公卿招贤举正直施恩惠恤孤惸宣政事行惠爱雪寃枉缓刑狱庆赐赏贺宴会行幸遣使安抚边境选将训兵上官赴任临政亲民结婚姻纳采问名嫁娶般移解除求医疗病裁制营建宫室缮城郭兴造动土竖柱上梁修仓库栽种牧养纳畜安葬忌畋猎取鱼⏎⏎按天赦为天地合德又为四时旺辰其力甚大故所宜与二德同旧本止宜覃恩肆赦缓刑狱特顾名而未思义耳不用以出师与忌畋猎取鱼同意⏎⏎母仓⏎⏎宜纳财栽种牧养纳畜⏎⏎与月恩四相"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 2052,
+   "line": 319,
+   "ctx": "之辰戌丑未日土王後之己午日则衰旺各有不同是又不可以不辨⏎⏎天愿⏎⏎宜祭祀祈福求嗣上册进表章颁诏覃恩肆赦施恩封拜诏命公卿招贤举正直施恩惠恤孤惸宣政事行惠爱雪寃枉缓刑狱庆赐赏贺宴会行幸遣使安抚边境选将训兵上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移裁制营建宫室缮城郭兴造动土竖柱上梁修仓库经络酝酿开市立劵交易纳财栽种牧养纳畜安葬⏎⏎按天愿为太阳加令星其吉最大故所宜与二德同不用以出师者兵隂象兵吉在太阳後四辰不用太阳日也宜葬事则专取太阳日也不用以解除疗病者疗解无取合义也何以取二德合彼乃德之"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 2311,
+   "line": 325,
+   "ctx": "发于天干德合为其合气天赦天愿皆合干支取义其气纯其力大乃日之最吉者能解诸凶故特表之旧本谓天愿宜纳财敦睦亲族盖其例二十四字已误十三宜乎失其义也⏎⏎月恩　四相　时德⏎⏎宜祭祀祈福求嗣施恩封拜举正直庆赐赏贺宴会行幸遣使上官赴任临政亲民结婚姻纳采问名般移解除求医疗病裁制修宫室缮城郭兴造动土竖柱上梁纳财开仓库出货财栽种牧养⏎⏎与驿马天马并宜诏命公卿招贤⏎⏎按月恩四相时德皆月建所生之日所宜应同旧本月恩宜祭祀上官赴任结婚姻般移修造动土纳财四相宜行幸遣使般移缮城郭修造动土栽种牧养时德宜施恩封拜庆赐"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 2396,
+   "line": 329,
+   "ctx": "福求嗣施恩封拜举正直庆赐赏贺宴会行幸遣使上官赴任临政亲民结婚姻纳采问名般移解除求医疗病裁制修宫室缮城郭兴造动土竖柱上梁纳财开仓库出货财栽种牧养⏎⏎与驿马天马并宜诏命公卿招贤⏎⏎按月恩四相时德皆月建所生之日所宜应同旧本月恩宜祭祀上官赴任结婚姻般移修造动土纳财四相宜行幸遣使般移缮城郭修造动土栽种牧养时德宜施恩封拜庆赐赏贺宴会其义不伦今按月建所生为相气其吉大於母仓我生为子孙其吉显於福德观其会通而推其义例故所宜应如此⏎⏎阳德　隂德⏎⏎宜施恩惠恤孤惸行惠爱雪寃枉缓刑狱⏎⏎按阳德隂德为乾坤纳"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 2411,
+   "line": 329,
+   "ctx": "会行幸遣使上官赴任临政亲民结婚姻纳采问名般移解除求医疗病裁制修宫室缮城郭兴造动土竖柱上梁纳财开仓库出货财栽种牧养⏎⏎与驿马天马并宜诏命公卿招贤⏎⏎按月恩四相时德皆月建所生之日所宜应同旧本月恩宜祭祀上官赴任结婚姻般移修造动土纳财四相宜行幸遣使般移缮城郭修造动土栽种牧养时德宜施恩封拜庆赐赏贺宴会其义不伦今按月建所生为相气其吉大於母仓我生为子孙其吉显於福德观其会通而推其义例故所宜应如此⏎⏎阳德　隂德⏎⏎宜施恩惠恤孤惸行惠爱雪寃枉缓刑狱⏎⏎按阳德隂德为乾坤纳甲取天地生成之义而以月配爻义不"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 2717,
+   "line": 349,
+   "ctx": "宜颁诏覃恩肆赦施恩封拜诏命公卿招贤举正直施恩惠恤孤惸宣政事行惠爱雪寃枉缓刑狱庆赐赏贺宴会行幸遣使安抚边境选将训兵上官赴任临政亲民裁制⏎⏎官日　守日　相日⏎⏎宜袭爵受封上官赴任临政亲民⏎⏎守日又宜安抚边境⏎⏎民日⏎⏎宜宴会结婚姻纳采问名进人口般移开市立劵交易纳财栽种牧养纳畜⏎⏎按坛经专以此五日为命将登坛拜爵上官之吉日通书止宜施恩封拜上官赴任临政亲民今以义推之则五日所宜应各不同王日为临官之辰其吉大於月建又居四时之首其吉不减天恩故所宜应如此不用以出师者不欲从我始也官日守日相日旧说可从袭"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 3230,
+   "line": 369,
+   "ctx": "则三合一为生一为旺其为墓日者则取三合之吉足矣其为生旺日者则土旺之吉当并取也故区而别之又三合即成定日而取义各有不同故分属各条之下若义有兼取者则又不嫌其并见也⏎⏎临日⏎⏎宜上册进表章上官赴任临政亲民陈词讼⏎⏎见义例⏎⏎驿马【天后】⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命公卿招贤⏎⏎又为天后宜求医疗病⏎⏎按驿马天马皆第取行远之义旧本谓驿马宜封拜官爵诏命公卿出行赴任移徙天马宜颁诏封拜招贤宣政事远行出征则失其义矣今以其日止宜行幸遣使般移与覃恩吉日并而後宜颁诏与封拜举"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 3335,
+   "line": 375,
+   "ctx": "⏎⏎驿马【天后】⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命公卿招贤⏎⏎又为天后宜求医疗病⏎⏎按驿马天马皆第取行远之义旧本谓驿马宜封拜官爵诏命公卿出行赴任移徙天马宜颁诏封拜招贤宣政事远行出征则失其义矣今以其日止宜行幸遣使般移与覃恩吉日并而後宜颁诏与封拜举正直吉日并而後宜诏命公卿招贤与布政事吉日并而後宜宣政事庶为允协天后见义例⏎⏎天马⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命公卿招贤⏎⏎义见驿马⏎⏎建日【兵福】⏎⏎宜施恩封拜诏命公卿招贤举正"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 3399,
+   "line": 379,
+   "ctx": "取行远之义旧本谓驿马宜封拜官爵诏命公卿出行赴任移徙天马宜颁诏封拜招贤宣政事远行出征则失其义矣今以其日止宜行幸遣使般移与覃恩吉日并而後宜颁诏与封拜举正直吉日并而後宜诏命公卿招贤与布政事吉日并而後宜宣政事庶为允协天后见义例⏎⏎天马⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命公卿招贤⏎⏎义见驿马⏎⏎建日【兵福】⏎⏎宜施恩封拜诏命公卿招贤举正直行幸遣使上官赴任临政亲民⏎⏎与天恩并宜颁诏宣政事⏎⏎又为兵福宜安抚边境选将训兵出师⏎⏎按建日与王官同义旧本止宜施恩封拜出行夫举"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 4167,
+   "line": 451,
+   "ctx": "破⏎⏎危日⏎⏎宜安抚边境选将训兵安牀⏎⏎立冬後立春前宜伐木霜降後立春前宜畋猎雨水後立夏前宜取鱼⏎⏎按危日取安为义故宜安牀然安不忘危则莫大於安抚训练之事伐木畋猎取鱼则以隂过盛而物当杀也各以其节气者顺时也⏎⏎成日【天喜　天医】⏎⏎宜入学安抚边境般移筑堤防开市⏎⏎又为天喜宜施恩封拜举正直庆赐赏贺宴会行幸遣使上官赴任临政亲民结婚姻纳采问名嫁娶五月与天马并宜诏命公卿招贤【驿马不得与天喜并】⏎⏎乂为天医宜求医疗病⏎⏎按成为合局之终开为生气之始故其日宜入学原始要终之义也宜安抚边境者功成而永奠也"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 4289,
+   "line": 457,
+   "ctx": "筑堤防开市⏎⏎又为天喜宜施恩封拜举正直庆赐赏贺宴会行幸遣使上官赴任临政亲民结婚姻纳采问名嫁娶五月与天马并宜诏命公卿招贤【驿马不得与天喜并】⏎⏎乂为天医宜求医疗病⏎⏎按成为合局之终开为生气之始故其日宜入学原始要终之义也宜安抚边境者功成而永奠也般移筑堤防开市皆取成义天喜旧宜封拜自宜上官义同建日⏎⏎收日⏎⏎宜进人口纳财捕捉纳畜⏎⏎霜降後立春前宜畋猎雨水後立夏前宜取鱼与月恩四相时德并宜修仓库⏎⏎义取诸收无修造义故必与月恩四相时德并而後宜修仓库若开日则虽宜修造不得与收日并若德合赦愿则自宜修"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 4511,
+   "line": 471,
+   "ctx": "则虽宜修造不得与收日并若德合赦愿则自宜修仓库又不待与收日并也⏎⏎母仓义亦如此⏎⏎开日【时阳　生气】⏎⏎宜祭祀祈福求嗣上册进表章颁诏覃恩肆赦施恩封拜诏命公卿招贤举正直施恩惠恤孤惸宣政事行惠爱雪寃枉缓刑狱庆赐赏贺宴会入学行幸遣使上官赴任临政亲民般移解除求医疗病裁制修宫室缮城郭兴造动土竖柱上梁开市修置产室开渠穿井安碓磑栽种牧养⏎⏎忌伐木畋猎取鱼破土安葬啓攒⏎⏎按开日一阳始生故又为时阳又为生气其日最吉旧本所宜无祭祀祈福求嗣覃恩拜官等事於义未备故补之不及婚事者无合义也忌伐木渔猎者恐伤生气也"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 6003,
+   "line": 609,
+   "ctx": "拜义相反忌安抚边境选将训兵出师与其日兵福所宜自相抵牾故删阳错小会隂位详月厌条下⏎⏎月破【大耗】⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀整容剃头整手足甲裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井安碓磑补垣塞穴修饰垣墙伐木栽种牧养纳畜破土安葬启攒⏎⏎又为大耗忌修仓库开市立劵交易纳财开仓库出货财⏎⏎与天德月德"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 6716,
+   "line": 621,
+   "ctx": "宜满日原自不值破日今三合等日俱宜经络故值破日则忌若沐浴寻常细事则自无当忌之理也⏎⏎平日【死神】⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井栽种牧养纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓刑狱入学沐浴整容剃头整手足甲安碓磑补垣塞穴扫舍"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 7734,
+   "line": 631,
+   "ctx": "宜不遇诸事皆忌最下凶叠大凶遇德仍诸事皆忌然後吉凶轻重各有区分而用静用作趋避各当云表例并列於後⏎⏎收日⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶般移安牀解除求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁鼓铸经络酝酿开市立劵交易开仓库出货财修置产室开渠穿井破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓刑狱入学进人口沐浴整容剃头整手足甲修仓库纳财安碓磑补垣塞穴扫舍宇修饰"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 8568,
+   "line": 647,
+   "ctx": "相又复泄气不足为吉子午月值月厌转以相亢为凶故各从重论旧本并忌上册进表章与其日福德所宜自相矛盾故删天狗见义例⏎⏎闭日【血支】⏎⏎忌上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会行幸遣使出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀求医疗目营建宫室修宫室兴造动土竖柱上梁开市开仓库出货财修置产室开渠穿井⏎⏎又为血支专忌针刺⏎⏎子午卯酉月值王日辰戌丑未月值官日天吏与天德月德天德合月德合天赦天愿并凡所忌者则不注宜所宜者亦不注忌不与德合赦愿并如常例寅申巳亥月值月煞从月煞论"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 8925,
+   "line": 657,
+   "ctx": "取者方闭无取发生也旧本不忌出行出师今以义推之出行与赴任事同一例出师尤出行之大者故并忌之⏎⏎刼煞⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除整容剃头整手足甲求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井安碓磑补垣塞穴修饰垣墙破屋坏垣栽种牧养纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 10356,
+   "line": 685,
+   "ctx": "岁三煞与岁破同凶而可以吉制月三煞义本相通今为推类而区别之庶条理咸贯矣不忌伐木与危日同义⏎⏎月刑⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除整容剃头整手足甲求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井安碓磑补垣塞穴修饰垣墙破屋坏垣栽种牧养纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 11391,
+   "line": 699,
+   "ctx": "其凶皆重於月害故从重论天吏之凶亦重於月害而不从天吏论者天吏不能该月害之所忌故也⏎⏎月厌【地火】⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移远回安牀解除整容剃头整手足甲求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井安碓磑补垣塞穴修饰垣墙平治道涂破屋坏垣伐木栽种牧养纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 11610,
+   "line": 703,
+   "ctx": "纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓刑狱入学沐浴扫舍宇捕捉畋猎取鱼⏎⏎又为地火忌栽种修筑园圃⏎⏎寅申月值成日丑未月值开日与月德天德合月德合并止忌行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶求医疗病般移远回栽种余皆不忌不与德神并如常例辰戌月值定日己亥月值满日与天德月德月德合并凡所忌者则不注宜所宜者亦不注忌不与德合并如常例子午月厌建会与天赦并如常例不与天赦并诸事皆忌卯酉月值月破灾煞虽与德合并仍诸事皆忌又正月甲戌二月乙酉五月丙午六月丁巳七月庚"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 12440,
+   "line": 705,
+   "ctx": "虚日故与德神并然後吉凶相抵而不宜不忌否则如常例也子午月厌建会则隂阳争五月丙午十一月壬子虽值月德然为隂阳大会丙壬只作建论不作德论惟天赦另有生意故与天赦并而後如常例否则诸事皆忌也卯酉月值灾破则显然冲击虽与德神并亦应诸事不宜矣又按旧历止忌出行嫁娶般移远回於义固为未协淮南子历事明原谓厌日不可举百事则亦略举大义而未之深辨今逐月较量其轻重而区别之如此至大会小会隂位等日则皆从二建会合取义故皆与子午月例同隂阳交破隂阳击冲阳破隂冲隂道冲阳等日则皆从二建对冲取义故皆与卯酉月例同岁薄逐阵则取二建将合而"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 13025,
+   "line": 719,
+   "ctx": "⏎⏎按厌对又为招摇皆以月厌之冲取义故所忌如此与德赦并则隂从阳故不忌与月破并则又为月建之冲故尤忌也⏎⏎大时【大败　咸池】⏎⏎忌祈福求嗣上册进表章施恩封拜诏命公卿招贤举正直冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除求医疗病营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库开市立劵交易纳财开仓库出货财修置产室栽种牧养纳畜⏎⏎又为咸池忌取鱼乘船渡水⏎⏎寅申巳亥月值除日官日辰戌月值执日六合止忌安抚边境选将训兵出师余皆不忌丑未月值执日六害与二德并亦止忌"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 13516,
+   "line": 737,
+   "ctx": "天愿不得与游祸并】⏎⏎按游祸日本不为凶第为三合临官故以过旺为祸而忌祈解医药之事与德赦并其旺如故故犹忌也⏎⏎天吏【致死】⏎⏎忌祈福求嗣上册进表章施恩封拜诏命公卿招贤举正直冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除求医疗病营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库开市立劵交易纳财开仓库出货财修置产室栽种牧养纳畜⏎⏎寅申巳亥月值危日与天德月德天德合月德合并止忌安抚边境选将训兵出师求医疗病余皆不忌不与德合并如常例辰戌丑未月值闭日与德合赦愿并"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 14469,
+   "line": 783,
+   "ctx": "干支皆四时休气故所忌如此与德合三合并则干与支必有一遇生旺者矣故不忌也犹忌军事与四击同义⏎⏎四废⏎⏎忌祈福求嗣上册进表章颁诏施恩封拜诏命公卿招贤举正直宣布政事庆赐赏贺宴会冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除求医疗病裁制营建宫室修宫室缮城郭筑堤防兴造动土竖柱上梁修仓库鼓铸经络酝酿开市立劵交易纳财开仓库出货财修置产室开渠穿井安碓磑补垣塞穴修饰垣墙栽种牧养纳畜破土安葬启攒○止不忌祭祀覃恩肆赦施恩惠恤孤惸行惠爱雪寃枉缓刑狱入学沐浴整容剃头整手"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 15191,
+   "line": 817,
+   "ctx": "三合论矣故不忌也⏎⏎八风⏎⏎忌取鱼乘船渡水⏎⏎与天德月德天德合月德合六合并则不忌【天赦不得与八风并】⏎⏎按八风所忌见义例与德合六合并则风以合而定矣故不忌也⏎⏎五墓⏎⏎忌冠带行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移安牀解除求医疗病营建宫室修宫室缮城郭兴造动土竖柱上梁开市立劵交易修置产室栽种牧养纳畜破土安葬启攒⏎⏎五月十一月与月德并则不忌⏎⏎按五墓乃五行旺干临於墓库故所忌如此与月德并则为三合旺气发於天干而不可以墓论矣故不忌也不取德合者不同行也旧忌无冠带"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 15749,
+   "line": 865,
+   "ctx": "禁⏎⏎忌安抚边境选将训兵出师⏎⏎与德合赦愿并犹忌⏎⏎按兵禁取逆义故忌军事虽与德合赦愿并无解於其逆也故犹忌大煞仿此⏎⏎大煞⏎⏎忌安抚边境选将训兵出师⏎⏎与德合并犹忌【赦愿不得与大煞并】⏎⏎按旧本并忌进人口纳财竖柱上梁其义不伦故删⏎⏎归忌⏎⏎忌般移远回⏎⏎与德合赦愿并犹忌⏎⏎血忌⏎⏎忌针刺⏎⏎与德合赦愿并犹忌⏎⏎往亡　气往亡⏎⏎忌上册进表章颁诏诏命公卿招贤宣政事行幸遣使安抚边境选将训兵出师上官赴任临政亲民嫁娶进人口般移求医疗病捕捉畋猎取鱼⏎⏎与德合赦愿并犹忌⏎⏎按往亡本不为凶第取三合"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 15836,
+   "line": 877,
+   "ctx": "大煞并】⏎⏎按旧本并忌进人口纳财竖柱上梁其义不伦故删⏎⏎归忌⏎⏎忌般移远回⏎⏎与德合赦愿并犹忌⏎⏎血忌⏎⏎忌针刺⏎⏎与德合赦愿并犹忌⏎⏎往亡　气往亡⏎⏎忌上册进表章颁诏诏命公卿招贤宣政事行幸遣使安抚边境选将训兵出师上官赴任临政亲民嫁娶进人口般移求医疗病捕捉畋猎取鱼⏎⏎与德合赦愿并犹忌⏎⏎按往亡本不为凶第取三合溺於所生而无尅制之义有往而不返之象故所忌如此然世俗避之惟谨虽值德合赦愿不能无疑故与并犹忌旧本并忌施恩封拜而不忌招贤宣政事今按往亡与封拜无涉应不忌凡宜出行之日方宜招贤宣政事往亡"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 17588,
+   "line": 951,
+   "ctx": "祀等事余事虽不忌亦不注宜也又上朔以年干取义晦日反支以月朔取义四离四絶以节气取义皆与德合赦愿义不相属故与并犹忌也下仿此⏎⏎冬至　夏至　春分　秋分⏎⏎不注上册进表章庆赐赏贺宴会行幸遣使安抚边境选将训兵出师上官赴任临政亲民结婚姻纳采问名嫁娶进人口般移开市立劵交易捕捉畋猎取鱼冬至日又不注伐木⏎⏎按二至之日隂阳争二分之日厌建对故虽吉日亦不注此数事冬至又不注伐木与开日同义⏎⏎土王用事⏎⏎忌营建宫室修宫室缮城郭筑堤防兴造动土修仓库修置产室开渠穿井安碓磑补垣修饰垣墙平治道涂破屋坏垣栽种破土⏎⏎义"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 18544,
+   "line": 1033,
+   "ctx": "宣政事之日遇往亡则改宣为布⏎⏎凡月厌忌行幸上官不注宜颁诏施恩封拜诏命公卿招贤举正直遇宜宣政事之日则改宣为布⏎⏎凡吉凶相抵不注忌结婚姻亦不注忌冠带纳采问名嫁娶进人口如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌嫁娶亦不注忌冠带结婚姻纳采问名进人口般移安牀如遇德犹忌之日则仍注忌遇不将而不注忌嫁娶者亦仍注忌遇亥日厌对八专四忌四穷而仍注忌嫁娶者止注所忌之事其不忌者仍不注忌⏎⏎凡吉凶相抵不注忌般移亦不注忌安牀不注忌安牀亦不注忌般移如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌解除亦不注忌整容剃头整"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 18615,
+   "line": 1035,
+   "ctx": "带纳采问名嫁娶进人口如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌嫁娶亦不注忌冠带结婚姻纳采问名进人口般移安牀如遇德犹忌之日则仍注忌遇不将而不注忌嫁娶者亦仍注忌遇亥日厌对八专四忌四穷而仍注忌嫁娶者止注所忌之事其不忌者仍不注忌⏎⏎凡吉凶相抵不注忌般移亦不注忌安牀不注忌安牀亦不注忌般移如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌解除亦不注忌整容剃头整手足甲如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌修造动土竖柱上梁亦不注忌修宫室缮城郭筑堤防修仓库鼓铸苫盖修置产室开渠穿井安碓磑补垣塞穴修饰垣墙"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 18632,
+   "line": 1035,
+   "ctx": "则仍注忌⏎⏎凡吉凶相抵不注忌嫁娶亦不注忌冠带结婚姻纳采问名进人口般移安牀如遇德犹忌之日则仍注忌遇不将而不注忌嫁娶者亦仍注忌遇亥日厌对八专四忌四穷而仍注忌嫁娶者止注所忌之事其不忌者仍不注忌⏎⏎凡吉凶相抵不注忌般移亦不注忌安牀不注忌安牀亦不注忌般移如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌解除亦不注忌整容剃头整手足甲如遇德犹忌之日则仍注忌⏎⏎凡吉凶相抵不注忌修造动土竖柱上梁亦不注忌修宫室缮城郭筑堤防修仓库鼓铸苫盖修置产室开渠穿井安碓磑补垣塞穴修饰垣墙平治道涂破屋坏垣如遇德犹忌之日则仍"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279228",
+   "juan": "卷十宜忌易传曰爻彖以情言吉凶",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 3302,
+   "line": 375,
+   "ctx": "嫌其并见也⏎⏎临日⏎⏎宜上册进表章上官赴任临政亲民陈词讼⏎⏎见义例⏎⏎驿马【天后】⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命公卿招贤⏎⏎又为天后宜求医疗病⏎⏎按驿马天马皆第取行远之义旧本谓驿马宜封拜官爵诏命公卿出行赴任移徙天马宜颁诏封拜招贤宣政事远行出征则失其义矣今以其日止宜行幸遣使般移与覃恩吉日并而後宜颁诏与封拜举正直吉日并而後宜诏命公卿招贤与布政事吉日并而後宜宣政事庶为允协天后见义例⏎⏎天马⏎⏎宜行幸遣使般移⏎⏎与天恩并宜颁诏宣政事与月恩四相时德并宜诏命"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 612,
+   "line": 115,
+   "ctx": "　　宣政事　　　布政事⏎⏎行惠爱　　　雪寃枉　　　缓刑狱⏎⏎庆赐　　　　赏贺　　　　宴会⏎⏎入学　　　　冠带　　　　行幸⏎⏎遣使　　　　安抚边境　　选将训兵⏎⏎出师　　　　上官赴任　　临政亲民⏎⏎结婚姻　　　纳采问名　　嫁娶⏎⏎进人口　　　般移　　　　安牀⏎⏎解除　　　　沐浴　　　　整容剃头⏎⏎整手足甲　　求医疗病　　裁制⏎⏎营建宫室　　修宫室　　　缮城郭⏎⏎筑堤防　　　兴造动土　　竖柱上梁⏎⏎经络　　　　开市　　　　立券⏎⏎交易　　　　纳财　　　　修置产室⏎⏎开渠穿井　　安碓磑"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "canon": "般移",
+   "word": "般移",
+   "pos": 3188,
+   "line": 381,
+   "ctx": "合月德合天赦天愿三合天喜六合不将⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月害月厌厌对大时天吏四废四忌四穷五墓往亡八专亥日⏎⏎进人口⏎⏎宜天愿民日三合满日收日六合天仓⏎⏎忌月破平日死神闭日劫煞灾煞月煞月刑月害月厌大时天吏四废四穷五墓九空往亡⏎⏎般移【移徙同】⏎⏎宜天德月德天德合月德合天赦天愿月恩四相时德民日驿马天马成日开日⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月厌大时天吏四废五墓归忌往亡⏎⏎远回⏎⏎忌月厌归忌⏎⏎安牀⏎⏎宜危日⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月厌大时天吏四废五墓"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 859,
+   "line": 147,
+   "ctx": "⏎⏎扫舍宇　　　修饰垣墙　　平治道涂⏎⏎伐木　　　　捕捉　　　　畋猎⏎⏎取鱼　　　　栽种　　　　牧养⏎⏎纳畜⏎⏎民用三十七事⏎⏎祭祀　　　　上表章　　　上官⏎⏎入学　　　　冠带　　　　结婚姻⏎⏎会亲友　　　嫁娶　　　　进人口⏎⏎出行　　　　移徙　　　　安牀⏎⏎沐浴　　　　剃头　　　　疗病⏎⏎裁衣　　　　修造动土　　竖柱上梁⏎⏎经络　　　　开市　　　　立券⏎⏎交易　　　　纳财　　　　修置产室⏎⏎开渠穿井　　安碓磑　　　扫舍宇⏎⏎平治道涂　　破屋坏垣　　伐木⏎⏎捕捉　　　　畋猎　　　"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 1105,
+   "line": 179,
+   "ctx": "⏎牧养　　　　破土　　　　安葬⏎⏎啓攒⏎⏎通书选择六十事⏎⏎祭祀　　　　祈福　　　　求嗣⏎⏎上册受封　　上表章　　　袭爵受封⏎⏎会亲友　　　入学　　　　冠带⏎⏎出行　　　　上官赴任　　临政亲民⏎⏎结婚姻　　　纳采问名　　嫁娶⏎⏎进人口　　　移徙　　　　远回⏎⏎安牀　　　　解除　　　　沐浴⏎⏎剃头　　　　整手足甲　　求医疗病⏎⏎疗目　　　　针刺　　　　裁衣⏎⏎筑堤防　　　修造动土　　竖柱上梁⏎⏎修仓库　　　鼓铸　　　　苫盖⏎⏎经络　　　　酝酿　　　　开市⏎⏎立券　　　　交易　　　　"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279229",
+   "juan": "卷十一用事选择用事宜忌备矣然铺",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 3191,
+   "line": 381,
+   "ctx": "合天赦天愿三合天喜六合不将⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月害月厌厌对大时天吏四废四忌四穷五墓往亡八专亥日⏎⏎进人口⏎⏎宜天愿民日三合满日收日六合天仓⏎⏎忌月破平日死神闭日劫煞灾煞月煞月刑月害月厌大时天吏四废四穷五墓九空往亡⏎⏎般移【移徙同】⏎⏎宜天德月德天德合月德合天赦天愿月恩四相时德民日驿马天马成日开日⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月厌大时天吏四废五墓归忌往亡⏎⏎远回⏎⏎忌月厌归忌⏎⏎安牀⏎⏎宜危日⏎⏎忌月破平日收日闭日劫煞灾煞月煞月刑月厌大时天吏四废五墓申日⏎"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279251",
+   "juan": "卷三十三上一章返回目录下一章中华",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 13560,
+   "line": 379,
+   "ctx": "相离稍远者犹之可也若於祖堂利而於修主之住屋不利则修主不利而合家亦不得受福矣大抵修主之住屋若与祖堂共一栋则吉凶同论若异栋则必兼论必俱利乃可今人有单论祖堂利否者非古人之旨也古人云祖堂不利则移香火於吉方如修主住房不利必要迁住吉方乃可修作其义甚明凡移徙而修者必待修完後方可择吉入宅或岁官交承亦可如主命本年利作兑不利作震则当迁居於东使所修之方昔视之为震者今则视之为兑矣此活变之法也⏎⏎按定中宫之法论层数固未精而论丈尺亦未甚确盖方位皆以目之所见为定如大门则以厅事为中可也如厅後则以正寝为中可也如坟"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279251",
+   "juan": "卷三十三上一章返回目录下一章中华",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 10933,
+   "line": 335,
+   "ctx": "者则乾金与庚金同坤土与戊土同艮土与巳土同巽木与乙木同⏎⏎马有冲山者则取到向如寅山马在申忌申字冲寅山则四柱多用寅字又助起寅山又马到申向也禄贵到向俱吉宜活法取之毋执一也⏎⏎又有本命飞遁真禄真贵真马则支干俱全之谓也以太岁入中宫遁到山向中宫造葬安床入宅俱大吉修方者宜到方⏎⏎如甲子年生人寅为禄马丑未为贵人用甲年五虎遁则寅为丙寅丑为丁丑未为辛未乙丑年修作以太岁乙丑入中宫顺数丙寅到乾六则乾为禄马辛未到坤二则坤为阳贵人丁丑到艮八则艮为隂贵人乾坤艮三方大吉⏎⏎按通书云本命日不宜用事诸历皆无明说惟见"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279251",
+   "juan": "卷三十三上一章返回目录下一章中华",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 13574,
+   "line": 379,
+   "ctx": "而於修主之住屋不利则修主不利而合家亦不得受福矣大抵修主之住屋若与祖堂共一栋则吉凶同论若异栋则必兼论必俱利乃可今人有单论祖堂利否者非古人之旨也古人云祖堂不利则移香火於吉方如修主住房不利必要迁住吉方乃可修作其义甚明凡移徙而修者必待修完後方可择吉入宅或岁官交承亦可如主命本年利作兑不利作震则当迁居於东使所修之方昔视之为震者今则视之为兑矣此活变之法也⏎⏎按定中宫之法论层数固未精而论丈尺亦未甚确盖方位皆以目之所见为定如大门则以厅事为中可也如厅後则以正寝为中可也如坟茔则以祖穴为中可也移步换形惟"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279252",
+   "juan": "卷三十四利用二年神总论月吉神总论",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 4715,
+   "line": 207,
+   "ctx": "⏎⏎宗镜曰太岁君也坐之吉向之凶冲破坐山故也四柱八字合之吉冲之尅之凶以臣犯君故也叠紫白三奇禄马贵人等吉星则极吉得君行道膏泽及民也叠戊巳年尅隂府大煞等凶星则又极凶衆凶有藉倚势作孽也故太岁或在山或在方审其叠吉而不叠凶则以四柱合之或一气或三合局造葬移徙其福大而且久非诸吉星可比也必要八节三奇太阳紫白诸吉同到本命贵禄临之尤妙曾文辿曰吉莫吉於修太岁凶莫凶於犯太岁太岁所在宜造葬宜移徙宜补葺皆修也不可拆毁不可穵窖开池皆犯也⏎⏎按太岁为岁君吉星会於坐山乘旺固吉然不得已而修作及葬事则可矣若兴造之事本属"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279252",
+   "juan": "卷三十四利用二年神总论月吉神总论",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 4778,
+   "line": 207,
+   "ctx": "叠戊巳年尅隂府大煞等凶星则又极凶衆凶有藉倚势作孽也故太岁或在山或在方审其叠吉而不叠凶则以四柱合之或一气或三合局造葬移徙其福大而且久非诸吉星可比也必要八节三奇太阳紫白诸吉同到本命贵禄临之尤妙曾文辿曰吉莫吉於修太岁凶莫凶於犯太岁太岁所在宜造葬宜移徙宜补葺皆修也不可拆毁不可穵窖开池皆犯也⏎⏎按太岁为岁君吉星会於坐山乘旺固吉然不得已而修作及葬事则可矣若兴造之事本属可缓行险儌幸未必得福不如其勿犯也通书有用月日纳音尅太岁纳音之说益属无理至可坐不可向则不易之论盖向太岁则坐于岁破矣虽有吉星不能解"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 6472,
+   "line": 427,
+   "ctx": "配月之法小通惟取两月或取生我或取我生皆无义例亦不足辨矣⏎⏎事类总集⏎⏎通书曰年贵人冬至後用阳贵夏至後用隂贵时贵人昼用阳贵夜用隂贵又一说子至巳用阳贵午至亥用隂贵⏎⏎凡修造用家主名姓昭告若家主行年不利即以子弟行年得利者作修造主昭告神祗俟修造完备入宅然後安谢⏎⏎凡新立宅舍或尽行折除旧宅倒堂竖造修主人眷既已出火避宅其起工只就坐上架马若修主不出火避宅或坐宫或移宫但就所修之方择吉方起工架马或别择吉方架马亦利若修作在住近空屋或在一百步之外起工架马并不问吉凶方道⏎⏎凡原有旧宅净尽折去叧造谓之倒堂"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 6619,
+   "line": 431,
+   "ctx": "眷既已出火避宅其起工只就坐上架马若修主不出火避宅或坐宫或移宫但就所修之方择吉方起工架马或别择吉方架马亦利若修作在住近空屋或在一百步之外起工架马并不问吉凶方道⏎⏎凡原有旧宅净尽折去叧造谓之倒堂竖造与新立宅舍同择吉方出火避宅俟工作完备别择吉年月入宅归火⏎⏎凡立磉便为立向修方如月家不利须与竖造同月盖竖造既得吉日则在前定磉难得全吉之日吉多凶少亦可用至扇架则又轻於定磉矣⏎⏎凡修造桥梁僧尼院宇庵观神庙开山立向修方并与民俗年月同⏎⏎凡新立宅舍尚未归火入宅即於宅内新造牛栏马枋羊栈猪牢等屋并不问年"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 6719,
+   "line": 437,
+   "ctx": "宅舍同择吉方出火避宅俟工作完备别择吉年月入宅归火⏎⏎凡立磉便为立向修方如月家不利须与竖造同月盖竖造既得吉日则在前定磉难得全吉之日吉多凶少亦可用至扇架则又轻於定磉矣⏎⏎凡修造桥梁僧尼院宇庵观神庙开山立向修方并与民俗年月同⏎⏎凡新立宅舍尚未归火入宅即於宅内新造牛栏马枋羊栈猪牢等屋并不问年月方道如在百二十步之外须看年月方道无凶煞占方宜起手修作⏎⏎凡方道有三曰隂方道曰阳方道曰交接方道隂方道者即中宫滴水门也阳方道者地基不与旧宅相接也交接方道者或前後左右屋宇与旧宅相连也如屋上起楼及架天井就檐"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7222,
+   "line": 443,
+   "ctx": "隔街路作之不妨如小修葺并不问吉凶之方但要吉日余即不畏若是乡村之地修方道或隔大溪水人不得渡四时常流亦不问凶煞若隔小水溪涧常流不絶小煞不妨若居城市隔一街巷三五尺非自已地者亦不犯方隅神煞如欲屋近作楼台厅馆虽是修方亦取方道有吉神无凶煞作之不妨⏎⏎论入宅法山向中宫并无凶煞惟大门微有凶神却用关闭正门从左右作小门出入或开横门出入或奉祖先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7337,
+   "line": 445,
+   "ctx": "不妨⏎⏎论入宅法山向中宫并无凶煞惟大门微有凶神却用关闭正门从左右作小门出入或开横门出入或奉祖先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7359,
+   "line": 445,
+   "ctx": "神却用关闭正门从左右作小门出入或开横门出入或奉祖先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7371,
+   "line": 445,
+   "ctx": "门出入或开横门出入或奉祖先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧煞忌之⏎⏎凡造葬先看山家"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7383,
+   "line": 445,
+   "ctx": "先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧煞忌之⏎⏎凡造葬先看山家墓运要正隂府太岁不尅山头"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 7418,
+   "line": 447,
+   "ctx": "入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧煞忌之⏎⏎凡造葬先看山家墓运要正隂府太岁不尅山头若浮天空亡天官符占舍位并忌开山立向巡山罗?止忌立向次论月家飞宫天地官符"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 8257,
+   "line": 475,
+   "ctx": "合吉虽无不将亦可用不必拘也⏎⏎凡月忌日不忌嫁娶辛亥年十一月初五日辛卯壬子年十二月初五日乙卯嫁娶用之亦多略举此事以袪俗忌⏎⏎凡嫁娶周堂值翁姑新人入门时俗有从权出外少避候新人坐牀翁姑方可回家⏎⏎凡封拜施恩事出於上百无忌惟择吉时⏎⏎凡上官嫁娶出行入宅修造安葬修方一切动用宜四大吉时兼黄道吉星时得吉星到时可胜诸凶所有九丑路空旬空俱不忌或合通天窍走马六壬天罡取用吉时吉神到山到向为吉⏎⏎杂用宜忌⏎⏎起工架马吉日⏎⏎正月　辛未乙未壬午丙午【外】癸酉丁酉丁丑癸丑二月　戊寅庚寅己巳【外】丙寅甲寅丁丑"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "归火",
+   "word": "归火",
+   "pos": 6621,
+   "line": 431,
+   "ctx": "已出火避宅其起工只就坐上架马若修主不出火避宅或坐宫或移宫但就所修之方择吉方起工架马或别择吉方架马亦利若修作在住近空屋或在一百步之外起工架马并不问吉凶方道⏎⏎凡原有旧宅净尽折去叧造谓之倒堂竖造与新立宅舍同择吉方出火避宅俟工作完备别择吉年月入宅归火⏎⏎凡立磉便为立向修方如月家不利须与竖造同月盖竖造既得吉日则在前定磉难得全吉之日吉多凶少亦可用至扇架则又轻於定磉矣⏎⏎凡修造桥梁僧尼院宇庵观神庙开山立向修方并与民俗年月同⏎⏎凡新立宅舍尚未归火入宅即於宅内新造牛栏马枋羊栈猪牢等屋并不问年月方"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "归火",
+   "word": "归火",
+   "pos": 6717,
+   "line": 437,
+   "ctx": "新立宅舍同择吉方出火避宅俟工作完备别择吉年月入宅归火⏎⏎凡立磉便为立向修方如月家不利须与竖造同月盖竖造既得吉日则在前定磉难得全吉之日吉多凶少亦可用至扇架则又轻於定磉矣⏎⏎凡修造桥梁僧尼院宇庵观神庙开山立向修方并与民俗年月同⏎⏎凡新立宅舍尚未归火入宅即於宅内新造牛栏马枋羊栈猪牢等屋并不问年月方道如在百二十步之外须看年月方道无凶煞占方宜起手修作⏎⏎凡方道有三曰隂方道曰阳方道曰交接方道隂方道者即中宫滴水门也阳方道者地基不与旧宅相接也交接方道者或前後左右屋宇与旧宅相连也如屋上起楼及架天井"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "归火",
+   "word": "归火",
+   "pos": 7316,
+   "line": 445,
+   "ctx": "作楼台厅馆虽是修方亦取方道有吉神无凶煞作之不妨⏎⏎论入宅法山向中宫并无凶煞惟大门微有凶神却用关闭正门从左右作小门出入或开横门出入或奉祖先福神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "归火",
+   "word": "归火",
+   "pos": 7385,
+   "line": 445,
+   "ctx": "神香火暂驻吉方俟凶神过後正向得利别择吉月吉日或岁除正初或立春交接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧煞忌之⏎⏎凡造葬先看山家墓运要正隂府太岁不尅山头若浮"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279253",
+   "juan": "卷三十五附录选择之道自本原以至利",
+   "canon": "归火",
+   "word": "归火",
+   "pos": 7416,
+   "line": 447,
+   "ctx": "接移入祖先福神香火奉祀遂开正门无妨⏎⏎论归火与竖造同日惟推吉时家主先移祖先福神香火入宅俗谓先过香火俟毕工後再择吉日同家眷从吉方入宅如竖造之日不先移香火入宅必待山向年月得利方可入宅归火若竖造之日虽吉或犯归忌九丑又须别择⏎⏎凡人家修造内堂完备已归火入宅向後续造厅廊或久住宅舍又欲修作安磑开渠修筑等事只用修方法择年月其山家墓运隂府太岁并不必忌惟浮天空亡巡山罗?及月家飞宫方道紧煞忌之⏎⏎凡造葬先看山家墓运要正隂府太岁不尅山头若浮天空亡天官符占舍位并忌开山立向巡山罗?止忌立向次论月家飞宫天地"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279254",
+   "juan": "卷三十六辨譌术士好奇而嗜利譌言繁",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10533,
+   "line": 341,
+   "ctx": "大吉临太岁隂岁以小吉临太岁视天上甲庚所临为天道丙壬所临为人道魁罡所临为拘检天道人道吉拘检凶假令今年太岁在寅大吉临寅视天上甲庚临地乙辛为天道天上丙壬临地丁癸为人道⏎⏎魁罡临己亥为拘检魁为拘罡为检他岁仿此岁在子午卯酉为四仲天道及人道皆在四维难可移徙阳月以大吉临月建隂月以小吉临月建移徙吉凶皆如太岁法今详龙首经之法必非出自黄帝亦属後世假托夫丑未之前一干必是甲庚安得不论五行生尅惟取太岁月建前一位之时辰移徙修造便获吉耶神煞起例天地兵人鬼死六道盖即龙首经之法而又推广之愈凿愈陋⏎⏎五符择时⏎⏎用"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279254",
+   "juan": "卷三十六辨譌术士好奇而嗜利譌言繁",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10551,
+   "line": 341,
+   "ctx": "所临为天道丙壬所临为人道魁罡所临为拘检天道人道吉拘检凶假令今年太岁在寅大吉临寅视天上甲庚临地乙辛为天道天上丙壬临地丁癸为人道⏎⏎魁罡临己亥为拘检魁为拘罡为检他岁仿此岁在子午卯酉为四仲天道及人道皆在四维难可移徙阳月以大吉临月建隂月以小吉临月建移徙吉凶皆如太岁法今详龙首经之法必非出自黄帝亦属後世假托夫丑未之前一干必是甲庚安得不论五行生尅惟取太岁月建前一位之时辰移徙修造便获吉耶神煞起例天地兵人鬼死六道盖即龙首经之法而又推广之愈凿愈陋⏎⏎五符择时⏎⏎用日禄起五符顺布十二位名透天关其法不过"
+  },
+  {
+   "book": "协纪辨方书",
+   "chap": "279254",
+   "juan": "卷三十六辨譌术士好奇而嗜利譌言繁",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10610,
+   "line": 341,
+   "ctx": "为人道⏎⏎魁罡临己亥为拘检魁为拘罡为检他岁仿此岁在子午卯酉为四仲天道及人道皆在四维难可移徙阳月以大吉临月建隂月以小吉临月建移徙吉凶皆如太岁法今详龙首经之法必非出自黄帝亦属後世假托夫丑未之前一干必是甲庚安得不论五行生尅惟取太岁月建前一位之时辰移徙修造便获吉耶神煞起例天地兵人鬼死六道盖即龙首经之法而又推广之愈凿愈陋⏎⏎五符择时⏎⏎用日禄起五符顺布十二位名透天关其法不过日干临时支以临官胎养时为吉余并凶耳其名字乃⏎⏎术士之揑造也然用时无专取胎养时之理即日禄尚须参论各神煞况胎养乎今日表已删"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359077",
+   "juan": "卷二",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 4609,
+   "line": 223,
+   "ctx": "丑刑申酉戌，则己刑申，酉自刑，丑刑戌也；以寅午戌刑己午未，则寅刑己，午自刑，戌刑未也；以申子辰刑寅卯辰，则申刑寅，子刑卯，辰自刑也；以亥卯未刑亥子丑，则亥自刑，卯刑子，未刑丑也。⏎⏎岁破⏎⏎广圣历曰：“岁破者，太岁所冲之辰也。其地不可兴造、移徙、嫁娶、远行，犯者主损财物及害家长，惟战伐向之吉。”○明时总要曰：“岁破者，子年在午，顺行十二辰，是也。”⏎⏎岁杀⏎⏎神枢经曰：“岁杀者，阴气尤毒，谓之杀也。常居四季，谓四季之阴气能游天上。”○李鼎祚曰：“寅午戌杀在丑，己酉丑杀在辰，申子辰"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359077",
+   "juan": "卷二",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 4763,
+   "line": 227,
+   "ctx": "：“岁破者，子年在午，顺行十二辰，是也。”⏎⏎岁杀⏎⏎神枢经曰：“岁杀者，阴气尤毒，谓之杀也。常居四季，谓四季之阴气能游天上。”○李鼎祚曰：“寅午戌杀在丑，己酉丑杀在辰，申子辰杀在未，亥卯未杀在戌。”○广圣历曰：“岁杀之地，不可穿凿、修营、移徙，犯之者伤子孙、六畜。”○曹震圭曰：“月杀者，三合五行成形之位，所谓养是也。大抵物之成形，母必有伤，故曰杀。”⏎⏎劫杀⏎⏎神枢经曰：“劫杀者，岁之阴气也。主有杀害，所理之方，忌有兴造，犯之主有劫盗、伤杀之事。”○李鼎祚曰：“寅午戌岁在亥，亥"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359077",
+   "juan": "卷二",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7028,
+   "line": 297,
+   "ctx": "幡对冲，其所在之方，不可嫁娶、纳奴婢、进六畜及兴造，犯之者破财物、损小口。○曹震圭曰：“豹尾者，虎贲之象，先锋之将也。故常与黄幡相对，是置于华盖之前也。”⏎⏎飞廉⏎⏎神枢经曰：“飞廉者，岁之廉察使君之象，亦名大煞。所理之方，不可兴工、动土、移徙、嫁娶，犯之主官府、口舌、疾病、遗亡。”○广圣历曰：“子年在申，丑年在酉，寅年在戌，卯年在巳，辰年在午，巳年在未，午年在寅，未年在卯，申年在辰，酉年在亥，戌年在子，亥年在丑也。”○曹震圭曰：“飞廉与大煞同义，解见第四卷。”⏎⏎白虎⏎⏎人元秘"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359077",
+   "juan": "卷二",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7510,
+   "line": 313,
+   "ctx": "兴造及问病、寻医、吊孝、送丧。”○蓬瀛书曰：“子年在戌，顺行十二辰，是也。其位常与官符对冲。”⏎⏎金神⏎⏎洪范篇曰：“金神者，太白之精，白兽之神。主兵戈、丧乱、水旱、淫疫。所理之地，忌筑城池、建宫室、竖楼阁、广园林、兴工、上梁、出军、征伐、移徙、嫁娶、远行、赴任，若犯干神者，其忌尤甚。”○堪舆经曰：“甲巳之年在午未申酉，乙庚之年在辰巳，丙辛之年在子丑寅卯午未，丁壬之年在寅卯戌亥，戊癸之年在申酉子丑也。”○曹震圭曰：“金神者，以年干五虎元历之逢庚辛及纳音金之位者是也。假如甲巳之年起"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359078",
+   "juan": "卷三",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 2607,
+   "line": 127,
+   "ctx": "，积藏者为仓，故以名之，各以生当时五行的辰为之。”⏎⏎按：春属木，水生之，故以亥子为母仓也。余仿此。不用干而用支者，支为地，有母道焉，万物生于土，有藏道焉。⏎⏎月恩⏎⏎五行论曰：“月恩者，阳建所生之干也，子母相从，谓之月恩，其日宜营造婚姻，移徙祭祀，上官纳财。”○历例曰：“月恩者，正月丙，二月丁，三月庚，四月己，五月戊，六月辛，七月壬，八月癸，九月庚，十月乙，十一月甲，十二月辛。”○曹震圭曰：“月恩者，子母相从，是月建反生于彼，盖母生我，我生子之义。”⏎⏎按：正月寅阳木生丙阳火，"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359078",
+   "juan": "卷三",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 3864,
+   "line": 155,
+   "ctx": "初九顺配之，天马则四月在子，意者四月乾卦，十月建亥，又在干宫，故以配干之初九欤，与曹氏之说相发。又按：午为马，故正月起午，马健行，故顺历六阳辰，又天马与白虎同见后。⏎⏎驿马⏎⏎神枢经曰：“驿马者，驿骑也，其日宜封赠官爵，诏命公卿，远行赴任，移徙迁居。”○李鼎祚曰：“驿马者，正月起申，逆行四孟。”○曹震圭曰：“驿马者，五行将病得见妻子，似人值困途逢妻子者也。假令寅午戌火也，病于申，中有庚为妻，戊为子，故以申为马，申子辰水也，病于寅，中有丙为妻，甲为子，亥卯未木也，病于巳，中有戊为妻"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359078",
+   "juan": "卷三",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7441,
+   "line": 239,
+   "ctx": "义，故得戊辰；十一月以其自建者，谓前后皆无所配，然建子之月，未可假力于人，其忌壬，用甲者，是待其子有所助也；十二月忌申，以就近申之未，故得癸未。其义如此。”⏎⏎四相⏎⏎总要历曰：“四相者，四时王相之辰也。其日宜修营起工，养育生财，栽植种莳，移徙远行。”○历例曰：“春丙丁，夏戊巳，秋壬癸，冬甲乙。”○曹震圭曰：“四相者，养育之道，母生子也。春木王生丙丁，夏火王生戊巳，秋金王生壬癸，冬水王生甲乙，惟庚辛者，金也，能杀万物，故不用。”⏎⏎四时天德⏎⏎总要历曰：“四时天德者，四序中德神也"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 3990,
+   "line": 179,
+   "ctx": "墓在未，丑能冲散也；申子辰月，水墓在辰，戌能冲散也；己酉丑月，金墓在丑，未能冲散也。今历家所传与九坎、九焦同行者非，盖所传有误，纪岁历亦止是逆行四季。”⏎⏎大杀⏎⏎神枢经曰：“大杀者，月中廉察也。所直之日，忌出军征讨，嫁娶，纳财，竖柱上梁，移徙，置室。”○李鼎祚曰：“大杀者，正月在戌，二月在巳，三月在午，四月在未，五月在寅，六月在卯，七月在辰，八月在亥，九月在子，十月在丑，十一月在申，十二月在酉。”○曹震圭曰：“东方之位，生育万物；南方之地，成熟万物；西方之位，杀伐万物；北方之位"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 6559,
+   "line": 239,
+   "ctx": "、己丑、己未共十二日也。”○曹震圭曰：“六壬经云：干为我，枝为彼，今干枝同类，是彼我同德，两势相敌，不分胜负，故忌出军。”⏎⏎按：专日亦名和日。⏎⏎月厌⏎⏎天宝历曰：“月厌者，阴建之辰也。所理之方，可以禳灾祈福，避病；所直之日，忌远行归家，移徙，婚嫁。”○历例曰：“月厌者，正月在戌，逆行十二辰。”○曹震圭曰：“月厌者，厌魅之神也。其性暗昧，私邪不正，故各忌之。盖十一月建子，阴阳气争，冬至前阴气极，冬至后阳气生，故自建子之月，阳建顺历丑、寅、卯一十二辰，阴建逆历亥、戌、酉一十二辰，"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 7598,
+   "line": 251,
+   "ctx": "二月土旺后三六一十八日，亦得往亡，或节气加时早晚间有差一日者，然其理大概如此。”○通书云：“唐太宗曰：宋武帝以往亡起兵，军吏以为不可，帝曰：我往彼亡，果克之，由此言之，可废明矣。”⏎⏎归忌⏎⏎广圣历曰：“归忌者，月内凶神也。其日忌远行归家，移徙，娶妇。”○历例曰：“孟月丑，仲月寅，季月子。”○曹震圭曰：“子者，一阳；丑乃二阳；寅乃三阳，盖此三辰阳气始盛，主动于外，不可反归于内也。”⏎⏎按：孟月忌丑，仲月忌寅，季月忌子者，皆忌退后一辰，所谓归忌也。如子为仲，丑为季，寅为孟，故孟月忌"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 9992,
+   "line": 297,
+   "ctx": "行六阳辰；飞流者，正月起卯，隂私者，正月起酉，土勃者，不去，皆顺行六隂辰，并解见月事吉神篇。”⏎⏎天刑　朱雀　白虎　天牢　元武　勾陈⏎⏎神枢经曰：“天刑、朱雀、白虎、天牢、元武、勾陈，者月中黑道也，所理之方，所直之日，皆不可兴土功，营屋舍，移徙，远行，嫁娶，出军。”○李鼎祚曰：“天刑者，正月起寅，白虎者，正月起午，天牢者，正月起申，皆顺行六阳辰；朱雀者，正月起卯，元武者，正月起酉，勾陈者，正月起亥，皆顺行六隂辰，并解见月事吉神篇。”⏎⏎八龙　七鸟　九虎　六蛇⏎⏎总要历曰：“八龙、"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359079",
+   "juan": "卷四",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 10426,
+   "line": 305,
+   "ctx": "，其成数九；壬癸者，南方水也，为龟蛇，其成数六，故各因以为名也。”⏎⏎九丑⏎⏎金柜经曰：“乙者，雷电始发之日；戊己者，北辰位下之日；辛者，万物决断之日；壬者，三光不照之日子午卯酉四仲之辰，日月之门，阴阳之界，五干临此四辰，其日不可出军嫁娶，移徙，筑室。”○曹植曰：“九丑者，乙卯、己卯、辛卯、乙酉、己酉、辛酉、戊午、戊子、壬午、壬子。”○曹震圭曰：“卯酉为日月出入之门，子午为阴阳交争之界，乙为六合，辛为太阳，壬为元武，己为六贼，戊为勾陈，故此五干加此四辰名曰丑，又以五干四辰其共数九"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359080",
+   "juan": "卷五",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 10670,
+   "line": 393,
+   "ctx": "合所领日为四月绝阴所领日。⏎⏎绝阳⏎⏎绝阳者，谓九月、十月阳气绝也，故九月小合所领日为十月绝阳所领日。⏎⏎立成⏎⏎曹震圭曰：“以上诸日，虽遇天德、月德、玉堂、生气、黄道、吉星值日，亦不可用，集正所谓阴阳不足之辰是也，忌兴造、嫁娶、上官赴任、入宅、迁移、出行、交易、合药、问病，百事不宜。”⏎⏎按：以上立成所载等日，皆从阴阳二建起论，于选择他书无所见，姑附于此。⏎⏎御定星历考原卷五⏎⏎上一章⏎⏎返回目录⏎⏎下一章⏎⏎中华典藏网旨在推广国学知识吸取国学精华，传承中华文化！⏎⏎本站非营利"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359081",
+   "juan": "卷六",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 5682,
+   "line": 187,
+   "ctx": "材木等事宜，立冬后立春前，午日、申日、危日，忌建、破、平、收日。”○曹震圭曰：“月令云孟夏之月，毋伐树木，草木零落，然后斤斧入山，故立冬后立春前择午、申日用之。”⏎⏎按：午火也，申金也，金能克木，木受其伤；木能生火，木泄其气，故以用之。⏎⏎移徙⏎⏎历例曰：“凡移徙居处等事宜，驿马、月恩、四相，忌归忌、九丑、建、破、平、收日、月厌日。”⏎⏎扫舍宇⏎⏎凡扫除宫室、宅舍等事宜，季月除日，忌日游神所在之方。⏎⏎安床【安置产室附】⏎⏎历例曰：“凡安置产室、竖立屏帐、张悬帷幄等事宜，危日，忌"
+  },
+  {
+   "book": "御定星历考原",
+   "chap": "359081",
+   "juan": "卷六",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 5692,
+   "line": 189,
+   "ctx": "春前，午日、申日、危日，忌建、破、平、收日。”○曹震圭曰：“月令云孟夏之月，毋伐树木，草木零落，然后斤斧入山，故立冬后立春前择午、申日用之。”⏎⏎按：午火也，申金也，金能克木，木受其伤；木能生火，木泄其气，故以用之。⏎⏎移徙⏎⏎历例曰：“凡移徙居处等事宜，驿马、月恩、四相，忌归忌、九丑、建、破、平、收日、月厌日。”⏎⏎扫舍宇⏎⏎凡扫除宫室、宅舍等事宜，季月除日，忌日游神所在之方。⏎⏎安床【安置产室附】⏎⏎历例曰：“凡安置产室、竖立屏帐、张悬帷幄等事宜，危日，忌申日及日游神所在之方"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p34",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 0,
+   "line": 1,
+   "ctx": "入宅歸火 造作倉庫入倉開店修築牆垣 分居名㸑均分財產修作碓磨牧養欄枋 造作牛屋造作猪稠造作羊棧雞搗鴨木西 造作馬枋養蚕作繭收割峰蜜買納猶犬 開鑿池塘修作陂塘築他衡獺畋獵綱魚 種時栽植 六種收割 五榖試新造酒醬醋 安機經絡起綱作染裁表合帳造作粧盔"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p34",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 2,
+   "line": 1,
+   "ctx": "入宅歸火 造作倉庫入倉開店修築牆垣 分居名㸑均分財產修作碓磨牧養欄枋 造作牛屋造作猪稠造作羊棧雞搗鴨木西 造作馬枋養蚕作繭收割峰蜜買納猶犬 開鑿池塘修作陂塘築他衡獺畋獵綱魚 種時栽植 六種收割 五榖試新造酒醬醋 安機經絡起綱作染裁表合帳造作粧盔 造"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p60",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 103,
+   "line": 1,
+   "ctx": "而不可以兼論也如執一書妄言人之禍福者非 一論宅主宅男年庚固要論年利亦要論曰主利推命以生日 爲王切忌用事之日冲尅如單論年利而不顧冲尅日主者 非單論父命不顧子命者亦非 一論周堂之例甚多有竪造周堂埋塟周堂上官周堂入宅周 堂分火周堂移床周堂嫁娶百虎周堂除靈出極周堂餘未 悉舉俱不本五行起例不知始作何人寔無準騐惟嫁娶一 欵出自監曆有理義可信其餘殊無相生相尅之理徒拘於 大月小月定局本當删之不足信也如世俗執泥者非 一論嫁娶周堂値翁與値姑臨新婦歸門時宜少避之次早拜"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p63",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 193,
+   "line": 1,
+   "ctx": "抑又有說焉天符之星殺如在上輔弼之臣事之大者則主 之造塟之類是也日家之雜煞如在下之百寮事之小者則 主之若出行之忌往亡納畜之忌死无是也亦猶大臣不親 細事小臣不敢專重權各有所主耳何世俗徃往不問星煞 之大小畏之如虎如赤口至小只忌交易詳事耳何以造塟 入火嫁娶槩亦忌之哉如此辨論非敢聞之斯世只可秘 于家庭亦庶幾得以徹玄窮微出入利用也云爾"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p96",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 385,
+   "line": 1,
+   "ctx": "吉此屡用之返爲吉兆也但要查不可犯陰府年月日時 尅爲重再以本山與亡命合祿馬胃入兼合曆數太陽鳥兎太陽天月二德尊帝 二星三奇吉門竅馬葢山黃道照臨塟穴并造命貴格三合會局補山相主此乃 安塟上吉之局也更合天星理氣分金倒杖龍穴砂水秀鹿者用之無不獲福矣 萁移徙亦要居屋坐向天利并與宅主本命無尅犯者吉如居屋未利暫移徙宜 將家先福神安在邉傍不可安在中宮切不可犯幻嘴朱雀人中宮之且犯者不 吉屡見甚騐若犯雷霆大殺白虎等疵入中宮宜從小門進入其中宮不宜鼓楽"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p96",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 412,
+   "line": 1,
+   "ctx": "以本山與亡命合祿馬胃入兼合曆數太陽鳥兎太陽天月二德尊帝 二星三奇吉門竅馬葢山黃道照臨塟穴并造命貴格三合會局補山相主此乃 安塟上吉之局也更合天星理氣分金倒杖龍穴砂水秀鹿者用之無不獲福矣 萁移徙亦要居屋坐向天利并與宅主本命無尅犯者吉如居屋未利暫移徙宜 將家先福神安在邉傍不可安在中宮切不可犯幻嘴朱雀人中宮之且犯者不 吉屡見甚騐若犯雷霆大殺白虎等疵入中宮宜從小門進入其中宮不宜鼓楽"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p129",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 218,
+   "line": 1,
+   "ctx": "子午卯酉年爲上元正月起八百二月七嘉二月六自辰戍 丑未年爲中元正月起五黄二月四绿三月三碧寅申巳亥爲下元正月起二 黑二月一白三月九紫並通行以求值月星旣得值月星卽移入中宫順飛人 方白星 到方吉 歲天德 集搃关此天地極福之神陰陽感動之位比修造 動上移徙嫁娶出入百事同之及用此自大書利 歲位合 集搃云此五行相合之辰画相扶助者也動上修 造嫁娶百事向之大吉又其日動作有㝠福助之 歲立不德往 集云五行同類 異位之德阴陽 交㑹之辰修造爱塟嫁 要出八百亊向之大吉 支德合 集云此陰陽恩義相遜之德五行相和之"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p131",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 799,
+   "line": 1,
+   "ctx": "甲子乙 丑内寅連丁卯戊辰間巳卯庚辰辛巳壬午言癸未腷求已 酉日庚成辛亥亦同聨壬子癸丑无差諆此是天恩吉日傳 天彐耑五 宜上官匍印 受賀納城百 亊言詩例四季天瑞是何辰戊寅巳卯辛 巳眞庚寅壬子无差别百事逢之瑞氣臻 天赦 宜踈獄施恩祀神賽愿修造起 工入宅移居百事吉〇今俗云 五月甲午十一月甲子爲天赦郄典天地轉移目同加以月建歴動九修造起 王動上極凶宜避之詩例春逢戊寅夏甲午秋値戊中天赦露冬月甲子敖傷"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p131",
+   "juan": "",
+   "canon": "复合",
+   "word": "入宅移居",
+   "pos": 799,
+   "line": 1,
+   "ctx": "甲子乙 丑内寅連丁卯戊辰間巳卯庚辰辛巳壬午言癸未腷求已 酉日庚成辛亥亦同聨壬子癸丑无差諆此是天恩吉日傳 天彐耑五 宜上官匍印 受賀納城百 亊言詩例四季天瑞是何辰戊寅巳卯辛 巳眞庚寅壬子无差别百事逢之瑞氣臻 天赦 宜踈獄施恩祀神賽愿修造起 工入宅移居百事吉〇今俗云 五月甲午十一月甲子爲天赦郄典天地轉移目同加以月建歴動九修造起 王動上極凶宜避之詩例春逢戊寅夏甲午秋値戊中天赦露冬月甲子敖傷"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p133",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 325,
+   "line": 1,
+   "ctx": "猪戊兔巳虎位庚王同馬辛癸蛇 福星貴人 宜㒷修安塟昏烟泰賀首 事俱吉詩例中騎孟虎丁 柔雞戊猴巳羊庚馬居辛蛇王龍癸尋兎乙遇牛 猪貴可知丙見福星在何處胃大原來不必推 十干喜神 宜嫁娶交易宴会 泰賀和合事詩例 甲巳尋寅卯乙庚戌亥推丙辛甲酉位富宜上官入宅送風諸事吉詩例四 丁王午未懷戊癸辰已立十千喜神居天所季天福最堪親巳卯庚雷辛卯尋 王辰癸巳併巳亥 庚子幸丑乙巳真 天馬 宜遠行出軍經商吉詩例正七南离天馬地二人 喉三九犬推四十周五十一虎六十二月尋龍騎 三合 宜出行合伴求婚嫁娶夌易和合等事吉詩例"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p144",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 186,
+   "line": 1,
+   "ctx": "云其方并日大忌於造墳安塟及造作岗主殺生長師人詩 日八座尋牧此訣真子生酉位遇收神開山立向居其位殺師湏知早避身 千斤殺 損六畜忌单修詩日用狗载指寅馬生猪犯辰虎 猴忌亥上羊虎相牛經龍雞占何處長蛇當路侵 飛廉 一名飛廉大移乃 歳之明神忌云起 造動土移徙嫁娶百事凶主公事疾病詩曰子午寅申丑未 年遁尋成位是飛廉卯酉巳亥辰戌歲但逢滿位掌中傳 五鬼 集云主店耗 失財病患如 値歲月合日祭祀修福助之吉詩例子年午位逆如辰丑歲須知通卯真寅見 寅兮卯見五辰逢子地巳猪征午尋戌地未自酉申遇申兮難未鴻戌向午官 亥"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p147",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 732,
+   "line": 1,
+   "ctx": "六丑寅逢七申酉八虎月際九酉戌十卯 辰富十一戌亥驪辰巳不信犯着爭雄日江河皆醫絕出軍用此日不久德亡 㓕行嫁用此日生离併外别出行用此日本利盡消折行槲用此日波退遭沉 没每月有二日四敗難宜説世人若避之 代代逢明月若合吉星多解救無他説 絶烟火曰 忌分居入宅作灶燒窒詩 囱正七辰戌莫分居二八 巳亥亦同忌三九子午休居火四十丑未不堪爲五十一月寅 中日六十二月卯酉殃移居人宅君湏記犯着州威人多危 八風日 忌行舡 壽日春 神煞例"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p148",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 34,
+   "line": 1,
+   "ctx": "忌巳酉丁丑日夏畏甲申甲辰凶秋 嫌辛未典丁未冬惡用戌甲寅逢 四窮日 忌入宅分居安門詩例春己夏了 秋辛究冬癸于畏支亥同假知立 乙亥爲例四穷 值目莫相逢 財離 忌分居經適合井收放財物詩例正龍三生三犬是四 羊五虎六泉子十雞八馬九猪頭十克十二申驪自 㓕門日 忌造作安修門路又云造塟韻人才詩例正巳七亥號威門二辰八義二 哪輪九"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p149",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 306,
+   "line": 1,
+   "ctx": "暦忌市貿交易裁衣納財詩例正月刀七并廿一二月刀四十九是二 月月一十六逢四月刀九廿五总五月十五兼仕五六月刀十二十樓七 月刀八廿二日八月刀二五不移还有十八十九日九月刀三刀四推十六十 七日還是十月刀一十四窺仲不十二廿二日臘冬刀九廿五知 瘟星出入 思入宅修造六畜闌材詩例正刀六人刀龙出二力五八原不失三月 刀三四是真四廿五人無差慧五月廿四七端然六逢廿二六無别七 月二十廿三連人忌廿七典三十九直十七二十日子 月十三六其説仲冬十二五同親膈十一人十四出 四方耗 忌出行開張啇 敗買賣立倉庫 詩例正五九逢"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p149",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 612,
+   "line": 1,
+   "ctx": "祥 有人犯着新凶至 大空亡 忌求財出行經啇出財上官詩例初一房從月建 首周数掌支皆順走数至木局爲空亡遁至辰戌 名赤日亥卵未支三個空先到小空後至 大行商生賈申支忌赤二納音定可否 小空亡 忌出行經痼求國出財 宜作壽木詩例見上 天刑 忌詞訟上官嫁娶入宅移居修舍宇犯之主殺入口損六畜詩例正七尋寅 二八辰三九午四十逢申五十一月知應戍六十二月子宫停 天牢 忌出行詞訟移居詩例正七是申二八戌三九値 子四十寅五十一月尋辰地六十二月午上明 罪开川 忌詞訟詩例春木冠 勝丑夏火罪刑辰秋 金在未上冬曰月忌上官"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p149",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 738,
+   "line": 1,
+   "ctx": "宇犯之主殺入口損六畜詩例正七尋寅 二八辰三九午四十逢申五十一月知應戍六十二月子宫停 天牢 忌出行詞訟移居詩例正七是申二八戌三九値 子四十寅五十一月尋辰地六十二月午上明 罪开川 忌詞訟詩例春木冠 勝丑夏火罪刑辰秋 金在未上冬曰月忌上官嫁娶安床入宅出行移徒詩例春不逢養值戌伸夏 水足戍神 反另火尋丑金辰冬水但尋未爲是生南死别两無精 不舉 忌上官移居婚姻交易人斈詩例春木逢子是敗鄕夏 人値卯区湏詳秋金遇午君湏忌冬水還居在西場 天罡勾系交系 詩例天罡 正續蛀二 子三羊嗟四寅五雞唱六辰七猪除八"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p149",
+   "juan": "",
+   "canon": "复合",
+   "word": "入宅移居",
+   "pos": 612,
+   "line": 1,
+   "ctx": "祥 有人犯着新凶至 大空亡 忌求財出行經啇出財上官詩例初一房從月建 首周数掌支皆順走数至木局爲空亡遁至辰戌 名赤日亥卵未支三個空先到小空後至 大行商生賈申支忌赤二納音定可否 小空亡 忌出行經痼求國出財 宜作壽木詩例見上 天刑 忌詞訟上官嫁娶入宅移居修舍宇犯之主殺入口損六畜詩例正七尋寅 二八辰三九午四十逢申五十一月知應戍六十二月子宫停 天牢 忌出行詞訟移居詩例正七是申二八戌三九値 子四十寅五十一月尋辰地六十二月午上明 罪开川 忌詞訟詩例春木冠 勝丑夏火罪刑辰秋 金在未上冬曰月忌上官嫁娶"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p150",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 102,
+   "line": 1,
+   "ctx": "大七蛇輪八鼠九羊死十虎十 一雞冬季河位上龍蟠溝渠棲 赤工丨 忌云変易主口舌爭兢不 宜会客穣之吉詩例同上 蚩尤 忌行兵出 陣冠笄不 吉詩保正七逢寅二八辰三九午上四十 申五十一月頃居戌六十二月子爲真 雷公 忌移徙居處詩例正七原晨二 八虎三九逢辰国十午五十一 月弄猿猴六十 二月戍爲祖 飛流 忌上官嫁娶詩訟詩例正七求卯二八巳二九未 上四十酉五十一月亥爲真六十二月丑上棲 朱雀 忌 人 宅分居詞訟詩日正七兎中取二八蛇頭當三 乞羊居棧四十雞栖藏五土猪圈六十二"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p150",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 784,
+   "line": 1,
+   "ctx": "湏尋門二寅推一月 正离隹丑窼 合吉星則吉 典建破平收 魁罡日同則凶有壬申壬子戊申辛亥修大明太阴所照之辰考正无拘詩日 丁卯戊辰巳巳歌壬申戊寅辛巳過壬午戊子已丑是戊戍巳亥辛丑冬戊申 辛亥戊午日王 戍癸亥搃离罺 九醜 思酬乃大地屬殃之日忌出行嫁娶移徙安塟吉多不忌 内有巳卯巳酉辛酉合太阴太阴所照之辰今考正無拘 也詩云巳卯壬午并乙酉戊子辛卯巳酉 愁王子戊午及辛酉九日原來名九醜 九上鬼 援百忌云上官起造動土忌 之趙世菴云凡事有始無終 其日典建破魁罡相併音則凶有吉星相扶則無妨今俵遁申符應經所忌"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p151",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 796,
+   "line": 1,
+   "ctx": "卽是二神加 天棒 卽自虎黑道忌詞訟出行詩日正七南騎馬二八舞候 將三九聞犬吠四十庸陣吟五十一尋虎六十二龍亭 水消开䧟日 居修造詩例正巳二子三逢丑四申五卯六戍求七亥八午 九未逢十寅土門官淀十二月中辰日忌瓦䧟冰消似水流 天戌員 忌 動 上監造㒷修入宅開倉庫塟埋犯主招賊盗詩例孟滿伸破季 逢開犯之賊從天上來荧天白兮賊不至白入荧兮定刼財 地戌員 造塟出行 入宅倉庫 栽值開池詩例地宅星辰不自由正七逢開二八牧三九逢危 四十執五十一月向乎求六十二月逢閉位犯着斯星招賊偷 焉蕪 卽力苦八 穷百事凶"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p151",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 849,
+   "line": 1,
+   "ctx": "水消开䧟日 居修造詩例正巳二子三逢丑四申五卯六戍求七亥八午 九未逢十寅土門官淀十二月中辰日忌瓦䧟冰消似水流 天戌員 忌 動 上監造㒷修入宅開倉庫塟埋犯主招賊盗詩例孟滿伸破季 逢開犯之賊從天上來荧天白兮賊不至白入荧兮定刼財 地戌員 造塟出行 入宅倉庫 栽值開池詩例地宅星辰不自由正七逢開二八牧三九逢危 四十執五十一月向乎求六十二月逢閉位犯着斯星招賊偷 焉蕪 卽力苦八 穷百事凶"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p157",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 167,
+   "line": 1,
+   "ctx": "五二八月初六十二十八仕四三 十日三九月刀五十一十七日三丑九四士月刀二万八十四二十二十六日 五十一月刀三刀九十五廿一廿七曰六十二月刀四刀十十六丑二廿八日 魯班刀占石殺跌蹼殺木呼末髓等殺 俱忌起工架 馬修木料 系工嘴朱雀雷霆天殺百虍窖中 宮 忌入火 安神 每耳窮日 大月三十小月廿 九是也凡事少用 六甲窮 癸亥日是 凡事少用 時冢凶申而主言 謂六十日時家吉㐫神註并詩例等事 天刑黒道天刑星 利用出師戦無不尅公人軍人用事凶動作不宜大忌詞 訟詩例巳平黒道俱同月家例如子日同上一月建子戌 上卽是"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p297",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 49,
+   "line": 1,
+   "ctx": "三元旺氣 齧 戌乾亥也節値立冬乾旺爲土元霜降爲戌旺爲中元小雪亥旺爲下 元此三元三氣各旺十五日若修造移徙嫁娶各重宜在此三元四 十五曰內正太陽正照作事大吉過此不及 铺宮 未坤申也餘氣値立秋坤旺爲王元大暑未旺爲中元處暑申旺爲下 元此三元三氣各旺一十五日共四十五曰若修造等事宜此節氣丙 爲太陽正照吉過此不及 良宮 丑艮寅三元也節値立春良旺爲上元大寒丑"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p309",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 125,
+   "line": 1,
+   "ctx": "到家長命中先見災横來官事退田地血光腰脚獨难開 瘖瘂耳龍瘡病口舌重重主血財虎陵蛇傷井樹打盗賊風声官事來 此星犯之家門暗退女人風吉見禍䘮敗不吉四十年敗絶 此星臨位不爲吉家亡破敗主人亡時師曉取先賢論暗昧凶殃不可當 年月凶中是計都壊人家業化虚無安墳入宅須迴避犯者遭官枉受徒 此星犯之主賊板指公事女人淫亂口舌㾮病溺水損六畜 第八位木星吉新 黃道六龍祿庫木星綺羅河魁合狼 登明寳葢玉堂四蚕星榮貴福龍進職使 末星爲福最非常照方作向没災殃生田牛馬年年進八十年中旺塲 又得身榮方援引人丁富貴綠衣郎六畜田"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p344",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 250,
+   "line": 1,
+   "ctx": "戌亥子丑 亥卯未命木寅卯辰巳午亥子丑寅卯辰巳午未申酉戌 巳上二例前一例以長生冠帶臨官帝旺胎養位爲吉以敗衰病死墓絶位 爲㐫可以凖信後一例有合利因吉者而六壬運則凶不合利田者而六壬 運則吉其他十二命修造命刑命殺墓殺天殺地殺天宮三虛五墓三災星 太歲入宅破墓破宅身運三元集正三元盤古三元老子三元破軍三元女 柳三元永定總聖三元通天竅九星大小運天鏡圖玄機圖天福經帝星運 五甲三元猪頭身壬金樓運五行壬運五音胎運五音三斗火一十八局通 天竅運透天大小六壬走馬中六壬五殺年月瓊林血海種種異名互相矛 盾殊無理"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p573",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 106,
+   "line": 1,
+   "ctx": "四二少霜書 論出火方位法如香火堂住宅之東方有年月三殺天地官符大月建小兒殺占 之亟欲修造必要出灭避宅移過所修造東方之東將所修造之位反作西方 視之乃能避殺餘西南北三六倣此非俗所云殺在東則要東方住宅出火也 逐月出火吉曰移徙居處同看吉曰 正月丁乙卯辛癸卯傺酉壬甲午 丙 戊 午丁未 三月癸巳巳亿丑亿亥 丙戍 巳亥 五未曰 胛 申 三月丁乙卯丁癸酉庚丙午乙西癸巳癸卯四 月庚甲子丙子剡卯乙卯触午丙午 五月戊壬辰 七月甲丙 九月壬庚午 甲戊 二巳亥生丑酾电蒇申耕日 丙"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p574",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 153,
+   "line": 1,
+   "ctx": "故移家口暫居停处此作當權大小修營亦用之士木犯輕人犯重此理時 師那得知小可修營不動中宮須少緩以待年月利不可輕易古人云出火易 歸火難也 論倒堂淨盡拆去舊堂於吉方小屋權居葢因淨靜拆去别無存着故不得巳就 吉方避之與符使祖先香火同歸處俟修造完日移香火入宅乃可 入山伐木 謂砍伐木科等事 凡伐木起工日切不可犯穿山殺如或材木到塲不可放推黃三殺入座戊巳方 及天地官符大月建小兒殺方 吉曰 巳巳庚午辛未壬申甲戊乙亥戊寅已卯壬午戊子乙酉甲午乙未丙申 壬寅丙午丁未戊申巳酉甲寅乙卯已未庚申辛酉 宜明星黃道天"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p574",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 94,
+   "line": 1,
+   "ctx": "論避宅出火乃是廻避命星出火移出祖先福神香火也或因速修營或就旺砍 革故移家口暫居停处此作當權大小修營亦用之士木犯輕人犯重此理時 師那得知小可修營不動中宮須少緩以待年月利不可輕易古人云出火易 歸火難也 論倒堂淨盡拆去舊堂於吉方小屋權居葢因淨靜拆去别無存着故不得巳就 吉方避之與符使祖先香火同歸處俟修造完日移香火入宅乃可 入山伐木 謂砍伐木科等事 凡伐木起工日切不可犯穿山殺如或材木到塲不可放推黃三殺入座戊巳方 及天地官符大月建小兒殺方 "
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p589",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 58,
+   "line": 1,
+   "ctx": "道要中宮方道利方可修整後廊斗底典香火堂相通亦然然於則後左右肉 屋即单論方道也起屋要先行墙後上梁不可倒行逆施上梁之後卽入火安 神不妨伹安神之後不可歇工歇久則又另擇吉日方可動作安神後安門又 宜取中宮利日若連工修造亦不妨也宅主宅衆年庚年日俱不可冲尅以宅 主宅男爲生其餘不近前亦不妨至人火則又要合家男女俱不冲尅也如坐 宮修方不犯緊殺只犯本命四的殺若合得本命祿馬貴人亦自"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p593",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 318,
+   "line": 1,
+   "ctx": " 城 士月甲辰丙辰五寅日戊辰庚辰五戌曰囯月神寅 钺 寅记巳癸巳邴申庚申 右吉曰不犯前叚諸凶神殺可用 論倒堂竪造尅釋年月與新立宅舍一同若在前原有舊宅淨盡拆去謂之倒堂 竪造宜在近方出火避宅俟工夫完備另擇吉年月曰方可人宅歸火且修造 內堂完偹巳歸火入宅續後起造㕔廊只作修力向擇年月所有山家墓運正 傍陰府前不須忌惟忌浮天空亡廵山羅喉及月飛宮方道繄煞耳 論監造不忌中宮神煞凡修造巳避宅出火則不忌中宮神煞只忌開山立向㐫 神如竪造之月有州縣官符大月建小見殺雷霆白虎大殺百虎朱雀占申宮 鹽造不妨止忌當曰"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p593",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 305,
+   "line": 1,
+   "ctx": "巳 辰 辛元未癸五酉曰 瑛 城 士月甲辰丙辰五寅日戊辰庚辰五戌曰囯月神寅 钺 寅记巳癸巳邴申庚申 右吉曰不犯前叚諸凶神殺可用 論倒堂竪造尅釋年月與新立宅舍一同若在前原有舊宅淨盡拆去謂之倒堂 竪造宜在近方出火避宅俟工夫完備另擇吉年月曰方可人宅歸火且修造 內堂完偹巳歸火入宅續後起造㕔廊只作修力向擇年月所有山家墓運正 傍陰府前不須忌惟忌浮天空亡廵山羅喉及月飛宮方道繄煞耳 論監造不忌中宮神煞凡修造巳避宅出火則不忌中宮神煞只忌開山立向㐫 神如竪造之月有州縣官符大月建小見殺雷霆白虎大殺百虎朱"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p593",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 316,
+   "line": 1,
+   "ctx": " 瑛 城 士月甲辰丙辰五寅日戊辰庚辰五戌曰囯月神寅 钺 寅记巳癸巳邴申庚申 右吉曰不犯前叚諸凶神殺可用 論倒堂竪造尅釋年月與新立宅舍一同若在前原有舊宅淨盡拆去謂之倒堂 竪造宜在近方出火避宅俟工夫完備另擇吉年月曰方可人宅歸火且修造 內堂完偹巳歸火入宅續後起造㕔廊只作修力向擇年月所有山家墓運正 傍陰府前不須忌惟忌浮天空亡廵山羅喉及月飛宮方道繄煞耳 論監造不忌中宮神煞凡修造巳避宅出火則不忌中宮神煞只忌開山立向㐫 神如竪造之月有州縣官符大月建小見殺雷霆白虎大殺百虎朱雀占申宮 鹽造不妨止忌"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p593",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 440,
+   "line": 1,
+   "ctx": "續後起造㕔廊只作修力向擇年月所有山家墓運正 傍陰府前不須忌惟忌浮天空亡廵山羅喉及月飛宮方道繄煞耳 論監造不忌中宮神煞凡修造巳避宅出火則不忌中宮神煞只忌開山立向㐫 神如竪造之月有州縣官符大月建小見殺雷霆白虎大殺百虎朱雀占申宮 鹽造不妨止忌當曰歸火犯之非俗云上梁之曰卽有中宮之說也"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p617",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 2,
+   "line": 1,
+   "ctx": "建師入宅 與監造逐月士日口同看 幂日貴祿化支吉忌四柱刑冲刀尅 寳 老君凶祖師吉兵馬区文䟽 起年月日法年支問老君循行十 本身凶 弟子 吉 二辰月起本師位日求祖師眞 神枳凶 局經樓 香爐舎尊主吉鞭笏吉本師凶 子曰以子加祖師餘倣此 永碗 如子年以子加老君"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p618",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 50,
+   "line": 1,
+   "ctx": "未午卯寅子子戌酉未卯寅丑子酉申 錢申木辰卯丑丑亥戌申辰卯寅丑戌酉 八酉申巳辰寅寅子亥酉巳辰卯寅亥戌 入宅戊酉午巳卯卯丑子戌午巳辰卯子亥 亥戌未午辰辰寅丑亥未午巳辰丑子 子亥申未巳巳卯寅子申未午巳寅丑 丑子酉申午午辰卯丑酉申未午卯寅 寅丑戌酉未未巳辰寅戊酉申未辰卯 国卯寅亥戌申申午巳卯亥戌酉申巳辰 辰卯子亥酉酉未午辰子亥戌酉午巳 巳辰丑子戌戌申"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p622",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 362,
+   "line": 1,
+   "ctx": "酉卯 禾 丑 午空 天辰 天地空亡 戌 亥 酉 卯 子 地 宅 申 寅 右太歲起正月月上起初烟並逆行遇午爲天空子爲地空閏月從木月起 六壬空亡兌坤离欲巽震银艮坎劉乾 右乾上起正月月上起初一並逆行遇离爲大室遇坎爲小空 安香火周堂多不凖騐其例載在入宅歸火門 逐月塑昼神像吉日寫眞容行樂同看 鬼申元空屋 春申夏寅秋巳日 亥 吉多不忌 冬 目 塑神"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p622",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 364,
+   "line": 1,
+   "ctx": " 禾 丑 午空 天辰 天地空亡 戌 亥 酉 卯 子 地 宅 申 寅 右太歲起正月月上起初烟並逆行遇午爲天空子爲地空閏月從木月起 六壬空亡兌坤离欲巽震银艮坎劉乾 右乾上起正月月上起初一並逆行遇离爲大室遇坎爲小空 安香火周堂多不凖騐其例載在入宅歸火門 逐月塑昼神像吉日寫眞容行樂同看 鬼申元空屋 春申夏寅秋巳日 亥 吉多不忌 冬 目 塑神"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p633",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 158,
+   "line": 1,
+   "ctx": "造作厠道 作厠吉方甲庚乙辛丙壬丁癸辰戌丑未方位立之大吉 作厠忌方子午爲天中卯酉爲天橫寅申巳亥爲四生四隅乾爲天門 巽爲地戸坤爲人門艮爲鬼路又爲四維立之大害 不可對前門後門及中楝來龍與不可近井灶經云鬼來跳是也 論作厠忌年月繄煞方道如新立宅舍永經歸火不須避忌方道神煞 修厠忌月六甲胎神八月占丑未日占牛胎四十月占鼎新不忌 吉日 丙寅戊辰丙子丙申庚子壬子丙辰爲天聾日乙丑丁卯已卯辛已乙永 丁酉巳亥辛丑辛亥癸丑辛酉爲地啞日吉 宜天乙絶氣伏㫁閉日忌執破滿開日 吉日月正一一三四五六七一八九十士士 天"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p634",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 271,
+   "line": 1,
+   "ctx": " 戊六月甲寅丙寅 神 申庚甲立亥幸亥 七月五子五卯日辛未乙未酾辰庚辰八月五丑友辰记巳癸已 申 九月五午曰五酉日 士月甲辰戊辰 視 十月五子钌未 辰究未已亥巳未辛亥主月甲子壬子 庚 壬 用 壬 午 寅 甲 戊丙戊 午丁未戊戍 寅甲申庚中 八宅歸火 謂八宅安祖先福神香火等事 吉曰 甲子庚子乙丑丁丑癸丑丙寅壬寅庚寅用寅乙卯丁卯癸卯任辰乙已 庚午丙午辛已癸巳乙未丁未电申庚申甲戌庚戌乙亥 宜天德月德天恩明旱黄道母倉天月德合上吉次吉 入火"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p634",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 364,
+   "line": 1,
+   "ctx": " 壬 午 寅 甲 戊丙戊 午丁未戊戍 寅甲申庚中 八宅歸火 謂八宅安祖先福神香火等事 吉曰 甲子庚子乙丑丁丑癸丑丙寅壬寅庚寅用寅乙卯丁卯癸卯任辰乙已 庚午丙午辛已癸巳乙未丁未电申庚申甲戌庚戌乙亥 宜天德月德天恩明旱黄道母倉天月德合上吉次吉 入火"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p635",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 191,
+   "line": 1,
+   "ctx": "宮大殺白虎雷霆百虎古中官夂忌月厭歸忌陰陽錯空 宅正絶烟火揚公忌四離四絕氣往亡天瘟受死火星天火正四廢四忌五窮 冰消瓦解披麻殺天空滅没等曰月忌日晦曰與本命相油尅曰新辰八火合 家人口俱宜入擇得俱合乃可問有一二女命不合此時不入俟安神后潜入 亦可舊屋歸火安神人多不能盡合单得宅主相合安復亦可其餘有碍者臨 期勿近亦吉井忌建破乎收日伹朱雀夭牢黑道冰消瓦解小疵皓移不載 凶曰日正二三四五六七八九十 士士 月厭 戍酉申未午巳辰卯寅丑子亥 歸忌 丑寅子丑寅子丑寅子丑 寅子 天賊 辰酉寅未午巳戍卯申丑 午"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p638",
+   "juan": "",
+   "canon": "移徙",
+   "word": "移徙",
+   "pos": 55,
+   "line": 1,
+   "ctx": "天地空 太歳起正月月七起刀一並逆行遇午爲天空忌入宅子爲地空不忌 戌亥酉未申午天空辰巳卯丑寅子地空 逐月入宅吉日移徙居處同看横天朱雀二十五日忌移徒 正月丙午丁酉癸酉癸卯 二月乙丑巳未丁未 辛 癸 未丙申巳丁亥 三月巳巳乙巳丁酉 四月顧子甲午丙午吉丙子癸卯乙穴 五月 丙 壬 辰记巳 辛 癸 未巳丁未炳申卩亥甲戌 六月戊寅用寅丙申癸酉 匕月甲子丙子庚壬子癸卯"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p638",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 23,
+   "line": 1,
+   "ctx": "天地空 太歳起正月月七起刀一並逆行遇午爲天空忌入宅子爲地空不忌 戌亥酉未申午天空辰巳卯丑寅子地空 逐月入宅吉日移徙居處同看横天朱雀二十五日忌移徒 正月丙午丁酉癸酉癸卯 二月乙丑巳未丁未 辛 癸 未丙申巳丁亥 三月巳巳乙巳丁酉 四月顧子甲午丙午吉丙子癸卯乙穴 五月 丙 壬 辰记巳 辛 癸 未"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p638",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 51,
+   "line": 1,
+   "ctx": "天地空 太歳起正月月七起刀一並逆行遇午爲天空忌入宅子爲地空不忌 戌亥酉未申午天空辰巳卯丑寅子地空 逐月入宅吉日移徙居處同看横天朱雀二十五日忌移徒 正月丙午丁酉癸酉癸卯 二月乙丑巳未丁未 辛 癸 未丙申巳丁亥 三月巳巳乙巳丁酉 四月顧子甲午丙午吉丙子癸卯乙穴 五月 丙 壬 辰记巳 辛 癸 未巳丁未炳申卩亥甲戌 六月戊寅用寅丙申癸酉 匕月甲子丙子庚"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p638",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 430,
+   "line": 1,
+   "ctx": "小月 從安向利 宅周 三刑国白圈吉家亡四 三財〇 月淸向六道 天福〇 順數小月 黒凶 刁一從天 例堂 五啇国黒圈凶五嚴由 刀一從玉堂 墨〇天良昱武地耗月福〇向天艮逆数 堂 安〇災、帥〇 向利逆數 此周堂一例乃是板局屡不准騐姑存於此知者勿泥 入火"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p647",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 146,
+   "line": 1,
+   "ctx": "申庚审 牧養欄枋 謂造安六畜欄槽等事 宜天德月德定成開日六儀母倉天倉生炁四相日納畜用龍虎日 忌飛亷天地賊受死大小耗月刑月害建閉收日及破群天瘟約綾四廢日 穿牛割牛騸馬羯羊鐓猪鐓雞割天凈猫並忌刀砧血忌飛廉受死血支日 論造六畜欄枋如新立宅舍未歸火入宅者惟擇吉日並不間年月方道神殺 論現往屋之前後左右欲造牛馬猪羊欄枋須看月方道無㐫殺占乃宜起手若 修作離住屋百歩外則不論矣 論修造六畜欄屋監造日忌火是葢屋日忌天火如動土日與修造動王例同仍 忌大小耗天賊飛亷正四廢刀砧瘟星入日千斤殺方月家正公殺及年"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p647",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 144,
+   "line": 1,
+   "ctx": "申丙申庚审 牧養欄枋 謂造安六畜欄槽等事 宜天德月德定成開日六儀母倉天倉生炁四相日納畜用龍虎日 忌飛亷天地賊受死大小耗月刑月害建閉收日及破群天瘟約綾四廢日 穿牛割牛騸馬羯羊鐓猪鐓雞割天凈猫並忌刀砧血忌飛廉受死血支日 論造六畜欄枋如新立宅舍未歸火入宅者惟擇吉日並不間年月方道神殺 論現往屋之前後左右欲造牛馬猪羊欄枋須看月方道無㐫殺占乃宜起手若 修作離住屋百歩外則不論矣 論修造六畜欄屋監造日忌火是葢屋日忌天火如動土日與修造動王例同仍 忌大小耗天賊飛亷正四廢刀砧瘟星入日千斤殺方月家正公殺"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p743",
+   "juan": "",
+   "canon": "归火",
+   "word": "入火",
+   "pos": 665,
+   "line": 1,
+   "ctx": "丑辰未 午西 戌午 压卯巳 午未申 巳未 寅卯巳 午申戊 庚申 辰巳 未丑 辛酉 寅午子 巳未酉 壬戌 巳寅午 申辰 癸亥 午卯巳 未丑 右時惟造塟要取三合會局補山不能拘此具餘諸事俱依此用之吉但逐 曰內之壬癸天玉係截路空亡時只忌上官赴任山行入火安門餘事不 忌并將日于數丢見甲乙者係旬申室亡時陽空陽陰空陰造塟不忌"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p833",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 145,
+   "line": 1,
+   "ctx": "日香火行 天師巳丑曰七曰後香火便行董伸巳卯月一百二十日後香火行吳眞 君丁卯日登香火郎行許眞君辛卯日登香火卽發先皇張趙甲申乙西 度法香火便旺三元傳法日丙辰香火卽發 造雷庿印劍冷牌尺日宜顕曲傳星及天地轉殺日 凶忌日不宜受師敎法行兵治病巳見上建師入宅同看 金華經拜受師敎法錄年月此例設於虛無姑存便覽 子命丑未卯巳申年吉辰年大旺利六十二月萬三千兵度子寅午酉戌亥解 丑命寅卯子巳年戍吉利五十月七萬千兵度丑辰申酉亥年凶 寅命辰巳未申年吉利二五八十月萬一千兵度子丑寅卯午五戌亥年凶 卯命子未五亥年吉"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p890",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 112,
+   "line": 1,
+   "ctx": "丁壬月轫五用庚戌癸未壬辰巳未曰 丙辛 戊癸 月 未庚辰已丑戊戌丙辰日 紅嘴宋雀臨九宮曰 用子癸酉壬午辛卯庚子巳酉戌午七曰在震宮忌修厨 乙丑甲戌癸未壬辰辛丑庚戌巳未七曰在巽宮忌入山伐木 丙寅乙亥甲申癸巳壬寅宰亥庚申七日在中宮忌入宅歸火 丁卯丙子乙酉甲午癸卯壬子辛酉七曰在乾宮忌修床 戊辰丁丑丙戌乙未甲辰癸丑壬戌七曰在兌宮忌修并 巳巳戊寅丁亥丙申乙巳甲寅癸亥七日在良宮忌作僧道堂 庚午巳卯戌子丁酉丙午乙卯六日在離宮忌修大門 辛未庚辰巳丑戌戌丁未丙辰六曰在坎宮忌修作水溝 壬"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p890",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 114,
+   "line": 1,
+   "ctx": "丁壬月轫五用庚戌癸未壬辰巳未曰 丙辛 戊癸 月 未庚辰已丑戊戌丙辰日 紅嘴宋雀臨九宮曰 用子癸酉壬午辛卯庚子巳酉戌午七曰在震宮忌修厨 乙丑甲戌癸未壬辰辛丑庚戌巳未七曰在巽宮忌入山伐木 丙寅乙亥甲申癸巳壬寅宰亥庚申七日在中宮忌入宅歸火 丁卯丙子乙酉甲午癸卯壬子辛酉七曰在乾宮忌修床 戊辰丁丑丙戌乙未甲辰癸丑壬戌七曰在兌宮忌修并 巳巳戊寅丁亥丙申乙巳甲寅癸亥七日在良宮忌作僧道堂 庚午巳卯戌子丁酉丙午乙卯六日在離宮忌修大門 辛未庚辰巳丑戌戌丁未丙辰六曰在坎宮忌修作水溝 壬申辛"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p890",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 278,
+   "line": 1,
+   "ctx": "宮忌修并 巳巳戊寅丁亥丙申乙巳甲寅癸亥七日在良宮忌作僧道堂 庚午巳卯戌子丁酉丙午乙卯六日在離宮忌修大門 辛未庚辰巳丑戌戌丁未丙辰六曰在坎宮忌修作水溝 壬申辛巳庚寅巳亥戊申丁巳六日在坤宮忌嫁娶 朱雀歌曰 朱雀震宮起甲子巽宮甲戌順行裝行到中宮莫歸火乾上一辰莫安床 兌上占之莫修井良宫奠作僧道堂離宮大門君莫犯坎宮水清大難常 坤宮嫁娶損宅長震宮修厨新婦亡巽位宮管山职入山伐衣定遭殃 修方"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p903",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 153,
+   "line": 1,
+   "ctx": "作震則當遷居而東旣居千東則自其居視所作 之方昔爲震者今爲兌矢百此作之無不可如遷東之居不利或無以居又如 何此又當別擇可遷之居終取其方便可也 如年家利便東南則遷其居於所作之西北自此居視之則昔之爲震省今轉而 爲巽矣作之無不可所作旣成卻入居之日宜用入宅法 論方道有三陰方道陽方道交接方道陰方道者卽中宮滴水內是也陽左道者 地基不與舊堂相接是也交接方道者或前後左右架屋宇與舊宅相連是也 〇就屋上起樓及架天井就簷滴水歸裏皆属中宮名日陰方只取中宮無殺 得責會爲大利〇如建亭毫造軒閣不進中宮名曰陽方道只"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p904",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 309,
+   "line": 1,
+   "ctx": "若隔大河水 人渡不得須用橋道并舟所渡處則不論吉凶若隔水渡溪澗有常流不䋲者 神殺小可不妨〇若造小廰樓毫近於居宅濶大者鲫干歩塘沼猶係本宅方 隅亦取方道有吉神無凶殺占之若居城市雖隔街巷三五尺非自巳地亦 不可犯方隅神殺 論修向方山頭法在前原有堂屋巳歸火八宅安處人眷同後又欲修廳廊謂之 修方向惟忌年家浮天空亡廵山羅睺陰陽的殺身皇定命緊忌月家方向緊 殺至如年月尅山家正陰府大歲等殺俱不忌若於中堂後又修作後堂不出 火避宅山頭方道併須論之 修方"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p905",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 16,
+   "line": 1,
+   "ctx": "論修向方〇昔有人先有後堂巳經歸火入宅原作丙向後有人癸卯年十 月起造前廳其年灸退占在午十一月地官符有占巽已小兒殺又在丙午丁 方作後果退少丁六口金銀冷退官非橫至術者曰論向首不論方道緊殺非 也如年月尅山傍正陰府俱勿論至于逐月緊殺亦須避忌此論向万不論山 方故曰立向修方而論是也 論修方"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p905",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 14,
+   "line": 1,
+   "ctx": "論修向方〇昔有人先有後堂巳經歸火入宅原作丙向後有人癸卯年十 月起造前廳其年灸退占在午十一月地官符有占巽已小兒殺又在丙午丁 方作後果退少丁六口金銀冷退官非橫至術者曰論向首不論方道緊殺非 也如年月尅山傍正陰府俱勿論至于逐月緊殺亦須避忌此論向万不論山 方故曰立向修方而論是也 論"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p907",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 255,
+   "line": 1,
+   "ctx": "変換門戸 故凶星不可犯耳至干寺觀廟字只論中宮屋向無凶星及九良星其年不到 却可用工 右據徊者云凡殺葢宅舍中宮及向無凶殺而有克會只就中宫起符便權請 起祖先福神香火隨符便同奉祀必須家王人春出避吉方但擇吉日從中 宮起子用工又千中宮住手俟工畢別擇吉曰入宅謂之出避不出火也〇葢 新造宅舍未經歸入如殺葢甃砌粉飭並不問中宮及向神殺惟用吉曰〇自 入宅歸火後若一住工過月踰飾以欲殺葢甃砌亦須中宮及向首無凶殺方 可用工 凡殺葢合宅方道切忌三殺年月官符打頭火小兒殺大月建陰陽的殺身皇定 命忌於此凶方起手用工殺"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p907",
+   "juan": "",
+   "canon": "入宅",
+   "word": "入宅",
+   "pos": 299,
+   "line": 1,
+   "ctx": "者云凡殺葢宅舍中宮及向無凶殺而有克會只就中宫起符便權請 起祖先福神香火隨符便同奉祀必須家王人春出避吉方但擇吉日從中 宮起子用工又千中宮住手俟工畢別擇吉曰入宅謂之出避不出火也〇葢 新造宅舍未經歸入如殺葢甃砌粉飭並不問中宮及向神殺惟用吉曰〇自 入宅歸火後若一住工過月踰飾以欲殺葢甃砌亦須中宮及向首無凶殺方 可用工 凡殺葢合宅方道切忌三殺年月官符打頭火小兒殺大月建陰陽的殺身皇定 命忌於此凶方起手用工殺葢若其力有肉殺先從吉方起手後在告方住丢"
+  },
+  {
+   "book": "陈子性藏书",
+   "chap": "p907",
+   "juan": "",
+   "canon": "归火",
+   "word": "歸火",
+   "pos": 301,
+   "line": 1,
+   "ctx": "凡殺葢宅舍中宮及向無凶殺而有克會只就中宫起符便權請 起祖先福神香火隨符便同奉祀必須家王人春出避吉方但擇吉日從中 宮起子用工又千中宮住手俟工畢別擇吉曰入宅謂之出避不出火也〇葢 新造宅舍未經歸入如殺葢甃砌粉飭並不問中宮及向神殺惟用吉曰〇自 入宅歸火後若一住工過月踰飾以欲殺葢甃砌亦須中宮及向首無凶殺方 可用工 凡殺葢合宅方道切忌三殺年月官符打頭火小兒殺大月建陰陽的殺身皇定 命忌於此凶方起手用工殺葢若其力有肉殺先從吉方起手後在告方住丢"
+  }
+ ]
+}
