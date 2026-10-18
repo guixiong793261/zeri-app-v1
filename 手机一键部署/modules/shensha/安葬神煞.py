@@ -161,9 +161,12 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_yuehai(sizhu):
             self._add_shensha('月害', -15, '月害凶日，不宜安葬')
         
-        # 大时
-        if self._is_dashi(sizhu):
-            self._add_shensha('大时', -12, '大时凶日，不宜安葬')
+        # 大时——P2 删除候选隔离（2026-10-18，001 §120）：大时×安葬三库无载
+        # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链（基类
+        # 通用链占位），基类按事项排除后将复活，故一并注释。
+        # 月害（上行 :161）与五墓（下文）系有载确认项，保留不动（基类未排除安葬）。
+        # if self._is_dashi(sizhu):
+        #     self._add_shensha('大时', -12, '大时凶日，不宜安葬')
         
         # 四废
         if self._is_sifei(sizhu):

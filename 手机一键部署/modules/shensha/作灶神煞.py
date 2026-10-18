@@ -107,13 +107,16 @@ class StoveShenShaChecker(ShenShaChecker):
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日忌作灶')
         
-        # 五墓
-        if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -12, '五墓日忌作灶')
-        
-        # 大时
-        if self._is_dashi(sizhu):
-            self._add_shensha('大时', -12, '大时日忌作灶')
+        # 五墓——P2 删除候选隔离（2026-10-18，001 §120）：五墓×作灶三库无载
+        # （协纪无用事条+陈书作灶条 p625-627 无载，docs/月家P2_月害大时往亡五墓_续取证.md §六）；
+        # 基类通用链已按事项排除；本行原为死链，基类排除后将复活，故一并注释。
+        # if self._is_wumu(sizhu):
+        #     self._add_shensha('五墓', -12, '五墓日忌作灶')
+
+        # 大时——P2 删除候选隔离（2026-10-18，001 §120）：大时×作灶三库无载
+        # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链，一并注释。
+        # if self._is_dashi(sizhu):
+        #     self._add_shensha('大时', -12, '大时日忌作灶')
         
         # 天吏
         if self._is_tianli(sizhu):
