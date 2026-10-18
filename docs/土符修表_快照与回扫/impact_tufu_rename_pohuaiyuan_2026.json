@@ -1,0 +1,338 @@
+{
+ "title": "拆舍土符文案正名影响面（9135b72 正名前 vs 正名后，2026全年×14事件，git worktree双跑）",
+ "base_old": "9135b72 Commit A（零典据删除）后·拆舍正名前",
+ "base_new": "工作区 拆舍文案正名「破屋坏垣（拆舍）」＋前置发射",
+ "whitelist": {
+  "拆舍": "description 正名，score -20 不动"
+ },
+ "trigger_days": 29,
+ "nonwhite_violations": [],
+ "counts": {
+  "无变化": 5081,
+  "文案正名": 29,
+  "异常": 0
+ },
+ "flips": [
+  {
+   "date": "2026-01-14",
+   "event": "拆舍",
+   "score_old": 52,
+   "score_new": 52,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-01-26",
+   "event": "拆舍",
+   "score_old": 109,
+   "score_new": 109,
+   "level_old": "★★★★★ 上吉",
+   "level_new": "★★★★★ 上吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-02-08",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-02-20",
+   "event": "拆舍",
+   "score_old": -31,
+   "score_new": -31,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-03-04",
+   "event": "拆舍",
+   "score_old": -19,
+   "score_new": -19,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-03-08",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-03-20",
+   "event": "拆舍",
+   "score_old": 25,
+   "score_new": 25,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-04-01",
+   "event": "拆舍",
+   "score_old": 38,
+   "score_new": 38,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-04-05",
+   "event": "拆舍",
+   "score_old": 177,
+   "score_new": 177,
+   "level_old": "★★★★★ 上吉",
+   "level_new": "★★★★★ 上吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-04-17",
+   "event": "拆舍",
+   "score_old": 87,
+   "score_new": 87,
+   "level_old": "★★★ 吉",
+   "level_new": "★★★ 吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-04-29",
+   "event": "拆舍",
+   "score_old": 64,
+   "score_new": 64,
+   "level_old": "★ 平",
+   "level_new": "★ 平",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-05-16",
+   "event": "拆舍",
+   "score_old": -40,
+   "score_new": -40,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-05-28",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-06-13",
+   "event": "拆舍",
+   "score_old": 40,
+   "score_new": 40,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-06-25",
+   "event": "拆舍",
+   "score_old": 38,
+   "score_new": 38,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-07-11",
+   "event": "拆舍",
+   "score_old": 31,
+   "score_new": 31,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-07-23",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-08-04",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-08-09",
+   "event": "拆舍",
+   "score_old": 62,
+   "score_new": 62,
+   "level_old": "★ 平",
+   "level_new": "★ 平",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-08-21",
+   "event": "拆舍",
+   "score_old": 104,
+   "score_new": 104,
+   "level_old": "★★★★ 大吉",
+   "level_new": "★★★★ 大吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-09-02",
+   "event": "拆舍",
+   "score_old": 87,
+   "score_new": 87,
+   "level_old": "★★★ 吉",
+   "level_new": "★★★ 吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-09-18",
+   "event": "拆舍",
+   "score_old": 111,
+   "score_new": 111,
+   "level_old": "★★★★★ 上吉",
+   "level_new": "★★★★★ 上吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-09-30",
+   "event": "拆舍",
+   "score_old": 109,
+   "score_new": 109,
+   "level_old": "★★★★★ 上吉",
+   "level_new": "★★★★★ 上吉",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-10-16",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-10-28",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-11-14",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-11-26",
+   "event": "拆舍",
+   "score_old": 0,
+   "score_new": 0,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-12-12",
+   "event": "拆舍",
+   "score_old": -46,
+   "score_new": -46,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  },
+  {
+   "date": "2026-12-24",
+   "event": "拆舍",
+   "score_old": -30,
+   "score_new": -30,
+   "level_old": "❌ 凶",
+   "level_new": "❌ 凶",
+   "tufu_old": -20,
+   "tufu_new": -20,
+   "kind": "文案正名"
+  }
+ ],
+ "anomalies": [],
+ "verdict": "PASS"
+}

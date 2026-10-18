@@ -48,11 +48,13 @@ class DemolitionShenShaChecker(ConstructionShenShaChecker):
 
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
-        super()._check_month_shensha(sizhu, **kwargs)
-        
-        # 土符（拆舍大忌）
+        # 土符（忌破屋坏垣——典据正名，2026-10-18 判据(b)拍板：协纪16事作
+        # 「破屋坏垣」，软件事项「拆舍」与之语义等价（⚠️档），正名后分值 -20 不动。
+        # 前置发射：super 链（修造）亦注册同名土符，_add_shensha 同名先到
+        # 先得去重，置 super 之前方使拆舍专用文案生效；修造/动土路径不变）
         if self._is_tufu(sizhu):
-            self._add_shensha('土符', -20, '忌拆舍，犯之主灾')
+            self._add_shensha('土符', -20, '忌破屋坏垣（拆舍），犯之主灾')
+        super()._check_month_shensha(sizhu, **kwargs)
         
         # 土王用事（拆舍大忌）
         if self._is_tuwang_yongshi(sizhu):

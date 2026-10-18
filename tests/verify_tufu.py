@@ -17,11 +17,13 @@
      → 三库正表口诀。
   3. 2026-10-18 判据(b)拍板落地：入宅/移徙/入学/求医/签约五事项土符条目
      零典据删除（入宅神煞/通用神煞 checker 块＋SHENSHA_SCORES 5 键），
-     修造/动土/拆舍 -20 典据通道保留（拆舍文案正名另批）。
+     修造/动土/拆舍 -20 典据通道保留；拆舍土符文案正名「破屋坏垣（拆舍）」
+     （协纪16事正名，语义等价⚠️档，分值 -20 不动，去「大忌」表述）。
 
 检查项：
   1. 黄金矩阵：12月支×12日支=144 点 _is_tufu ≡ 典据真值函数，0 错；
-  2. 多通道对账：修造/动土/拆舍 checker 触发日发射「土符 -20」；
+  2. 多通道对账：修造/动土/拆舍 checker 触发日发射「土符 -20」
+     （拆舍文案断言：含「破屋坏垣」、不含「大忌」）；
      入宅（含移徙）/通用（含入学/求医/签约）checker 触发日零发射；
      SHENSHA_SCORES 零典据 5 键已删、典据 3 键 -20 保留；
   3. 校准.py 展示表逐字断言：含正表口诀、不含旧错串「子午月在丑」；
@@ -121,6 +123,10 @@ for ev, cls in channels20:
         hits = emitted(cls(), sizhu_of(d))
         if not (len(hits) == 1 and hits[0].get('score') == -20):
             c2_bad.append('%s %s 发射=%s' % (ev, ds, hits))
+        elif ev == '拆舍':
+            desc = str(hits[0].get('description', ''))
+            if '破屋坏垣' not in desc or '大忌' in desc:
+                c2_bad.append('拆舍 %s 文案=%s' % (ds, desc))
     # 锚点非触发日不发射
     hits = emitted(cls(), sizhu_of(dt.date(2026, 11, 4)))
     if hits:
