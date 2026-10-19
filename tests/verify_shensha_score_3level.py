@@ -36,7 +36,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
 
 
+_STAT = {'checks': 0, 'pass': 0}
+
+
 def check(name, cond):
+    """断言计数就地自汇报（001 §135.4：计数以脚本自报为准，不依赖 Shell 回显）。"""
+    _STAT['checks'] += 1
+    if cond:
+        _STAT['pass'] += 1
     print('[%s] %s' % ('PASS' if cond else 'FAIL', name))
     if not cond:
         FAILS.append(name)
@@ -193,27 +200,44 @@ check("F2 已删项仅经通配保持既有值不复活：shensha_score('移徙'
       and ('入宅', '月刑') not in SHENSHA_SCORES
       and shensha_score('移徙', '月刑') == -15)
 
-# F3 原事项级有键 + 通配有键（值冲突时）→ 必须命中原事项级。
-# 现实表内该层无「值可区分」样本（移徙∩通配 6 名值与通配相等），故用运行期
-# 临时注入制造可区分样本：断言后立即还原（不改源码、不落库、不改键表终态）。
-_inj = [('移徙', '__边界用例煞__'), ('*', '__边界用例煞__')]
-_old = [SHENSHA_SCORES.get(k, '__ABSENT__') for k in _inj]
+# F3 原事项级有键 + 通配有键（值冲突）→ 必须命中原事项级。
+# 【注入型用例·不得与并行测试同跑】（防护③ 隔离标记）——现实表内该层无
+# 「值可区分」样本（移徙∩通配 6 名值与通配相等），故以运行期临时注入制造
+# 可区分样本（不改源码、不落库、不改键表终态）。
+# 拍板三项防护：①注入范围最小化（仅注入被测单键，注入前后各做一次全表
+# 快照断言）；②还原失败硬失败（还原后断言回原状，失败 raise 非 pass）；
+# ③测试隔离标记（本块注释与断言名显式标「注入型」）。
+_INJECT_NAME = '__边界用例煞__'
+_inj_keys = [('移徙', _INJECT_NAME), ('*', _INJECT_NAME)]
+_snap_before = dict(SHENSHA_SCORES)                 # 防护① 全表快照（注入前）
+_old = {k: SHENSHA_SCORES.get(k, '__ABSENT__') for k in _inj_keys}
 try:
-    SHENSHA_SCORES[_inj[0]] = -7   # 原事项级
-    SHENSHA_SCORES[_inj[1]] = -3   # 通配级（值可区分）
-    check('F3 运行期注入：原事项级有键时命中 -7（非通配 -3）',
-          shensha_score('移徙', '__边界用例煞__') == -7)
+    SHENSHA_SCORES[_inj_keys[0]] = -7               # 原事项级
+    SHENSHA_SCORES[_inj_keys[1]] = -3               # 通配级（值可区分）
+    _snap_mid = dict(SHENSHA_SCORES)                # 防护① 全表快照（注入后）
+    _delta = {k for k in set(_snap_mid) | set(_snap_before)
+              if _snap_mid.get(k, '__ABSENT__') != _snap_before.get(k, '__ABSENT__')}
+    check('F3【注入型】防护①范围最小化：全表仅被测 2 键变动（实测变动 %d 键）'
+          % len(_delta), _delta == set(_inj_keys))
+    check('F3【注入型】原事项级有键时命中 -7（非通配 -3）',
+          shensha_score('移徙', _INJECT_NAME) == -7)
 finally:
-    for _k, _ov in zip(_inj, _old):
+    for _k, _ov in _old.items():                    # 还原
         if _ov == '__ABSENT__':
             SHENSHA_SCORES.pop(_k, None)
         else:
             SHENSHA_SCORES[_k] = _ov
-check('F3 注入已还原（键表与注入前一致）',
-      ('移徙', '__边界用例煞__') not in SHENSHA_SCORES
-      and ('*', '__边界用例煞__') not in SHENSHA_SCORES)
+    _restored = dict(SHENSHA_SCORES) == _snap_before
+
+# 防护② 经 check() 汇报（确保「自报计数 == 逐行点数」，口径一致）
+check('F3【注入型】防护②还原硬校验：键表与注入前全表一致', _restored)
+if not _restored:                                   # 防护② 失败即 raise 非 pass
+    raise RuntimeError(
+        'F3【注入型】还原失败：键表已被污染，硬失败退出'
+        '（防污染后续测试/并行运行）')
 
 print('---')
+print('CHECKS=%d PASS=%d FAIL=%d' % (_STAT['checks'], _STAT['pass'], len(FAILS)))
 if FAILS:
     print('FAILS=%d' % len(FAILS))
     for f in FAILS:
