@@ -1673,7 +1673,20 @@ SHENSHA_SCORES = {
 
 
 def shensha_score(event_type, name, default=None):
-    """取某事项下某神煞的统一分值；无登记时返回 default。"""
+    """取某事项下某神煞的统一分值；无登记时返回 default。
+
+    三级查找（2026-10-19 移徙休眠键修复·选A，拍板条件②）：
+      原事项 → canonical → 通配，逐级命中即返回。
+    回退约束：逐级 return 天然保证「通配级不得覆盖前两级已命中项」；
+    配套 tests/verify_shensha_score_3level.py 断言。
+    全局影响面：SHENSHA_SCORES 非 canonical 事项键全表仅「入宅←移徙」
+    一族（bb196e7 §四），且移徙 78 键值与入宅键 100% 一致（cb3f8cb
+    D 段），原事项级命中值 == 旧 canonical 命中值 → 改造前后全事项
+    零变化（全量遍历实证见 verify）。x4/P2 已删 10 键在原事项级查不到，
+    不经本次改造复活（拍板条件④）。
+    """
+    if (event_type, name) in SHENSHA_SCORES:
+        return SHENSHA_SCORES[(event_type, name)]
     canonical = canonical_event(event_type)
     if (canonical, name) in SHENSHA_SCORES:
         return SHENSHA_SCORES[(canonical, name)]
