@@ -1432,6 +1432,8 @@ class ShenShaChecker:
     
     def _check_year_shensha(self, sizhu, **kwargs):
         """检查年神煞（通用）"""
+        # 事项级排除口径（x4 批，年块用）
+        _p2_ev_y = getattr(self, '_std_event', None)
         # 吉神
         if self._is_suide(sizhu):
             self._add_shensha('岁德', 20, '岁之德神，主化凶为吉')
@@ -1447,9 +1449,12 @@ class ShenShaChecker:
             self._add_shensha('福星', 10, '福星主福泽，吉')
         
         # 凶煞
-        if self._is_jiesha(sizhu):
+        # x4 入宅般移映射删除批（2026-10-19，001 §127）：劫煞/灾煞×入宅三库
+        # 零逐字明文（凡般移【移徙同】忌列映射），入宅通道停发（识别位收口，
+        # 本即 score=0 识别展示；不动其余事项）。
+        if self._is_jiesha(sizhu) and _p2_ev_y != '入宅':
             self._add_shensha('劫煞', -25, '劫煞忌大事')
-        if self._is_zaijiesha(sizhu):
+        if self._is_zaijiesha(sizhu) and _p2_ev_y != '入宅':
             self._add_shensha('灾煞', -25, '灾煞主灾祸')
         if self._is_suisha(sizhu):
             self._add_shensha('岁煞', -20, '岁煞忌用')
@@ -1493,6 +1498,8 @@ class ShenShaChecker:
     
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞（通用）"""
+        # 事项级排除口径（2026-10-19 x4 批提至方法头，供月块多煞共用）
+        _p2_ev = getattr(self, '_std_event', None)
         # 吉神
         if self._is_yuede_he(sizhu):
             self._add_shensha('月德合', 12, '月德合吉')
@@ -1553,9 +1560,13 @@ class ShenShaChecker:
             self._add_shensha('月空', 10, '月空主空亡')
         
         # 凶煞
-        if self._is_yuepo(sizhu):
+        # x4 入宅般移映射删除批（2026-10-19，001 §127）：月破×入宅三库零逐字
+        # 明文（docs/典据研究_入宅同源复核_般移映射条目.md §126），入宅排除。
+        if self._is_yuepo(sizhu) and _p2_ev not in ('入宅',):
             self._add_shensha('月破', -30, '月破日诸事不宜')
         if self._is_yueyan(sizhu):
+            # 保留项（x4）：月厌×入宅有陈书八宅歸火条 p635 逐字独立明文，
+            # 不随般移映射删除（001 §126/§127）。
             self._add_shensha('月厌', -15, '月厌凶日')
         if self._is_yandui(sizhu):
             # 2026-10 α2-C 接线：厌对（《协纪》卷五义例三《天宝历》"厌对者，
@@ -1581,7 +1592,9 @@ class ShenShaChecker:
 
         if self._is_yuexu(sizhu):
             self._add_shensha('月虚', -10, '月虚主虚耗')
-        if self._is_yuexing(sizhu):
+        if self._is_yuexing(sizhu) and _p2_ev not in ('入宅',):
+            # x4：月刑×入宅三库零逐字明文（陈书 p647 月刑属納畜/六畜欄条，
+            # 非入宅忌列），入宅排除（001 §126/§127）。
             self._add_shensha('月刑', -15, '月刑主刑伤')
         # ===== P2 删除候选事项排除（2026-10-18 隔离批，001 §120）=====
         # 月家P2 续取证批准删除候选（docs/月家P2_月害大时往亡五墓_续取证.md §六/§七）：
@@ -1597,7 +1610,6 @@ class ShenShaChecker:
         # 死链排查：修造神煞.py 无月害发射（全库月害 _add_shensha 仅基类/
         # 安葬/通用三处活链），无死链复活风险；装修经 canonical 归并修造，
         # 同被本排除覆盖。
-        _p2_ev = getattr(self, '_std_event', None)
         if self._is_yuehai(sizhu) and _p2_ev not in ('入宅', '出行', '动土', '拆舍', '修造'):
             self._add_shensha('月害', -15, '月害主妨害')
         # 土瘟：通用链发射。P1-5（2026-10-18）：安葬通道关闭（陈书 p748「止忌破土
@@ -1607,21 +1619,35 @@ class ShenShaChecker:
             # P1-5 正名（2026-10-18）：限定词「四季土旺日」+忌动土入 UI 文案；
             # 与协纪/考原建除「满为土瘟小吉」同名异实，分名不合并（docs/P1-5_土瘟注册范围取证.md §六）
             self._add_shensha('土瘟', -20, '土瘟（四季土旺日），忌动土')
-        if self._is_dashi(sizhu) and _p2_ev not in ('作灶', '安葬'):
+        # x4 入宅般移映射删除批（2026-10-19，001 §127）：大时×入宅三库零逐字
+        # 明文（docs/典据研究_入宅同源复核_般移映射条目.md §126），入宅排除
+        # （保留既有作灶/安葬排除）。
+        if self._is_dashi(sizhu) and _p2_ev not in ('作灶', '安葬', '入宅'):
             self._add_shensha('大时', -12, '大时忌用')
-        if self._is_tianli(sizhu):
+        if self._is_tianli(sizhu) and _p2_ev not in ('入宅',):
+            # x4：天吏×入宅三库零逐字明文，入宅排除。
             self._add_shensha('天吏', -15, '天吏主致死')
         if self._is_sifei(sizhu):
+            # 保留项（x4）：四废×入宅有陈书八宅歸火条 p635「正四廢」逐字独立
+            # 明文，不随般移映射删除（001 §126/§127）。
             self._add_shensha('四废', -15, '四废日凶')
         if self._is_flyinglian(sizhu):
             self._add_shensha('飞廉', -12, '飞廉主虚惊')
-        if self._is_wumu(sizhu) and _p2_ev not in ('作灶',):
+        # x4：五墓×入宅三库零逐字明文（陈书 p646 五墓属安碓磨条忌列），入宅
+        # 排除（保留既有作灶排除）。
+        if self._is_wumu(sizhu) and _p2_ev not in ('作灶', '入宅'):
             self._add_shensha('五墓', -12, '五墓主死丧')
         if self._is_fuduan(sizhu):
             self._add_shensha('伏断日', -15, '伏断日忌用')
-        if self._is_wangwang(sizhu):
+        if self._is_wangwang(sizhu) and _p2_ev not in ('入宅',):
+            # x4：往亡×入宅月块发射（本块为入宅活链；日块「往亡日」经异名
+            # 归一「往亡」并被本块先到先得，同批于 _check_day_shensha 一并
+            # 排除，双活链同拦防单链误删复活，001 §126/§127）。
             self._add_shensha('往亡', -20, '往亡日忌用')
         if self._is_guiji(sizhu):
+            # 保留项（x4）：归忌×入宅有协纪卷三十五附录用法论＋陈书八宅歸火条
+            # p635＋神煞例 p148 三处逐字独立明文（入宅归火核心忌），不随般移
+            # 映射删除（001 §126/§127）。
             self._add_shensha('归忌', -15, '归忌日忌用')
     
     def _check_day_shensha(self, sizhu, **kwargs):
@@ -1685,7 +1711,9 @@ class ShenShaChecker:
             self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死日忌用')
-        if self._is_wangwang(sizhu):
+        if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) != '入宅':
+            # x4：往亡×入宅日块发射。与月块「往亡」构成双活链（异名归一
+            # 「往亡日」→「往亡」），双链同拦防单链误删复活（001 §126/§127）。
             self._add_shensha('往亡日', -20, '往亡日忌用')
         if self._is_sili(sizhu):
             self._add_shensha('四离日', -35, '四离日大忌')
