@@ -149,6 +149,70 @@ jq_days, _ = _run('嫁娶', y0, y1)
 tot_jq = sum(s for hits in jq_days.values() for _, s in hits)
 check('嫁娶通道全年总分=-2308（非别名族对照基线）', tot_jq == -2308)
 
+# ============ F：通配不覆盖前两级·边界用例（2026-10-19 拍板提醒项） ============
+# 防未来新增通配键时回退：前两级已命中时通配级不得覆盖。三类边界逐条断言，
+# 且必须至少含 1 条「值可区分」样本（否则断言空转、无法暴露覆盖风险）。
+_alias2canon = {}
+for _c, _al in EVENT_ALIASES.items():
+    for _a in _al:
+        if _a != _c:
+            _alias2canon[_a] = _c
+_wild = {n: v for (e, n), v in SHENSHA_SCORES.items() if e == '*'}
+
+# F1 原事项级无键 + canonical有键 + 通配有键 → 必须命中 canonical（不得落通配）
+f1 = []
+for a2, canon in _alias2canon.items():
+    for (ce, n), v in SHENSHA_SCORES.items():
+        if ce != canon or (a2, n) in SHENSHA_SCORES or n not in _wild:
+            continue
+        f1.append((a2, canon, n, v, _wild[n]))
+check('F1 样本非空转（实测 %d 对）' % len(f1), len(f1) >= 1)
+f1_bad = [r for r in f1 if shensha_score(r[0], r[2]) != r[3]]
+check('F1 原事项级无键时逐对命中 canonical 值（%d 对，差异 %d）'
+      % (len(f1), len(f1_bad)), not f1_bad)
+f1_disc = [r for r in f1 if r[3] != r[4]]
+check("F1 含「值可区分」样本≥1（canonical≠通配，实测 %d 对）" % len(f1_disc),
+      len(f1_disc) >= 1)
+check("F1 强断言：移徙×日破时 原事项级无键、canonical(入宅)=-20、通配=-10"
+      " → shensha_score('移徙','日破时')=-20（非通配 -10）",
+      ('移徙', '日破时') not in SHENSHA_SCORES
+      and SHENSHA_SCORES.get(('入宅', '日破时')) == -20
+      and _wild.get('日破时') == -10
+      and shensha_score('移徙', '日破时') == -20)
+
+# F2 原事项级无键 + canonical无键 + 通配有键 → 命中通配（回退可用）
+f2 = [(a2, n, _wild[n]) for a2, canon in _alias2canon.items() for n in _wild
+      if (a2, n) not in SHENSHA_SCORES and (canon, n) not in SHENSHA_SCORES]
+check('F2 样本非空转（实测 %d 对）' % len(f2), len(f2) >= 1)
+f2_bad = [r for r in f2 if shensha_score(r[0], r[1]) != r[2]]
+check('F2 前两级皆无键时逐对命中通配值（%d 对，差异 %d）'
+      % (len(f2), len(f2_bad)), not f2_bad)
+check("F2 已删项仅经通配保持既有值不复活：shensha_score('移徙','月刑')=-15"
+      "（(',移徙',月刑)/('入宅',月刑) 均无键）",
+      ('移徙', '月刑') not in SHENSHA_SCORES
+      and ('入宅', '月刑') not in SHENSHA_SCORES
+      and shensha_score('移徙', '月刑') == -15)
+
+# F3 原事项级有键 + 通配有键（值冲突时）→ 必须命中原事项级。
+# 现实表内该层无「值可区分」样本（移徙∩通配 6 名值与通配相等），故用运行期
+# 临时注入制造可区分样本：断言后立即还原（不改源码、不落库、不改键表终态）。
+_inj = [('移徙', '__边界用例煞__'), ('*', '__边界用例煞__')]
+_old = [SHENSHA_SCORES.get(k, '__ABSENT__') for k in _inj]
+try:
+    SHENSHA_SCORES[_inj[0]] = -7   # 原事项级
+    SHENSHA_SCORES[_inj[1]] = -3   # 通配级（值可区分）
+    check('F3 运行期注入：原事项级有键时命中 -7（非通配 -3）',
+          shensha_score('移徙', '__边界用例煞__') == -7)
+finally:
+    for _k, _ov in zip(_inj, _old):
+        if _ov == '__ABSENT__':
+            SHENSHA_SCORES.pop(_k, None)
+        else:
+            SHENSHA_SCORES[_k] = _ov
+check('F3 注入已还原（键表与注入前一致）',
+      ('移徙', '__边界用例煞__') not in SHENSHA_SCORES
+      and ('*', '__边界用例煞__') not in SHENSHA_SCORES)
+
 print('---')
 if FAILS:
     print('FAILS=%d' % len(FAILS))
