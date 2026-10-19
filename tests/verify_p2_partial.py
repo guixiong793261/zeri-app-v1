@@ -20,7 +20,10 @@ B. 键层：('入学','月害')/('入学','往亡')/('签约','往亡') 已删�
 C. 源码层：通用神煞.py 月害/往亡发射带 _std_event 拆分条件
    （往亡为月块「往亡」+日块「往亡日」归一同名双活链，两处同拦）；
 D. 反向断言：通用大时/五墓现状不变（大时×通用、五墓×通用三事项
-   全有载，不属拆分面）。
+   全有载，不属拆分面）；
+E. 通用分支打戳回归（w6 验收建议）：get_shensha_checker 返回实例
+   必须已设 _std_event 且等于规范事项值（专属/通用两分支同断言），
+   防未来再出现「无戳休眠」。
 
 退出码 0=全过 1=有失败。
 """
@@ -49,7 +52,7 @@ def _get(s, k):
 sys.path.insert(0, ROOT)
 from modules.四柱计算器 import calculate_sizhu
 from modules.shensha import get_checker
-from modules.事项标准 import SHENSHA_SCORES
+from modules.事项标准 import SHENSHA_SCORES, canonical_event
 
 # ============ B：键层 ============
 for k in [('入学', '月害'), ('入学', '往亡'), ('签约', '往亡')]:
@@ -63,6 +66,14 @@ with open(p, encoding='utf-8') as f:
     src = f.read()
 check('月害发射带入学拆分条件', "and getattr(self, '_std_event', None) != '入学'" in src)
 check('往亡发射双链拆分条件(月块+日块)', src.count("not in ('入学', '签约')") >= 2)
+
+# ============ E：通用分支打戳回归 ============
+for _ev in ('入学', '求医', '签约'):
+    _ck = get_checker(_ev)
+    _sev = getattr(_ck, '_std_event', None)
+    check('打戳回归 %s：_std_event 已设（不为 None）' % _ev, _sev is not None)
+    check('打戳回归 %s：_std_event==canonical_event(%s)（实际=%r）'
+          % (_ev, _ev, _sev), _sev == canonical_event(_ev))
 
 # ============ A：行为层（2026 Q1） ============
 checkers = {ev: get_checker(ev) for ev in ('入学', '求医', '签约')}
