@@ -6,7 +6,7 @@
 实现高级安葬择日的宜忌规则
 
 核心规则：
-1. 一票否决：重丧日、三丧日、年重丧、冲山日、月破、岁破、四离四绝、十恶大败
+1. 一票否决：重丧日、三丧日、年重丧、冲山日、月破、岁破、四离四绝
 2. 吉神：天德、月德、不将日、黄道吉日、鸣吠日、鸣吠对日
 3. 扶山：日课五行生扶坐山
 4. 三合六合：日课与坐山相合
@@ -138,8 +138,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         '戌': '辰', '亥': '未', '子': '戌', '丑': '丑'
     }
     
-    # 十恶大败日
-    SHIE_DABAI = ['甲辰', '乙巳', '丙申', '丁亥', '戊戌', '己丑', '庚辰', '辛巳', '壬申', '癸亥']
+    # 十恶大败日表与一票否决引用已删（2026-10-19 全删批·二档，001 §139）：
+    # 三库无「十恶大败忌安葬」明文，无典据不得一票否决（拍板逐项批准）。
     
     # 鸣吠日/鸣吠对日：2026-10 A1 起不再在本类维护干支表——典载 13 日／11 日
     # 收口到 神煞基类.is_mingfei_by_pillar / is_mingfeidui_by_pillar（见文件头
@@ -299,9 +299,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         if month_zhi and day_gan and self._is_furi(month_zhi, day_gan):
             ji_list.append('复日忌安葬')
         
-        # 5. 十恶大败日
-        if day_gan and day_zhi and self._is_shie_dabai(day_gan + day_zhi):
-            ji_list.append('十恶大败日忌安葬')
+        # 5. 十恶大败日——已删（2026-10-19 全删批·二档）：三库无「十恶大败
+        # 忌安葬」明文，无典据不得一票否决（拍板逐项批准）；编号保留防错位。
         
         # 6. 月破日
         if self.has_marriage_shensha:
@@ -441,9 +440,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         """
         return day_zhi == self.WANGWANG_MAP.get(month_zhi)
     
-    def _is_shie_dabai(self, day_pillar):
-        """是否十恶大败日"""
-        return day_pillar in self.SHIE_DABAI
+    # _is_shie_dabai 已删（2026-10-19 全删批·二档）：SHIE_DABAI 表与一票否决
+    # 引用同删——无典据不得一票否决（拍板逐项批准，001 §139）。
 
     def _is_sui_po_day(self, year_zhi, day_zhi):
         """是否岁破日（日支与年支相冲）"""
