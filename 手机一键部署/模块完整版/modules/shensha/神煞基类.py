@@ -1710,6 +1710,10 @@ class ShenShaChecker:
         if self._is_shie_dabai(sizhu):
             self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
         if self._is_shousi_day(sizhu):
+            # 入宅通道注记（2026-10-19 死链清理同批 7 条之⑦，仅登记不删行）：
+            # 入宅 checker 子类月块（入宅神煞.py，_is_shousi，-22 同值）经
+            # MRO month→day 先行发射同名 '受死日'，本行对入宅通道为死链
+            #（_add_shensha 先到先得去重）；对其余事项本行为活链，不得删。
             self._add_shensha('受死日', -22, '受死日忌用')
         if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) != '入宅':
             # x4：往亡×入宅日块发射。与月块「往亡」构成双活链（异名归一

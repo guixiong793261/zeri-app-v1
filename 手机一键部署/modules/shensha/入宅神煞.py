@@ -220,9 +220,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # ===== 极凶日 =====
 
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败日，入宅大忌')
+        # 2026-10-19 死链清理（非般移源补齐前置，拍板「先清7条同名重加死链」）：
+        # '十恶大败' 子类日块重加删除——基类日块（神煞基类.py:1711，-30 同值）
+        # 经本类日方法 super 先行发射，本行被 _add_shensha 先到先得去重，从未
+        # 生效（死链）。删除零行为差，dump diff=0 实证见本批 commit。
         
         # ===== 凶煞 =====
         
@@ -278,25 +279,26 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # ===== 补充缺失的凶煞检查 =====
         
-        # 丧门（主丧亡，忌入宅）
-        if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -15, '丧门日忌入宅')
+        # 2026-10-19 死链清理（同批 7 条之②）：'丧门' 子类日块重加删除——
+        # 基类年块（神煞基类.py:1489，-15 同值）经 MRO year→day 先行发射，
+        # 本行被 _add_shensha 先到先得去重，从未生效（死链）。零行为差。
         
-        # 吊客（主吊唁，忌入宅）
-        if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -12, '吊客日忌入宅')
+        # 2026-10-19 死链清理（同批 7 条之③）：'吊客' 子类日块重加删除——
+        # 基类年块（神煞基类.py:1491，-12 同值）经 MRO year→day 先行发射，
+        # 本行被 _add_shensha 先到先得去重，从未生效（死链）。零行为差。
         
-        # 病符（主疾病，忌入宅）
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符日忌入宅')
+        # 2026-10-19 死链清理（同批 7 条之④）：'病符' 子类日块重加删除——
+        # 基类年块（神煞基类.py:1493，-12 同值）经 MRO year→day 先行发射，
+        # 本行被 _add_shensha 先到先得去重，从未生效（死链）。零行为差。
+        # （病符表源/触发已验 A5，活链在基类年块，不受影响。）
         
-        # 官符（主官讼，忌入宅）
-        if self._is_guanfu(sizhu):
-            self._add_shensha('官符', -10, '官符日忌入宅')
+        # 2026-10-19 死链清理（同批 7 条之⑤）：'官符' 子类日块重加删除——
+        # 基类年块（神煞基类.py:1485，-10 同值）经 MRO year→day 先行发射，
+        # 本行被 _add_shensha 先到先得去重，从未生效（死链）。零行为差。
         
-        # 五鬼（主耗散）
-        if self._is_wugui(sizhu):
-            self._add_shensha('五鬼', -15, '五鬼日主耗散，忌入宅')
+        # 2026-10-19 死链清理（同批 7 条之⑥）：'五鬼' 子类日块重加删除——
+        # 基类年块（神煞基类.py:1478，-15 同值）经 MRO year→day 先行发射，
+        # 本行被 _add_shensha 先到先得去重，从未生效（死链）。零行为差。
         
         # 月虚（主虚耗）
         if self._is_yuexu(sizhu):
