@@ -36,7 +36,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
 
 
+_STAT = {'checks': 0, 'pass': 0}
+
+
 def check(name, cond):
+    """断言计数就地自汇报（001 §135.4：计数以脚本自报为准，不依赖 Shell 回显）。"""
+    _STAT['checks'] += 1
+    if cond:
+        _STAT['pass'] += 1
     print('[%s] %s' % ('PASS' if cond else 'FAIL', name))
     if not cond:
         FAILS.append(name)
@@ -120,6 +127,7 @@ for ev in ('嫁娶', '安葬'):
           sum(c2.values()) > 0 and c2['受死日'] > 0)
 
 print('---')
+print('CHECKS=%d PASS=%d FAIL=%d' % (_STAT['checks'], _STAT['pass'], len(FAILS)))
 if FAILS:
     print('FAILS=%d' % len(FAILS))
     for f in FAILS:
