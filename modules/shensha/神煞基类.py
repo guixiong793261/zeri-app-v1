@@ -1707,8 +1707,11 @@ class ShenShaChecker:
                 break
         
         # 凶煞
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
         if self._is_shousi_day(sizhu):
             # 入宅通道注记（2026-10-19 死链清理同批 7 条之⑦，仅登记不删行）：
             # 入宅 checker 子类月块（入宅神煞.py，_is_shousi，-22 同值）经
@@ -2247,6 +2250,9 @@ class ShenShaChecker:
         except Exception:
             return False
     
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """十恶大败日
         甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥

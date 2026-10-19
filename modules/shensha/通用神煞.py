@@ -331,9 +331,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_sifei(sizhu):
             self._add_shensha('四废日', -15, '春庚申辛酉，夏壬子癸亥，秋甲寅乙卯，冬丙午丁巳')
 
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
         # ===== 吉神 =====
 
@@ -427,8 +429,11 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('天巫日', 8, '天巫为吉，祈福灵验')
 
         # ===== 日神类凶煞 =====
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死之日，大忌')
@@ -564,6 +569,9 @@ class CommonShenShaChecker(ShenShaChecker):
         return is_sifei_by_pillar(sizhu['month_zhi'],
                                   sizhu['day_gan'] + sizhu['day_zhi'])
 
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败"""
         day_gan = sizhu['day_gan']

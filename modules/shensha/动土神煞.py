@@ -166,9 +166,11 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_sijue(sizhu):
             self._add_shensha('四绝日', -35, '立春、立夏、立秋、立冬前一日，忌大事')
         
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '忌动土修造，犯之主败')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '忌动土修造，犯之主败')
 
         # 伏断日由基类月作用域统一注册（A6-3 同名分支删除，super 先注册必被去重）
 

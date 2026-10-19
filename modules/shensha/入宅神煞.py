@@ -594,7 +594,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return jian_idx in jianxing_ji
     
     # ========== 日神煞判断 ==========
-    
+
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """十恶大败日"""
         day_gan = sizhu['day_gan']

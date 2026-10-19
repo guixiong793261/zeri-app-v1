@@ -184,9 +184,11 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日不宜出行')
         
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败日不宜出行')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '十恶大败日不宜出行')
 
         # 2026-10 A1：'反支日' 同名重加删除（基类日作用域统一注册，
         # 谓词已修为按农历月朔支起算的典载口径）。
