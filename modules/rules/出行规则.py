@@ -19,7 +19,7 @@ if __name__ == '__main__' and __package__ is None:
 规则层次：
 1. 建除十二神宜忌
 2. 天德/月德/不将日等吉神
-3. 月破/岁破/四离四绝等凶煞
+3. 月破/四离四绝等凶煞（「岁破」已删：岁破批 2026-10-20，001 §140）
 4. 与事主生肖关系（冲日忌出行）
 5. 出行方位辅助
 6. 专用出行吉日（鸣犬日、要安日等）
@@ -106,7 +106,7 @@ class TravelRuleChecker(EventRuleChecker):
         # 2. 天德/月德/不将日等吉神
         self._check_shensha_yi(date_obj, yi_list)
 
-        # 3. 月破/岁破/四离四绝等凶煞
+        # 3. 月破/四离四绝等凶煞（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_shensha_ji(sizhu, date_obj, ji_list)
 
         # 4. 出行专用吉凶
@@ -164,7 +164,7 @@ class TravelRuleChecker(EventRuleChecker):
             pass
 
     def _check_shensha_ji(self, sizhu, date_obj, ji_list):
-        """检查月破/岁破/四离四绝等凶煞"""
+        """检查月破/四离四绝等凶煞（『岁破』日课普适项已删：岁破批 001 §140）"""
         day_zhi = sizhu.get('day_zhi', '')
         year_zhi = sizhu.get('year_zhi', '')
         month_zhi = sizhu.get('month_zhi', '')
@@ -179,15 +179,13 @@ class TravelRuleChecker(EventRuleChecker):
             if chong_map.get(month_zhi) == day_zhi:
                 ji_list.append(f'月破日({month_zhi}月{day_zhi}日)忌出行')
 
-        # 岁破日（年支冲日支）
-        if year_zhi and day_zhi:
-            chong_map = {
-                '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-                '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-                '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-            }
-            if chong_map.get(year_zhi) == day_zhi:
-                ji_list.append(f'岁破日({year_zhi}年{day_zhi}日)忌出行')
+        # 岁破日×出行已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册；veto_keywords
+        # 内「岁破日」同步移除（另见 _check_veto_items）。发射原为：
+        #     if year_zhi and day_zhi:
+        #         chong_map = {...}
+        #         if chong_map.get(year_zhi) == day_zhi:
+        #             ji_list.append(f'岁破日({year_zhi}年{day_zhi}日)忌出行')
 
         # 四离四绝日
         if date_obj:
@@ -290,8 +288,8 @@ class TravelRuleChecker(EventRuleChecker):
             yi_list.append(f'出行吉日干{day_gan}利{gan_direction}方')
 
     def _check_veto_items(self, sizhu, ji_list):
-        """检查一票否决项"""
-        veto_keywords = ['月破日', '岁破日', '四离', '四绝', '往亡']
+        """检查一票否决项（『岁破日』已移除：岁破批 2026-10-20，001 §140）"""
+        veto_keywords = ['月破日', '四离', '四绝', '往亡']
         veto_reasons = []
 
         for ji in ji_list:

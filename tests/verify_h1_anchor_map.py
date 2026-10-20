@@ -13,11 +13,14 @@
     等级=score纯函数一致；无分可停、H1 对嫁娶总分为零影响。
 
 断言汇总：
-  A. 结构：恰11键；映射族51＋veto族3＝54。
+  A. 结构：恰11键；映射族46。
+     （2026-10-19 十恶大败批 -1（安葬族）、2026-10-20 岁破批 -4：动土/拆舍/
+      入宅/签约四事项「岁破」锚点族随岁破日课普适忌删除而移除）。原「veto族3」
+      随 _h1_is_veto_reason 一并删除（001 §140，岁破日 veto 文案不再产生）。
   B/B'. 每日对账（通用：数值；嫁娶：结构）。
-  C. 62 个 tx 串（出行12串逐串）锚点同日共存全部至少1次；3 veto族命中。
+  C. 62 个 tx 串（出行12串逐串）锚点同日共存全部至少1次。
   D. 通用非veto日：old=new+10停宜-15停忌；枚举真实等级跨档。
-  E. 停分文本全集 ⊆ 表内62 tx ∪ veto文案；单边样本从未停。
+  E. 停分文本全集 ⊆ 表内62 tx；单边样本从未停。
 退出码 0/1，打印 FAIL 计数。
 """
 import sys, io, os, datetime
@@ -29,8 +32,14 @@ sys.path.insert(0, _REPO_ROOT)
 
 EVENTS = ['嫁娶', '修造', '动土', '拆舍', '入宅', '作灶', '开业', '出行', '安葬', '安床', '签约']
 D0, D1 = datetime.date(2024, 1, 1), datetime.date(2026, 12, 31)
-SIDE_SAMPLES = {'动土': '建除闭日忌动土', '修造': '岁破日忌修造'}
-VETO_EVS = ['动土', '拆舍', '入宅']
+# SIDE_SAMPLES 原 {'修造': '岁破日忌修造'}——『岁破日忌修造』随岁破批（001 §140）
+# 删除后不再产生（该文本本非修造 H1 映射族成员，留之即「悬空样本」）。今取
+# 修造忌项中非锚点的单边样本『时冲山』替换，不留悬空（2026-10-20 用户拍板
+# 「锚点不存在」或「替换为新锚点」→取替换）。
+SIDE_SAMPLES = {'动土': '建除闭日忌动土', '修造': '时冲山'}
+# VETO_EVS 原 ['动土','拆舍','入宅']——其「岁破日 veto 理由族」随岁破批
+# （2026-10-20，001 §140）删除 _h1_is_veto_reason 而消失，清空（不再断言）。
+VETO_EVS = []
 
 
 def _worker(task):
@@ -38,12 +47,11 @@ def _worker(task):
     import sys
     sys.stdout = open(os.devnull, 'w')
     from modules.四柱计算器 import calculate_sizhu
-    from modules.评分器 import Scorer, H1_ANCHOR_MAP, _h1_is_veto_reason
+    from modules.评分器 import Scorer, H1_ANCHOR_MAP
     from modules.事项标准 import canonical_event, event_profile
 
     ev, o0, o1 = task
     fails, fired, level_changes, stopped = [], Counter(), [], set()
-    veto_fired = 0
     po_yi_n = po_ji_n = 0
     n_cells = 0
     is_marriage = event_profile(ev)['marriage']
@@ -64,8 +72,6 @@ def _worker(task):
         cev = canonical_event(ev)
 
         def is_stopped(text):
-            if _h1_is_veto_reason(text):
-                return True
             for ss_n, tx in H1_ANCHOR_MAP.get(cev, []):
                 if text == tx and ss_n in ss_names:
                     return True
@@ -81,9 +87,7 @@ def _worker(task):
                 for t in yi + ji:
                     if t == tx:
                         fired[(ev, ss_n, tx)] += 1
-        for t in yi + ji:
-            if _h1_is_veto_reason(t):
-                veto_fired += 1
+        # veto理由族计数已删（岁破批 001 §140：_h1_is_veto_reason 及其 3 族取消）
 
         if ev in SIDE_SAMPLES:
             txt = SIDE_SAMPLES[ev]
@@ -139,7 +143,7 @@ def _worker(task):
     return {
         'ev': ev, 'fails': fails,
         'fired': {f"{k[0]}|{k[1]}|{k[2]}": v for k, v in fired.items()},
-        'veto_fired': veto_fired, 'stopped': list(stopped),
+        'stopped': list(stopped),
         'level_changes': level_changes,
         'po_yi': po_yi_n, 'po_ji': po_ji_n, 'cells': n_cells,
     }
@@ -162,10 +166,8 @@ def main():
             map_families.add((ev, ss_name))
             all_tx.add(tx)
             tx_by_family.setdefault((ev, ss_name), []).append(tx)
-    if len(map_families) != 51:
-        fails.append(f"A: 映射族数={len(map_families)}（应51）")
-    if len(map_families) + 3 != 54:
-        fails.append(f"A: 总锚点族={len(map_families)+3}（应54）")
+    if len(map_families) != 46:
+        fails.append(f"A: 映射族数={len(map_families)}（应46）")
 
     # ---------- 任务分片（按 季度×事项） ----------
     tasks = []
@@ -187,7 +189,6 @@ def main():
 
     # ---------- 汇总 ----------
     fired = Counter()
-    veto_fired_all = Counter()
     stopped_all = set()
     level_changes_all = []
     sum_po_yi = sum_po_ji = n_cells = 0
@@ -195,7 +196,6 @@ def main():
         fails.extend(res['fails'])
         for k, v in res['fired'].items():
             fired[k] += v
-        veto_fired_all[res['ev']] += res['veto_fired']
         stopped_all.update(res['stopped'])
         level_changes_all.extend(res['level_changes'])
         sum_po_yi += res['po_yi']; sum_po_ji += res['po_ji']
@@ -206,26 +206,21 @@ def main():
         for tx in txs:   # 出行12串逐串
             if fired.get(f"{ev}|{ss_n}|{tx}", 0) < 1:
                 fails.append(f"C: 锚点无同日共存: {ev} | {ss_n} | {tx}")
-    for ev in VETO_EVS:
-        if veto_fired_all.get(ev, 0) < 1:
-            fails.append(f"C: veto理由族无真实触发: {ev}")
+    # veto理由族命中断言已删（岁破批 001 §140：_h1_is_veto_reason 及 3 族取消）
 
     # ---------- E. 停分文本全集 ----------
     for t in stopped_all:
         if t not in all_tx:
-            from modules.评分器 import _h1_is_veto_reason
-            if not _h1_is_veto_reason(t):
-                fails.append(f"E: 表外文本被停分: {t}")
+            fails.append(f"E: 表外文本被停分: {t}")
 
     # ---------- 报告 ----------
     level_changes_all.sort()
     real_lvl = [x for x in level_changes_all]
     print("=" * 64)
     print(f"单元格={n_cells}（1096天×11事项）  耗时={elapsed:.0f}s  进程={nworkers}")
-    print(f"映射族={len(map_families)} + veto族3 = 54；tx串={len(all_tx)}")
+    print(f"映射族={len(map_families)}；tx串={len(all_tx)}")
     print(f"通用链停分事件: 宜 {sum_po_yi} 条 / 忌 {sum_po_ji} 条（嫁娶规则本就不计分，不含在内）")
     print(f"锚点共存命中: tx串 {sum(1 for k in fired)} / {len(all_tx)}")
-    print("veto族命中: " + ", ".join(f"{ev}={veto_fired_all.get(ev,0)}" for ev in VETO_EVS))
     print(f"通用事项真实等级跨档日: {len(real_lvl)}")
     for row in real_lvl[:60]:
         print("   ", row)
@@ -237,7 +232,7 @@ def main():
         for m in fails[:60]:
             print("  [FAIL]", m)
         sys.exit(1)
-    print("PASS：结构54 + 每日对账一致(无溢出) + 锚点全命中 + 单边未停 + 嫁娶零影响")
+    print("PASS：结构46 + 每日对账一致(无溢出) + 锚点全命中 + 单边未停 + 嫁娶零影响")
     sys.exit(0)
 
 

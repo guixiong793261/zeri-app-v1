@@ -6,7 +6,8 @@
 实现高级安葬择日的宜忌规则
 
 核心规则：
-1. 一票否决：重丧日、三丧日、年重丧、冲山日、月破、岁破、四离四绝
+1. 一票否决：重丧日、三丧日、年重丧、冲山日、月破、四离四绝（「岁破」已删：
+   岁破批 2026-10-20，001 §140）
 2. 吉神：天德、月德、不将日、黄道吉日、鸣吠日、鸣吠对日
 3. 扶山：日课五行生扶坐山
 4. 三合六合：日课与坐山相合
@@ -314,9 +315,12 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             if month_zhi and day_zhi and self._is_chong(month_zhi, day_zhi):
                 ji_list.append('月破日忌安葬')
         
-        # 7. 岁破日
-        if year_zhi and day_zhi and self._is_sui_po_day(year_zhi, day_zhi):
-            ji_list.append('岁破日忌安葬')
+        # 7. 岁破日×安葬已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册；谓词
+        # _is_sui_po_day 同步删除（无 caller）。发射原为：
+        #     if year_zhi and day_zhi and self._is_sui_po_day(year_zhi, day_zhi):
+        #         ji_list.append('岁破日忌安葬')
+        # 注：第 12 项「岁破检查（方位）」为山向（坐山犯岁破）语境，保留并标注。
         
         # 8. 四离四绝
         # 2026-09-20 死表清理：原 else 备用检查引用 _is_sili/_is_sijue 月支→日支
@@ -350,6 +354,7 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
                 ji_list.append(f'{zuoshan}山犯日三煞')
         
         # 12. 岁破检查（方位）
+        # 【保留·仅方位语境】坐山犯岁破方位（山向语境，非日课普适岁破注册）
         if year_zhi and zuoshan and self._is_sui_po_direction(year_zhi, zuoshan):
             ji_list.append(f'{zuoshan}山犯岁破')
         
@@ -443,9 +448,9 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
     # _is_shie_dabai 已删（2026-10-19 全删批·二档）：SHIE_DABAI 表与一票否决
     # 引用同删——无典据不得一票否决（拍板逐项批准，001 §139）。
 
-    def _is_sui_po_day(self, year_zhi, day_zhi):
-        """是否岁破日（日支与年支相冲）"""
-        return self._is_chong(year_zhi, day_zhi)
+    # _is_sui_po_day 已删（岁破批 2026-10-20，001 §140）：日课普适岁破谓词，
+    # 唯一消费者（第 7 项岁破日发射）本批同步删除后无 caller。
+    # 原实现：return self._is_chong(year_zhi, day_zhi)
 
     def _is_mingfei(self, day_pillar):
         """是否鸣吠日（委托 神煞基类 典载 13 日柱，2026-10 A1）"""
@@ -702,7 +707,4 @@ if __name__ == '__main__':
     print(f"秋季辰日是否三丧: {checker._is_sansang('申', '辰')}")
     print(f"冬季未日是否三丧: {checker._is_sansang('亥', '未')}")
     
-    # 测试岁破日
-    print("\n=== 岁破日测试 ===")
-    print(f"子年午日是否岁破: {checker._is_sui_po_day('子', '午')}")
-    print(f"午年子日是否岁破: {checker._is_sui_po_day('午', '子')}")
+    # 「岁破日」自测已删（岁破批 2026-10-20，001 §140：_is_sui_po_day 同步删除）

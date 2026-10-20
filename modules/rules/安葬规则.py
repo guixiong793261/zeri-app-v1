@@ -22,7 +22,7 @@ if __name__ == '__main__' and __package__ is None:
 1. 建除十二神：宜成、开；忌破、闭、建
 2. 天德、月德日宜
 3. 不将日宜
-4. 忌月破、岁破、四离四绝
+4. 忌月破、四离四绝（「岁破」已删：岁破批 2026-10-20，001 §140）
 5. 重丧日忌（一票否决）
 6. 山向五行生扶判断
 7. 忌与事主年命相冲
@@ -276,7 +276,7 @@ class BurialRuleChecker(EventRuleChecker):
         # 5. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 6. 月破、岁破、四离四绝
+        # 6. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili(date_obj, sizhu, owners, ji_list)
         
         # 7. 山向相关规则（扶山）
@@ -341,7 +341,7 @@ class BurialRuleChecker(EventRuleChecker):
             pass
     
     def _check_po_and_sili(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、岁破、四离四绝"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -352,10 +352,11 @@ class BurialRuleChecker(EventRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌安葬')
             
-            # 岁破（年支与日支相冲）
-            year_zhi = sizhu.get('year_zhi', '')
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append('岁破日忌安葬')
+            # 岁破×安葬已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课
+            # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。发射原为：
+            #     year_zhi = sizhu.get('year_zhi', '')
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append('岁破日忌安葬')
             
             # 与事主年支相冲
             if owners:

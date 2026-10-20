@@ -7,7 +7,7 @@
 
 核心规则：
 1. 入宅吉时：天德、月德、天德合、月德合
-2. 入宅忌时：月破、岁破、四离四绝、往亡、归忌
+2. 入宅忌时：月破、四离四绝、往亡、归忌（「岁破」已删：岁破批 2026-10-20，001 §140）
 3. 移徙吉日：三合、六合、天赦、母仓
 4. 入宅大忌：冲宅主生肖、红嘴朱雀（2026-10-18 删「土符」：三库无「土符×入宅」
    明文，判据(b)五档判定零典据，docs/典据研究_土符入宅_(b)所忌事项范围_取证.md）
@@ -51,7 +51,7 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
         # 3. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、岁破、四离四绝
+        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili_ruzhai(date_obj, sizhu, owners, ji_list)
         
         # 5. 山向相关规则（扶山）
@@ -112,7 +112,7 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
             pass
     
     def _check_po_and_sili_ruzhai(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、岁破、四离四绝（入宅版）"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -125,10 +125,12 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌入宅')
             
-            # 岁破（年支与日支相冲）
-            year_zhi = sizhu.get('year_zhi', '')
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append('岁破日忌入宅')
+            # 岁破×入宅/移徙已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册
+            # 零日课典据，拍板删日课通道普适忌注册（移徙 canonical 归并入宅，同删）。
+            # 发射原为：
+            #     year_zhi = sizhu.get('year_zhi', '')
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append('岁破日忌入宅')
             
             # 与事主年支相冲
             if owners:

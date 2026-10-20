@@ -7,7 +7,7 @@
 
 核心规则：
 1. 动土吉日：天德、月德、天德合、月德合
-2. 动土忌日：土符、土瘟、土忌、月破、岁破
+2. 动土忌日：土符、土瘟、土忌、月破（「岁破」已删：岁破批 2026-10-20，001 §140）
 3. 动土大忌：土王用事、三煞
 4. 破土忌日：四离四绝
 ================================================================================
@@ -49,7 +49,7 @@ class DongTuRuleChecker(ConstructionRuleChecker):
         # 3. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、岁破、四离四绝
+        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili_dongtu(date_obj, sizhu, owners, ji_list)
         
         # 5. 山向相关规则（扶山）
@@ -110,7 +110,7 @@ class DongTuRuleChecker(ConstructionRuleChecker):
             pass
     
     def _check_po_and_sili_dongtu(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、岁破、四离四绝（动土版）"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -123,10 +123,11 @@ class DongTuRuleChecker(ConstructionRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌动土')
             
-            # 岁破（年支与日支相冲）
-            year_zhi = sizhu.get('year_zhi', '')
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append('岁破日忌动土')
+            # 岁破×动土已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课
+            # 典据，拍板删日课通道普适忌注册。发射原为：
+            #     year_zhi = sizhu.get('year_zhi', '')
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append('岁破日忌动土')
             
             # 与事主年支相冲
             if owners:
