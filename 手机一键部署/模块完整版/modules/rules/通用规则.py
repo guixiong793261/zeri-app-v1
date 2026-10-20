@@ -27,7 +27,8 @@ EventRuleChecker()，实例化即 TypeError，导致这三类事项在评分器�
      保证「宜/忌」字样与该日黄道加分/减分不矛盾）；
    - 源二：modules/五行择日法.py 的 EVENT_RULES（正五行口径，建除项写作"X日"）。
    事项名经 EVENT_ALIASES 映射后匹配；两源冲突（同日既宜又忌）时两边都不计。
-2. 天德/月德日宜；月破/岁破/四离四绝忌；日柱冲事主年支忌
+2. 天德/月德日宜；月破/四离四绝忌（「岁破」已删：岁破批 2026-10-20，001 §140）；
+   日柱冲事主年支忌
    —— 与开业/安床/出行等事项规则检查器完全同口径。
 3. 不作一票否决（同开业/安床），仅产出宜忌条目。
 ================================================================================
@@ -219,7 +220,8 @@ class GenericRuleChecker(EventRuleChecker):
             pass
 
     def _check_po_and_sili(self, date_obj, sizhu, owners, event_type, ji_list):
-        """月破、岁破、四离四绝忌（非一票否决，同开业/安床）"""
+        """月破、四离四绝忌（非一票否决，同开业/安床）
+        （『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha or not event_type:
             return
 
@@ -230,9 +232,13 @@ class GenericRuleChecker(EventRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append(f'四离四绝日忌{event_type}')
 
-            year_zhi = sizhu.get('year_zhi', '')
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append(f'岁破日忌{event_type}')
+            # 岁破×通用（f-string 覆盖 入学/求医/签约/通用 等 event_type）已删
+            # （岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课典据（协纪卷内
+            # 「岁破日」0 命中），拍板删日课通道普适忌注册。删除后 4 事项逐一断言清零。
+            # 发射原为：
+            #     year_zhi = sizhu.get('year_zhi', '')
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append(f'岁破日忌{event_type}')
         except Exception:
             pass
 

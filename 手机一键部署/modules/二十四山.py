@@ -1524,6 +1524,8 @@ class ZhengTiWuXingSelector:
                 result['total_score'] -= 100  # 大凶，一票否决
 
             # 检查年家二黑（病符星）：到山扣40分，主疾病脾胃、妇人不安
+            # 【保留·方位神语境】病符批（2026-10-20，001 §141）不删此项：山家封禁
+            # （二黑病符星到坐山）属方位神评分，与日课普适病符注册不同机制、不同层。
             er_hei_mountains = self.shensha_checker.check_er_hei(year_num)
             if mountain_name in er_hei_mountains:
                 palace = self.shensha_checker.get_erhei_palace(year_num)

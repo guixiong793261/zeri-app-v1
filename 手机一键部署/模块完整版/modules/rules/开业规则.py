@@ -17,7 +17,7 @@ if __name__ == '__main__' and __package__ is None:
 1. 建除十二神：宜成、开、定、满；忌破、闭、平
 2. 天德、月德日宜
 3. 不将日宜
-4. 忌月破、岁破、四离四绝
+4. 忌月破、四离四绝（「岁破」已删：岁破批 2026-10-20，001 §140）
 5. 黄道吉日（青龙、明堂等）
 6. 与事主年命相合（三合、六合）
 ================================================================================
@@ -146,7 +146,7 @@ class OpeningRuleChecker(EventRuleChecker):
         # 3. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、岁破、四离四绝
+        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili(date_obj, year_zhi, owners, ji_list)
         
         # 5. 与事主年命相合
@@ -199,7 +199,7 @@ class OpeningRuleChecker(EventRuleChecker):
             pass
     
     def _check_po_and_sili(self, date_obj, year_zhi, owners, ji_list):
-        """检查月破、岁破、四离四绝"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -210,14 +210,18 @@ class OpeningRuleChecker(EventRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌开业')
             
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append('岁破日忌开业')
-            
+            # 岁破×开业（日课普适，年支冲日支）已删（岁破批 2026-10-20，001 §140）：
+            # 日课普适岁破注册零日课典据，拍板删日课通道普适忌注册。发射原为：
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append('岁破日忌开业')
+            # 下方「与{事主}岁破」（事主年命冲流年）系本命语境，保留并标注（非本批）。
+
             if owners:
                 for owner in owners:
                     owner_zhi = self._get_owner_year_zhi(owner)
                     if owner_zhi and self.is_year_break(date_obj, owner_zhi):
                         name = owner.get('name', '事主')
+                        # 【保留·仅本命语境】事主年命冲流年（非日课普适岁破注册）
                         ji_list.append(f'与{name}岁破，忌开业')
                         break
         except Exception:

@@ -47,11 +47,14 @@ class CommonShenShaChecker(ShenShaChecker):
         day_zhi = sizhu['day_zhi']
 
         # 2026-09-16修复：原此处无条件加 '太岁' -20，导致入学/求医/签约
-        # 每一天都被扣20分且神煞栏恒显"犯太岁"。太岁为年神（忌动土方位），
-        # 民事择日其真实禁忌是"日支冲年支"=岁破，已由下方 _get_suipo 判定。
-        # 岁破
-        if day_zhi == self._get_suipo(year_zhi):
-            self._add_shensha('岁破', -30, '与太岁相冲，百事不宜')
+        # 每一天都被扣20分且神煞栏恒显"犯太岁"。太岁为年神（忌动土方位）。
+        # 岁破×通用已删（岁破批，2026-10-20，001 §140）：原此处以
+        # day_zhi == self._get_suipo(year_zhi) 发射 '岁破' -30；日课普适岁破注册
+        # 零日课典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。
+        # 发射原为：
+        #     if day_zhi == self._get_suipo(year_zhi):
+        #         self._add_shensha('岁破', -30, '与太岁相冲，百事不宜')
+        # 注：_get_suipo 保留——日破时(:506)/月破(:519) 仍消费，本批不动。
 
         # 年支三煞（劫煞、灾煞、岁煞）
         if self._is_nian_sansha(sizhu):
@@ -136,8 +139,10 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客临门，主有凶事')
 
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符加身，提防疾病')
+        # 病符×通用已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符加身，提防疾病')
 
         if self._is_tianhao(sizhu):
             self._add_shensha('天耗', -10, '天耗临身，虚耗破财')
@@ -290,8 +295,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_guiji(sizhu):
             self._add_shensha('归忌', -15, '归忌之日，忌归家')
 
-        if self._is_hongzui_zhuque(sizhu):
-            self._add_shensha('红嘴朱雀', -12, '红嘴朱雀，口舌是非')
+        # 红嘴朱雀×通用已删（红嘴朱雀按典修批 A，2026-10-20）：三库无「红嘴朱雀
+        # 忌入学/求医/签约」明文，且旧起例（月支对冲+2，等价月支+8）与陈书 p890
+        # 「日干支×九宫飞」全异。通用事项按典不注册该煞。发射原为：
+        #     if self._is_hongzui_zhuque(sizhu):
+        #         self._add_shensha('红嘴朱雀', -12, '红嘴朱雀，口舌是非')
 
         if self._is_tiangou(sizhu):
             self._add_shensha('天狗', -12, '天狗食日，主有损失')
@@ -331,9 +339,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_sifei(sizhu):
             self._add_shensha('四废日', -15, '春庚申辛酉，夏壬子癸亥，秋甲寅乙卯，冬丙午丁巳')
 
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
         # ===== 吉神 =====
 
@@ -427,8 +437,11 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('天巫日', 8, '天巫为吉，祈福灵验')
 
         # ===== 日神类凶煞 =====
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死之日，大忌')
@@ -564,6 +577,9 @@ class CommonShenShaChecker(ShenShaChecker):
         return is_sifei_by_pillar(sizhu['month_zhi'],
                                   sizhu['day_gan'] + sizhu['day_zhi'])
 
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败"""
         day_gan = sizhu['day_gan']
@@ -755,22 +771,11 @@ class CommonShenShaChecker(ShenShaChecker):
     # 归忌 _is_guiji 已删除（2026-10 A5 收口）：旧"月支前七位"系偏移错，
     # 回归基类 is_guiji_by_zhi（《协纪·历例》孟月丑/仲月寅/季月子）。
 
-    def _is_hongzui_zhuque(self, sizhu):
-        """红嘴朱雀（月支对冲前两位）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = DI_ZHI
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        duichong = chong_map.get(month_zhi, '')
-        if duichong and duichong in zh_list:
-            idx = zh_list.index(duichong)
-            hongzui = zh_list[(idx + 2) % 12]
-            return day_zhi == hongzui
-        return False
+    # _is_hongzui_zhuque 已删除（红嘴朱雀按典修批 A，2026-10-20）：旧「月支
+    # 对冲+2（等价月支+8）」月起例与陈书 p890「日干支×九宫飞」全异，且通用
+    # 事项按典不注册该煞。起例统一收口基类。原实现留档备反证：
+    #     chong = {'子': '午', ...}[month_zhi]; idx = DI_ZHI.index(chong)
+    #     return day_zhi == DI_ZHI[(idx + 2) % 12]
 
     def _is_tiangou(self, sizhu):
         """天狗（月支对冲后三位）"""

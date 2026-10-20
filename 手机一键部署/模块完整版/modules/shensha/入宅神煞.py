@@ -53,9 +53,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # if self._is_sansha(sizhu):
         #     self._add_shensha('年三煞', -25, '入宅大忌，犯之主凶灾')
         
-        # 岁破（日支与年支相冲）
-        if self._is_suipo(sizhu):
-            self._add_shensha('岁破', -30, '岁破日诸事不宜，入宅大忌')
+        # 岁破×入宅已删（岁破批，2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中；「岁破最凶/例无制法」系山向造命语境），
+        # 拍板「删日课通道岁破普适忌注册」。发射行原为：
+        #     if self._is_suipo(sizhu):
+        #         self._add_shensha('岁破', -30, '岁破日诸事不宜，入宅大忌')
     
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
@@ -93,9 +95,13 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 本行原为死链（基类月块「往亡」先到先得）；基类月块＋日块「往亡日」
         # 双活链本批同拦（防单链误删复活），本行同步删。
         
-        # 红嘴朱雀（入宅大忌）
-        if self._is_hongzui_zhuque(sizhu):
-            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀日入宅大凶')
+        # 红嘴朱雀：旧「月支顺行一位」起例删除（红嘴朱雀按典修批 A，2026-10-20）。
+        # 旧起例与通用（月支对宫+2）互斥且均与陈书 p890「日干支×九宫飞」全异
+        # （2026 年与中宮日仅 3/43 重合）。统一起例收口基类
+        # _is_hongzui_zhuque(sizhu, gong)，中宮日发射在同批 commit B 落地。
+        # 旧发射原为：
+        #     if self._is_hongzui_zhuque(sizhu):
+        #         self._add_shensha('红嘴朱雀', -30, '红嘴朱雀日入宅大凶')
         
         # 天狗
         if self._is_tiangou(sizhu):
@@ -220,10 +226,19 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         
         # ===== 极凶日 =====
 
+        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「丙寅、乙亥、
+        # 甲申、癸巳、壬寅、辛亥、庚申七日在**中宮**，忌入宅歸火」。起例按
+        # 日干支×九宫（基类 _is_hongzui_zhuque），与月支无关；文案含「归火」
+        # 以对齐典载（歸火不单设事项键，随入宅通道落地）。
+        if self._is_hongzui_zhuque(sizhu, '中'):
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临中宮，忌入宅、归火')
+
         # 2026-10-19 死链清理（非般移源补齐前置，拍板「先清7条同名重加死链」）：
         # '十恶大败' 子类日块重加删除——基类日块（神煞基类.py:1711，-30 同值）
         # 经本类日方法 super 先行发射，本行被 _add_shensha 先到先得去重，从未
         # 生效（死链）。删除零行为差，dump diff=0 实证见本批 commit。
+        # 2026-10-19 十恶大败全删批追记：基类发射行亦已注释清零（001 §139），
+        # 十恶大败日课扣分全系统归零，谓词保留作无禄日历法载体。
         
         # ===== 凶煞 =====
         
@@ -351,14 +366,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
             return day_idx in sansha_indices
         return False
     
-    def _is_suipo(self, sizhu):
-        """是否岁破（日支与年支相冲）"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        zh_list = DI_ZHI
-        idx = zh_list.index(year_zhi)
-        suipo = zh_list[(idx + 6) % 12]
-        return day_zhi == suipo
+    # _is_suipo 已删（岁破批，2026-10-20，001 §140）：日课普适岁破谓词零典据，
+    # 唯一消费者（年块发射行）本批同步删除后无 caller（原实现：日支==年支+6）。
     
     # ========== 月神煞判断 ==========
     
@@ -383,16 +392,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
                                   sizhu.get('day_zhi', ''))
     
-    def _is_hongzui_zhuque(self, sizhu):
-        """红嘴朱雀日（入宅大忌）"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        hongzui_map = {
-            '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
-            '午': '未', '未': '申', '申': '酉', '酉': '戌',
-            '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
-        }
-        return day_zhi == hongzui_map.get(month_zhi)
+    # _is_hongzui_zhuque 已删除（红嘴朱雀按典修批 A，2026-10-20）：旧为「月支
+    # 顺行一位」月起例，与典载「日干支×九宫飞」全异。起例统一收口基类
+    # ShenShaChecker._is_hongzui_zhuque(sizhu, gong)。原实现留档备反证：
+    #     hongzui_map = {'寅': '卯', '卯': '辰', ... '丑': '寅'}
+    #     return day_zhi == hongzui_map.get(month_zhi)
     
     def _is_tiangou(self, sizhu):
         """天狗日 - 根据《钦定协纪辨方书》，天狗为建除十二神中的"满"日"""
@@ -594,7 +598,10 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return jian_idx in jianxing_ji
     
     # ========== 日神煞判断 ==========
-    
+
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """十恶大败日"""
         day_gan = sizhu['day_gan']

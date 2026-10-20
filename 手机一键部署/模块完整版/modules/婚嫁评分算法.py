@@ -178,25 +178,32 @@ def is_liuhe(zhi1, zhi2):
           ('辰', '酉'), ('酉', '辰'), ('巳', '申'), ('申', '巳'), ('午', '未'), ('未', '午')}
     return (zhi1, zhi2) in he
 
+# 三合四局按宫位序（长生→帝旺→墓）排列：P1-C-2 修复（2026-10-16 拍板）。
+# 原 set 字面量 + list(set) 输出顺序受 PYTHONHASHSEED 影响跨进程可翻转
+# （§96.5 挂账：0111 案拱合局 (巳,丑)↔(丑,巳)，fixture 会无故漂移），
+# 改为宫位序元组 + 序内过滤，输出与进程无关；属测试基建修正，非业务口径变更。
+_SANHE_GONGXU = [
+    ('申', '子', '辰'),  # 水局：申长生 子帝旺 辰墓
+    ('寅', '午', '戌'),  # 火局：寅长生 午帝旺 戌墓
+    ('巳', '酉', '丑'),  # 金局：巳长生 酉帝旺 丑墓
+    ('亥', '卯', '未'),  # 木局：亥长生 卯帝旺 未墓
+]
+
 def is_sanhe(zhi_list):
     """检查是否构成三合局（三个不同地支）"""
-    sanhe_groups = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-    # 使用 set 去重，确保只有不同的地支才算
     unique_zhis = set(zhi_list) - {None, ''}
-    for group in sanhe_groups:
-        if group.issubset(unique_zhis):
-            return True, list(group)
+    for group in _SANHE_GONGXU:
+        if set(group).issubset(unique_zhis):
+            return True, list(group)  # 宫位序（长生→帝旺→墓），输出稳定
     return False, None
 
 def is_banhe(zhi_list):
     """检查是否构成半合局（两个不同地支）"""
-    sanhe_groups = [{'申', '子', '辰'}, {'寅', '午', '戌'}, {'巳', '酉', '丑'}, {'亥', '卯', '未'}]
-    # 使用 set 去重，确保只有不同的地支才算
     unique_zhis = set(zhi_list) - {None, ''}
-    for group in sanhe_groups:
-        common = unique_zhis & group
+    for group in _SANHE_GONGXU:
+        common = unique_zhis.intersection(group)
         if len(common) == 2:
-            return True, list(common)
+            return True, [z for z in group if z in common]  # 宫位序，输出稳定
     return False, None
 
 # ==================== 日课四柱内部合局评分 ====================
@@ -603,7 +610,8 @@ def check_liuhai_penalty(sizhu):
             z2_name, z2 = zhis[j]
             if z1 and z2:
                 if (z1, z2) in liuhai_pairs or (z2, z1) in liuhai_pairs:
-                    total_penalty -= 5  # 每处六害扣5分
+                    # P1-C-1-a（2026-10-16 拍板）：嫁娶课式六害 -5→-6，与通用四柱六对口径（日课校验器 E207）统一
+                    total_penalty -= 6  # 每处六害扣6分
                     reasons.append(f"六害: {z1_name}{z1}害{z2_name}{z2}")
     
     return total_penalty, reasons
@@ -663,7 +671,8 @@ def check_sanxing_penalty(sizhu):
     for zhi in zixing_zhi:
         if zhi_counter.get(zhi, 0) >= 2:
             matching_zhis = [f"{z_name}{z}" for z_name, z in zhis_with_name if z == zhi]
-            total_penalty -= 6  # 自刑扣6分
+            # P1-C-1-b（2026-10-16 拍板）：嫁娶课式自刑 -6→-8，与通用四柱六对口径（日课校验器 E207）及三刑 -8 统一
+            total_penalty -= 8  # 自刑扣8分
             reasons.append(f"自刑: {', '.join(matching_zhis)}")
     
     return total_penalty, reasons
@@ -992,12 +1001,14 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             details.append(('不将日', _bujiang_score))
         
         if is_tiande_day(date_obj):
-            score += 15  # 天德
-            details.append(('天德', 15))
-        
+            # P1-C-3a（2026-10-17 拍板）：嫁娶天德 15→20，与通用口径统一（B 族残差清零）
+            score += 20  # 天德
+            details.append(('天德', 20))
+
         if is_yuede_day(date_obj):
-            score += 15  # 月德
-            details.append(('月德', 15))
+            # P1-C-3a：嫁娶月德 15→18，与通用口径统一
+            score += 18  # 月德
+            details.append(('月德', 18))
         
         # 大黄道（十二神值日）/小黄道（建除十二神）计分
         # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
@@ -1114,14 +1125,15 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         
         # 天罡日（妨翁）检查 - 嫁娶大忌
         if is_tiangang_day(date_obj):
-            score -= 40  # 天罡日，妨翁
-            details.append(('天罡日（妨翁）', -40))
+            # P1-C-3a：-40→-10，与通用（入学/求医/签约）口径统一
+            score -= 10  # 天罡日，妨翁
+            details.append(('天罡日（妨翁）', -10))
             result['warnings'].append("天罡日：对新郎父亲不利")
-        
         # 河魁日（妨姑）检查 - 嫁娶大忌
         if is_hekui_day(date_obj):
-            score -= 40  # 河魁日，妨姑
-            details.append(('河魁日（妨姑）', -40))
+            # P1-C-3a：-40→-10，与通用口径统一
+            score -= 10  # 河魁日，妨姑
+            details.append(('河魁日（妨姑）', -10))
             result['warnings'].append("河魁日：对新郎母亲不利")
         
         # 夫星、子星检查（年干通书口径，与头示"夫星/子星"一致）
@@ -1184,10 +1196,10 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     except ImportError:
         from 事项标准 import shensha_score as _shensha_score
 
-    # 月破（-40分）
+    # 月破（P1-C-3a：-40→-30，与通用口径统一）
     if is_month_break(date_obj, sizhu):
-        score -= 40
-        details.append(('月破', -40))
+        score -= 30
+        details.append(('月破', -30))
         result['warnings'].append('月破：月支冲日支，大凶之日，慎用')
     
     # 上朔日（-35分）
@@ -1362,7 +1374,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     if liuhai_score != 0:
         score += liuhai_score
         for reason in liuhai_reasons:
-            details.append((reason, -5))  # 每处六害扣5分
+            # P1-C-1-a：与函数内累加值同步，每处六害 -6
+            details.append((reason, -6))
     
     # 4.7 三刑检查（排除示例时柱）
     sanxing_score, sanxing_reasons = check_sanxing_penalty(sizhu_no_hour)
@@ -1373,7 +1386,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             if '无恩之刑' in reason or '恃势之刑' in reason or '无礼之刑' in reason:
                 details.append((reason, -8))
             elif '自刑' in reason:
-                details.append((reason, -6))
+                # P1-C-1-b：与函数内累加值同步，自刑 -8
+                details.append((reason, -8))
     
     # 5. 日课年月日柱内部合局评分（排除示例时柱）
     zhiju_score, zhiju_reason = get_zhiju_score(

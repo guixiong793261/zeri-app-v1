@@ -26,9 +26,11 @@ class DemolitionShenShaChecker(ConstructionShenShaChecker):
         if self._is_taisui(sizhu):
             self._add_shensha('太岁', -20, '太岁当头，忌拆舍')
         
-        # 岁破（拆舍大忌）
-        if self._is_suipo(sizhu):
-            self._add_shensha('岁破', -30, '岁破日忌拆舍，犯之主凶')
+        # 岁破×拆舍已删（岁破批，2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。发射原为
+        # （本行原走基类 _is_suipo，基类谓词本批同步删）：
+        #     if self._is_suipo(sizhu):
+        #         self._add_shensha('岁破', -30, '岁破日忌拆舍，犯之主凶')
         
         # 岁煞
         if self._is_suisha(sizhu):

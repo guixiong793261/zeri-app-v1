@@ -99,9 +99,17 @@ class StoveShenShaChecker(ShenShaChecker):
         
         # ===== 凶煞 =====
 
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败日忌作灶')
+        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「甲子、癸酉、
+        # 壬午、辛卯、庚子、己酉、戊午七日在**震宮**，忌修厨」（朱雀歌「震宮
+        # 修厨新婦亡」）。修厨按作灶通道落地；起例按日干支×九宫（基类）。
+        if self._is_hongzui_zhuque(sizhu, '震'):
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临震宮，忌修厨（作灶）')
+
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '十恶大败日忌作灶')
         
         # 四废
         if self._is_sifei(sizhu):

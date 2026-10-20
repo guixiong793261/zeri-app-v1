@@ -69,9 +69,10 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客主丧事，凶')
         
-        # 病符
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符主疾病，凶')
+        # 病符×安葬已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符主疾病，凶')
         
         # 官符
         if self._is_guanfu(sizhu):
@@ -194,9 +195,11 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # ===== 极凶日（安葬绝对禁忌）=====
 
-        # 十恶大败日
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败日，诸事不宜，安葬大忌')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '十恶大败日，诸事不宜，安葬大忌')
 
         # 伏断日由基类月作用域统一注册（A6-3 同名分支删除，super 先注册必被去重）
 
@@ -438,7 +441,10 @@ class BurialShenShaChecker(ShenShaChecker):
         return day_zhi == bazuori_map.get(month_zhi)
     
     # ===== 极凶日 =====
-    
+
+    # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
+    # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
+    # 已全部注释清零（三库无普适日忌明文），规则引擎残留引用随二档批删除。
     def _is_shie_dabai(self, sizhu):
         """是否十恶大败日"""
         day_gan = sizhu.get('day_gan', '')

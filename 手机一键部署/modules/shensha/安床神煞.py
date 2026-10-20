@@ -53,9 +53,10 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '主吊唁，不宜安床')
 
-        # 病符
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '主疾病，不宜安床')
+        # 病符×安床已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '主疾病，不宜安床')
 
         # 官符
         if self._is_guanfu(sizhu):
@@ -126,6 +127,14 @@ class BedShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu, **kwargs)
 
+        # ===== 凶煞 =====
+
+        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「丁卯、丙子、
+        # 乙酉、甲午、癸卯、壬子、辛酉七日在**乾宮**，忌修床（安床）」（朱雀歌
+        # 「乾上一辰莫安床」）。起例按日干支×九宫（基类），与月支无关。
+        if self._is_hongzui_zhuque(sizhu, '乾'):
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临乾宮，忌安床')
+
         # ===== 吉神 =====
 
         # 天德
@@ -182,9 +191,11 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日不宜安床')
 
-        # 十恶大败
-        if self._is_shie_dabai(sizhu):
-            self._add_shensha('十恶大败', -30, '十恶大败日，不宜安床')
+        # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
+        # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
+        # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
+        # if self._is_shie_dabai(sizhu):
+        #     self._add_shensha('十恶大败', -30, '十恶大败日，不宜安床')
 
         # ===== 安床专用 =====
 

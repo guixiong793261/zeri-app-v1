@@ -3024,6 +3024,8 @@ class DayScoreWindow:
                         self._insert_colored_text("     ✅ 坐山不犯五黄\n")
 
             # 年家二黑（病符星）检查
+            # 【保留·方位神语境】病符批（2026-10-20，001 §141）不删此项：为年家二黑
+            # 病符星方位展示文本，非日课病符注册。
             erhei_info = sansha_info.get('erhei_info') or {}
             if erhei_info.get('宫位'):
                 self._insert_colored_text("\n   【年家二黑（病符）】\n")

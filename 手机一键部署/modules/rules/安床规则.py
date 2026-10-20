@@ -24,7 +24,7 @@ if __name__ == '__main__' and __package__ is None:
 2. 天德、月德日宜
 3. 不将日宜
 4. 忌与事主生肖相冲
-5. 忌月破、岁破
+5. 忌月破（「岁破」已删：岁破批 2026-10-20，001 §140）
 6. 床位朝向与日支五行关系（辅助参考）
 ================================================================================
 """
@@ -136,7 +136,7 @@ class BedRuleChecker(EventRuleChecker):
         # 3. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、岁破、四离四绝
+        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili(date_obj, sizhu, owners, ji_list)
         
         # 5. 忌与事主生肖相冲
@@ -197,7 +197,7 @@ class BedRuleChecker(EventRuleChecker):
             pass
     
     def _check_po_and_sili(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、岁破、四离四绝"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -210,11 +210,13 @@ class BedRuleChecker(EventRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌安床')
             
-            # 岁破（与事主年支相冲）
-            if owners:
-                year_zhi = sizhu.get('year_zhi', '')
-                if year_zhi and self.is_year_break(date_obj, year_zhi):
-                    ji_list.append('岁破日忌安床')
+            # 岁破×安床已删（岁破批 2026-10-20，001 §140）：勘正三记本条「判定用
+            # 流年支却以 `if owners` 为闸」口径不一致——按快照口径以「日课普适面」
+            # 并入删除，口径不一致处随删除消解，不额外改动。发射原为：
+            #     if owners:
+            #         year_zhi = sizhu.get('year_zhi', '')
+            #         if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #             ji_list.append('岁破日忌安床')
         except Exception:
             pass
     

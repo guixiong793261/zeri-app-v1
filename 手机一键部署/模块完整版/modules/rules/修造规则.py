@@ -23,7 +23,7 @@ if __name__ == '__main__' and __package__ is None:
 1. 建除十二神：宜成、开、定；忌破、闭、平
 2. 天德、月德日宜
 3. 不将日宜
-4. 忌月破、岁破、四离四绝
+4. 忌月破、四离四绝（「岁破」已删：岁破批 2026-10-20，001 §140）
 5. 扶山：日课五行生扶坐山为宜，克制坐山为忌
 6. 相主：忌与事主生肖相冲
 7. 山向三合局：日课地支与坐山三合为宜
@@ -246,7 +246,7 @@ class ConstructionRuleChecker(EventRuleChecker):
         # 3. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、岁破、四离四绝
+        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili(date_obj, sizhu, owners, ji_list)
         
         # 5. 山向相关规则（扶山）
@@ -314,7 +314,7 @@ class ConstructionRuleChecker(EventRuleChecker):
             pass
     
     def _check_po_and_sili(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、岁破、四离四绝"""
+        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
         if not self.has_marriage_shensha:
             return
         
@@ -327,10 +327,11 @@ class ConstructionRuleChecker(EventRuleChecker):
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌修造')
             
-            # 岁破（年支与日支相冲）
-            year_zhi = sizhu.get('year_zhi', '')
-            if year_zhi and self.is_year_break(date_obj, year_zhi):
-                ji_list.append('岁破日忌修造')
+            # 岁破×修造已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课
+            # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。发射原为：
+            #     year_zhi = sizhu.get('year_zhi', '')
+            #     if year_zhi and self.is_year_break(date_obj, year_zhi):
+            #         ji_list.append('岁破日忌修造')
             
             # 与事主年支相冲
             if owners:
@@ -369,6 +370,9 @@ class ConstructionRuleChecker(EventRuleChecker):
             
             # 日课生坐山为吉（扶山）
             # 冲突处理：生扶之支犯岁破/冲事主年命时，冲主大忌优先，扶山不救
+            # 【保留·仅山向/扶山语境】下方『（岁破日）』系方位（山向造命）语境，
+            # 非日课普适岁破注册；岁破批（2026-10-20，001 §140）不删此项，且为
+            # 评分器.py _HARD_VETO_KEYWORDS '岁破' 保留之依据（不得连带删）。
             if self.SHENG.get(zhi_wuxing) == zuoshan_wuxing:
                 conflicts = []
                 if zhi == day_zhi and year_zhi and self.ZHI_CHONG.get(zhi) == year_zhi:
@@ -913,17 +917,17 @@ class ConstructionRuleChecker(EventRuleChecker):
                         if is_zhuzhu:
                             veto_reasons.append(f'年支{year_zhi}冲宅主{owner.get("name", "")}生肖{zodiac}')
 
-        # 3. 检查岁破日（日支冲太岁年支）：岁破为修造大忌，一票否决
-        day_zhi = sizhu.get('day_zhi', '')
-        year_zhi = sizhu.get('year_zhi', '')
-        if day_zhi and year_zhi:
-            chong_map2 = {
-                '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-                '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-                '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-            }
-            if chong_map2.get(day_zhi, '') == year_zhi:
-                veto_reasons.append(f'岁破日：日支{day_zhi}冲太岁{year_zhi}，大事忌用')
+        # 3. 岁破日一票否决已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册
+        # 零日课典据（协纪卷内「岁破日」0 命中；「岁破最凶／例无制法」系山向造命
+        # 语境），拍板「无典据不得一票否决」。本块经 ConstructionRuleChecker 被
+        # 入宅/动土/拆舍/移徙 继承（共 5 通道），删除后须逐通道断言 veto 清零。
+        # 原实现：
+        #     day_zhi = sizhu.get('day_zhi', '')
+        #     year_zhi = sizhu.get('year_zhi', '')
+        #     if day_zhi and year_zhi:
+        #         chong_map2 = {...}
+        #         if chong_map2.get(day_zhi, '') == year_zhi:
+        #             veto_reasons.append(f'岁破日：日支{day_zhi}冲太岁{year_zhi}，大事忌用')
 
         if veto_reasons:
             return True, "、".join(veto_reasons)
