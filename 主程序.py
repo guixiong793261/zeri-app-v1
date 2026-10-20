@@ -4337,6 +4337,8 @@ class ZeriApp:
                     _annual_keys = ('犯年三煞', '年三煞(山向)', '年家三煞', '年冲山', '犯岁破',
                                     '冲山', '太岁压', '年家二黑', '年家五黄', '二黑', '五黄',
                                     '病符', '山家封禁', '到山')
+                    # 【保留·方位神语境】'病符' 系年家二黑（病符星）坐山忌项文本，属
+                    # 山家封禁/方位；病符批（2026-10-20，001 §141）不删此项。
                 _blanket_hits = [(_t, _c) for _t, _c in _blanket_ji.items()
                                  if _c >= _threshold and any(_k in _t for _k in _annual_keys)]
                 if _blanket_hits:

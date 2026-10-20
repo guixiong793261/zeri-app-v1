@@ -139,8 +139,10 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客临门，主有凶事')
 
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符加身，提防疾病')
+        # 病符×通用已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符加身，提防疾病')
 
         if self._is_tianhao(sizhu):
             self._add_shensha('天耗', -10, '天耗临身，虚耗破财')

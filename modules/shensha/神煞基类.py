@@ -1489,8 +1489,12 @@ class ShenShaChecker:
             self._add_shensha('丧门', -15, '丧门主丧亡')
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客主吊唁')
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符主疾病')
+        # 病符×基类年块已删（病符批，2026-10-20，001 §141）：三库病符全为
+        # 方位/年神语境（协纪「其地」、考原「所理之地」、陈书「病符方」），
+        # 无日课普适忌明文；拍板「删日课通道病符注册，方位/年命语境保留」。
+        # 发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符主疾病')
         if self._is_tianhao(sizhu):
             self._add_shensha('天耗', -10, '天耗主损耗')
         if self._is_dihao(sizhu):
@@ -2365,17 +2369,19 @@ class ShenShaChecker:
             return day_zhi == diaoke
         return False
     
-    def _is_bingfu(self, sizhu):
-        """病符（《协纪·历例》："太岁后一辰也"，曹震圭注"是旧岁建也"，
-        即年支前一位=旧岁年支；旧"年支前九位"系偏移错，A5 修复）"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        if year_zhi in zh_list:
-            idx = zh_list.index(year_zhi)
-            bingfu = zh_list[(idx - 1) % 12]
-            return day_zhi == bingfu
-        return False
+    # _is_bingfu 已删（病符批，2026-10-20，001 §141）：谓词仅服务病符七通道
+    # 日课注册，无任何非评分链路调用（黄历「病符星」走二十四山紫白飞星独立
+    # 实现），注册删除后无 caller。原实现（A5 修复版：《协纪》卷四引《历例》
+    # 「病符者，太岁后一辰也」，年支-1）留档备反证：
+    #     def _is_bingfu(self, sizhu):
+    #         year_zhi = sizhu.get('year_zhi', '')
+    #         day_zhi = sizhu.get('day_zhi', '')
+    #         zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    #         if year_zhi in zh_list:
+    #             idx = zh_list.index(year_zhi)
+    #             bingfu = zh_list[(idx - 1) % 12]
+    #             return day_zhi == bingfu
+    #         return False
     
     def _is_guanfu(self, sizhu):
         """官符（年支前七位）"""

@@ -69,9 +69,10 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客主丧事，凶')
         
-        # 病符
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符主疾病，凶')
+        # 病符×安葬已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符主疾病，凶')
         
         # 官符
         if self._is_guanfu(sizhu):

@@ -88,9 +88,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_diaoke(sizhu):
             self._add_shensha('吊客', -12, '吊客日，忌动土修造')
         
-        # 病符
-        if self._is_bingfu(sizhu):
-            self._add_shensha('病符', -12, '病符日，忌动土修造')
+        # 病符×动土已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
+        # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：
+        #     if self._is_bingfu(sizhu):
+        #         self._add_shensha('病符', -12, '病符日，忌动土修造')
         
         # 官符
         if self._is_guanfu(sizhu):

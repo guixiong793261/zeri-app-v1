@@ -4044,6 +4044,8 @@ class Scorer:
             pass
 
         # 年家二黑信息（详情展示用；二黑为病符星，失运主疾病脾胃）
+        # 【保留·方位神语境】病符批（2026-10-20，001 §141）不删此项：此处「病符」
+        # 系年家二黑病符星（紫白飞星·方位神），与日课病符注册同名词异实。
         try:
             if getattr(self, '_zeli_mode', 'feixing') != 'feixing':
                 raise ImportError('_zm0915 pure skip erhei')  # 纯正五行模式不排年家紫白

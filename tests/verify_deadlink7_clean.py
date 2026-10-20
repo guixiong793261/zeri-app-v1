@@ -17,13 +17,18 @@
 后，十恶大败日课扣分全系统归零——本脚本 W7 收为 W6（十恶大败移出），
 基线/活链/计数断言同步；历史「基类日块:1711 活链」表述以该批为准失效。
 
+2026-10-20 同步注记（病符批，001 §141）：病符日课普适注册全删（7 发射＋1 谓词
+＋14 键）后，本脚本 W6 收为 **W5**（病符移出）；B 段「基类活链在位」中的病符项
+**语义反转**为「病符全链清零」（基类/子类源码无可执行发射、入宅/移徙/嫁娶/安葬
+通道 2026 全年病符计数=0），C 段 BASE 同步移出病符 (30,-12)。
+
 验证面：
 A. 源码层死链清除：入宅神煞.py 不再含 6 条子类发射行；注释留痕存在。
-B. 活链保持：基类 6 条发射行源码在位（防误删活链）。
-C. 行为层零变化：入宅通道 2026 全年 6 煞计数=基线（30/31/30/31/30/59）
+B. 活链保持：基类 5 条发射行源码在位（防误删活链）；病符反向断言全链清零。
+C. 行为层零变化：入宅通道 2026 全年 5 煞计数=基线（30/31/31/30/59）
    且分值一致（dump diff=0 已由本批 commit 实证）。
 D. 多链同拦：入宅/移徙通道逐日同名神煞至多 1 条（无重复发射）；
-   移徙通道 6 煞计数与入宅一致（同类同戳）。
+   移徙通道 5 煞计数与入宅一致（同类同戳）。
 E. 非入宅不波及：嫁娶通道 受死日/丧门 等上半年发射>0
    （基类受死日行对其余事项活链未删）。
 
@@ -57,10 +62,11 @@ sys.path.insert(0, ROOT)
 from modules.四柱计算器 import calculate_sizhu
 from modules.shensha import get_checker
 
-W6 = ['丧门', '吊客', '病符', '官符', '五鬼', '受死日']
+W6 = ['丧门', '吊客', '官符', '五鬼', '受死日']   # 病符已移出（001 §141，W6→W5）
 # 基线（修改前 dump C:\Temp\emit_before.json，与盘点 §二一致；
-# 十恶大败 (60,-30) 已于 2026-10-19 全删批移出本回归——001 §139）
-BASE = {'丧门': (30, -15), '吊客': (31, -12), '病符': (30, -12),
+# 十恶大败 (60,-30) 已于 2026-10-19 全删批移出本回归——001 §139；
+# 病符 (30,-12) 已于 2026-10-20 病符批移出——001 §141）
+BASE = {'丧门': (30, -15), '吊客': (31, -12),
         '官符': (31, -10), '五鬼': (30, -15), '受死日': (59, -22)}
 
 # ============ A：源码层死链清除 ============
@@ -79,11 +85,24 @@ p_b = os.path.join(ROOT, 'modules', 'shensha', '神煞基类.py')
 with open(p_b, encoding='utf-8') as f:
     b_src = f.read()
 for n, s in [('受死日', -22), ('五鬼', -15), ('官符', -10),
-             ('丧门', -15), ('吊客', -12), ('病符', -12)]:
+             ('丧门', -15), ('吊客', -12)]:
     check("基类活链在位：_add_shensha('%s', %d" % (n, s),
           "_add_shensha('%s', %d," % (n, s) in b_src)
 check('受死日基类行未删·仅注释登记（入宅注记在位）',
       '入宅通道注记（2026-10-19 死链清理同批 7 条之⑦' in b_src)
+
+# B'：病符全链清零（病符批 2026-10-20，001 §141——原「基类活链在位」语义反转）
+# 反转原因：病符日课普适注册经拍板删除（三库病符皆方位/年神语境，无日课普适
+# 忌明文），基类发射行不再存在，原「活链箭头应可达」断言失去对象，改断清零。
+# 注：墓碑注释按惯例留原实现（含 _add_shensha('病符' 字样），故断言须先剥注释。
+_bingfu_srcs = [('入宅', z_src), ('基类', b_src)]
+for _m in ('修造神煞', '动土神煞', '嫁娶神煞', '安床神煞', '安葬神煞', '通用神煞'):
+    with open(os.path.join(ROOT, 'modules', 'shensha', _m + '.py'),
+              encoding='utf-8') as f:
+        _bingfu_srcs.append((_m, f.read()))
+for _m, _src in _bingfu_srcs:
+    _code = '\n'.join(ln.split('#', 1)[0] for ln in _src.splitlines())
+    check("B' %s 无可执行病符发射" % _m, "_add_shensha('病符'" not in _code)
 
 # ============ C：行为层零变化（入宅通道 2026 全年） ============
 def _run(ev, start, end):
@@ -91,6 +110,7 @@ def _run(ev, start, end):
     cnt = {n: 0 for n in W6}
     sc = {}
     dup = 0
+    bf = 0      # 病符计数（001 §141 后应恒 0）
     d = start
     while d <= end:
         sz = calculate_sizhu(d, 10, 0)
@@ -99,37 +119,42 @@ def _run(ev, start, end):
         if len(names) != len(set(names)):
             dup += 1
         for s in hits:
+            if s['name'] == '病符':
+                bf += 1
             if s['name'] in cnt:
                 cnt[s['name']] += 1
                 sc[s['name']] = s['score']
         d += datetime.timedelta(days=1)
-    return cnt, sc, dup
+    return cnt, sc, dup, bf
 
 
 y0 = datetime.date(2026, 1, 1)
 y1 = datetime.date(2026, 12, 31)
-cnt, sc, dup_ru = _run('入宅', y0, y1)
+cnt, sc, dup_ru, bf_ru = _run('入宅', y0, y1)
 for n in W6:
     c0, s0 = BASE[n]
     check('入宅通道 %s 计数=%d 分值=%d 与基线一致 (x%d/%d)'
           % (n, c0, s0, cnt[n], sc.get(n, 0)),
           cnt[n] == c0 and sc.get(n) == s0)
+check("C' 入宅通道 2026 全年病符发射=0（实得 %d）" % bf_ru, bf_ru == 0)
 
 # ============ D：多链同拦 ============
 check('入宅通道逐日同名至多1条·无重复发射（重复日=%d）' % dup_ru, dup_ru == 0)
-cnt_y, sc_y, dup_y = _run('移徙', y0, y1)
-check('移徙通道 6 煞计数与入宅逐项一致（同类同戳）',
+cnt_y, sc_y, dup_y, bf_y = _run('移徙', y0, y1)
+check('移徙通道 5 煞计数与入宅逐项一致（同类同戳）',
       all(cnt_y[n] == BASE[n][0] for n in W6))
 check('移徙通道逐日同名至多1条（重复日=%d）' % dup_y, dup_y == 0)
+check("D' 移徙通道 2026 全年病符发射=0（实得 %d）" % bf_y, bf_y == 0)
 
 # ============ E：非入宅不波及 ============
 h0 = datetime.date(2026, 1, 1)
 h1 = datetime.date(2026, 6, 30)
 for ev in ('嫁娶', '安葬'):
-    c2, _, _ = _run(ev, h0, h1)
-    check('非入宅不波及：%s 通道 6 煞上半年仍发射（合计 %d；受死日 x%d）'
+    c2, _, _, bf2 = _run(ev, h0, h1)
+    check('非入宅不波及：%s 通道 5 煞上半年仍发射（合计 %d；受死日 x%d）'
           % (ev, sum(c2.values()), c2['受死日']),
           sum(c2.values()) > 0 and c2['受死日'] > 0)
+    check("E' %s 通道 上半年病符发射=0（实得 %d）" % (ev, bf2), bf2 == 0)
 
 print('---')
 print('CHECKS=%d PASS=%d FAIL=%d' % (_STAT['checks'], _STAT['pass'], len(FAILS)))
