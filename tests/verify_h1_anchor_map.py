@@ -23,7 +23,7 @@
   E. 停分文本全集 ⊆ 表内62 tx；单边样本从未停。
 退出码 0/1，打印 FAIL 计数。
 """
-import sys, io, os, datetime
+import sys, io, os, re, datetime
 from collections import Counter
 
 # 仓库根＝本脚本所在 tests/ 的上一层（两仓通用，避免硬编码路径）
@@ -120,12 +120,38 @@ def _worker(task):
                         fails.append(
                             f"B': {d} {ev} 等级非总分纯函数: {base_lvl} vs {chk_lvl}")
         else:
+            # H1-1（2026-10-20 拍板）：分金/正体大凶不走忌事 -15——生产侧
+            # 评分器.py:4918-4919 显式跳过，扣分由 _fj_penalty 单列
+            # '分金扣分' 键（评分器.py:5117-5119 取 -abs(得分)、:5306-5308 入账）。
+            # 本段不做简单排除，双向强断言：
+            #   ① 忌事分期望 = -15×(忌项-被停-大凶条数)；
+            #   ② 各大凶条目文本内「得分N」取 -abs(N) 合计 == breakdown['分金扣分']
+            #      （验证扣分真实落入单列键、未丢失）。
+            _fj_items = [t for t in ji if t.startswith(('分金大凶', '正体大凶'))]
             exp_yi = 10 * (len(yi) - len(po_yi))
-            exp_ji = -15 * (len(ji) - len(po_ji))
+            exp_ji = -15 * (len(ji) - len(po_ji) - len(_fj_items))
             if bd.get('宜事得分') != exp_yi:
                 fails.append(f"B: {d} {ev} 宜事分={bd.get('宜事得分')} 期望={exp_yi} yi={yi}")
             if bd.get('忌事得分') != exp_ji:
                 fails.append(f"B: {d} {ev} 忌事分={bd.get('忌事得分')} 期望={exp_ji} ji={ji}")
+            _exp_fj = 0
+            for _t in _fj_items:
+                _m = re.search(r'得分(-?\d+)', _t)
+                if not _m:
+                    fails.append(f"B: {d} {ev} 大凶条目无『得分N』可校: {_t}")
+                    continue
+                _exp_fj += -abs(int(_m.group(1)))
+            _fj_actual = bd.get('分金扣分', 0) or 0
+            if _fj_actual != _exp_fj:
+                # 唯一合法例外：一票否决日早退（评分器.py:5123-5132）——当日
+                # breakdown 由 _build_wu_xing_breakdown 重建，不含'分金扣分'
+                # 键；总分强制归零，强扣分本不落账。此时 r['score'] 必为 0；
+                # 其余情形（键在而值不符，或非否决日缺键）均为真异常。
+                if not (_exp_fj != 0 and _fj_actual == 0
+                        and r.get('score', 1) == 0):
+                    fails.append(
+                        f"B: {d} {ev} 分金扣分={bd.get('分金扣分', 0)} "
+                        f"期望={_exp_fj} 大凶条目={_fj_items}")
             # D：非veto日总分/等级硬对账
             if r.get('score', 0) > 0:
                 delta = 10 * len(po_yi) - 15 * len(po_ji)
