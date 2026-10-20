@@ -19,11 +19,18 @@ python sweep_year.py "<旧基线>"                              yr_old.csv
 python sum_year2.py      # 读 C:\Temp\yr_old.csv / yr_new.csv -> yr_final.json
 python diff4.py          # 读 sw_*.csv + lv_*.txt -> diff4.json
 python att4.py           # 四日条目级分值差
+
+# 5) 74 例降档复核清单（2026-10-20 拍板 b 项）
+python gen_down74_review.py   # 读本目录 yr_old/yr_new.csv -> down74_attrib.json + 复核清单 MD
+
+# 6) 历史报告原参数反向检索（2026-10-20 拍板 c 项，需旧基线 worktree）
+python param_hunt.py     # 在 <旧基线 worktree> 上搜 309/246/259 -> param_hunt_result.json
 ```
 
 - 旧基线复算方式：`git worktree add <dir> 8b9bbb6`（只读，不改主仓）。
 - `probe_cmp.py` 为单点四日明细探针（入宅），保留作抽查用。
-- `sw_*.csv` 为四日 720 格原始明细；全年 5475 格 CSV 体积较大未入库，按上述命令可 1:1 重生成（耗时约 2 分钟/端）。
+- `sw_*.csv` 为四日 720 格原始明细；`yr_*.csv` 为全年 5475 格原始明细（2026-10-20 起入库）。
+- `param_hunt_result.json`：历史三分反向检索结果——246（8 组命中）、259（2 组命中）已补录原参数；309 穷尽 12 600 组合（事项×时辰×宅型×单/双事主×坐向变体）无命中，该空间内不可复现。
 
 ## 文件 SHA256（前 16 位）
 
@@ -41,6 +48,12 @@ python att4.py           # 四日条目级分值差
 | sw_old.csv | bc4153612b79c24b |
 | yr_final.json | 368ea35f92662af6 |
 | yr_summary.json | a7f4bbd4b046e64c |
+| yr_old.csv | 772212a7a331c6b0 |
+| yr_new.csv | 1bb4904b5f51286c |
+| down74_attrib.json | 3331219df33d282c |
+| gen_down74_review.py | 20aafd7305298489 |
+| param_hunt.py | 4b265a5dcdab54e8 |
+| param_hunt_result.json | 9c0803ad72b45bd9 |
 
 ## 结果摘要
 

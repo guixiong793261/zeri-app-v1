@@ -1,0 +1,999 @@
+[
+ {
+  "date": "2026-07-19",
+  "event": "安床",
+  "old": "154",
+  "new": "102",
+  "delta": -52,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "受死日": -22,
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-18",
+  "event": "动土",
+  "old": "99",
+  "new": "57",
+  "delta": -42,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-18",
+  "event": "修造",
+  "old": "114",
+  "new": "72",
+  "delta": -42,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★ 平",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-18",
+  "event": "拆舍",
+  "old": "129",
+  "new": "87",
+  "delta": -42,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-30",
+  "event": "动土",
+  "old": "106",
+  "new": "64",
+  "delta": -42,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-10-31",
+  "event": "修造",
+  "old": "116",
+  "new": "76",
+  "delta": -40,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22,
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-29",
+  "event": "修造",
+  "old": "89",
+  "new": "51",
+  "delta": -38,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20,
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-17",
+  "event": "作灶",
+  "old": "65",
+  "new": "35",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-20",
+  "event": "安床",
+  "old": "98",
+  "new": "68",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-29",
+  "event": "安床",
+  "old": "63",
+  "new": "33",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-02-07",
+  "event": "安床",
+  "old": "103",
+  "new": "73",
+  "delta": -30,
+  "old_level": "★★★★ 大吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-02-19",
+  "event": "作灶",
+  "old": "77",
+  "new": "47",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-03-09",
+  "event": "作灶",
+  "old": "71",
+  "new": "41",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-03-18",
+  "event": "作灶",
+  "old": "94",
+  "new": "64",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-03-30",
+  "event": "安床",
+  "old": "132",
+  "new": "102",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "入宅",
+  "old": "64",
+  "new": "34",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "劫煞": 0
+  }
+ },
+ {
+  "date": "2026-04-07",
+  "event": "移徙",
+  "old": "64",
+  "new": "34",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "劫煞": 0
+  }
+ },
+ {
+  "date": "2026-04-08",
+  "event": "安床",
+  "old": "65",
+  "new": "35",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-05-02",
+  "event": "安床",
+  "old": "76",
+  "new": "46",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-05-17",
+  "event": "作灶",
+  "old": "90",
+  "new": "60",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-05-29",
+  "event": "安床",
+  "old": "77",
+  "new": "47",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-06-16",
+  "event": "安床",
+  "old": "130",
+  "new": "100",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-06-22",
+  "event": "安床",
+  "old": "122",
+  "new": "92",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-21",
+  "event": "安床",
+  "old": "94",
+  "new": "64",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-30",
+  "event": "安床",
+  "old": "89",
+  "new": "59",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-05",
+  "event": "作灶",
+  "old": "107",
+  "new": "77",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-08",
+  "event": "安床",
+  "old": "133",
+  "new": "103",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-17",
+  "event": "安床",
+  "old": "124",
+  "new": "94",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-10-04",
+  "event": "入宅",
+  "old": "83",
+  "new": "53",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "劫煞": 0
+  }
+ },
+ {
+  "date": "2026-10-04",
+  "event": "移徙",
+  "old": "83",
+  "new": "53",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "劫煞": 0
+  }
+ },
+ {
+  "date": "2026-11-07",
+  "event": "安床",
+  "old": "89",
+  "new": "59",
+  "delta": -30,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-11-13",
+  "event": "作灶",
+  "old": "111",
+  "new": "81",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-11-16",
+  "event": "安床",
+  "old": "112",
+  "new": "82",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-11-24",
+  "event": "入宅",
+  "old": "115",
+  "new": "85",
+  "delta": -30,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-12-01",
+  "event": "作灶",
+  "old": "78",
+  "new": "48",
+  "delta": -30,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-12-04",
+  "event": "安床",
+  "old": "61",
+  "new": "31",
+  "delta": -30,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-30",
+  "event": "修造",
+  "old": "126",
+  "new": "99",
+  "delta": -27,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {
+   "八专": -15
+  }
+ },
+ {
+  "date": "2026-09-30",
+  "event": "拆舍",
+  "old": "121",
+  "new": "94",
+  "delta": -27,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土符": -20,
+   "受死日": -22
+  },
+  "removed": {
+   "八专": -15
+  }
+ },
+ {
+  "date": "2026-01-05",
+  "event": "出行",
+  "old": "79",
+  "new": "57",
+  "delta": -22,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "出行",
+  "old": "114",
+  "new": "92",
+  "delta": -22,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "安床",
+  "old": "71",
+  "new": "49",
+  "delta": -22,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "入学",
+  "old": "77",
+  "new": "55",
+  "delta": -22,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "求医",
+  "old": "77",
+  "new": "55",
+  "delta": -22,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-07",
+  "event": "签约",
+  "old": "77",
+  "new": "55",
+  "delta": -22,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-05-01",
+  "event": "出行",
+  "old": "77",
+  "new": "55",
+  "delta": -22,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-07-07",
+  "event": "求医",
+  "old": "110",
+  "new": "88",
+  "delta": -22,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-07-19",
+  "event": "动土",
+  "old": "90",
+  "new": "68",
+  "delta": -22,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-07-31",
+  "event": "安床",
+  "old": "119",
+  "new": "97",
+  "delta": -22,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-07-31",
+  "event": "求医",
+  "old": "111",
+  "new": "89",
+  "delta": -22,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-26",
+  "event": "动土",
+  "old": "91",
+  "new": "71",
+  "delta": -20,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-26",
+  "event": "修造",
+  "old": "90",
+  "new": "70",
+  "delta": -20,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-26",
+  "event": "拆舍",
+  "old": "98",
+  "new": "78",
+  "delta": -20,
+  "old_level": "★★★ 吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-17",
+  "event": "动土",
+  "old": "100",
+  "new": "80",
+  "delta": -20,
+  "old_level": "★★★★ 大吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-17",
+  "event": "拆舍",
+  "old": "97",
+  "new": "77",
+  "delta": -20,
+  "old_level": "★★★ 吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-09",
+  "event": "修造",
+  "old": "78",
+  "new": "58",
+  "delta": -20,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-09",
+  "event": "拆舍",
+  "old": "78",
+  "new": "58",
+  "delta": -20,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-21",
+  "event": "动土",
+  "old": "82",
+  "new": "62",
+  "delta": -20,
+  "old_level": "★★ 中吉",
+  "new_level": "★ 平",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-21",
+  "event": "修造",
+  "old": "124",
+  "new": "104",
+  "delta": -20,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-21",
+  "event": "拆舍",
+  "old": "114",
+  "new": "94",
+  "delta": -20,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-02",
+  "event": "动土",
+  "old": "65",
+  "new": "45",
+  "delta": -20,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-02",
+  "event": "修造",
+  "old": "107",
+  "new": "87",
+  "delta": -20,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-09-02",
+  "event": "拆舍",
+  "old": "97",
+  "new": "77",
+  "delta": -20,
+  "old_level": "★★★ 吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-11-14",
+  "event": "动土",
+  "old": "78",
+  "new": "58",
+  "delta": -20,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土符": -20
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-01-19",
+  "event": "修造",
+  "old": "81",
+  "new": "63",
+  "delta": -18,
+  "old_level": "★★ 中吉",
+  "new_level": "❌ 凶",
+  "added": {
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-04-29",
+  "event": "作灶",
+  "old": "91",
+  "new": "73",
+  "delta": -18,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "大时": -12
+  }
+ },
+ {
+  "date": "2026-05-08",
+  "event": "作灶",
+  "old": "109",
+  "new": "91",
+  "delta": -18,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "大时": -12
+  }
+ },
+ {
+  "date": "2026-07-20",
+  "event": "修造",
+  "old": "85",
+  "new": "67",
+  "delta": -18,
+  "old_level": "★★★ 吉",
+  "new_level": "★ 平",
+  "added": {
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-07-22",
+  "event": "修造",
+  "old": "100",
+  "new": "82",
+  "delta": -18,
+  "old_level": "★★★★ 大吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-05",
+  "event": "修造",
+  "old": "117",
+  "new": "99",
+  "delta": -18,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★ 吉",
+  "added": {
+   "土王用事": -18
+  },
+  "removed": {}
+ },
+ {
+  "date": "2026-08-27",
+  "event": "作灶",
+  "old": "78",
+  "new": "60",
+  "delta": -18,
+  "old_level": "★★ 中吉",
+  "new_level": "★ 平",
+  "added": {
+   "红嘴朱雀": -30
+  },
+  "removed": {
+   "大时": -12
+  }
+ },
+ {
+  "date": "2026-05-19",
+  "event": "出行",
+  "old": "114",
+  "new": "104",
+  "delta": -10,
+  "old_level": "★★★★★ 上吉",
+  "new_level": "★★★★ 大吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {
+   "病符": -12
+  }
+ },
+ {
+  "date": "2026-05-19",
+  "event": "安床",
+  "old": "63",
+  "new": "53",
+  "delta": -10,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {
+   "病符": -12
+  }
+ },
+ {
+  "date": "2026-07-19",
+  "event": "修造",
+  "old": "62",
+  "new": "58",
+  "delta": -4,
+  "old_level": "★ 平",
+  "new_level": "❌ 凶",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {
+   "土王用事": -18
+  }
+ },
+ {
+  "date": "2026-01-23",
+  "event": "动土",
+  "old": "86",
+  "new": "84",
+  "delta": -2,
+  "old_level": "★★★ 吉",
+  "new_level": "★★ 中吉",
+  "added": {
+   "受死日": -22
+  },
+  "removed": {
+   "土符": -20
+  }
+ }
+]

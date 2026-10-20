@@ -1,0 +1,172 @@
+{
+  "2026-11-04": {
+    "target": 309,
+    "hits": [],
+    "searched_space": "R1: 15事项×12时辰×house_type{阳宅,阴宅}×owners{[] + 12单事主(年支子..亥)}；R2a: 15事项×12时辰×2宅型×owners=[]×12坐向变体；R2b: 15事项×12时辰×2宅型×双事主(子午卯酉两两组合10组)×无坐向",
+    "exhausted": true
+  },
+  "2026-10-23": {
+    "target": 246,
+    "hits": [
+      {
+        "event": "出行",
+        "hour": 6,
+        "house_type": "阳宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "出行",
+        "hour": 6,
+        "house_type": "阴宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "出行",
+        "hour": 14,
+        "house_type": "阳宅",
+        "owners": [
+          {
+            "name": "事主亥",
+            "生肖": "亥",
+            "年支": "亥"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "出行",
+        "hour": 14,
+        "house_type": "阴宅",
+        "owners": [
+          {
+            "name": "事主亥",
+            "生肖": "亥",
+            "年支": "亥"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "开业",
+        "hour": 12,
+        "house_type": "阳宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "开业",
+        "hour": 12,
+        "house_type": "阴宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "安床",
+        "hour": 6,
+        "house_type": "阳宅",
+        "owners": [
+          {
+            "name": "事主亥",
+            "生肖": "亥",
+            "年支": "亥"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "安床",
+        "hour": 6,
+        "house_type": "阴宅",
+        "owners": [
+          {
+            "name": "事主亥",
+            "生肖": "亥",
+            "年支": "亥"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 246,
+        "level": "★★★★★ 上吉"
+      }
+    ],
+    "searched_space": "R1: 15事项×12时辰×house_type{阳宅,阴宅}×owners{[] + 12单事主(年支子..亥)}",
+    "exhausted": false
+  },
+  "2026-06-01": {
+    "target": 259,
+    "hits": [
+      {
+        "event": "出行",
+        "hour": 10,
+        "house_type": "阳宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 259,
+        "level": "★★★★★ 上吉"
+      },
+      {
+        "event": "出行",
+        "hour": 10,
+        "house_type": "阴宅",
+        "owners": [
+          {
+            "name": "事主丑",
+            "生肖": "丑",
+            "年支": "丑"
+          }
+        ],
+        "shan_xiang": null,
+        "total": 259,
+        "level": "★★★★★ 上吉"
+      }
+    ],
+    "searched_space": "R1: 15事项×12时辰×house_type{阳宅,阴宅}×owners{[] + 12单事主(年支子..亥)}",
+    "exhausted": false
+  }
+}
