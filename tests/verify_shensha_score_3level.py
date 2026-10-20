@@ -19,12 +19,12 @@ A. 三级顺序与回退：75 键 shensha_score('移徙',n)==('移徙',n) 值（
    落入 canonical 级与入宅同值。
 B. 全事项对照零变化：本地复刻旧两级逻辑，对 键表全部事项名 ∪
    EVENT_ALIASES 全别名 × 键表全部煞名 逐对断言 新==旧。
-C. 75 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
+C. 74 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
 D. 10 煞不复活：shensha_score('移徙',n)＝8×None＋月刑-15＋月害-15
    （快照 bb196e7 §二基线）；移徙通道 2026 全年 10 煞零发射。
 E. 发射链零变化：入宅/移徙通道 2026 全年逐日发射清单逐项一致、
-   总分=4238（十恶大败全删批后 2948＋岁破批 930＋病符批 360）；
-   嫁娶总分=-148（同三批同步，非别名族对照）。
+   总分=3848（十恶大败全删批后 2948＋岁破批 930＋病符批 360＋红嘴朱雀批 -390）；
+   嫁娶总分=-1228（红嘴朱雀批新增坤宮 -1080）。
 
 退出码 0=全过 1=有失败。
 """
@@ -75,14 +75,14 @@ def old_score(ev, n, default=None):
 
 # ============ A：三级顺序与回退 ============
 yi = {n: v for (e, n), v in SHENSHA_SCORES.items() if e == '移徙'}
-check('移徙键数=75（cb3f8cb 删除后，再减十恶大败键·全删批＋岁破键·岁破批＋病符键·病符批同步）',
-      len(yi) == 75)
+check('移徙键数=74（cb3f8cb 删除后，再减十恶大败·岁破·病符键，红嘴朱雀批 75→74）',
+      len(yi) == 74)
 for n, v in yi.items():
     if shensha_score('移徙', n) != v:
         check("原事项级命中：shensha_score('移徙',%r)==%r" % (n, v), False)
         break
 else:
-    check('原事项级命中：75键 shensha_score(移徙,n)==(移徙,n) 值', True)
+    check('原事项级命中：74键 shensha_score(移徙,n)==(移徙,n) 值', True)
 # 通配不覆盖前两级：交集名逐项断言
 wild_names = {n for (e, n) in SHENSHA_SCORES if e == '*'}
 inter_yi = wild_names & set(yi)
@@ -150,16 +150,16 @@ for n in D10:
 check('移徙通道==入宅通道 2026 全年逐日发射清单逐项一致',
       all(ru_days[k] == yi_days[k] for k in ru_days))
 tot_ru = sum(s for hits in ru_days.values() for _, s in hits)
-check('入宅通道全年总分=4238（十恶大败全删批 2948＋岁破批 930＋病符批 360）',
-      tot_ru == 4238)
+check('入宅通道全年总分=3848（十恶大败全删批 2948＋岁破批 930＋病符批 360＋红嘴朱雀批 -390）',
+      tot_ru == 3848)
 tot_yi = sum(s for hits in yi_days.values() for _, s in hits)
-check('移徙通道全年总分=4238（=入宅，十恶大败＋岁破＋病符三批后基线）', tot_yi == 4238)
+check('移徙通道全年总分=3848（=入宅，红嘴朱雀批同链）', tot_yi == 3848)
 dup = sum(1 for hits in yi_days.values()
           if len([n for n, _ in hits]) != len({n for n, _ in hits}))
 check('移徙通道逐日同名至多1条·不与入宅重复发射（重复日=%d）' % dup, dup == 0)
 jq_days, _ = _run('嫁娶', y0, y1)
 tot_jq = sum(s for hits in jq_days.values() for _, s in hits)
-check('嫁娶通道全年总分=-148（非别名族对照，-2308+1800+360 三批同步）', tot_jq == -148)
+check('嫁娶通道全年总分=-1228（非别名族对照，红嘴朱雀批新增 -1080）', tot_jq == -1228)
 
 # ============ F：通配不覆盖前两级·边界用例（2026-10-19 拍板提醒项） ============
 # 防未来新增通配键时回退：前两级已命中时通配级不得覆盖。三类边界逐条断言，
