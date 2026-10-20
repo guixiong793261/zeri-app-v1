@@ -98,24 +98,52 @@ def _worker(task):
             # B'：规则文本不进嫁娶总分（score_breakdown 必须为 {}）
             if bd != {}:
                 fails.append(f"B': {d} {ev} score_breakdown应为空dict, 实际={bd}")
-            # 等级=总分纯函数一致（须纳入"忌嫁娶封顶"设计：封顶日基础级≤★平
-            # 且必带后缀；未封顶日等级==纯函数等级）
+            # 等级断言（H1-2，2026-10-20 拍板③：强断言二级降格，严禁放宽）。
+            # 生产 _apply_marriage_level_caps（评分器.py:6250-6313）两级互斥：
+            #   一级「（犯忌嫁娶，慎用）」：details 名含"忌嫁娶"→封顶★平；
+            #   二级「（小忌，降一格）」：（一级未命中）details 名含"闭日/夫星"
+            #     或 warnings 含"忌嫁娶"→按 MARRIAGE_LEVEL_ORDER 降恰一档；
+            #     已是❌凶（idx=0）则无处可降、不加注。
+            # 测试侧结果 dict 无 warnings，故对二级降格做"档序反推"强断言：
+            #   带二级后缀 ⟺ 基础级 ≡ 总分纯函数等级降恰好一档（ORDER 相邻）。
             if r.get('score', 0) > 0:
                 raw_lvl = r.get('level', '') or ''
-                capped = raw_lvl.endswith('（犯忌嫁娶，慎用）')
-                base_lvl = raw_lvl.replace('（犯忌嫁娶，慎用）', '')
+                suf1, suf2 = '（犯忌嫁娶，慎用）', '（小忌，降一格）'
+                c1, c2 = suf1 in raw_lvl, suf2 in raw_lvl
+                if c1 and c2:
+                    fails.append(f"B': {d} {ev} 两级后缀互斥却被同注: {raw_lvl}")
+                base_lvl = raw_lvl.replace(suf1, '').replace(suf2, '')
                 mrg_details = r.get('marriage_details') or []
                 has_ji = any(
                     '忌嫁娶' in str(_d[0])
                     for _d in mrg_details
                     if isinstance(_d, (list, tuple)) and len(_d) >= 1)
+                ORDER = scorer.MARRIAGE_LEVEL_ORDER
+                chk_lvl = scorer._get_level(r['score'], wx, r.get('huangdao_info'))
                 if has_ji:
-                    # 封顶：基础级不高于★平（总分本就<60时为❌凶，否则★平），必带后缀
-                    if not capped or base_lvl not in ('❌ 凶', '★ 平'):
+                    # 一级封顶：必带 suf1、不带 suf2，基础级≤★平
+                    if not c1 or c2 or base_lvl not in ('❌ 凶', '★ 平'):
                         fails.append(
                             f"B': {d} {ev} 忌嫁娶应封顶(≤★平)带后缀, 实际={raw_lvl}")
+                elif c1:
+                    # 反向断言：无一级触发（details 无"忌嫁娶"）不得带一级后缀
+                    fails.append(
+                        f"B': {d} {ev} 无忌嫁娶触发却带一级后缀: {raw_lvl}")
+                elif c2:
+                    # 二级降格强断言：基础级≡纯函数等级按 ORDER 降恰好一档
+                    try:
+                        _i_pure = ORDER.index(chk_lvl)
+                        _i_base = ORDER.index(base_lvl)
+                        if _i_pure < 1 or _i_base != _i_pure - 1:
+                            fails.append(
+                                f"B': {d} {ev} 降一格档序错: "
+                                f"基础={base_lvl} 纯函数={chk_lvl}")
+                    except ValueError:
+                        fails.append(
+                            f"B': {d} {ev} 降一格等级不在ORDER: "
+                            f"基础={base_lvl} 纯函数={chk_lvl}")
                 else:
-                    chk_lvl = scorer._get_level(r['score'], wx, r.get('huangdao_info'))
+                    # 无后缀（含二级触发但❌凶无处可降）：等级==总分纯函数
                     if base_lvl != chk_lvl:
                         fails.append(
                             f"B': {d} {ev} 等级非总分纯函数: {base_lvl} vs {chk_lvl}")
