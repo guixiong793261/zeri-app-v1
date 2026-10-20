@@ -127,6 +127,14 @@ class BedShenShaChecker(ShenShaChecker):
         """检查日神煞"""
         super()._check_day_shensha(sizhu, **kwargs)
 
+        # ===== 凶煞 =====
+
+        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「丁卯、丙子、
+        # 乙酉、甲午、癸卯、壬子、辛酉七日在**乾宮**，忌修床（安床）」（朱雀歌
+        # 「乾上一辰莫安床」）。起例按日干支×九宫（基类），与月支无关。
+        if self._is_hongzui_zhuque(sizhu, '乾'):
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临乾宮，忌安床')
+
         # ===== 吉神 =====
 
         # 天德

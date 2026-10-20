@@ -165,6 +165,12 @@ class MarriageShenShaChecker(ShenShaChecker):
         month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日（婚嫁绝对禁忌）=====
+
+        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「壬申、辛巳、
+        # 庚寅、己亥、戊申、丁巳六日在**坤宮**，忌嫁娶」（朱雀歌「坤宮嫁娶損
+        # 宅長」）。起例按日干支×九宫（基类 _is_hongzui_zhuque），与月支无关。
+        if self._is_hongzui_zhuque(sizhu, '坤'):
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临坤宮，忌嫁娶')
         
         # 红砂日（按孟仲季月）
         if self._is_hongsha(sizhu):
