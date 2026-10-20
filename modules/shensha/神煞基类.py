@@ -1739,10 +1739,11 @@ class ShenShaChecker:
         # if self._is_shie_dabai(sizhu):
         #     self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
         if self._is_shousi_day(sizhu):
-            # 入宅通道注记（2026-10-19 死链清理同批 7 条之⑦，仅登记不删行）：
-            # 入宅 checker 子类月块（入宅神煞.py，_is_shousi，-22 同值）经
-            # MRO month→day 先行发射同名 '受死日'，本行对入宅通道为死链
-            #（_add_shensha 先到先得去重）；对其余事项本行为活链，不得删。
+            # 入宅通道注记（2026-10-19 死链清理同批 7 条之⑦，仅登记不删行；
+            # 2026-10-20 受死日收敛后更新）：基类表已改挂表A逐月表，与入宅子类
+            # 月块 _is_shousi 同集合（-22 同值）；入宅通道由月块先行发射，本行
+            # 经 _add_shensha 先到先得去重不重复扣分；对其余 13 通道本行为唯一
+            # 活链，不得删。
             self._add_shensha('受死日', -22, '受死日忌用')
         if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) != '入宅':
             # x4：往亡×入宅日块发射。与月块「往亡」构成双活链（异名归一
@@ -3518,18 +3519,19 @@ class ShenShaChecker:
         return day_zhi == yima_map.get(month_zhi)
 
     def _is_shousi_day(self, sizhu):
-        """受死日（春戌、夏丑、秋辰、冬未）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        if month_zhi in ['寅', '卯', '辰']:
-            return day_zhi == '戌'
-        elif month_zhi in ['巳', '午', '未']:
-            return day_zhi == '丑'
-        elif month_zhi in ['申', '酉', '戌']:
-            return day_zhi == '辰'
-        elif month_zhi in ['亥', '子', '丑']:
-            return day_zhi == '未'
-        return False
+        """受死日（《陈子性藏书》p152 逐月表：正戌、二辰、三亥、四巳、五子、
+        六午、七丑、八未、九寅、十申、十一卯、十二酉；月支查日支）。
+
+        2026-10-20 受死日收敛：旧「春戌、夏丑、秋辰、冬未」季节表（表B）已废弃，
+        统一改挂表A逐月表（与入宅/嫁娶子类 _is_shousi 同表同集合）。
+        """
+        shousi_map = {
+            '寅': '戌', '卯': '辰', '辰': '亥', '巳': '巳',
+            '午': '子', '未': '午', '申': '丑', '酉': '未',
+            '戌': '寅', '亥': '申', '子': '卯', '丑': '酉',
+        }
+        return sizhu.get('day_zhi', '') == shousi_map.get(
+            sizhu.get('month_zhi', ''))
 
     def _is_wangwang(self, sizhu):
         """往亡日（《协纪》口诀"正寅二巳三申四亥五卯六午七酉八子
