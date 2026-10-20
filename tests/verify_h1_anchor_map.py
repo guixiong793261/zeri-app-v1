@@ -19,9 +19,12 @@
       H1-3 批 -1：入宅「月破」锚点族随规则层发射删除而移除）。原「veto族3」
       随 _h1_is_veto_reason 一并删除（001 §140，岁破日 veto 文案不再产生）。
   B/B'. 每日对账（通用：数值；嫁娶：结构）。
-  C. 62 个 tx 串（出行12串逐串）锚点同日共存全部至少1次。
+  C. 56 个 tx 串（出行12串逐串）锚点同日共存全部至少1次。
   D. 通用非veto日：old=new+10停宜-15停忌；枚举真实等级跨档。
-  E. 停分文本全集 ⊆ 表内62 tx；单边样本从未停。
+  E. 停分文本全集 ⊆ 表内56 tx；单边样本从未停；入宅月破清零（H1-3）。
+  F. 映射族发射源守卫（H1-4）：每 tx 在 modules 源码有字面量命中
+     （剔除 H1_ANCHOR_MAP 定义块自身）或命中登记的动态发射模式，
+     改名/删发射即时报 FAIL，防 647 式批量腐烂。
 退出码 0/1，打印 FAIL 计数。
 """
 import sys, io, os, re, datetime
@@ -229,6 +232,39 @@ def main():
     if len(map_families) != 45:
         fails.append(f"A: 映射族数={len(map_families)}（应45，H1-3 删入宅月破族后）")
 
+    # ---------- F. 映射族发射源守卫（H1-4，2026-10-20 拍板④） ----------
+    # 每 tx 必须有生产发射源：① modules 源码字面量命中（剔除评分器.py 内
+    # H1_ANCHOR_MAP 定义块自身，防止"只改表不改发射"自检通过）；② 或命中
+    # 下列登记的动态发射 f-string 模式（fullmatch，源见各条注释）。
+    import glob as _glob
+    _srcs = []
+    for _p in _glob.glob(os.path.join(_REPO_ROOT, 'modules', '**', '*.py'),
+                         recursive=True):
+        with open(_p, encoding='utf-8') as _f:
+            _s = _f.read()
+        if _p.endswith('评分器.py'):
+            _i = _s.find('H1_ANCHOR_MAP = {')
+            if _i >= 0:
+                _s = _s[:_i] + _s[_s.find('\n}', _i):]
+        _srcs.append(_s)
+    _DYN_TX = [
+        # 修造规则.py:286/288 f'建除{jianchu}日[宜忌]修造'
+        (re.compile(r'建除.+日宜修造'), '修造规则.py:286'),
+        (re.compile(r'建除.+日忌修造'), '修造规则.py:288'),
+        # 开业规则.py:171/173 f'建除{jianchu}日[宜忌]开业'
+        (re.compile(r'建除.+日[宜忌]开业'), '开业规则.py:171/173'),
+        # 出行规则.py:180 f'月破日({month_zhi}月{day_zhi}日)忌出行'
+        (re.compile(r'月破日\(.{1}月.{1}日\)忌出行'), '出行规则.py:180'),
+        # 通用规则.py:230 f'月破日忌{event_type}'（签约走通用链）
+        (re.compile(r'月破日忌签约'), '通用规则.py:230'),
+    ]
+    for tx in sorted(all_tx):
+        if any(tx in _s for _s in _srcs):
+            continue
+        if any(_pat.fullmatch(tx) for _pat, _ in _DYN_TX):
+            continue
+        fails.append(f"F: 映射tx无发射源（字面量/动态模式均无）: {tx}")
+
     # ---------- 任务分片（按 季度×事项） ----------
     tasks = []
     od = D0.toordinal()
@@ -292,7 +328,7 @@ def main():
         for m in fails[:60]:
             print("  [FAIL]", m)
         sys.exit(1)
-    print("PASS：结构46 + 每日对账一致(无溢出) + 锚点全命中 + 单边未停 + 嫁娶零影响")
+    print("PASS：结构45 + 每日对账一致(无溢出) + 锚点全命中 + 单边未停 + 嫁娶零影响 + 发射源在位")
     sys.exit(0)
 
 
