@@ -9379,3 +9379,14 @@ ot shan_xiang → 「玄空飞星：本事项无坐山，玄空飞星段不适�
 - **145.6 测试同步（同 commit）**：`verify_shousi.py` D/E 段拆为「11 保留通道 == 表A 且恒 -22（341 通道·天）」＋新增 D2（四通道零发射、合计 0、基类谓词仍在表A 31 天为真）／G（键表 1262、三键已删、四通道 `shensha_score`=None、11 通道 -22、修造以发射值计分）／H（四通道总分 +682 与 11 通道零变化）／I（基类四事项门控、通用 `!= '通用'`、开业/安葬墓碑、基类与通用活码仍在）；联动同步 verify_hzzq（1262／作灶 -1369）、verify_shie_dabai_delete（SS_DEL 四通道受死日=0）、verify_deadlink7_clean（安葬受死日=0、其余四煞仍发射>0）、verify_a5_pianyi 与 verify_岁破病符删除（键数 1262）。
 - **145.7 回归**：verify_shousi / verify_hzzq / verify_shie_dabai_delete / verify_shensha_score_3level / verify_deadlink7_clean / verify_岁破病符删除 / verify_a5_pianyi **7 脚本全 exit 0**；`check_file_integrity.py` 11 文件 ALL PASS（行尾一致、无非预期字符、py_compile OK）。
 - **145.8 状态与遗留**：零改判维持（2026-11-04 暂不按上吉采用，回扫与重出按 §10.5 阻塞）；六副本本批**未同步**，待受死日批全部落地、测试全绿后统一重建；verify_h1_anchor_map 647 FAIL 仍待独立立项；`verify_a5_pianyi` 本次复跑已 exit 0。
+
+## §146 六副本统一重建（2026-10-20，基线 ed6ce50 → 部署端 6bbfb76）
+
+- **146.1 拍板**：受死日删除批验收通过后，优先执行六副本统一重建；`verify_h1_anchor_map` 647 FAIL 作为独立技术债暂缓（属测试基建遗留，不影响核心择日算法）。
+- **146.2 同步范围**：主仓 `e4791cf..ed6ce50` 改动的 11 个同名文件（受死日收敛批 + 删除批：神煞基类／通用神煞／开业神煞／安葬神煞／事项标准 5 个源码键表，加 verify_shousi／verify_hzzq／verify_shensha_score_3level／verify_shie_dabai_delete／verify_岁破病符删除／verify_a5_pianyi 6 个测试），写入主仓两层部署副本（手机一键部署、模块完整版），共 24 文件变更（+714/−116，commit `6bbfb76`）。统一版仓三层同源更新，按纪律③**暂不提交**（保留未提交工作区）。
+- **146.3 测试补充**：三层部署端新增 `tests/verify_shousi.py`（此前部署包无此脚本）。仅测试文件，**运行时零改动**，目的是让部署端可独立执行本批受死日回归。
+- **146.4 编译校验**：六端全量 py_compile **919/919 PASS**（主仓根 396／主仓手机层 170／主仓完整版 86／统一版根 218／统一版手机层 33／统一版完整版 16）。
+- **146.5 一致性校验**：关键文件 SHA256 六端一致——神煞基类 `d2cd27da`（6/6）、通用神煞 `127acef8`（6/6）、嫁娶神煞 `e7e107a7`（6/6）、事项标准 `ad8a5b37`（4/4）、评分器 `a14b91f3`（4/4）、入宅神煞 `da4d7c22`（4/4）、开业神煞 `20412908`（4/4）、安葬神煞 `ec88a54f`（4/4）、verify_hzzq `1a520b15`（6/6）、verify_shensha_score_3level `a215db8d`（6/6）。`modules/` 同名文件漂移 **0**（主仓手机层 66、主仓完整版 66、统一版根 66、统一版两层 7／6）；`tests/` 同名漂移 **0**（12／12／104／10／10）。目标端缺失项均为既有结构性裁剪（fixtures、tools、docs、部分历史 verify 脚本），本批未新增。
+- **146.6 部署端冒烟**：主仓手机层、主仓完整版、统一版根三层各跑 5 脚本（verify_shousi／verify_hzzq／verify_shensha_score_3level／verify_shie_dabai_delete／verify_岁破病符删除），**15/15 全 exit 0**；verify_shousi「FAIL 0 项 ALL PASS」、verify_hzzq「FAIL 0 ALL PASS」，确认部署端无路径／依赖漂移。
+- **146.7 当前基线**：主仓 HEAD `6bbfb76`（功能 `cbec95d` + 记账 `ed6ce50` + 同步 `6bbfb76`）；部署端代码与主仓逐字节一致。零改判维持（已出日课不回溯；2026-11-04 暂不按上吉采用）。
+- **146.8 后续排期（用户已定方向）**：①观察期满后解除 §10.5 阻塞，用最新评分器重出 2026-11-04 日课并做全盘回扫；②`verify_h1_anchor_map` 647 FAIL 独立立项；③继续「已验表源神煞的后三层补齐」与「表源层未验神煞全量遍历」滚动计划。
