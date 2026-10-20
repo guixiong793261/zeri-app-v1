@@ -1,0 +1,918 @@
+{
+ "2026-11-04": [
+  {
+   "date": "2026-11-04",
+   "event": "入宅",
+   "old_total": "216",
+   "new_total": "236",
+   "delta": 20,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 89,
+   "ss_sum_new": 109
+  },
+  {
+   "date": "2026-11-04",
+   "event": "移徙",
+   "old_total": "216",
+   "new_total": "236",
+   "delta": 20,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 89,
+   "ss_sum_new": 109
+  },
+  {
+   "date": "2026-11-04",
+   "event": "嫁娶",
+   "old_total": "50",
+   "new_total": "50",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -33,
+   "ss_sum_new": -33
+  },
+  {
+   "date": "2026-11-04",
+   "event": "动土",
+   "old_total": "92",
+   "new_total": "112",
+   "delta": 20,
+   "old_level": "★★★ 吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": -35,
+   "ss_sum_new": -15
+  },
+  {
+   "date": "2026-11-04",
+   "event": "修造",
+   "old_total": "189",
+   "new_total": "191",
+   "delta": 2,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {
+    "土王用事": -18
+   },
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 62,
+   "ss_sum_new": 64
+  },
+  {
+   "date": "2026-11-04",
+   "event": "拆舍",
+   "old_total": "134",
+   "new_total": "154",
+   "delta": 20,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": -3,
+   "ss_sum_new": 17
+  },
+  {
+   "date": "2026-11-04",
+   "event": "出行",
+   "old_total": "247",
+   "new_total": "247",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 110,
+   "ss_sum_new": 110
+  },
+  {
+   "date": "2026-11-04",
+   "event": "开业",
+   "old_total": "256",
+   "new_total": "256",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 119,
+   "ss_sum_new": 119
+  },
+  {
+   "date": "2026-11-04",
+   "event": "安床",
+   "old_total": "231",
+   "new_total": "231",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 114,
+   "ss_sum_new": 114
+  },
+  {
+   "date": "2026-11-04",
+   "event": "作灶",
+   "old_total": "206",
+   "new_total": "176",
+   "delta": -30,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {
+    "红嘴朱雀": -30
+   },
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 69
+  },
+  {
+   "date": "2026-11-04",
+   "event": "安葬",
+   "old_total": "147",
+   "new_total": "147",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 65,
+   "ss_sum_new": 65
+  },
+  {
+   "date": "2026-11-04",
+   "event": "入学",
+   "old_total": "206",
+   "new_total": "233",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 126
+  },
+  {
+   "date": "2026-11-04",
+   "event": "求医",
+   "old_total": "196",
+   "new_total": "223",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 126
+  },
+  {
+   "date": "2026-11-04",
+   "event": "签约",
+   "old_total": "206",
+   "new_total": "233",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 126
+  },
+  {
+   "date": "2026-11-04",
+   "event": "通用",
+   "old_total": "196",
+   "new_total": "223",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 126
+  }
+ ],
+ "2026-10-23": [
+  {
+   "date": "2026-10-23",
+   "event": "入宅",
+   "old_total": "186",
+   "new_total": "206",
+   "delta": 20,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 47,
+   "ss_sum_new": 67
+  },
+  {
+   "date": "2026-10-23",
+   "event": "移徙",
+   "old_total": "186",
+   "new_total": "206",
+   "delta": 20,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 47,
+   "ss_sum_new": 67
+  },
+  {
+   "date": "2026-10-23",
+   "event": "嫁娶",
+   "old_total": "65",
+   "new_total": "65",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -33,
+   "ss_sum_new": -33
+  },
+  {
+   "date": "2026-10-23",
+   "event": "动土",
+   "old_total": "72",
+   "new_total": "92",
+   "delta": 20,
+   "old_level": "★ 平",
+   "new_level": "★★★ 吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": -67,
+   "ss_sum_new": -47
+  },
+  {
+   "date": "2026-10-23",
+   "event": "修造",
+   "old_total": "159",
+   "new_total": "161",
+   "delta": 2,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {
+    "土王用事": -18
+   },
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": 20,
+   "ss_sum_new": 22
+  },
+  {
+   "date": "2026-10-23",
+   "event": "拆舍",
+   "old_total": "104",
+   "new_total": "124",
+   "delta": 20,
+   "old_level": "★★★★ 大吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -20
+   },
+   "changed": {},
+   "ss_sum_old": -45,
+   "ss_sum_new": -25
+  },
+  {
+   "date": "2026-10-23",
+   "event": "出行",
+   "old_total": "224",
+   "new_total": "224",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 75,
+   "ss_sum_new": 75
+  },
+  {
+   "date": "2026-10-23",
+   "event": "开业",
+   "old_total": "248",
+   "new_total": "248",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 99,
+   "ss_sum_new": 99
+  },
+  {
+   "date": "2026-10-23",
+   "event": "安床",
+   "old_total": "223",
+   "new_total": "223",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 94,
+   "ss_sum_new": 94
+  },
+  {
+   "date": "2026-10-23",
+   "event": "作灶",
+   "old_total": "176",
+   "new_total": "176",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 57,
+   "ss_sum_new": 57
+  },
+  {
+   "date": "2026-10-23",
+   "event": "安葬",
+   "old_total": "199",
+   "new_total": "199",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 70,
+   "ss_sum_new": 70
+  },
+  {
+   "date": "2026-10-23",
+   "event": "入学",
+   "old_total": "198",
+   "new_total": "225",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 79,
+   "ss_sum_new": 106
+  },
+  {
+   "date": "2026-10-23",
+   "event": "求医",
+   "old_total": "188",
+   "new_total": "215",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 79,
+   "ss_sum_new": 106
+  },
+  {
+   "date": "2026-10-23",
+   "event": "签约",
+   "old_total": "198",
+   "new_total": "225",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 79,
+   "ss_sum_new": 106
+  },
+  {
+   "date": "2026-10-23",
+   "event": "通用",
+   "old_total": "188",
+   "new_total": "215",
+   "delta": 27,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "土符": -15,
+    "红嘴朱雀": -12
+   },
+   "changed": {},
+   "ss_sum_old": 79,
+   "ss_sum_new": 106
+  }
+ ],
+ "2026-07-24": [
+  {
+   "date": "2026-07-24",
+   "event": "入宅",
+   "old_total": "178",
+   "new_total": "178",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "劫煞": 0
+   },
+   "changed": {},
+   "ss_sum_old": 12,
+   "ss_sum_new": 12
+  },
+  {
+   "date": "2026-07-24",
+   "event": "移徙",
+   "old_total": "178",
+   "new_total": "178",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "劫煞": 0
+   },
+   "changed": {},
+   "ss_sum_old": 12,
+   "ss_sum_new": 12
+  },
+  {
+   "date": "2026-07-24",
+   "event": "嫁娶",
+   "old_total": "0",
+   "new_total": "0",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {
+    "红嘴朱雀": -30
+   },
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 0,
+   "ss_sum_new": -30
+  },
+  {
+   "date": "2026-07-24",
+   "event": "动土",
+   "old_total": "118",
+   "new_total": "118",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -38,
+   "ss_sum_new": -38
+  },
+  {
+   "date": "2026-07-24",
+   "event": "修造",
+   "old_total": "123",
+   "new_total": "105",
+   "delta": -18,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {
+    "土王用事": -18
+   },
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -33,
+   "ss_sum_new": -51
+  },
+  {
+   "date": "2026-07-24",
+   "event": "拆舍",
+   "old_total": "73",
+   "new_total": "73",
+   "delta": 0,
+   "old_level": "★ 平",
+   "new_level": "★ 平",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -68,
+   "ss_sum_new": -68
+  },
+  {
+   "date": "2026-07-24",
+   "event": "出行",
+   "old_total": "189",
+   "new_total": "189",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 13,
+   "ss_sum_new": 13
+  },
+  {
+   "date": "2026-07-24",
+   "event": "开业",
+   "old_total": "166",
+   "new_total": "166",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -10,
+   "ss_sum_new": -10
+  },
+  {
+   "date": "2026-07-24",
+   "event": "安床",
+   "old_total": "176",
+   "new_total": "176",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 20,
+   "ss_sum_new": 20
+  },
+  {
+   "date": "2026-07-24",
+   "event": "作灶",
+   "old_total": "0",
+   "new_total": "0",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -3,
+   "ss_sum_new": -3
+  },
+  {
+   "date": "2026-07-24",
+   "event": "安葬",
+   "old_total": "56",
+   "new_total": "56",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -65,
+   "ss_sum_new": -65
+  },
+  {
+   "date": "2026-07-24",
+   "event": "入学",
+   "old_total": "182",
+   "new_total": "182",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 36,
+   "ss_sum_new": 36
+  },
+  {
+   "date": "2026-07-24",
+   "event": "求医",
+   "old_total": "172",
+   "new_total": "172",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 36,
+   "ss_sum_new": 36
+  },
+  {
+   "date": "2026-07-24",
+   "event": "签约",
+   "old_total": "182",
+   "new_total": "182",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 36,
+   "ss_sum_new": 36
+  },
+  {
+   "date": "2026-07-24",
+   "event": "通用",
+   "old_total": "172",
+   "new_total": "172",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 36,
+   "ss_sum_new": 36
+  }
+ ],
+ "2026-06-01": [
+  {
+   "date": "2026-06-01",
+   "event": "入宅",
+   "old_total": "193",
+   "new_total": "235",
+   "delta": 42,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "大时": -12,
+    "红嘴朱雀": -30
+   },
+   "changed": {},
+   "ss_sum_old": 6,
+   "ss_sum_new": 48
+  },
+  {
+   "date": "2026-06-01",
+   "event": "移徙",
+   "old_total": "193",
+   "new_total": "235",
+   "delta": 42,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "大时": -12,
+    "红嘴朱雀": -30
+   },
+   "changed": {},
+   "ss_sum_old": 6,
+   "ss_sum_new": 48
+  },
+  {
+   "date": "2026-06-01",
+   "event": "嫁娶",
+   "old_total": "0",
+   "new_total": "0",
+   "delta": 0,
+   "old_level": "❌ 凶",
+   "new_level": "❌ 凶",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -40,
+   "ss_sum_new": -40
+  },
+  {
+   "date": "2026-06-01",
+   "event": "动土",
+   "old_total": "164",
+   "new_total": "164",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -13,
+   "ss_sum_new": -13
+  },
+  {
+   "date": "2026-06-01",
+   "event": "修造",
+   "old_total": "176",
+   "new_total": "176",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -1,
+   "ss_sum_new": -1
+  },
+  {
+   "date": "2026-06-01",
+   "event": "拆舍",
+   "old_total": "171",
+   "new_total": "171",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": -16,
+   "ss_sum_new": -16
+  },
+  {
+   "date": "2026-06-01",
+   "event": "出行",
+   "old_total": "256",
+   "new_total": "256",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 59,
+   "ss_sum_new": 59
+  },
+  {
+   "date": "2026-06-01",
+   "event": "开业",
+   "old_total": "225",
+   "new_total": "225",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 68,
+   "ss_sum_new": 68
+  },
+  {
+   "date": "2026-06-01",
+   "event": "安床",
+   "old_total": "240",
+   "new_total": "240",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 63,
+   "ss_sum_new": 63
+  },
+  {
+   "date": "2026-06-01",
+   "event": "作灶",
+   "old_total": "173",
+   "new_total": "185",
+   "delta": 12,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "大时": -12
+   },
+   "changed": {},
+   "ss_sum_old": 31,
+   "ss_sum_new": 43
+  },
+  {
+   "date": "2026-06-01",
+   "event": "安葬",
+   "old_total": "151",
+   "new_total": "163",
+   "delta": 12,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {
+    "大时": -12
+   },
+   "changed": {},
+   "ss_sum_old": 9,
+   "ss_sum_new": 21
+  },
+  {
+   "date": "2026-06-01",
+   "event": "入学",
+   "old_total": "182",
+   "new_total": "182",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 25,
+   "ss_sum_new": 25
+  },
+  {
+   "date": "2026-06-01",
+   "event": "求医",
+   "old_total": "192",
+   "new_total": "192",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 25,
+   "ss_sum_new": 25
+  },
+  {
+   "date": "2026-06-01",
+   "event": "签约",
+   "old_total": "182",
+   "new_total": "182",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 25,
+   "ss_sum_new": 25
+  },
+  {
+   "date": "2026-06-01",
+   "event": "通用",
+   "old_total": "182",
+   "new_total": "182",
+   "delta": 0,
+   "old_level": "★★★★★ 上吉",
+   "new_level": "★★★★★ 上吉",
+   "added": {},
+   "removed": {},
+   "changed": {},
+   "ss_sum_old": 25,
+   "ss_sum_new": 25
+  }
+ ]
+}

@@ -1,0 +1,1003 @@
+{
+ "changed": 2389,
+ "total_rows": 5475,
+ "level_changed": 825,
+ "level_pairs": {
+  "★★ 中吉→❌ 凶": 15,
+  "❌ 凶→★ 平": 144,
+  "❌ 凶→★★ 中吉": 74,
+  "★★★★ 大吉→★★★★★ 上吉": 44,
+  "❌ 凶→★★★★★ 上吉": 55,
+  "★★ 中吉→★★★★★ 上吉": 39,
+  "★★★ 吉→★★★★★ 上吉": 128,
+  "★ 平→★★ 中吉": 18,
+  "❌ 凶→★★★ 吉": 86,
+  "★ 平→❌ 凶": 11,
+  "★★★ 吉→★ 平": 8,
+  "★ 平→★★★★ 大吉": 13,
+  "★★★ 吉→★★ 中吉": 3,
+  "❌ 凶→★★★★ 大吉": 14,
+  "★★★★ 大吉→★ 平": 1,
+  "★ 平→★★★★★ 上吉": 24,
+  "★★ 中吉→★★★ 吉": 37,
+  "★ 平→★★★ 吉": 57,
+  "★★★ 吉→★★★★ 大吉": 11,
+  "★★ 中吉→★★★★ 大吉": 7,
+  "★★★ 吉→❌ 凶": 6,
+  "★★★★★ 上吉→★★★★ 大吉": 6,
+  "★★★★★ 上吉→★★★ 吉": 14,
+  "★★★★ 大吉→★★ 中吉": 2,
+  "★★ 中吉→★ 平": 2,
+  "★★★★★ 上吉→★★ 中吉": 3,
+  "★★★★★ 上吉→★ 平": 1,
+  "★★★★★ 上吉→❌ 凶": 2
+ },
+ "delta_by_event": {
+  "入宅": 6925,
+  "移徙": 6749,
+  "动土": 1084,
+  "修造": 1220,
+  "拆舍": 2449,
+  "出行": 3998,
+  "安葬": 2583,
+  "入学": 4505,
+  "求医": 3690,
+  "签约": 3931,
+  "通用": 4164,
+  "安床": 543,
+  "开业": 2961,
+  "作灶": 1083
+ },
+ "watch_counts": {
+  "八专": {
+   "old": 300,
+   "new": 30
+  },
+  "劫煞": {
+   "old": 437,
+   "new": 375
+  },
+  "十恶大败": {
+   "old": 846,
+   "new": 0
+  },
+  "受死日": {
+   "old": 502,
+   "new": 327
+  },
+  "四击": {
+   "old": 251,
+   "new": 0
+  },
+  "土王用事": {
+   "old": 206,
+   "new": 216
+  },
+  "土符": {
+   "old": 261,
+   "new": 87
+  },
+  "大时": {
+   "old": 431,
+   "new": 311
+  },
+  "大煞": {
+   "old": 352,
+   "new": 0
+  },
+  "天吏": {
+   "old": 468,
+   "new": 402
+  },
+  "岁破": {
+   "old": 248,
+   "new": 0
+  },
+  "病符": {
+   "old": 421,
+   "new": 0
+  },
+  "红嘴朱雀": {
+   "old": 176,
+   "new": 174
+  }
+ },
+ "attribution": [
+  {
+   "shensha": "土王用事",
+   "event": "修造",
+   "kind": "add",
+   "cells": 68,
+   "score": -1224
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "动土",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "修造",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "出行",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "开业",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "安床",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "安葬",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "入学",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "求医",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "签约",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "通用",
+   "kind": "del",
+   "cells": 60,
+   "score": 1800
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "安床",
+   "kind": "add",
+   "cells": 43,
+   "score": -1290
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "作灶",
+   "kind": "add",
+   "cells": 42,
+   "score": -1260
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "入宅",
+   "kind": "add",
+   "cells": 40,
+   "score": -1200
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "移徙",
+   "kind": "add",
+   "cells": 40,
+   "score": -1200
+  },
+  {
+   "shensha": "天吏",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 33,
+   "score": 495
+  },
+  {
+   "shensha": "天吏",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 33,
+   "score": 495
+  },
+  {
+   "shensha": "岁破",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "动土",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "入学",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "求医",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "签约",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "岁破",
+   "event": "通用",
+   "kind": "del",
+   "cells": 31,
+   "score": 930
+  },
+  {
+   "shensha": "劫煞",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 31,
+   "score": 0
+  },
+  {
+   "shensha": "劫煞",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 31,
+   "score": 0
+  },
+  {
+   "shensha": "四击",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "四击",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "四击",
+   "event": "修造",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "四击",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "受死日",
+   "event": "开业",
+   "kind": "del",
+   "cells": 31,
+   "score": 682
+  },
+  {
+   "shensha": "受死日",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 31,
+   "score": 682
+  },
+  {
+   "shensha": "受死日",
+   "event": "安葬",
+   "kind": "del",
+   "cells": 31,
+   "score": 682
+  },
+  {
+   "shensha": "四击",
+   "event": "入学",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "四击",
+   "event": "求医",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "四击",
+   "event": "签约",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "受死日",
+   "event": "通用",
+   "kind": "del",
+   "cells": 31,
+   "score": 682
+  },
+  {
+   "shensha": "四击",
+   "event": "通用",
+   "kind": "del",
+   "cells": 31,
+   "score": 372
+  },
+  {
+   "shensha": "病符",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "动土",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "修造",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "出行",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "开业",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "安床",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "安葬",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "入学",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "求医",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "签约",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "病符",
+   "event": "通用",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "大时",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "大时",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "大时",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "大时",
+   "event": "安葬",
+   "kind": "del",
+   "cells": 30,
+   "score": 360
+  },
+  {
+   "shensha": "八专",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "修造",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "入学",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "求医",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "签约",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "八专",
+   "event": "通用",
+   "kind": "del",
+   "cells": 30,
+   "score": 450
+  },
+  {
+   "shensha": "土王用事",
+   "event": "修造",
+   "kind": "del",
+   "cells": 29,
+   "score": 522
+  },
+  {
+   "shensha": "土王用事",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 29,
+   "score": 522
+  },
+  {
+   "shensha": "受死日",
+   "event": "动土",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "修造",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "拆舍",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "出行",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "安床",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "入学",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "求医",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "受死日",
+   "event": "签约",
+   "kind": "add",
+   "cells": 29,
+   "score": -638
+  },
+  {
+   "shensha": "土符",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 29,
+   "score": 580
+  },
+  {
+   "shensha": "土符",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 29,
+   "score": 580
+  },
+  {
+   "shensha": "土符",
+   "event": "入学",
+   "kind": "del",
+   "cells": 29,
+   "score": 435
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "入学",
+   "kind": "del",
+   "cells": 29,
+   "score": 348
+  },
+  {
+   "shensha": "土符",
+   "event": "求医",
+   "kind": "del",
+   "cells": 29,
+   "score": 435
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "求医",
+   "kind": "del",
+   "cells": 29,
+   "score": 348
+  },
+  {
+   "shensha": "土符",
+   "event": "签约",
+   "kind": "del",
+   "cells": 29,
+   "score": 435
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "签约",
+   "kind": "del",
+   "cells": 29,
+   "score": 348
+  },
+  {
+   "shensha": "土符",
+   "event": "通用",
+   "kind": "del",
+   "cells": 29,
+   "score": 435
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "通用",
+   "kind": "del",
+   "cells": 29,
+   "score": 348
+  },
+  {
+   "shensha": "受死日",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "动土",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "修造",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "出行",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "安床",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "入学",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "求医",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "受死日",
+   "event": "签约",
+   "kind": "del",
+   "cells": 28,
+   "score": 616
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 27,
+   "score": 810
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 27,
+   "score": 810
+  },
+  {
+   "shensha": "土符",
+   "event": "动土",
+   "kind": "del",
+   "cells": 27,
+   "score": 540
+  },
+  {
+   "shensha": "土符",
+   "event": "修造",
+   "kind": "del",
+   "cells": 27,
+   "score": 540
+  },
+  {
+   "shensha": "土符",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 27,
+   "score": 540
+  },
+  {
+   "shensha": "土符",
+   "event": "动土",
+   "kind": "add",
+   "cells": 27,
+   "score": -540
+  },
+  {
+   "shensha": "土符",
+   "event": "修造",
+   "kind": "add",
+   "cells": 27,
+   "score": -540
+  },
+  {
+   "shensha": "土符",
+   "event": "拆舍",
+   "kind": "add",
+   "cells": 27,
+   "score": -540
+  },
+  {
+   "shensha": "大煞",
+   "event": "入宅",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "移徙",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "动土",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "修造",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "拆舍",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "出行",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "开业",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "安床",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "作灶",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "安葬",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "入学",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "求医",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "签约",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "大煞",
+   "event": "通用",
+   "kind": "del",
+   "cells": 25,
+   "score": 300
+  },
+  {
+   "shensha": "十恶大败",
+   "event": "嫁娶",
+   "kind": "del",
+   "cells": 6,
+   "score": 180
+  },
+  {
+   "shensha": "红嘴朱雀",
+   "event": "嫁娶",
+   "kind": "add",
+   "cells": 3,
+   "score": -90
+  },
+  {
+   "shensha": "受死日",
+   "event": "嫁娶",
+   "kind": "del",
+   "cells": 3,
+   "score": 66
+  },
+  {
+   "shensha": "四击",
+   "event": "嫁娶",
+   "kind": "del",
+   "cells": 3,
+   "score": 36
+  },
+  {
+   "shensha": "大煞",
+   "event": "嫁娶",
+   "kind": "del",
+   "cells": 2,
+   "score": 24
+  },
+  {
+   "shensha": "病符",
+   "event": "嫁娶",
+   "kind": "del",
+   "cells": 1,
+   "score": 12
+  }
+ ]
+}
