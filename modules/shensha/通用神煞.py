@@ -47,11 +47,14 @@ class CommonShenShaChecker(ShenShaChecker):
         day_zhi = sizhu['day_zhi']
 
         # 2026-09-16修复：原此处无条件加 '太岁' -20，导致入学/求医/签约
-        # 每一天都被扣20分且神煞栏恒显"犯太岁"。太岁为年神（忌动土方位），
-        # 民事择日其真实禁忌是"日支冲年支"=岁破，已由下方 _get_suipo 判定。
-        # 岁破
-        if day_zhi == self._get_suipo(year_zhi):
-            self._add_shensha('岁破', -30, '与太岁相冲，百事不宜')
+        # 每一天都被扣20分且神煞栏恒显"犯太岁"。太岁为年神（忌动土方位）。
+        # 岁破×通用已删（岁破批，2026-10-20，001 §140）：原此处以
+        # day_zhi == self._get_suipo(year_zhi) 发射 '岁破' -30；日课普适岁破注册
+        # 零日课典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。
+        # 发射原为：
+        #     if day_zhi == self._get_suipo(year_zhi):
+        #         self._add_shensha('岁破', -30, '与太岁相冲，百事不宜')
+        # 注：_get_suipo 保留——日破时(:506)/月破(:519) 仍消费，本批不动。
 
         # 年支三煞（劫煞、灾煞、岁煞）
         if self._is_nian_sansha(sizhu):

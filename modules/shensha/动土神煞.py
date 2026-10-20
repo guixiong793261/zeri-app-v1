@@ -60,9 +60,10 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_taisui(sizhu):
             self._add_shensha('太岁', -20, '太岁当头，忌动土')
         
-        # 岁破
-        if self._is_suipo(sizhu):
-            self._add_shensha('岁破', -30, '岁破日，动土大忌')
+        # 岁破×动土已删（岁破批，2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。发射原为：
+        #     if self._is_suipo(sizhu):
+        #         self._add_shensha('岁破', -30, '岁破日，动土大忌')
         
         # 岁煞
         if self._is_suisha(sizhu):
@@ -256,16 +257,8 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         day_zhi = sizhu.get('day_zhi', '')
         return year_zhi == day_zhi and year_zhi != ''
     
-    def _is_suipo(self, sizhu):
-        """岁破：日支冲年支"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong_map.get(year_zhi)
+    # _is_suipo 已删（岁破批，2026-10-20，001 §140）：日课普适岁破谓词零典据，
+    # 唯一消费者（年块发射行）本批同步删除后无 caller（原实现：日支==年支+6）。
 
     # 岁煞 _is_suisha 已删除 override，直接继承神煞基类的权威墓库位表
     # （申子辰→未、巳酉丑→辰、寅午戌→丑、亥卯未→戌，2026-09-18 修正）

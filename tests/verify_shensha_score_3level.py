@@ -6,22 +6,24 @@ shensha_score 三级查找改造回归（2026-10-19，移徙休眠键修复·选
 ②三级查找顺序与回退明确：原事项→canonical→通配，逐级命中即返回；
   通配级不得覆盖前两级已命中项；
 ③多链同拦回归：移徙专属键可命中、且不与入宅通道重复发射；
-  77 共有键同值须断言「评分零变化」（78-1，十恶大败键随 2026-10-19 全删批移除）；
+  76 共有键同值须断言「评分零变化」（78-1-1，十恶大败键随 2026-10-19 全删批移除，
+  ('移徙','岁破')随岁破批 2026-10-20 移除——001 §140）；
 ④x4/P2 删除项（10 煞）在移徙通道保持删除，不得因「通配」复活。
 前置：cb3f8cb 已删 10 键（条件①）；bb196e7 §四证全表非 canonical 键
 仅「入宅←移徙」一族，改造全局影响面上限即移徙 88 键。
 
 验证面：
-A. 三级顺序与回退：77 键 shensha_score('移徙',n)==('移徙',n) 值（原事项
+A. 三级顺序与回退：76 键 shensha_score('移徙',n)==('移徙',n) 值（原事项
    级命中）；与 ('*',n) 交集名逐项断言不被通配覆盖；别名（搬家/迁居）
    落入 canonical 级与入宅同值。
 B. 全事项对照零变化：本地复刻旧两级逻辑，对 键表全部事项名 ∪
    EVENT_ALIASES 全别名 × 键表全部煞名 逐对断言 新==旧。
-C. 77 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
+C. 76 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
 D. 10 煞不复活：shensha_score('移徙',n)＝8×None＋月刑-15＋月害-15
    （快照 bb196e7 §二基线）；移徙通道 2026 全年 10 煞零发射。
 E. 发射链零变化：入宅/移徙通道 2026 全年逐日发射清单逐项一致、
-   总分=2948（十恶大败全删批后基线，原 1148+1800）；嫁娶总分=-508（原 -2308+1800）。
+   总分=3878（十恶大败全删批后基线 2948＋岁破批回正 930）；
+   嫁娶总分=-508（十恶大败全删批后基线，岁破不波及嫁娶）。
 
 退出码 0=全过 1=有失败。
 """
@@ -72,13 +74,14 @@ def old_score(ev, n, default=None):
 
 # ============ A：三级顺序与回退 ============
 yi = {n: v for (e, n), v in SHENSHA_SCORES.items() if e == '移徙'}
-check('移徙键数=77（cb3f8cb 删除后，再减十恶大败键·全删批同步）', len(yi) == 77)
+check('移徙键数=76（cb3f8cb 删除后，再减十恶大败键·全删批＋岁破键·岁破批同步）',
+      len(yi) == 76)
 for n, v in yi.items():
     if shensha_score('移徙', n) != v:
         check("原事项级命中：shensha_score('移徙',%r)==%r" % (n, v), False)
         break
 else:
-    check('原事项级命中：77键 shensha_score(移徙,n)==(移徙,n) 值', True)
+    check('原事项级命中：76键 shensha_score(移徙,n)==(移徙,n) 值', True)
 # 通配不覆盖前两级：交集名逐项断言
 wild_names = {n for (e, n) in SHENSHA_SCORES if e == '*'}
 inter_yi = wild_names & set(yi)
@@ -109,9 +112,9 @@ for ev in events:
 check('全事项×全煞名 新旧逻辑逐对同值（%d 对，差异 %d）' % (pairs, len(bad)),
       not bad)
 
-# ============ C：77 共有键评分零变化 ============
+# ============ C：76 共有键评分零变化 ============
 ok77 = all(shensha_score('移徙', n) == SHENSHA_SCORES.get(('入宅', n)) for n in yi)
-check('77键 shensha_score(移徙,n)==(入宅,n) 值（评分零变化）', ok77)
+check('76键 shensha_score(移徙,n)==(入宅,n) 值（评分零变化）', ok77)
 
 # ============ D：10 煞不复活 ============
 for n in D10:
@@ -146,9 +149,9 @@ for n in D10:
 check('移徙通道==入宅通道 2026 全年逐日发射清单逐项一致',
       all(ru_days[k] == yi_days[k] for k in ru_days))
 tot_ru = sum(s for hits in ru_days.values() for _, s in hits)
-check('入宅通道全年总分=2948（十恶大败全删批后基线 1148+1800）', tot_ru == 2948)
+check('入宅通道全年总分=3878（十恶大败全删批后基线 2948＋岁破批回正 930）', tot_ru == 3878)
 tot_yi = sum(s for hits in yi_days.values() for _, s in hits)
-check('移徙通道全年总分=2948（=入宅，十恶大败全删批后基线）', tot_yi == 2948)
+check('移徙通道全年总分=3878（=入宅，十恶大败全删批＋岁破批后基线）', tot_yi == 3878)
 dup = sum(1 for hits in yi_days.values()
           if len([n for n, _ in hits]) != len({n for n, _ in hits}))
 check('移徙通道逐日同名至多1条·不与入宅重复发射（重复日=%d）' % dup, dup == 0)

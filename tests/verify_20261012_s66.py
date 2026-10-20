@@ -18,7 +18,10 @@
 
 断言设计：
   正向——4 名命中时条目在列、score==0、description 带标注（走 Scorer 生产入口）
-  反向——① 非三煞家族负分神煞（岁破等）分值不变、不带标注；
+  反向——① 非三煞家族负分神煞分值不变、不带标注；
+         ①' 岁破日课通道不再产生（-30 观测断言反转）：岁破批（2026-10-20，
+            001 §140）删除日课普适岁破注册后，扫描窗内 shensha_list **不得**
+            再出现 '岁破' 条目（二选一取「断言不存在」口径，不改断其他值）；
          ② 标注只出现在 4 名（标注⇔4名双向）；
          ③ SHENSHA_SCORES 表值不被回改（shensha_score 仍返回 -18/-25/-20，
             证明对账惯例保留、收口在解析层）；
@@ -103,10 +106,12 @@ def main():
 
     print('[4] 反向①：非三煞负分神煞分值不变、无标注（观测数>0 防空洞断言）')
     check('非三煞负分条目被观测到', neg_non_trio_observed > 0, f'观测数 {neg_non_trio_observed}')
-    check('岁破在扫描窗内被观测到', len(suipo_observations) > 0)
-    for dstr, ev, sc, desc in suipo_observations[:3]:
-        check(f'岁破 {dstr} {ev} 分值保持 -30 且无标注',
-              sc == -30 and MARK not in desc, f'score={sc} desc={desc}')
+    # ①' 岁破日课通道已删（岁破批 001 §140）：断言不存在，而非改断其他值
+    check('岁破日课通道不再产生（岁破在扫描窗内零观测）', len(suipo_observations) == 0,
+          f'观测到 {len(suipo_observations)} 条：{suipo_observations[:3]}')
+    for dstr, ev, sc, desc in suipo_observations[:3]:   # 反证自检：若出现即报错
+        check(f'岁破 {dstr} {ev} 不应存在（残留观测）', False,
+              f'score={sc} desc={desc}')
 
     print('[5] 反向⑥：4 名覆盖保证（扫描窗内逐一观测，防空洞断言）')
     for nm in TRIO_NAMES:

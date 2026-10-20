@@ -3517,16 +3517,10 @@ class ShenShaChecker:
         day_zhi = sizhu.get('day_zhi', '')
         return year_zhi == day_zhi and year_zhi != ''
 
-    def _is_suipo(self, sizhu):
-        """岁破：日支冲年支"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        chong_map = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong_map.get(year_zhi)
+    # _is_suipo 已删（岁破批，2026-10-20，001 §140）：日课普适岁破谓词零典据。
+    # 全库引用核查：仅 拆舍神煞.py 年块发射行调用（本批同步删）；入宅/动土各
+    # 有同名 override（本批同步删）；通用神煞走独立 _get_suipo（保留）。
+    # 删除后无 caller（原实现：日支==年支+6）。
 
     def _is_suisha(self, sizhu):
         """岁煞（三煞体系之"墓库"位）

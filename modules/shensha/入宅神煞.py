@@ -53,9 +53,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # if self._is_sansha(sizhu):
         #     self._add_shensha('年三煞', -25, '入宅大忌，犯之主凶灾')
         
-        # 岁破（日支与年支相冲）
-        if self._is_suipo(sizhu):
-            self._add_shensha('岁破', -30, '岁破日诸事不宜，入宅大忌')
+        # 岁破×入宅已删（岁破批，2026-10-20，001 §140）：日课普适岁破注册零日课
+        # 典据（协纪卷内「岁破日」0 命中；「岁破最凶/例无制法」系山向造命语境），
+        # 拍板「删日课通道岁破普适忌注册」。发射行原为：
+        #     if self._is_suipo(sizhu):
+        #         self._add_shensha('岁破', -30, '岁破日诸事不宜，入宅大忌')
     
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞"""
@@ -353,14 +355,8 @@ class RuZhaiShenShaChecker(ShenShaChecker):
             return day_idx in sansha_indices
         return False
     
-    def _is_suipo(self, sizhu):
-        """是否岁破（日支与年支相冲）"""
-        year_zhi = sizhu['year_zhi']
-        day_zhi = sizhu['day_zhi']
-        zh_list = DI_ZHI
-        idx = zh_list.index(year_zhi)
-        suipo = zh_list[(idx + 6) % 12]
-        return day_zhi == suipo
+    # _is_suipo 已删（岁破批，2026-10-20，001 §140）：日课普适岁破谓词零典据，
+    # 唯一消费者（年块发射行）本批同步删除后无 caller（原实现：日支==年支+6）。
     
     # ========== 月神煞判断 ==========
     
