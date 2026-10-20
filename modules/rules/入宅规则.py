@@ -112,14 +112,16 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
             pass
     
     def _check_po_and_sili_ruzhai(self, date_obj, sizhu, owners, ji_list):
-        """检查月破、四离四绝（『岁破』日课普适项已删：岁破批 2026-10-20，001 §140）"""
+        """检查四离四绝（『岁破』『月破』日课普适项已删：岁破批 001 §140；月破批 H1-3 2026-10-20）"""
         if not self.has_marriage_shensha:
             return
         
         try:
-            # 月破（月支与日支相冲）
-            if self.is_month_break(date_obj):
-                ji_list.append('月破日忌入宅')
+            # 月破×入宅/移徙已删（H1-3 批 2026-10-20 拍板①）：神煞层月破
+            # 日课忌入宅零典据（§127 已删），规则层同款清理——与岁破批
+            # 「半修状态」同款陷阱，绝不恢复神煞。发射原为：
+            #     if self.is_month_break(date_obj):
+            #         ji_list.append('月破日忌入宅')
             
             # 四离四绝
             if self.is_sili_sijue(date_obj):

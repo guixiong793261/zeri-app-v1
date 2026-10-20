@@ -13,9 +13,10 @@
     等级=score纯函数一致；无分可停、H1 对嫁娶总分为零影响。
 
 断言汇总：
-  A. 结构：恰11键；映射族46。
+  A. 结构：恰11键；映射族45。
      （2026-10-19 十恶大败批 -1（安葬族）、2026-10-20 岁破批 -4：动土/拆舍/
-      入宅/签约四事项「岁破」锚点族随岁破日课普适忌删除而移除）。原「veto族3」
+      入宅/签约四事项「岁破」锚点族随岁破日课普适忌删除而移除；2026-10-20
+      H1-3 批 -1：入宅「月破」锚点族随规则层发射删除而移除）。原「veto族3」
       随 _h1_is_veto_reason 一并删除（001 §140，岁破日 veto 文案不再产生）。
   B/B'. 每日对账（通用：数值；嫁娶：结构）。
   C. 62 个 tx 串（出行12串逐串）锚点同日共存全部至少1次。
@@ -93,6 +94,11 @@ def _worker(task):
             txt = SIDE_SAMPLES[ev]
             if txt in (yi + ji) and txt in (po_yi + po_ji):
                 fails.append(f"E: {d} {ev} 单边样本被误停: {txt}")
+
+        # H1-3（2026-10-20 拍板①）：入宅月破规则层发射已删（入宅规则.py
+        # 原:121-122），反向断言全期清零、防复活（移徙 canonical 归并入宅）。
+        if cev == '入宅' and '月破日忌入宅' in (yi + ji):
+            fails.append(f"E: {d} {ev} 已删月破规则残留发射: 月破日忌入宅")
 
         if is_marriage:
             # B'：规则文本不进嫁娶总分（score_breakdown 必须为 {}）
@@ -220,8 +226,8 @@ def main():
             map_families.add((ev, ss_name))
             all_tx.add(tx)
             tx_by_family.setdefault((ev, ss_name), []).append(tx)
-    if len(map_families) != 46:
-        fails.append(f"A: 映射族数={len(map_families)}（应46）")
+    if len(map_families) != 45:
+        fails.append(f"A: 映射族数={len(map_families)}（应45，H1-3 删入宅月破族后）")
 
     # ---------- 任务分片（按 季度×事项） ----------
     tasks = []
