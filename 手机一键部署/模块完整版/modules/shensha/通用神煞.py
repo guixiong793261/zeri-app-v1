@@ -443,7 +443,12 @@ class CommonShenShaChecker(ShenShaChecker):
         # if self._is_shie_dabai(sizhu):
         #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
-        if self._is_shousi_day(sizhu):
+        # 受死日×通用已删（2026-10-20 受死日删除批，001 §145）：本类由入学/
+        # 求医/签约/通用共用，通用事项无载（陈书 p54「凡事皆忌者，非」为反向
+        # 明载），按 _std_event 门控仅排除通用，其余三事项保留
+        #（快照 docs/影响面快照_受死日删除候选.md §一）。
+        if (self._is_shousi_day(sizhu)
+                and getattr(self, '_std_event', None) != '通用'):
             self._add_shensha('受死日', -22, '受死之日，大忌')
 
         # 往亡日——P2 部分匹配拆分双链补拦（2026-10-18，001 §123）：本块发射名

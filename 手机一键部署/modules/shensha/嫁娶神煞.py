@@ -733,7 +733,8 @@ class MarriageShenShaChecker(ShenShaChecker):
     def _is_shousi(self, situ):
         """
         是否受死日
-        口诀：正戌二辰三亥四巳五子六午七丑八未八寅九申十卯十酉十一辰十二戌
+        口诀（《陈子性藏书》p152）：正戌、二辰、三亥、四巳、五子、六午、
+        七丑、八未、九寅、十申、十一卯、十二酉（月支查日支）
         """
         month_zhi = situ['month_zhi']
         day_zhi = situ['day_zhi']

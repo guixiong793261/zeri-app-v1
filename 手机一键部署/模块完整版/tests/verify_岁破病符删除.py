@@ -24,12 +24,13 @@
      D2 修造规则 扶山冲突 ji 含「（岁破日）」仍存在（山向语境）；
      D3 二十四山 二黑病符星到山评分仍在（方位神语境）；
      D4 评分器 _HARD_VETO_KEYWORDS 仍含 '岁破'（承 D2 之文本）。
-  E. 表层：SHENSHA_SCORES 无岁破/病符键；键数 1265／移徙块 74
-     （红嘴朱雀按典修批 A 后：-5 旧键 +3 新键）；
+  E. 表层：SHENSHA_SCORES 无岁破/病符键；键数 1262／移徙块 74
+     （红嘴朱雀按典修批 A 后：-5 旧键 +3 新键；受死日删除批 1265→1262）；
      shensha_score 对两名返回 None。
   F. 谓词：_is_suipo／_is_bingfu／_get_suipo／_is_sui_po_day／_h1_is_veto_reason
      全库不可调用（剥注释后无定义、无调用）；_get_suipo 保留（日破/月破消费）例外。
-  G. 总分基线：入宅/移徙 3848、嫁娶 -1228（2026 全年，owners=[]；含红嘴朱雀批）。
+  G. 总分基线：入宅/移徙 4464、嫁娶 -612（2026 全年，owners=[]；含红嘴朱雀批与
+     受死日收敛批 +616）。
 
 退出码：0=全过，1=有失败（FAIL N 计数）
 ================================================================================
@@ -185,7 +186,7 @@ def main():
     check(f'表内无病符键（实得 {len(bf_keys)}）', not bf_keys)
     check("通配键 ('*','岁破') 不存在", ('*', '岁破') not in SHENSHA_SCORES)
     check("通配键 ('*','病符') 不存在", ('*', '病符') not in SHENSHA_SCORES)
-    check(f'总表键数=1265（实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1265)
+    check(f'总表键数=1262（实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1262)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     check(f'移徙块键数=74（实得 {n_yi}）', n_yi == 74)
     for ev in CH:
@@ -225,7 +226,7 @@ def main():
 
     # ============ G：总分基线 ============
     print('[G] 总分基线（2026 全年，owners=[]）')
-    for ev, exp in (('入宅', 3848), ('移徙', 3848), ('嫁娶', -1228)):
+    for ev, exp in (('入宅', 4464), ('移徙', 4464), ('嫁娶', -612)):
         ck = get_checker(ev)
         tot = 0
         for _, sz in days:

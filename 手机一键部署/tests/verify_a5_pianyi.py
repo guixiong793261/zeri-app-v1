@@ -299,8 +299,8 @@ def _assert_bingfu_removed():
         assert shensha_score(ev, '病符') is None, f'{ev} 病符分值应已删除'
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     assert n_yi == 74, f'移徙块键数应=74（病符批 76→75，红嘴朱雀批 75→74），实得 {n_yi}'
-    assert len(SHENSHA_SCORES) == 1265, \
-        f'SHENSHA_SCORES 总键应=1265（病符批 1281→1267，红嘴朱雀批 1267-5+3=1265），实得 {len(SHENSHA_SCORES)}'
+    assert len(SHENSHA_SCORES) == 1262, \
+        f'SHENSHA_SCORES 总键应=1262（病符批 1281→1267，红嘴朱雀批 1267-5+3=1265，受死日删除批 1265→1262），实得 {len(SHENSHA_SCORES)}'
     return {'移徙块': n_yi, '总表': len(SHENSHA_SCORES)}
 
 
