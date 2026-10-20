@@ -196,6 +196,28 @@ def is_mingfeidui_by_pillar(day_pillar):
     return day_pillar in _MINGFEI_DUI_PILLARS
 
 
+# 红嘴朱雀九宫（《陈子性藏书》p890「紅嘴朱雀臨九宮」唯一起例）：
+# 六十甲子序 n（甲子=1…癸亥=60），(n-1) mod 9 → 震1／巽2／中3／乾4／兌5／
+# 艮6／離7／坎8／坤9，每九日一轮；与月支无关。p601（坎宮忌作水溝）、
+# p631（兌宮忌修井）逐柱互证。协纪/考原均无此煞（同名 0 命中）。
+_HONGZUI_PILLARS_BY_GONG = {
+    '震': frozenset(('甲子', '癸酉', '壬午', '辛卯', '庚子', '己酉', '戊午')),
+    '巽': frozenset(('乙丑', '甲戌', '癸未', '壬辰', '辛丑', '庚戌', '己未')),
+    '中': frozenset(('丙寅', '乙亥', '甲申', '癸巳', '壬寅', '辛亥', '庚申')),
+    '乾': frozenset(('丁卯', '丙子', '乙酉', '甲午', '癸卯', '壬子', '辛酉')),
+    '兌': frozenset(('戊辰', '丁丑', '丙戌', '乙未', '甲辰', '癸丑', '壬戌')),
+    '艮': frozenset(('己巳', '戊寅', '丁亥', '丙申', '乙巳', '甲寅', '癸亥')),
+    '離': frozenset(('庚午', '己卯', '戊子', '丁酉', '丙午', '乙卯')),
+    '坎': frozenset(('辛未', '庚辰', '己丑', '戊戌', '丁未', '丙辰')),
+    '坤': frozenset(('壬申', '辛巳', '庚寅', '己亥', '戊申', '丁巳')),
+}
+
+
+def is_hongzui_in_gong(day_pillar, gong):
+    """红嘴朱雀日是否临指定宫（日干支查《陈子性藏书》p890 九宫起例）"""
+    return day_pillar in _HONGZUI_PILLARS_BY_GONG.get(gong, ())
+
+
 # 反支：按农历月【朔日地支】定本月首个反支日的农历日数，其后十二日一遇。
 # 戌亥朔→1，申酉朔→2，午未朔→3，辰巳朔→4，寅卯朔→5，子丑朔→6
 _FANZHI_FIRST_LUNAR_DAY = {
@@ -2867,7 +2889,21 @@ class ShenShaChecker:
         kuigang_list = ['庚辰', '戊戌', '壬辰', '庚戌']
         day_pillar = day_gan + day_zhi
         return day_pillar in kuigang_list
-    
+
+    def _is_hongzui_zhuque(self, sizhu, gong='中'):
+        """红嘴朱雀日（按日干支查九宫，《陈子性藏书》p890）
+
+        2026-10-20 红嘴朱雀按典修批：旧实现散落于入宅（月支顺行一位）与
+        通用（月支对宫+2，等价月支+8）两套互斥的月起例，均与典载「日干支×
+        九宫飞」全异，2026 年与中宮日仅 3/43 重合（27 天误报、40 天漏检）。
+        现统一收口于本方法：day_pillar ∈ 该宫干支集合即触发，与月支无关。
+        """
+        day_gan = sizhu.get('day_gan', '')
+        day_zhi = sizhu.get('day_zhi', '')
+        if not day_gan or not day_zhi:
+            return False
+        return is_hongzui_in_gong(day_gan + day_zhi, gong)
+
     def _is_fanzhi(self, sizhu):
         """反支日（按农历月朔支起算，《协纪》卷九立成／《星历考原》卷四）
 

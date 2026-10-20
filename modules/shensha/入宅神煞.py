@@ -95,9 +95,13 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         # 本行原为死链（基类月块「往亡」先到先得）；基类月块＋日块「往亡日」
         # 双活链本批同拦（防单链误删复活），本行同步删。
         
-        # 红嘴朱雀（入宅大忌）
-        if self._is_hongzui_zhuque(sizhu):
-            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀日入宅大凶')
+        # 红嘴朱雀：旧「月支顺行一位」起例删除（红嘴朱雀按典修批 A，2026-10-20）。
+        # 旧起例与通用（月支对宫+2）互斥且均与陈书 p890「日干支×九宫飞」全异
+        # （2026 年与中宮日仅 3/43 重合）。统一起例收口基类
+        # _is_hongzui_zhuque(sizhu, gong)，中宮日发射在同批 commit B 落地。
+        # 旧发射原为：
+        #     if self._is_hongzui_zhuque(sizhu):
+        #         self._add_shensha('红嘴朱雀', -30, '红嘴朱雀日入宅大凶')
         
         # 天狗
         if self._is_tiangou(sizhu):
@@ -381,16 +385,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         return is_wangwang_by_zhi(sizhu.get('month_zhi', ''),
                                   sizhu.get('day_zhi', ''))
     
-    def _is_hongzui_zhuque(self, sizhu):
-        """红嘴朱雀日（入宅大忌）"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        hongzui_map = {
-            '寅': '卯', '卯': '辰', '辰': '巳', '巳': '午',
-            '午': '未', '未': '申', '申': '酉', '酉': '戌',
-            '戌': '亥', '亥': '子', '子': '丑', '丑': '寅'
-        }
-        return day_zhi == hongzui_map.get(month_zhi)
+    # _is_hongzui_zhuque 已删除（红嘴朱雀按典修批 A，2026-10-20）：旧为「月支
+    # 顺行一位」月起例，与典载「日干支×九宫飞」全异。起例统一收口基类
+    # ShenShaChecker._is_hongzui_zhuque(sizhu, gong)。原实现留档备反证：
+    #     hongzui_map = {'寅': '卯', '卯': '辰', ... '丑': '寅'}
+    #     return day_zhi == hongzui_map.get(month_zhi)
     
     def _is_tiangou(self, sizhu):
         """天狗日 - 根据《钦定协纪辨方书》，天狗为建除十二神中的"满"日"""
