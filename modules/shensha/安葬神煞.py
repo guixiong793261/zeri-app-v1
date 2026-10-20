@@ -182,6 +182,10 @@ class BurialShenShaChecker(ShenShaChecker):
             self._add_shensha('五墓', -12, '五墓凶日，不宜安葬')
         
         # 受死日
+        # 【受死日删除候选·标注隔离 2026-10-20】陈书 p54「丧塟即不忌」、
+        # p748「即受死日亦不忌安塟」、p152「宜安塟」三条明载不忌安葬
+        #（快照 docs/影响面快照_受死日删除候选.md §一）；本块标记为待删除，
+        # 拍板前行为不变（仍 -22）。
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死日大凶，绝对不可安葬')
     

@@ -443,6 +443,9 @@ class CommonShenShaChecker(ShenShaChecker):
         # if self._is_shie_dabai(sizhu):
         #     self._add_shensha('十恶大败', -30, '忌大事，犯之主败')
 
+        # 【受死日删除候选·标注隔离 2026-10-20】本类由入学/求医/签约/通用共用；
+        # 通用事项无载（陈书 p54「凡事皆忌者，非」为反向明载），待拍板后加
+        # `_std_event != '通用'` 门控，其余三事项保留。拍板前行为不变。
         if self._is_shousi_day(sizhu):
             self._add_shensha('受死日', -22, '受死之日，大忌')
 
