@@ -196,12 +196,11 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_mucang(sizhu):
             self._add_shensha('母仓', 10, '母仓日吉')
         
-        # 受死日
-        # 【受死日删除候选·标注隔离 2026-10-20】陈书受死语境无「忌开业」明文
-        # （快照 docs/影响面快照_受死日删除候选.md §一），本行标记为待删除；
-        # 拍板前行为不变（仍 -22），删除 commit 时连基类日块门控一并落地。
-        if self._is_shousi_day(sizhu):
-            self._add_shensha('受死日', -22, '受死日不宜开业')
+        # 受死日发射已删（2026-10-20 受死日删除批，001 §145）：陈书受死语境
+        # 无「忌开业」明文（快照 docs/影响面快照_受死日删除候选.md §一），
+        # 基类日块同步加 _std_event 门控。原发射为：
+        #     if self._is_shousi_day(sizhu):
+        #         self._add_shensha('受死日', -22, '受死日不宜开业')
         
         # 往亡日
         if self._is_wangwang(sizhu):

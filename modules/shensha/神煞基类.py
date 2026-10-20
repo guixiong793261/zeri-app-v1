@@ -1738,14 +1738,17 @@ class ShenShaChecker:
         # 「然惟随各年及本命避之」属本命避忌，非日课普适扣分）；谓词保留作无禄日载体。
         # if self._is_shie_dabai(sizhu):
         #     self._add_shensha('十恶大败', -30, '十恶大败，诸事不宜')
-        # 【受死日删除候选·标注隔离 2026-10-20】本行为 15 通道共用兜底；
-        # 开业/作灶/通用/安葬 四通道待拍板后加 `_std_event not in (...)` 门控
-        # （快照 docs/影响面快照_受死日删除候选.md）。拍板前行为不变。
-        if self._is_shousi_day(sizhu):
+        # 受死日（2026-10-20 删除批，001 §145）：开业/作灶/通用 三库无载、
+        # 安葬三条反向明载（陈书 p54「丧塟即不忌」、p748「即受死日亦不忌
+        # 安塟」、p152「宜安塟」），四通道经 _std_event 门控退出；其余 11
+        # 通道保留（快照 docs/影响面快照_受死日删除候选.md §一）。
+        if (self._is_shousi_day(sizhu)
+                and getattr(self, '_std_event', None) not in
+                ('开业', '作灶', '通用', '安葬')):
             # 入宅通道注记（2026-10-19 死链清理同批 7 条之⑦，仅登记不删行；
             # 2026-10-20 受死日收敛后更新）：基类表已改挂表A逐月表，与入宅子类
             # 月块 _is_shousi 同集合（-22 同值）；入宅通道由月块先行发射，本行
-            # 经 _add_shensha 先到先得去重不重复扣分；对其余 13 通道本行为唯一
+            # 经 _add_shensha 先到先得去重不重复扣分；对其余 9 通道本行为唯一
             # 活链，不得删。
             self._add_shensha('受死日', -22, '受死日忌用')
         if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) != '入宅':
