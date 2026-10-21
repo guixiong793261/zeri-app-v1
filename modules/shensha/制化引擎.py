@@ -198,6 +198,8 @@ def eval_yandui_exempt(sizhu):
     天愿经 DE_GODS_WUDE 结构性排除（禁并排除对，矩阵 §3.1）。
 
     Returns:
-        bool
+        (bool, str): (是否豁免, 豁免注记文案；不豁免时为空串)
     """
-    return bool(get_de_gods(sizhu, allow=DE_GODS_WUDE))
+    if get_de_gods(sizhu, allow=DE_GODS_WUDE):
+        return True, YANDUI_EXEMPT_NOTE
+    return False, ''

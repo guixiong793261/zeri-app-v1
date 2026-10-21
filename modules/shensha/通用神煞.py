@@ -37,6 +37,14 @@ except ImportError:
     from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_sifei_by_pillar
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
+# 制化引擎（2026-10-21 制化第一批，001 §155）：大时/五墓豁免判定单点
+try:
+    from .制化引擎 import (eval_dashi_chouwei_exempt, eval_wumu_exempt,
+                            DASHI_EXEMPT_KEY, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE)
+except ImportError:
+    from 制化引擎 import (eval_dashi_chouwei_exempt, eval_wumu_exempt,
+                           DASHI_EXEMPT_KEY, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE)
+
 class CommonShenShaChecker(ShenShaChecker):
     """通用神煞检查器"""
 
@@ -272,7 +280,13 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('小耗', -15, '小耗之日，略有损耗')
 
         if self._is_dashi(sizhu):
-            self._add_shensha('大时', -12, '大时咸池，桃花煞')
+            # 2026-10-21 制化第一批（001 §155，矩阵#9）：丑未月二德并止忌军事
+            # （军事映射空集=全免附警示）；相抵支不落地（轻重层挂账）。
+            _da, _dn = eval_dashi_chouwei_exempt(sizhu, getattr(self, '_std_event', None))
+            if _da:
+                self._add_shensha(DASHI_EXEMPT_KEY, 0, _dn)
+            else:
+                self._add_shensha('大时', -12, '大时咸池，桃花煞')
 
         # 2026-10-21 口径收口批（001 §153）：天吏×入学超范围删除（卷十忌列无
         # 入学，取证稿 §1.8）；移徙恢复发射（般移【移徙同】双明文，x4 误排
@@ -291,7 +305,12 @@ class CommonShenShaChecker(ShenShaChecker):
         #         self._add_shensha('飞廉', -12, '飞廉作祟，口舌是非')
 
         if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -12, '五墓之日，忌埋葬')
+            # 2026-10-21 制化第一批（001 §155，矩阵#15）：午/子月与月德并
+            # 则不忌（德神集仅月德，无证据不放宽）。
+            if eval_wumu_exempt(sizhu):
+                self._add_shensha(WUMU_EXEMPT_KEY, 0, WUMU_EXEMPT_NOTE)
+            else:
+                self._add_shensha('五墓', -12, '五墓之日，忌埋葬')
 
         # 2026-10-21 口径收口批（001 §153）：伏断日日家用忌零载删除（协纪卷十
         # 无条目、卷十一 0 命中、卷三十六辨讹「伏断本选时之法」，取证稿 §1.4）。

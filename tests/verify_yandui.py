@@ -194,20 +194,30 @@ case_d_pred = ShenShaCase(
 
 # ===== 入口④：score_marriage_day details 端到端 =====
 from modules.婚嫁评分算法 import score_marriage_day
+from modules.shensha.制化引擎 import eval_yandui_exempt
+from modules.四柱计算器 import calculate_sizhu
 
 
 def adapter_d_details(d):
     try:
         r = score_marriage_day(d)
-        return [x for x in r.get('details', []) if x[0] == '厌对'] == [('厌对', -10)]
+        items = [x for x in r.get('details', [])
+                 if x[0] in ('厌对', '厌对·制化豁免')]
+        # 2026-10-21 制化第一批（001 §155，矩阵#13）：五德并日豁免——details
+        # 记 ('厌对·制化豁免', 0)；非豁免日仍恰含 ('厌对', -10)。
+        sz = calculate_sizhu(d, 12, 0)
+        if eval_yandui_exempt(sz)[0]:
+            return items == [('厌对·制化豁免', 0)]
+        return items == [('厌对', -10)]
     except Exception:
         return _UNAVAILABLE
 
 
 case_d_details = ShenShaCase(
-    name='厌对-D端到端details(-10)', category='A',
+    name='厌对-D端到端details(-10/豁免)', category='A',
     description='命中日 score_marriage_day details 恰含(厌对,-10)，'
-                '非命中日不含；2025-2027共1095天穷举',
+                '五德并豁免日恰含(厌对·制化豁免,0)（制化第一批 001 §155）；'
+                '2025-2027共1095天穷举',
     inputs=DAYS, expected=expected_pred, adapter=adapter_d_details, compare='bool')
 
 CASES = [case_pred, case_score, case_golden, case_d_pred, case_d_details]
@@ -240,10 +250,16 @@ def _assert_extra():
     import modules.婚嫁评分算法 as _H
     _orig = _H.is_yandui
     hit_days = [d for d in DAYS if expected_pred(d)]
+    # 制化第一批（001 §155）：命中日按是否五德并分为豁免/非豁免两组，
+    # 分别锚定「关断分支总分差=-10 截断公式」与「豁免日零变化+豁免键」。
+    hit_days_ex = [d for d in hit_days
+                   if eval_yandui_exempt(calculate_sizhu(d, 12, 0))[0]]
+    _ex_set = set(hit_days_ex)
+    hit_days_nx = [d for d in hit_days if d not in _ex_set]
     miss_sample = DAYS[::47]
     n_delta = 0
     try:
-        for d in hit_days:
+        for d in hit_days_nx:
             r_on = _H.score_marriage_day(d)
             _H.is_yandui = lambda date_obj, sizhu: False
             r_off = _H.score_marriage_day(d)
@@ -257,6 +273,16 @@ def _assert_extra():
                 f'{d} 关闭分支后 details 仍含厌对'
             if delta == -10:
                 n_delta += 1
+        for d in hit_days_ex:
+            r_on = _H.score_marriage_day(d)
+            _H.is_yandui = lambda date_obj, sizhu: False
+            r_off = _H.score_marriage_day(d)
+            _H.is_yandui = _orig
+            assert r_on['score'] == r_off['score'], \
+                f'{d} 五德并豁免日关断分支总分应零变化（豁免已免扣）'
+            ks = [x[0] for x in r_on['details']]
+            assert '厌对·制化豁免' in ks and '厌对' not in ks, \
+                f'{d} 豁免日 details 应记豁免键 0 分: {ks}'
         for d in miss_sample:
             if expected_pred(d):
                 continue

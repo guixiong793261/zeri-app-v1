@@ -1,111 +1,128 @@
 # -*- coding: utf-8 -*-
 """
-五墓「不得自动豁免」回归锁（制化层前置断言，2026-10-18）
+五墓制化豁免回归锁（制化第一批 2026-10-21 随批更新）
 ======================================================
-拍板依据：d6 月家P2 续取证发现五墓制化条文「五月十一月与月德并则不忌」
-（协纪卷十五墓段明文），用户拍板：
-「不批准本批立即改码……标注'五墓制化待制化层统一处理'……
-保留回归断言：在制化层裁断前，不得因月德自动豁免五墓
-（防止有人看到条文就顺手加豁免）。」
-
-验证面：
-A. 源码层：基类/通用 checker 五墓发射附近无月德豁免分支；
-B. 行为层（反向锚）：午月丙戌日 = 五墓（四五月丙戌）+ 月德并
-   （午月月德=丙干，丙戌日干丙=月德）——协纪典载「不忌」之日，
-   软件在制化层裁断前**仍发射五墓 -12**（维持现状，不自动豁免）。
-   制化层批次实现豁免时，本断言需随批更新（届时应先改本脚本拍板）。
+沿革：
+- 2026-10-18 d6 批初版：拍板「制化层裁断前不得因月德自动豁免五墓」，
+  本锁反向锚定「午月丙戌日仍发射五墓 -12」。
+- 2026-10-21 制化第一批（001 §155 六项拍板，矩阵 #15 批准落地）：五墓豁免
+  正式落地——「五月(午)、十一月(子)与月德并则不忌」（《协纪》卷六义例四；
+  德神集仅月德，不含月德合/天德，无证据不放宽）。本锁随批更新（原脚本
+  自注协议：制化层批次实现豁免时，本断言需随批更新）：
+  A. 源码层：基类/通用 checker 五墓发射存在豁免分支（eval_wumu_exempt +
+     WUMU_EXEMPT_KEY + 矩阵#15 锚注记），else 分支保留原 -12 发射；
+  B. 行为层正锚：午月丙戌日（五墓+月德并）→ 发射豁免注记键 0 分，
+     不再发射'五墓'正名（通用+嫁娶通道）；
+  C. 行为层反锚：巳月丙戌日（五墓 fired，月德庚≠丙 无月德并）→ 仍发射
+     '五墓' -12；
+  D. 排除面：入宅/作灶仍零五墓发射（基类排除不动）；
+  E. 哨兵：2026-11-04 入宅 221/★★★★★上吉（2026 全年无豁免触发日，
+     探针 manifest 佐证）。
 
 退出码 0=全过 1=有失败。
 """
 import io
 import os
-import re
 import sys
 import datetime
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
 FAILS = []
 
 
-def check(name, cond):
-    tag = 'PASS' if cond else 'FAIL'
-    print('[%s] %s' % (tag, name))
+def check(name, cond, extra=''):
+    print(('  PASS  ' if cond else '  FAIL  ') + name + (('  | ' + extra) if (extra and not cond) else ''))
     if not cond:
         FAILS.append(name)
 
 
-# ============ A：源码层（无月德豁免分支） ============
-SOURCES = ['modules/shensha/神煞基类.py', 'modules/shensha/通用神煞.py']
-for rel in SOURCES:
-    path = os.path.join(ROOT, rel.replace('/', os.sep))
-    with open(path, encoding='utf-8') as f:
-        src = f.read()
-    # 定位五墓发射块（发射行前后 6 行窗口）
-    blocks = []
-    lines = src.split('\n')
-    for i, ln in enumerate(lines):
-        if "_add_shensha('五墓'" in ln:
-            blocks.append('\n'.join(lines[max(0, i - 6):i + 2]))
-    check('%s 存在五墓发射' % rel, len(blocks) >= 1)
-    for j, blk in enumerate(blocks):
-        check('%s 五墓发射#%d 无月德豁免分支' % (rel, j + 1),
-          '月德' not in blk and 'yuede' not in blk.lower() and '德' not in blk)
-    # 无条件发射 = 不得因月德/德合并等制化条件跳过；事项排除（_p2_ev，P2
-    # 隔离批 001 §120 引入）不属制化豁免，允许存在。
-    check('%s 五墓发射无月德类豁免条件' % rel,
-          not re.search(r"(月德|yuede|德合|dehe)", blk, re.IGNORECASE))
-
-# ============ B：行为层（午月丙戌日仍扣分） ============
-sys.path.insert(0, ROOT)
-try:
+def main():
     from modules.四柱计算器 import calculate_sizhu
     from modules.shensha import get_checker
+    from modules.shensha.制化引擎 import (eval_wumu_exempt, WUMU_EXEMPT_KEY,
+                                          DE_GODS_ALL)
 
-    def _get(s, k):
-        return s.get(k) if isinstance(s, dict) else getattr(s, k, None)
+    print('== A. 源码层：发射块豁免分支与锚注记 ==')
+    base = open(os.path.join(ROOT, 'modules', 'shensha', '神煞基类.py'),
+                encoding='utf-8').read()
+    common = open(os.path.join(ROOT, 'modules', 'shensha', '通用神煞.py'),
+                  encoding='utf-8').read()
+    for tag, src in (('基类', base), ('通用', common)):
+        i = src.find("self._add_shensha('五墓'")
+        check('%s 仍存在五墓发射块' % tag, i > 0)
+        blk = src[max(0, i - 700):i + 200]
+        check('%s 豁免分支接线 eval_wumu_exempt' % tag, 'eval_wumu_exempt' in blk)
+        check('%s 豁免键 WUMU_EXEMPT_KEY' % tag, 'WUMU_EXEMPT_KEY' in blk)
+        check('%s 矩阵#15 锚注记' % tag, '矩阵#15' in blk)
+    check('基类 else 分支保留 -12', "self._add_shensha('五墓', -12, '五墓主死丧')" in base)
+    check('通用 else 分支保留 -12', "self._add_shensha('五墓', -12, '五墓之日，忌埋葬')" in common)
 
-    ck = get_checker('通用')
-    # 扫 2025-2027 各年午月窗口找丙戌日（五墓四五月丙戌；午月月德丙干=月德并）
-    found = None
-    for y in (2025, 2026, 2027):
-        # 午月窗口：6/6..7/6（小暑前，按节气月支实时判定兜底）
-        cur = datetime.date(y, 6, 6)
-        end = datetime.date(y, 7, 6)
-        while cur <= end and found is None:
-            sz = calculate_sizhu(cur, 10, 0)
-            if (sz.get('day_gan') == '丙' and sz.get('day_zhi') == '戌'
-                    and sz.get('month_zhi') == '午'):
-                found = cur
-            cur += datetime.timedelta(days=1)
-        if found is not None:
+    print('== B. 行为层正锚：午月丙戌（五墓+月德并）→ 豁免键 0 分 ==')
+    anchor_b = None
+    d = datetime.date(2020, 1, 1)
+    while d <= datetime.date(2035, 12, 31):
+        sz = calculate_sizhu(d, 12, 0)
+        if sz['month_zhi'] == '午' and sz['day_gan'] + sz['day_zhi'] == '丙戌':
+            anchor_b = (d, sz)
             break
-    check('2025-2027 午月找到丙戌日（五墓+月德并）', found is not None)
-    if found is not None:
-        sz = calculate_sizhu(found, 10, 0)
-        # 月德确证：该日应发射月德
-        results = ck.check(sz, [])
-        names = [(_get(s, 'name'), _get(s, 'score')) for s in results]
-        has_yuede = any(n == '月德' for n, _ in names)
-        wumu = [(n, sc) for n, sc in names if n == '五墓']
-        check('该日确证月德在榜（月德并成立前提）', has_yuede)
-        check('五墓+月德并日仍发射五墓（不得自动豁免）', len(wumu) >= 1)
-        if wumu:
-            check('五墓分值 -12 维持现状', any(sc == -12 for _, sc in wumu))
-        # 反向锚：入宅 checker 同日仍扣（通用通道外抽样——择嫁娶抽查五墓发射）
-        ck2 = get_checker('嫁娶')
-        results2 = ck2.check(sz, [])
-        names2 = [_get(s, 'name') for s in results2]
-        check('嫁娶通道五墓+月德并日仍发射五墓', '五墓' in names2)
-except ImportError as e:
-    print('[SKIP] 行为层：模块导入失败（%s），以源码层断言为准' % e)
+        d += datetime.timedelta(days=1)
+    check('2020–2035 找到午月丙戌锚日', anchor_b is not None)
+    if anchor_b:
+        d, sz = anchor_b
+        check('引擎 eval_wumu_exempt(锚日)=True', eval_wumu_exempt(sz) is True)
+        for ev in ('通用', '嫁娶'):
+            names = [(s['name'], s['score']) for s in get_checker(ev).check(sz, [])]
+            ex = [x for x in names if x[0] == WUMU_EXEMPT_KEY]
+            wm = [x for x in names if x[0] == '五墓']
+            check('%s通道 锚日发射豁免键0分' % ev, ex == [(WUMU_EXEMPT_KEY, 0)], str(names))
+            check('%s通道 锚日不再发射五墓正名' % ev, not wm, str(names))
 
-print('---')
-if FAILS:
+    print('== C. 行为层反锚：巳月丙戌（无月德并）→ 仍 -12 ==')
+    anchor_c = None
+    d = datetime.date(2020, 1, 1)
+    while d <= datetime.date(2035, 12, 31):
+        sz = calculate_sizhu(d, 12, 0)
+        if sz['month_zhi'] == '巳' and sz['day_gan'] + sz['day_zhi'] == '丙戌':
+            anchor_c = (d, sz)
+            break
+        d += datetime.timedelta(days=1)
+    check('2020–2035 找到巳月丙戌锚日', anchor_c is not None)
+    if anchor_c:
+        d, sz = anchor_c
+        check('引擎 eval_wumu_exempt(反锚日)=False', eval_wumu_exempt(sz) is False)
+        names = [(s['name'], s['score']) for s in get_checker('通用').check(sz, [])]
+        check('反锚日仍发射五墓 -12', ('五墓', -12) in names, str(names))
+        check('反锚日无豁免键', not any(x[0] == WUMU_EXEMPT_KEY for x in names))
+
+    print('== D. 排除面：入宅/作灶零五墓发射（2026 全年抽查） ==')
+    bad = []
+    d = datetime.date(2026, 1, 1)
+    while d <= datetime.date(2026, 12, 31):
+        sz = calculate_sizhu(d, 12, 0)
+        for ev in ('入宅', '作灶'):
+            for s in get_checker(ev).check(sz, []):
+                if s['name'] in ('五墓', WUMU_EXEMPT_KEY):
+                    bad.append((str(d), ev, s['name']))
+        d += datetime.timedelta(days=1)
+    check('入宅/作灶 2026 全年无五墓/豁免键发射', not bad, str(bad[:5]))
+
+    print('== E. 哨兵：2026-11-04 入宅 221/上吉 ==')
+    from modules.评分器 import calculate_score
+    sz = calculate_sizhu(datetime.date(2026, 11, 4), 12, 0)
+    r = calculate_score(sz, '入宅')
+    check('哨兵分=221', r['score'] == 221, str(r['score']))
+    check('哨兵级=上吉', '上吉' in str(r.get('level', '')))
+    check('哨兵日无五墓/豁免键', not any(
+        s['name'] in ('五墓', WUMU_EXEMPT_KEY) for s in r.get('shensha_list', [])))
+    check('德神封闭集不含天恩', '天恩' not in DE_GODS_ALL)
+
+    print()
     print('FAILS=%d' % len(FAILS))
-    for f in FAILS:
-        print(' -', f)
-    raise SystemExit(1)
-print('ALL PASS')
-raise SystemExit(0)
+    return 1 if FAILS else 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

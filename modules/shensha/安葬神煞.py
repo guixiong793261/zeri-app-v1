@@ -32,6 +32,14 @@ except ImportError:
     from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
     from 工具函数 import DI_ZHI
 
+# 制化引擎（2026-10-21 制化第一批，001 §155）：五墓豁免判定单点。
+# 本行原为死链（super 先行占位），基类接线豁免后若不同步接线会在豁免日
+# 复活 -12（基类豁免日不发射'五墓'正名，同名去重失效）。
+try:
+    from .制化引擎 import eval_wumu_exempt, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE
+except ImportError:
+    from 制化引擎 import eval_wumu_exempt, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE
+
 class BurialShenShaChecker(ShenShaChecker):
     # P1-5（2026-10-18）：安葬不忌土瘟（陈书 p748「止忌破土不忌安葬」+协纪卷十一
     # 安葬忌列无土族煞）——关闭基类通用链土瘟发射；docs/P1-5_安葬土瘟_对勘.md，001 §117
@@ -182,7 +190,12 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 五墓
         if self._is_wumu(sizhu):
-            self._add_shensha('五墓', -12, '五墓凶日，不宜安葬')
+            # 2026-10-21 制化第一批（001 §155，矩阵#15）：与基类同键豁免注记
+            # （午/子月与月德并则不忌，德神集仅月德）。
+            if eval_wumu_exempt(sizhu):
+                self._add_shensha(WUMU_EXEMPT_KEY, 0, WUMU_EXEMPT_NOTE)
+            else:
+                self._add_shensha('五墓', -12, '五墓凶日，不宜安葬')
         
         # 受死日发射已删（2026-10-20 受死日删除批，001 §145）：陈书 p54
         # 「丧塟即不忌」、p748「即受死日亦不忌安塟」、p152「宜安塟」三条明载
