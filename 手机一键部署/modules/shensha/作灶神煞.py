@@ -123,9 +123,10 @@ class StoveShenShaChecker(ShenShaChecker):
         # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链，
         # 基类通用链事项排除后隔离（001 §120）。
         
-        # 天吏
-        if self._is_tianli(sizhu):
-            self._add_shensha('天吏', -15, '天吏日忌作灶')
+        # 天吏×作灶已删（2026-10-21 口径收口批，001 §153）：协纪卷十天吏忌列
+        # 37 项无作灶（取证稿 §1.8 判 ❌）。原发射为：
+        #     if self._is_tianli(sizhu):
+        #         self._add_shensha('天吏', -15, '天吏日忌作灶')
         
         # ===== 吉神 =====
         

@@ -142,9 +142,12 @@ class BurialShenShaChecker(ShenShaChecker):
         if self._is_yaoan(sizhu):
             self._add_shensha('要安', 8, '要安吉日，利于安葬')
         
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '不将日安葬大吉')
+        # 不将日×安葬已删（2026-10-21 口径收口批，001 §153）：不将日三库一致
+        # 「嫁娶专用」（协纪卷十「宜嫁娶」、卷十一仅嫁娶、考原、陈书 p134），
+        # 安葬无载（取证稿 §1.2 判 ❌）。本处与下方日块两处发射一并删除。
+        # 原发射为：
+        #     if self._is_bujiang(sizhu):
+        #         self._add_shensha('不将日', 15, '不将日安葬大吉')
         
         # 月厌
         if self._is_yueyan(sizhu):
@@ -245,9 +248,10 @@ class BurialShenShaChecker(ShenShaChecker):
         # 13/11 日柱统一注册（安葬取 SHENSHA_SCORES 既有 15/10 键）；本类
         # 旧 _is_mingfei 为连续 24 日错表（2026 端到端 149 命中），方法删除。
 
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '不将日安葬可用')
+        # 不将日×安葬已删（口径收口批，001 §153，判据见上方月块注）。
+        # 原发射为：
+        #     if self._is_bujiang(sizhu):
+        #         self._add_shensha('不将日', 15, '不将日安葬可用')
         
         # 六合
         if self._is_liuhe(sizhu):

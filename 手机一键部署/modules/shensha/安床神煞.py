@@ -101,9 +101,10 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yaoan(sizhu):
             self._add_shensha('要安', 8, '要安日，主安宁，安床吉')
 
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '不将日，阳将阴将之日，安床大吉')
+        # 不将日×安床已删（2026-10-21 口径收口批，001 §153）：不将日三库一致
+        # 「嫁娶专用」，安床无载（取证稿 §1.2 判 ❌）。原发射为：
+        #     if self._is_bujiang(sizhu):
+        #         self._add_shensha('不将日', 15, '不将日，阳将阴将之日，安床大吉')
 
         # ===== 月神类凶煞 =====
 
