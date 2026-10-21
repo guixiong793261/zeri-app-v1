@@ -1,0 +1,45 @@
+{
+  "title": "制化第一批·大时/五墓 2026 影响面探针 manifest",
+  "generated_at": "2026-10-21",
+  "main_repo_head": "6ed914d",
+  "probe_scope": "2026-01-01 ~ 2026-12-31 × 15 事项 × 12时辰口径（hour=12）",
+  "method": "monkey-patch ShenShaChecker._is_dashi/_is_wumu（进程内模拟，主仓零改动）；豁免判定与制化引擎.py 判据同构",
+  "frozen_criteria": {
+    "大时豁免支": "月支∈{丑,未} 且 天德+月德同时并临（二德并最严判读）→ 止忌军事（映射空集）=全免",
+    "五墓豁免支": "月支∈{午,子} 且 月德并（仅月德）→ 不忌",
+    "不落地支": "大时寅申巳亥除日官日支（建除阻塞）、大时子午卯酉相抵支（轻重层挂账）"
+  },
+  "files": {
+    "probe_大时五墓_2026.py": "b458cb0007ae751208589808f537516c61800ecff11703c9bf9659fd578bd631",
+    "大时五墓_2026_影响面.json": "0953f29a17cf274ea2f32c6cfe4b40d91379b0d197e5105205955c4f1f834fe5",
+    "manifest.json": "本文件"
+  },
+  "head_result": {
+    "大时": {
+      "firing_days_2026": 30,
+      "deduct_event_days": 341,
+      "exempt_cond_days": 6,
+      "exempt_overlap_days": 0,
+      "score_delta_2026": 0
+    },
+    "五墓": {
+      "firing_days_2026": 6,
+      "deduct_event_days": 75,
+      "exempt_cond_days": 5,
+      "exempt_overlap_days": 0,
+      "score_delta_2026": 0
+    },
+    "sentinel_2026_11_04_ruzhai": {
+      "dashi_fired": false,
+      "wumu_fired": false,
+      "cond": false,
+      "score": 221,
+      "level": "★★★★★上吉",
+      "conclusion": "哨兵不受本批影响，221 基线维持"
+    }
+  },
+  "artifacts_noted": {
+    "嫁娶截断": "嫁娶通道在专属硬否决日提前返回，shensha_list 截断（大时 30 天仅捕获 11 天、五墓 6 天仅捕获 3 天），系先例行为，与 Δ=0 结论无关",
+    "排除面完好": "入宅/作灶（基类 1679/1681 排除）与安葬（大时通道）0 实扣，排除逻辑未被探针破坏"
+  }
+}

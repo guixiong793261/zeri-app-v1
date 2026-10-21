@@ -1,0 +1,238 @@
+{
+  "meta": {
+    "title": "制化第一批·大时/五墓 2026 影响面探针",
+    "year": 2026,
+    "hour": 12,
+    "events": [
+      "嫁娶",
+      "修造",
+      "动土",
+      "拆舍",
+      "入宅",
+      "开业",
+      "出行",
+      "安床",
+      "作灶",
+      "安葬",
+      "入学",
+      "求医",
+      "签约",
+      "通用",
+      "祭祀"
+    ],
+    "method": "monkey-patch ShenShaChecker._is_dashi/_is_wumu（进程内模拟，未改码）",
+    "dashi_exempt_rule": "月支∈{丑,未} 且 天德+月德同时并临 → 止忌军事(映射空集)=全免",
+    "wumu_exempt_rule": "月支∈{午,子} 且 月德并(仅月德) → 不忌",
+    "generated_at": "2026-10-21T22:26:06"
+  },
+  "stat": {
+    "大时": {
+      "cond_days": 0,
+      "fire_days": 30,
+      "deduct_event_days": 341,
+      "exempt_event_days": 0,
+      "score_delta_total": 0,
+      "by_event": {
+        "嫁娶": {
+          "deduct_days": 11,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "修造": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "动土": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "拆舍": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "入宅": {
+          "deduct_days": 0,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "开业": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "出行": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "安床": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "作灶": {
+          "deduct_days": 0,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "安葬": {
+          "deduct_days": 0,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "入学": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "求医": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "签约": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "通用": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "祭祀": {
+          "deduct_days": 30,
+          "exempt_days": 0,
+          "delta": 0
+        }
+      }
+    },
+    "五墓": {
+      "cond_days": 0,
+      "fire_days": 6,
+      "deduct_event_days": 75,
+      "exempt_event_days": 0,
+      "score_delta_total": 0,
+      "by_event": {
+        "嫁娶": {
+          "deduct_days": 3,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "修造": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "动土": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "拆舍": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "入宅": {
+          "deduct_days": 0,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "开业": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "出行": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "安床": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "作灶": {
+          "deduct_days": 0,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "安葬": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "入学": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "求医": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "签约": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "通用": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        },
+        "祭祀": {
+          "deduct_days": 6,
+          "exempt_days": 0,
+          "delta": 0
+        }
+      }
+    },
+    "同日双煞": {
+      "deduct_event_days": 0,
+      "exempt_event_days": 0,
+      "score_delta_total": 0
+    }
+  },
+  "cond_day_lists": {
+    "大时丑未二德并": {
+      "days": [
+        "2026-01-06",
+        "2026-01-16",
+        "2026-01-26",
+        "2026-07-09",
+        "2026-07-19",
+        "2026-07-29"
+      ],
+      "count": 6
+    },
+    "五墓午子月德并": {
+      "days": [
+        "2026-06-11",
+        "2026-06-21",
+        "2026-07-01",
+        "2026-12-14",
+        "2026-12-24"
+      ],
+      "count": 5
+    }
+  },
+  "sentinel_20261104_ruzhai": {
+    "date": "2026-11-04",
+    "event": "入宅",
+    "dashi_fired": false,
+    "wumu_fired": false,
+    "cond_dashi": false,
+    "cond_wumu": false,
+    "score_before": 221,
+    "level_before": "★★★★★ 上吉",
+    "score_after": 221,
+    "level_after": "★★★★★ 上吉"
+  }
+}
