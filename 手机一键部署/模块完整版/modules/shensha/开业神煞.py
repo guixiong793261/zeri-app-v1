@@ -30,6 +30,14 @@ try:
 except ImportError:
     from 神煞基类 import ShenShaChecker
 
+# 制化引擎（2026-10-21 制化第一批，001 §155）：大时豁免判定单点。
+# 本行原为死链（super 先行占位），基类接线豁免后若不同步接线会在豁免日
+# 复活 -12（基类豁免日不发射'大时'正名，同名去重失效）。
+try:
+    from .制化引擎 import eval_dashi_chouwei_exempt, DASHI_EXEMPT_KEY
+except ImportError:
+    from 制化引擎 import eval_dashi_chouwei_exempt, DASHI_EXEMPT_KEY
+
 class OpeningShenShaChecker(ShenShaChecker):
     """开业神煞检查器"""
     
@@ -128,7 +136,13 @@ class OpeningShenShaChecker(ShenShaChecker):
         
         # 大时
         if self._is_dashi(sizhu):
-            self._add_shensha('大时', -12, '大时主凶')
+            # 2026-10-21 制化第一批（001 §155，矩阵#9）：与基类同键豁免注记
+            # （丑未月二德并止忌军事=映射空集全免附警示）。
+            _da, _dn = eval_dashi_chouwei_exempt(sizhu, getattr(self, '_std_event', None))
+            if _da:
+                self._add_shensha(DASHI_EXEMPT_KEY, 0, _dn)
+            else:
+                self._add_shensha('大时', -12, '大时主凶')
         
         # 天吏
         if self._is_tianli(sizhu):

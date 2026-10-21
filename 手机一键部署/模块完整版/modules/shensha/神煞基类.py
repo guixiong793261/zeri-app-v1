@@ -16,6 +16,17 @@ except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
+# 制化引擎（2026-10-21 制化第一批，001 §155）：德神豁免判定单点。
+# 引擎对本模块为惰性导入（运行期才取 ShenShaChecker），无循环导入。
+try:
+    from .制化引擎 import (eval_yandui_exempt, eval_dashi_chouwei_exempt,
+                            eval_wumu_exempt, YANDUI_EXEMPT_KEY,
+                            DASHI_EXEMPT_KEY, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE)
+except ImportError:
+    from 制化引擎 import (eval_yandui_exempt, eval_dashi_chouwei_exempt,
+                           eval_wumu_exempt, YANDUI_EXEMPT_KEY,
+                           DASHI_EXEMPT_KEY, WUMU_EXEMPT_KEY, WUMU_EXEMPT_NOTE)
+
 # 尝试导入 sxtwl 库（土王用事边界精确判定用；2026-10 批8a）
 try:
     import sxtwl
@@ -1604,7 +1615,14 @@ class ShenShaChecker:
             # 月厌所冲之辰也，其日忌嫁娶"；《历例》"正月起辰，逆行十二辰"）；
             # 分值事项标准 ('嫁娶','厌对'):-10。发射分=0：score 参数是查表
             # fallback，非 0 会使全部事项误扣（典载厌对忌嫁娶族）。
-            self._add_shensha('厌对', 0, '厌对之日，月厌所冲，忌嫁娶')
+            # 2026-10-21 制化第一批（001 §155，矩阵#13）：「与天德月德天德合
+            # 月德合天赦并则不忌（天愿不得与厌对并）」——五德集命中即发射
+            # 0 分豁免注记行（天愿经禁并排除对结构性排除，制化引擎单点）。
+            _za, _zn = eval_yandui_exempt(sizhu)
+            if _za:
+                self._add_shensha(YANDUI_EXEMPT_KEY, 0, _zn)
+            else:
+                self._add_shensha('厌对', 0, '厌对之日，月厌所冲，忌嫁娶')
 
         if self._is_yangcuo(sizhu):
             # 2026-10 α2-C 接线：阳错（《协纪》卷四义例二《堪舆经》逐月干支
@@ -1653,8 +1671,16 @@ class ShenShaChecker:
         # x4 入宅般移映射删除批（2026-10-19，001 §127）：大时×入宅三库零逐字
         # 明文（docs/典据研究_入宅同源复核_般移映射条目.md §126），入宅排除
         # （保留既有作灶/安葬排除）。
+        # 2026-10-21 制化第一批（001 §155，矩阵#9）：「丑未月与二德并，止忌
+        # 军事」——军事经止忌映射表为空集=当前事项全免（附警示文案，拍板3）；
+        # 子午卯酉相抵支典无力度原文不落地（轻重层挂账）；寅申巳亥除日官日支
+        # 建除阻塞挂账。「二德并」=天德+月德同时并临（最严判读，001 §155）。
         if self._is_dashi(sizhu) and _p2_ev not in ('作灶', '安葬', '入宅'):
-            self._add_shensha('大时', -12, '大时忌用')
+            _da, _dn = eval_dashi_chouwei_exempt(sizhu, _p2_ev)
+            if _da:
+                self._add_shensha(DASHI_EXEMPT_KEY, 0, _dn)
+            else:
+                self._add_shensha('大时', -12, '大时忌用')
         # 2026-10-21 口径收口批（001 §153）：x4 批「天吏×入宅三库零逐字明文」
         # 注释有误——协纪卷十忌列明文含「般移」、卷十一「般移【移徙同】」双明文
         # （docs/下半场第一批_八项三库取证_20261021.md §1.8），入宅/移徙属般移
@@ -1678,8 +1704,14 @@ class ShenShaChecker:
         #         self._add_shensha('飞廉', -12, '飞廉主虚惊')
         # x4：五墓×入宅三库零逐字明文（陈书 p646 五墓属安碓磨条忌列），入宅
         # 排除（保留既有作灶排除）。
+        # 2026-10-21 制化第一批（001 §155，矩阵#15）：「五月、十一月与月德并
+        # 则不忌」（卷六义例四）；德神集仅月德，不含月德合/天德（无证据不放宽，
+        # 001 §155 判读冻结）。
         if self._is_wumu(sizhu) and _p2_ev not in ('作灶', '入宅'):
-            self._add_shensha('五墓', -12, '五墓主死丧')
+            if eval_wumu_exempt(sizhu):
+                self._add_shensha(WUMU_EXEMPT_KEY, 0, WUMU_EXEMPT_NOTE)
+            else:
+                self._add_shensha('五墓', -12, '五墓主死丧')
         # 2026-10-21 口径收口批（001 §153）：伏断日日家用忌零载删除——协纪卷十
         # 无条目、卷十一 0 命中；卷三十六辨讹明定「伏断本选时之法」（选时层非
         # 日家层）；卷三十五附录仅塑绘神像/成造船只两处专用且软件无对应通道

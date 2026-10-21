@@ -1227,11 +1227,22 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     # 厌对（2026-10 I1 第一批接入）：《协纪》卷五义例三《天宝历》月厌所冲
     # 之辰，典载"其日忌嫁娶"。谓词委托神煞基类.is_yandui_by_zhi 单点出口，
     # 分值查 ('嫁娶','厌对')=-10（非嫁娶事项无键、不接入）。
+    # 2026-10-21 制化第一批（001 §155，矩阵#13）：「与天德月德天德合月德合
+    # 天赦并则不忌（天愿不得与厌对并）」——五德集命中即免扣，details 记
+    # 豁免键 0 分（防日课校验器嫁娶负分条目双向追溯误报）。
+    try:
+        from .shensha.制化引擎 import eval_yandui_exempt
+    except ImportError:
+        from modules.shensha.制化引擎 import eval_yandui_exempt
     if is_yandui(date_obj, sizhu):
-        _yandui_score = _shensha_score('嫁娶', '厌对', -10)
-        score += _yandui_score
-        details.append(('厌对', _yandui_score))
-        result['warnings'].append('厌对：月厌所冲之日，忌嫁娶')
+        if eval_yandui_exempt(sizhu)[0]:
+            details.append(('厌对·制化豁免', 0))
+            result['warnings'].append('厌对：五德并临，典载不忌（已豁免）')
+        else:
+            _yandui_score = _shensha_score('嫁娶', '厌对', -10)
+            score += _yandui_score
+            details.append(('厌对', _yandui_score))
+            result['warnings'].append('厌对：月厌所冲之日，忌嫁娶')
 
     # 八专（2026-10 I1 第一批接入）：《历例》B5 版 5 柱
     # （丁未、己未、庚申、甲寅、癸丑），《协纪》卷十嫁娶忌。
