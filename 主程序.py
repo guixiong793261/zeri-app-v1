@@ -135,6 +135,7 @@ except ImportError:
 # SHAN_EVENTS 为 UI 山向段落分组（含历史标签上梁/竖柱）；MARRIAGE_EVENTS 含订婚/纳采等别名；
 # FEIXING_EVENTS 为玄空飞星参与事项（含别名），与评分器飞星口径一致。
 from modules.事项标准 import SHAN_UI_EVENTS as SHAN_EVENTS, MARRIAGE_EVENTS, MARRIAGE_UI_EVENTS, FEIXING_EVENTS, UI_EVENTS
+from modules.事项标准 import SHENSHA_WEIGHT_PENDING
 
 
 def _fmt_score(v, empty='-'):
@@ -6653,6 +6654,15 @@ class ZeriApp:
                 content += "【其他神煞】\n"
                 for it in ping_items: content += it
                 content += "\n"
+            # 2026-10-21 口径收口批（001 §153 拍板6）：轻重层待证提示语——
+            # 下列神煞分值为软件经验权重（三库无分值原文），弱化绝对参考性。
+            _wpend = sorted({sh.get('name') for sh in shensha_list
+                             if isinstance(sh, dict)
+                             and sh.get('name') in SHENSHA_WEIGHT_PENDING})
+            if _wpend:
+                content += (
+                    "  注：%s 的分值为软件经验权重（轻重层待证·典籍无分值原文），"
+                    "仅供参考，待轻重层裁断后校准。\n" % '、'.join(_wpend))
             content += "\n"
         else:
             content += """【神煞信息】
