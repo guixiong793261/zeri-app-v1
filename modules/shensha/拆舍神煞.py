@@ -22,10 +22,12 @@ class DemolitionShenShaChecker(ConstructionShenShaChecker):
         """检查年神煞"""
         super()._check_year_shensha(sizhu, **kwargs)
         
-        # 太岁（拆舍大忌）
-        if self._is_taisui(sizhu):
-            self._add_shensha('太岁', -20, '太岁当头，忌拆舍')
-        
+        # 太岁×拆舍已删（口径收口批，2026-10-21，001 §153，岁破款收口）：
+        # 方位神误作日辰神（判据同动土注；快验稿 §4.4 与岁破五维全同）。
+        # 原发射为：
+        #     if self._is_taisui(sizhu):
+        #         self._add_shensha('太岁', -20, '太岁当头，忌拆舍')
+
         # 岁破×拆舍已删（岁破批，2026-10-20，001 §140）：日课普适岁破注册零日课
         # 典据（协纪卷内「岁破日」0 命中），拍板删日课通道普适忌注册。发射原为
         # （本行原走基类 _is_suipo，基类谓词本批同步删）：
