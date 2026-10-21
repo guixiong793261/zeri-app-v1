@@ -91,9 +91,10 @@ class TravelShenShaChecker(ShenShaChecker):
         if self._is_yinde(sizhu):
             self._add_shensha('阴德', 10, '阴德吉星，宜出行')
         
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '不将日利于出行')
+        # 不将日×出行已删（2026-10-21 口径收口批，001 §153）：不将日三库一致
+        # 「嫁娶专用」，出行无载（取证稿 §1.2 判 ❌）。原发射为：
+        #     if self._is_bujiang(sizhu):
+        #         self._add_shensha('不将日', 15, '不将日利于出行')
         
         # 月厌
         if self._is_yueyan(sizhu):

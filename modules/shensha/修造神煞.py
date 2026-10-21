@@ -218,9 +218,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
         # 13/11 日柱统一注册（修造取 SHENSHA_SCORES 既有 15/10 键）；本类
         # 旧 _is_mingfei/_is_mingfeidui 为 6 日错表，方法一并删除收口到基类。
 
-        # 不将日
-        if self._is_bujiang(sizhu):
-            self._add_shensha('不将日', 15, '修造吉日')
+        # 不将日×修造已删（2026-10-21 口径收口批，001 §153）：不将日三库一致
+        # 「嫁娶专用」，修造无载（取证稿 §1.2 判 ❌；本处原为死链，基类月块
+        # 先到先得，同批一并删除）。原发射为：
+        #     if self._is_bujiang(sizhu):
+        #         self._add_shensha('不将日', 15, '修造吉日')
 
         # ===== 补充缺失的吉神检查 =====
 

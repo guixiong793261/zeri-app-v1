@@ -36,7 +36,9 @@ A5 批·偏移错 2 项穷举验证（归忌／病符）
    推导；产品侧仅调用基类谓词与 checker，杜绝自证。
 
 含：2025-2027 共 1095 天归忌谓词穷举；新旧集合代数（零交集断言）；
-端到端 3 个 checker（归忌：入宅/修造/签约——恰一条＋分值锁）；
+端到端 4 个 checker（归忌：嫁娶/入宅/出行/移徙——恰一条＋分值锁；
+2026-10-21 口径收口批 001 §153：归忌注册仅保留 4 事项，修造/签约等
+11 项发射与键已删，转由 _assert_bingfu_removed 内键数断言收口）；
 病符删除反向断言；override 删除结构断言。
 """
 import sys
@@ -230,7 +232,10 @@ case_locks = ShenShaCase(
 
 
 CASES = [_make_pred_case('归忌')]
-CASES.extend(_make_e2e_case(e, '归忌', -15) for e in ('入宅', '修造', '签约'))
+# 口径收口批（001 §153）：归忌注册仅保留 嫁娶/入宅/出行/移徙 4 事项
+# （主锚用忌面=般移/移徙＋远回；嫁娶三库分歧保留、入宅/出行 x4 明文保留），
+# 修造/签约等 11 项发射与键已删，端到端对象随之收窄。
+CASES.extend(_make_e2e_case(e, '归忌', -15) for e in ('嫁娶', '入宅', '出行', '移徙'))
 # 病符谓词/端到端用例已删（病符批 2026-10-20，001 §141）：日课普适注册全删后
 # 无被测对象；转由 _assert_bingfu_removed() 作「谓词/发射/键全链清零」反向断言。
 CASES.append(case_locks)
@@ -298,9 +303,9 @@ def _assert_bingfu_removed():
                '作灶', '移徙', '入学', '求医', '签约', '安葬'):
         assert shensha_score(ev, '病符') is None, f'{ev} 病符分值应已删除'
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
-    assert n_yi == 74, f'移徙块键数应=74（病符批 76→75，红嘴朱雀批 75→74），实得 {n_yi}'
-    assert len(SHENSHA_SCORES) == 1262, \
-        f'SHENSHA_SCORES 总键应=1262（病符批 1281→1267，红嘴朱雀批 1267-5+3=1265，受死日删除批 1265→1262），实得 {len(SHENSHA_SCORES)}'
+    assert n_yi == 71, f'移徙块键数应=71（口径收口批 74→71：删 反支日/天恩/不将日 ×移徙 3 键），实得 {n_yi}'
+    assert len(SHENSHA_SCORES) == 1217, \
+        f'SHENSHA_SCORES 总键应=1217（口径收口批 1262→1217，删超范围注册键 45），实得 {len(SHENSHA_SCORES)}'
     return {'移徙块': n_yi, '总表': len(SHENSHA_SCORES)}
 
 

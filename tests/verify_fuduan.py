@@ -18,13 +18,16 @@ docs/协纪辨方书神煞对照表.md）：伏断日＝日支与月支相害（
 验证结构：
 1. 权威六害表硬编码 + sxtwl 独立节气月支，1095 天穷举谓词；
 2. 基类 self 方法委托一致性；
-3. 9 事项分值锁 -15；
-4. 12 个黄金日（2026 各节气月首个伏断日）日柱硬锁；
-5. pipeline 端到端：14 事项 checker 命中日恰 1 条「伏断日」-15，
-   旧冲表反例日 / 旧干表反例日均 0 条；
+3. 分值锁（口径收口批 2026-10-21，001 §153 反转）：注册键 9 项已删，
+   shensha_score 各事项返回 None（无键）；
+4. 12 个黄金日（2026 各节气月首个伏断日）日柱硬锁（谓词层保留：
+   伏断本选时之法，A6-3 三派收敛的 is_fuduan_by_zhi 留作选时层唯一出口）；
+5. pipeline 端到端（口径收口批反转）：14 事项 checker 全年 0 条「伏断日」
+   （日家用忌零载：协纪卷十无条目、卷十一 0 命中、卷三十六辨讹明定，
+   docs/下半场第一批_八项三库取证_20261021.md §1.4）；
 6. 单点出口锁：各 checker 类自身 __dict__ 不再携带 _is_fuduan override；
 7. 反向断言：六害关系表与典载口诀逐字一致；月害与伏断 1095 天同集
-   （同源双名共存为当前拍板口径，漂移即报错，见报告挂账项）。
+   （谓词层关系不变）；9 个原注册键删除后分值返回 None。
 """
 import sys
 import datetime
@@ -134,15 +137,19 @@ def adapter_self_pred(d):
 
 
 def expected_score(_d):
-    return -15
+    # 口径收口批（001 §153）：注册键已删，shensha_score 返回 None（无键）。
+    return True
 
 
 def adapter_score(_d):
     try:
         from modules.事项标准 import shensha_score
-        return shensha_score('嫁娶', '伏断日', None)
     except Exception:
         return _UNAVAILABLE
+    vals = [shensha_score(ev, '伏断日', None)
+            for ev in ('嫁娶', '开业', '出行', '安床', '作灶', '入学',
+                       '求医', '签约', '安葬')]
+    return all(v is None for v in vals)
 
 
 def expected_golden(d):
@@ -163,23 +170,19 @@ def adapter_golden(d):
 
 
 def adapter_pipeline(d):
-    """14 事项 checker 端到端：命中日恰 1 条「伏断日」-15，非命中日 0 条。"""
+    """口径收口批反转：14 事项 checker 全年 0 条「伏断日」（日家用忌零载）。"""
     try:
         from modules.四柱计算器 import calculate_sizhu
         from modules.事项标准 import get_shensha_checker
         sz = calculate_sizhu(d, 12, 0)
-        expect_hit = expected_pred(d)
+        sz['date'] = d
         for ev in EVENTS:
             c = get_shensha_checker(ev)
             c.check(sz)
             rows = [x for x in c.shensha_list
                     if isinstance(x, dict) and x.get('name') == '伏断日']
-            if expect_hit:
-                if len(rows) != 1 or rows[0].get('score') != -15:
-                    return False
-            else:
-                if rows:
-                    return False
+            if rows:
+                return False
         return True
     except Exception:
         return _UNAVAILABLE
@@ -222,7 +225,7 @@ case_self = ShenShaCase(
 
 case_score = ShenShaCase(
     name='伏断-分值锁', category='B',
-    description="shensha_score('嫁娶','伏断日')==-15",
+    description="口径收口批反转：9 个原注册键已删，shensha_score(ev,'伏断日') 均 None",
     inputs=[datetime.date(2026, 2, 12)], expected=expected_score,
     adapter=adapter_score, compare='eq')
 
@@ -233,9 +236,9 @@ case_golden = ShenShaCase(
     expected=expected_golden, adapter=adapter_golden, compare='eq')
 
 case_pipeline = ShenShaCase(
-    name='伏断-14事项pipeline单条目锁', category='B',
-    description='命中日14 checker各恰1条「伏断日」-15；旧冲表反例(2026-01-09)'
-                '与旧干表反例(2026-01-06)均0条；1095天逐日符合性',
+    name='伏断-14事项pipeline删除锁', category='B',
+    description='口径收口批反转：14 checker 2025-2027 全期 0 条「伏断日」'
+                '（日家用忌零载，取证稿 §1.4；谓词层黄金日锁另行保留）',
     inputs=DAYS, expected=lambda _d: True, adapter=adapter_pipeline,
     compare='bool')
 
@@ -250,10 +253,10 @@ CASES = [case_pred, case_self, case_score, case_golden, case_pipeline, case_sing
 
 def _assert_extra():
     """1) 六害表与典载口诀逐字一致；
-    2) 月害关系层 is_liuhai_by_zhi 与伏断 1095 天同集（同源双名共存，
-       若未来伏断典据翻书改口径，本断言提示双扣需重新拍板）；
-    3) 9 个有键事项分值全为 -15，5 个无键事项回落默认 -15（发射字面量）；
-    4) 旧冲表/旧干表反例日显式不命中。"""
+    2) 月害关系层 is_liuhai_by_zhi 与伏断 1095 天同集（谓词层关系不变）；
+    3) 口径收口批反转（001 §153）：9 个原注册键删除后 shensha_score 返回
+       None（发射已同步删除，不存在「无键兜底」泄漏）；
+    4) 旧冲表/旧干表反例日显式不命中（谓词层）。"""
     from modules.shensha.神煞基类 import (
         is_fuduan_by_zhi, is_liuhai_by_zhi, _LIUHAI_PARTNER, ShenShaChecker)
     # 口诀逐字
@@ -264,15 +267,15 @@ def _assert_extra():
         assert is_liuhai_by_zhi(mz, dz) == is_fuduan_by_zhi(mz, dz)
         assert ShenShaChecker()._is_yuehai(
             {'month_zhi': mz, 'day_zhi': dz}) == is_liuhai_by_zhi(mz, dz)
-    # 分值
+    # 分值（反转：键已删 → None）
     from modules.事项标准 import shensha_score
     for ev in ('嫁娶', '开业', '出行', '安床', '作灶', '入学', '求医', '签约', '安葬'):
-        assert shensha_score(ev, '伏断日', None) == -15, ev
+        assert shensha_score(ev, '伏断日', None) is None, ev
     # 反例
     for d in NEG_CHONG + NEG_GAN:
         assert not expected_pred(d), d
         assert not is_fuduan_by_zhi(_month_zhi_at(d), _day_ganzhi(d)[1]), d
-    # 黄金日全部命中且月柱月支与标注一致
+    # 黄金日全部命中且月柱月支与标注一致（谓词层保留证据）
     from modules.四柱计算器 import calculate_sizhu
     for gd, gz, mz in GOLDEN:
         sz = calculate_sizhu(gd, 12, 0)

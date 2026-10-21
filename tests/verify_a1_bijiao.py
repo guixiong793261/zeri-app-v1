@@ -197,12 +197,14 @@ TARGETS = ['岁德', '岁德合', '月空', '天马', '反支日', '天恩', '�
 GOLD_KEY = {'岁德': '岁德', '岁德合': '岁德合', '月空': '月空', '天马': '天马',
             '反支日': '反支', '天恩': '天恩', '鸣吠日': '鸣吠日', '鸣吠对日': '鸣吠对日'}
 SCORES = {
-    '修造': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10, '反支日': -12,
+    # 口径收口批（001 §153）：反支日全事项删除；天恩仅修造保留（条件增益句
+    # 「与修造吉神并尤宜兴作」，取证稿 §1.1/§1.5）。
+    '修造': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10,
              '天恩': 10, '鸣吠日': 15, '鸣吠对日': 10},
-    '安葬': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10, '反支日': -12,
-             '天恩': 10, '鸣吠日': 15, '鸣吠对日': 10},
-    '签约': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10, '反支日': -12,
-             '天恩': 10, '鸣吠日': 12, '鸣吠对日': 8},
+    '安葬': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10,
+             '鸣吠日': 15, '鸣吠对日': 10},
+    '签约': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10,
+             '鸣吠日': 12, '鸣吠对日': 8},
 }
 DAYS_2026 = [d for d in DAYS if d.year == 2026]
 
@@ -212,7 +214,8 @@ def _make_e2e_case(event):
 
     def expected(d):
         g = _gold(d)
-        return tuple(sorted((nm, sm[nm]) for nm in TARGETS if g[GOLD_KEY[nm]]))
+        return tuple(sorted((nm, sm[nm]) for nm in TARGETS
+                            if nm in sm and g[GOLD_KEY[nm]]))
 
     def adapter(d):
         try:
@@ -229,6 +232,12 @@ def _make_e2e_case(event):
             names = [n for n, _ in sel]
             if len(names) != len(set(names)):
                 return f'BAD:DUP{sel}'
+            # 口径收口批（001 §153）：反支日任何事项不得发射；
+            # 天恩仅修造通道发射（其余事项删除）。
+            if '反支日' in names:
+                return f'BAD:SCOPE-反支日{sel}'
+            if '天恩' in names and event != '修造':
+                return f'BAD:SCOPE-天恩{sel}'
             return tuple(sorted(sel))
         except Exception:
             return _UNAVAILABLE
@@ -347,12 +356,13 @@ def _assert_leap_2025():
 
 
 def _assert_banned_names_and_scope():
-    """全部 14 事项端到端：旧名 0 出现；动土手抄日检查不出天恩/反支日。"""
+    """全部 14 事项端到端：旧名 0 出现；反支日全事项 0 发射、
+    天恩仅修造发射（口径收口批 001 §153）。"""
     from modules.四柱计算器 import calculate_sizhu
     from modules.事项标准 import get_shensha_checker
     events = ['嫁娶', '修造', '动土', '拆舍', '入宅', '作灶', '开业', '出行',
               '安葬', '安床', '移徙', '入学', '求医', '签约']
-    banned = {'鸣犬日', '鸣犬对日', '天马日'}
+    banned = {'鸣犬日', '鸣犬对日', '天马日', '反支日'}
     suihe_total = 0
     for e in events:
         ck = get_shensha_checker(e)
@@ -361,6 +371,8 @@ def _assert_banned_names_and_scope():
             sz['date'] = d
             names = [it['name'] for it in ck.check(sz, owners=[])]
             assert not (banned & set(names)), f'{e} {d} 出现旧名 {banned & set(names)}'
+            if e != '修造':
+                assert '天恩' not in names, f'{e} {d} 不应有天恩（仅修造保留）'
             if e == '动土':
                 assert '天恩' not in names, f'动土手抄日检查不应有天恩 {d}'
                 assert '反支日' not in names, f'动土手抄日检查不应有反支日 {d}'

@@ -1570,7 +1570,12 @@ class ShenShaChecker:
             self._add_shensha('续世', 10, '续世主续嗣')
         if self._is_yaoan(sizhu):
             self._add_shensha('要安', 8, '要安主安宁')
-        if self._is_bujiang(sizhu):
+        # 2026-10-21 口径收口批（001 §153，用户拍板批1）：不将日三库一致
+        # 「嫁娶专用」（协纪卷十「宜嫁娶」、卷十一仅嫁娶 1 条、考原「阴阳不将
+        # 夫妇荣昌」、陈书 p134，docs/下半场第一批_八项三库取证_20261021.md §1.2）。
+        # 原 15 事项发射系超范围注册：入宅/开业/出行/安床/作灶/移徙/入学/求医/
+        # 签约/安葬 10 项无载删除（键同步删），仅保留嫁娶通道。
+        if self._is_bujiang(sizhu) and getattr(self, '_std_event', None) == '嫁娶':
             self._add_shensha('不将日', 15, '不将日吉')
         if self._is_tianma(sizhu):
             # 天马（月神，2026-10 A1 自年/日作用域移入；分值查 SHENSHA_SCORES，
@@ -1663,14 +1668,26 @@ class ShenShaChecker:
         # 排除（保留既有作灶排除）。
         if self._is_wumu(sizhu) and _p2_ev not in ('作灶', '入宅'):
             self._add_shensha('五墓', -12, '五墓主死丧')
-        if self._is_fuduan(sizhu):
-            self._add_shensha('伏断日', -15, '伏断日忌用')
+        # 2026-10-21 口径收口批（001 §153）：伏断日日家用忌零载删除——协纪卷十
+        # 无条目、卷十一 0 命中；卷三十六辨讹明定「伏断本选时之法」（选时层非
+        # 日家层）；卷三十五附录仅塑绘神像/成造船只两处专用且软件无对应通道
+        # （取证稿 §1.4）。原发射（全部事项 -15）为超范围注册，注册键 9 项
+        # 同步删除；A6-3 起例三派收敛结论不受影响（选时层另批处置）。
+        # 原发射为：
+        #     if self._is_fuduan(sizhu):
+        #         self._add_shensha('伏断日', -15, '伏断日忌用')
         if self._is_wangwang(sizhu) and _p2_ev not in ('入宅',):
             # x4：往亡×入宅月块发射（本块为入宅活链；日块「往亡日」经异名
             # 归一「往亡」并被本块先到先得，同批于 _check_day_shensha 一并
             # 排除，双活链同拦防单链误删复活，001 §126/§127）。
             self._add_shensha('往亡', -20, '往亡日忌用')
-        if self._is_guiji(sizhu):
+        # 2026-10-21 口径收口批（001 §153）：归忌主锚用忌面=般移/移徙＋远回
+        # （卷十独立条「忌般移远回」、卷十一忌 般移【移徙同】/远回 2 条，取证稿
+        # §1.7）。嫁娶系三库分歧（协纪按语以「俗说」驳回/考原·陈书忌）按层级
+        # 仅标注保留；入宅⚠️（陈书归火条独立明文，x4 结论不变）、出行⚠️
+        # （「远回」非「出行」，映射待裁）均保留。其余 11 事项（修造/动土/
+        # 拆舍/开业/安床/作灶/入学/求医/签约/安葬/通用）无载删除，键同步删。
+        if self._is_guiji(sizhu) and getattr(self, '_std_event', None) in ('嫁娶', '入宅', '出行'):
             # 保留项（x4）：归忌×入宅有协纪卷三十五附录用法论＋陈书八宅歸火条
             # p635＋神煞例 p148 三处逐字独立明文（入宅归火核心忌），不随般移
             # 映射删除（001 §126/§127）。
@@ -1708,10 +1725,12 @@ class ShenShaChecker:
             self._add_shensha('上吉日', 12, '上吉日吉')
         if self._is_shengqi(sizhu):
             self._add_shensha('生气', 10, '生气吉')
-        # 2026-10 A1：天恩为《协纪》卷五日神（15 日柱），收口基类日作用域
-        # 单点注册（旧仅修造/拆舍/入宅注册，其余事项漏配）；分值查
-        # SHENSHA_SCORES，缺省 +10。动土类手抄日检查不走 super，维持原状。
-        if self._is_tianen(sizhu):
+        # 2026-10-21 口径收口批（001 §153）：天恩卷十 8 项宜全为「施恩庆赏类」、
+        # 卷十一 8 条亦全为此类，无民事事目（取证稿 §1.1）；唯一通道外延=
+        # 「与修造吉神并尤宜兴作」（条件增益）。原 14 事项发射为超范围注册：
+        # 拆舍/入宅/移徙等 13 项删除（键同步删），仅保留修造通道（依条件增益句）。
+        # A1 修复的 15 日柱起例结论不受影响。
+        if self._is_tianen(sizhu) and getattr(self, '_std_event', None) == '修造':
             self._add_shensha('天恩', 10, '天恩日吉')
         month_zhi_check = sizhu.get('month_zhi', '')
         day_zhi_check = sizhu.get('day_zhi', '')
@@ -1765,8 +1784,13 @@ class ShenShaChecker:
             self._add_shensha('红砂日', -15, '红砂日凶')
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌日', -20, '杨公忌日百事不宜')
-        if self._is_fanzhi(sizhu):
-            self._add_shensha('反支日', -12, '反支日凶')
+        # 2026-10-21 口径收口批（001 §153）：反支日全事项删除——协纪卷十仅
+        # 「忌上册进表章、陈词讼」2 项（软件 14 事项全无载）；「历例止言忌
+        # 上表章」不得据卷十自注推测语扩面（取证稿 §1.5）。上册进表章/陈词讼
+        # 属帝王用事，软件 15 事项通道无对应，注册键 13 项同步删除。
+        # 原发射为：
+        #     if self._is_fanzhi(sizhu):
+        #         self._add_shensha('反支日', -12, '反支日凶')
         if self._is_shangshuo(sizhu):
             self._add_shensha('上朔日', -10, '上朔日凶')
         if self._is_kuigang(sizhu):
