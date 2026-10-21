@@ -284,8 +284,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_sifei(sizhu):
             self._add_shensha('四废', -15, '四废日，百事不宜')
 
-        if self._is_flyinglian(sizhu):
-            self._add_shensha('飞廉', -12, '飞廉作祟，口舌是非')
+        # 2026-10-21 口径收口批（001 §153）：飞廉日辰发射撤销（岁方神误作
+        # 日辰神；本谓词实为月大煞实体，月大煞日课层已删，换名计分失去法理
+        # 基础，取证稿 §1.3）。谓词保留作历法展示候选。原发射为：
+        #     if self._is_flyinglian(sizhu):
+        #         self._add_shensha('飞廉', -12, '飞廉作祟，口舌是非')
 
         if self._is_wumu(sizhu):
             self._add_shensha('五墓', -12, '五墓之日，忌埋葬')
