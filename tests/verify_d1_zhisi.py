@@ -88,13 +88,18 @@ def main():
         else:
             bad_keys = [k for k in scores
                         if k[0] == '安葬' and k[1] in ('致死日', '天吏日')]
-            keep = ('安葬', '天吏') in scores
+            # 口径收口批（2026-10-21，001 §153）：('安葬','天吏') 已随天吏
+            # 超范围清理删除（卷十忌列无破土/安葬，取证稿 §1.8 判 ❌）；
+            # 原「防误删」断言反转为删除断言。
+            gone = ('安葬', '天吏') not in scores
             if bad_keys:
                 failed.append('事项标准残留注册：%s' % bad_keys)
-            if not keep:
-                failed.append("('安葬','天吏') 正当条目丢失（防误删断言）")
-            print('✅' if not bad_keys and keep else '❌',
-                  '动态导入事项标准：零 (安葬,致死日/天吏日) 键，(安葬,天吏) 在位')
+            if not gone:
+                failed.append("('安葬','天吏') 应已删（口径收口批 001 §153，"
+                              "取证稿 §1.8 判 ❌）")
+            print('✅' if not bad_keys and gone else '❌',
+                  '动态导入事项标准：零 (安葬,致死日/天吏日) 键，(安葬,天吏) 已删'
+                  '（口径收口批 001 §153）')
     except Exception as e:  # noqa: BLE001
         failed.append('动态导入失败：%r' % e)
         print('❌ 动态导入事项标准异常：%r' % e)

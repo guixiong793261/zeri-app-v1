@@ -274,7 +274,11 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_dashi(sizhu):
             self._add_shensha('大时', -12, '大时咸池，桃花煞')
 
-        if self._is_tianli(sizhu):
+        # 2026-10-21 口径收口批（001 §153）：天吏×入学超范围删除（卷十忌列无
+        # 入学，取证稿 §1.8）；移徙恢复发射（般移【移徙同】双明文，x4 误排
+        # 更正，基类同步反转）；通用面照常发射（月家凶煞通用面，取证稿 §1.8
+        # 未单列）。
+        if self._is_tianli(sizhu) and getattr(self, '_std_event', None) != '入学':
             self._add_shensha('天吏', -15, '天吏致死，大忌')
 
         if self._is_sifei(sizhu):

@@ -19,12 +19,13 @@ A. 三级顺序与回退：75 键 shensha_score('移徙',n)==('移徙',n) 值（
    落入 canonical 级与入宅同值。
 B. 全事项对照零变化：本地复刻旧两级逻辑，对 键表全部事项名 ∪
    EVENT_ALIASES 全别名 × 键表全部煞名 逐对断言 新==旧。
-C. 74 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
-D. 10 煞不复活：shensha_score('移徙',n)＝8×None＋月刑-15＋月害-15
-   （快照 bb196e7 §二基线）；移徙通道 2026 全年 10 煞零发射。
+C. 共有键评分零变化：shensha_score('移徙',n)==('入宅',n) 值。
+D. 10 煞分值（口径收口批 2026-10-21，001 §153 修订）：
+   shensha_score('移徙',n)＝7×None＋天吏-15（恢复）＋月刑-15＋月害-15
+   （快照 bb196e7 §二基线）；移徙通道 7 煞零发射、天吏恢复发射。
 E. 发射链零变化：入宅/移徙通道 2026 全年逐日发射清单逐项一致、
-   总分=4464（十恶大败全删批后 2948＋岁破批 930＋病符批 360＋红嘴朱雀批 -390
-   ＋受死日收敛批 616）；嫁娶总分=-612（红嘴朱雀批新增坤宮 -1080＋受死日收敛 616）。
+   总分=2816（口径收口批 001 §153 删 反支日/天恩/不将日/伏断日 发射＋
+   天吏批恢复 -15×32 后实测重冻；前值 4464）；嫁娶总分=-625（前值 -612）。
 
 退出码 0=全过 1=有失败。
 """
@@ -59,8 +60,11 @@ from modules.事项标准 import (SHENSHA_SCORES, shensha_score, canonical_event
                              EVENT_ALIASES)
 
 D10 = ['月破', '劫煞', '灾煞', '往亡', '月煞', '月刑', '天吏', '大时', '五墓', '月害']
+# 口径收口批（001 §153）：天吏×移徙恢复 -15（般移【移徙同】双明文，x4 误排反转）
 EXPECT10 = {'月破': None, '劫煞': None, '灾煞': None, '往亡': None, '月煞': None,
-            '月刑': -15, '天吏': None, '大时': None, '五墓': None, '月害': -15}
+            '月刑': -15, '天吏': -15, '大时': None, '五墓': None, '月害': -15}
+# 发射零复活名单（天吏移出：恢复发射）
+NOTREVIVED = ['月破', '劫煞', '灾煞', '往亡', '月煞', '大时', '五墓']
 
 
 def old_score(ev, n, default=None):
@@ -75,8 +79,9 @@ def old_score(ev, n, default=None):
 
 # ============ A：三级顺序与回退 ============
 yi = {n: v for (e, n), v in SHENSHA_SCORES.items() if e == '移徙'}
-check('移徙键数=74（cb3f8cb 删除后，再减十恶大败·岁破·病符键，红嘴朱雀批 75→74）',
-      len(yi) == 74)
+check('移徙键数=72（口径收口批 2026-10-21，001 §153：删 反支日/天恩/不将日 3 键；'
+      '天吏批 +1 恢复；红嘴朱雀批 75→74 起）',
+      len(yi) == 72)
 for n, v in yi.items():
     if shensha_score('移徙', n) != v:
         check("原事项级命中：shensha_score('移徙',%r)==%r" % (n, v), False)
@@ -113,13 +118,14 @@ for ev in events:
 check('全事项×全煞名 新旧逻辑逐对同值（%d 对，差异 %d）' % (pairs, len(bad)),
       not bad)
 
-# ============ C：75 共有键评分零变化 ============
+# ============ C：共有键评分零变化 ============
 ok77 = all(shensha_score('移徙', n) == SHENSHA_SCORES.get(('入宅', n)) for n in yi)
-check('75键 shensha_score(移徙,n)==(入宅,n) 值（评分零变化）', ok77)
+check('共有键 shensha_score(移徙,n)==(入宅,n) 值（评分零变化，n=%d）' % len(yi),
+      ok77)
 
-# ============ D：10 煞不复活 ============
+# ============ D：10 煞分值锁定 ============
 for n in D10:
-    check("shensha_score('移徙',%r)=%r（10煞不复活）" % (n, EXPECT10[n]),
+    check("shensha_score('移徙',%r)=%r（口径收口批后分值）" % (n, EXPECT10[n]),
           shensha_score('移徙', n) == EXPECT10[n])
 
 
@@ -143,23 +149,29 @@ y0 = datetime.date(2026, 1, 1)
 y1 = datetime.date(2026, 12, 31)
 ru_days, ru10 = _run('入宅', y0, y1)
 yi_days, yi10 = _run('移徙', y0, y1)
-for n in D10:
+for n in NOTREVIVED:
     check('移徙通道 %s 全年零发射·不复活 (x%d)' % (n, yi10[n]), yi10[n] == 0)
+check('移徙通道 天吏 恢复发射 (x%d，口径收口批 001 §153 反转)' % yi10['天吏'],
+      yi10['天吏'] > 0)
+check('移徙通道 月刑/月害 发射已被 x4 通道排除 (x%d/x%d)'
+      % (yi10['月刑'], yi10['月害']), yi10['月刑'] == 0 and yi10['月害'] == 0)
 
 # ============ E：发射链零变化 ============
 check('移徙通道==入宅通道 2026 全年逐日发射清单逐项一致',
       all(ru_days[k] == yi_days[k] for k in ru_days))
 tot_ru = sum(s for hits in ru_days.values() for _, s in hits)
-check('入宅通道全年总分=4464（2948＋岁破930＋病符360＋红嘴-390＋受死日收敛616）',
-      tot_ru == 4464)
+check('入宅通道全年总分=2816（口径收口批 001 §153 删 反支日/天恩/不将日/伏断日 '
+      '发射＋天吏批恢复 -15×32 后实测重冻；前值 4464）',
+      tot_ru == 2816)
 tot_yi = sum(s for hits in yi_days.values() for _, s in hits)
-check('移徙通道全年总分=4464（=入宅，红嘴/受死日同链）', tot_yi == 4464)
+check('移徙通道全年总分=2816（=入宅，红嘴/受死日同链）', tot_yi == 2816)
 dup = sum(1 for hits in yi_days.values()
           if len([n for n, _ in hits]) != len({n for n, _ in hits}))
 check('移徙通道逐日同名至多1条·不与入宅重复发射（重复日=%d）' % dup, dup == 0)
 jq_days, _ = _run('嫁娶', y0, y1)
 tot_jq = sum(s for hits in jq_days.values() for _, s in hits)
-check('嫁娶通道全年总分=-612（非别名族对照，红嘴-1080＋受死日收敛616）', tot_jq == -612)
+check('嫁娶通道全年总分=-625（口径收口批后实测重冻，不将日保留；前值 -612）',
+      tot_jq == -625)
 
 # ============ F：通配不覆盖前两级·边界用例（2026-10-19 拍板提醒项） ============
 # 防未来新增通配键时回退：前两级已命中时通配级不得覆盖。三类边界逐条断言，
