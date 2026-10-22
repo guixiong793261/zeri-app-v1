@@ -201,9 +201,10 @@ check('修造谓词委托 is_tuwang_yongshi_by_date',
 
 
 # ── 6. 运行时：动土/拆舍翻转日发射断言 ───────────────────────
-# 注意：修造神煞 L290-292 用 _is_tuwang（=土瘟表）发射「土王用事 -18」（名实
-# 错，另立）。同日 _is_tuwang_yongshi（-40）会被去重抑制。故本节只取
-# 土瘟表为 False 的翻转日，隔离 -40 发射变化（名实错 -18 不受批8a 影响）。
+# 注意：修造神煞 L290-292 用 _is_tuwang（=土瘟表）发射「土王用事 -20」（名实
+# 错，另立；轻重层批次1 001 §158 由 -18 同步）。同日 _is_tuwang_yongshi（-20，批次1 由 -40 消双轨）
+# 会被去重抑制。故本节只取
+# 土瘟表为 False 的翻转日，隔离 -20 发射变化（名实错 -18→-20 随批次1 同步）。
 def names_scores(checker, sz):
     out = {}
     for it in checker.check(sz, {}):
@@ -236,7 +237,7 @@ for i in range((dt.date(2026, 12, 31) - d0).days + 1):
         old = day > last_day - 18
     is_tuwen = sz.get('day_zhi') == tuwen_map.get(month_zhi)
     if is_tuwen:
-        continue  # 土瘟表日 -18 去重抑制 -40，跳过
+        continue  # 土瘟表日 -20（原 -18）去重抑制土王发射，跳过
     if old and not new:
         old_only.append(cur)
     elif new and not old:
@@ -258,11 +259,11 @@ for cur in sample:
         if present != expect_present:
             emit_bad.append('%s %s present=%s expect=%s'
                             % (cur, tag, present, expect_present))
-        elif expect_present and score != -40:
-            emit_bad.append('%s %s score=%s expect=-40'
+        elif expect_present and score != -20:
+            emit_bad.append('%s %s score=%s expect=-20（批次1 消双轨）'
                             % (cur, tag, score))
-check('运行时：翻转日（土瘟表非命中）动土/拆舍 土王用事 -40 发射与新口径一致'
-      '（抽样 %d 天）' % len(sample), not emit_bad, '; '.join(emit_bad[:5]))
+check('运行时：翻转日（土瘟表非命中）动土/拆舍 土王用事 -20 发射与新口径一致'
+      '（轻重层批次1 001 §158 消双轨 -40→-20；抽样 %d 天）' % len(sample), not emit_bad, '; '.join(emit_bad[:5]))
 
 # ── 7. 修造零变化断言（走 _is_tuwang→_is_tuwen，名实错另立）───
 # 在样本翻转日上，修造发射集与"谓词独立"无关联——即修造不发射土王用事

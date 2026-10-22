@@ -170,7 +170,9 @@ class MarriageShenShaChecker(ShenShaChecker):
         # 庚寅、己亥、戊申、丁巳六日在**坤宮**，忌嫁娶」（朱雀歌「坤宮嫁娶損
         # 宅長」）。起例按日干支×九宫（基类 _is_hongzui_zhuque），与月支无关。
         if self._is_hongzui_zhuque(sizhu, '坤'):
-            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临坤宮，忌嫁娶')
+            # 轻重层批次1（001 §158）：L4 标注（典据单一，仅陈书九宫起例、无力度
+            # 原文，分值系按典落地定档），分值维持 -30 不动
+            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临坤宮，忌嫁娶（L4标注：典据单一，仅陈书九宫起例，无力度原文，分值按典落地定档）')
         
         # 红砂日（按孟仲季月）
         if self._is_hongsha(sizhu):

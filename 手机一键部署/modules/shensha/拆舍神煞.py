@@ -59,9 +59,9 @@ class DemolitionShenShaChecker(ConstructionShenShaChecker):
             self._add_shensha('土符', -20, '忌破屋坏垣（拆舍），犯之主灾')
         super()._check_month_shensha(sizhu, **kwargs)
         
-        # 土王用事（拆舍大忌）
+        # 土王用事（拆舍大忌；轻重层批次1 001 §158：兜底 -40→-20 消双轨，拆舍无注册键以此为准）
         if self._is_tuwang_yongshi(sizhu):
-            self._add_shensha('土王用事', -40, '土王当权，忌拆舍')
+            self._add_shensha('土王用事', -20, '土王当权，忌拆舍')
         
         # 月刑
         if self._is_yuexing(sizhu):

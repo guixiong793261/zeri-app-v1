@@ -301,9 +301,9 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟（四季土旺日）忌动土修造')
         
-        # 土王用事（四立前各18日，与动土/拆舍统一口径；2026-10-18 P1-1 修：原委托土瘟推排致双发射）
+        # 土王用事（四立前各18日，与动土/拆舍统一口径；2026-10-18 P1-1 修：原委托土瘟推排致双发射；轻重层批次1 001 §158：兜底字面量随注册键同步 -18→-20）
         if self._is_tuwang_yongshi(sizhu):
-            self._add_shensha('土王用事', -18, '土王用事忌动土')
+            self._add_shensha('土王用事', -20, '土王用事忌动土')
         
         # 刀砧煞
         if self._is_daozhen(sizhu):

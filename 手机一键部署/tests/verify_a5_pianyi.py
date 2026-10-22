@@ -235,7 +235,7 @@ CASES = [_make_pred_case('归忌')]
 # 口径收口批（001 §153）：归忌注册仅保留 嫁娶/入宅/出行/移徙 4 事项
 # （主锚用忌面=般移/移徙＋远回；嫁娶三库分歧保留、入宅/出行 x4 明文保留），
 # 修造/签约等 11 项发射与键已删，端到端对象随之收窄。
-CASES.extend(_make_e2e_case(e, '归忌', -15) for e in ('嫁娶', '入宅', '出行', '移徙'))
+CASES.extend(_make_e2e_case(e, '归忌', -10) for e in ('嫁娶', '入宅', '出行', '移徙'))  # 轻重层批次1（001 §158）：归忌 -15→-10
 # 病符谓词/端到端用例已删（病符批 2026-10-20，001 §141）：日课普适注册全删后
 # 无被测对象；转由 _assert_bingfu_removed() 作「谓词/发射/键全链清零」反向断言。
 CASES.append(case_locks)
@@ -304,8 +304,8 @@ def _assert_bingfu_removed():
         assert shensha_score(ev, '病符') is None, f'{ev} 病符分值应已删除'
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     assert n_yi == 71, f'移徙块键数应=71（天吏批 72→71：飞廉批删 飞廉×移徙 键），实得 {n_yi}'
-    assert len(SHENSHA_SCORES) == 1199, \
-        f'SHENSHA_SCORES 总键应=1199（天吏批 1215→飞廉批 1201→太岁批 1199），实得 {len(SHENSHA_SCORES)}'
+    assert len(SHENSHA_SCORES) == 1200, \
+        f'SHENSHA_SCORES 总键应=1200（天吏批 1215→飞廉批 1201→太岁批 1199→轻重层批次1 +1 月德合通配键 1200，001 §158），实得 {len(SHENSHA_SCORES)}'
     return {'移徙块': n_yi, '总表': len(SHENSHA_SCORES)}
 
 
