@@ -42,61 +42,41 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
         house_type = kwargs.get('house_type')
         shan_xiang = kwargs.get('shan_xiang')
         
-        # 1. 建除十二神规则
-        self._check_jianchu_ruzhai(date_obj, yi_list, ji_list)
-        
-        # 2. 天德、月德日
+        # 1. 天德、月德日
         self._check_tiande_yuede_ruzhai(date_obj, yi_list)
         
-        # 3. 不将日
+        # 2. 不将日
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
+        # 3. 月破、四离四绝（岁破已删：岁破批 2026-10-20，001 §140）
         self._check_po_and_sili_ruzhai(date_obj, sizhu, owners, ji_list)
         
-        # 5. 山向相关规则（扶山）
+        # 4. 山向相关规则（扶山）
         zuoshan = self._extract_zuoshan(shan_xiang)
         if zuoshan:
             self._check_fushan(sizhu, zuoshan, owners, yi_list, ji_list)
             self._check_sanhe(sizhu, zuoshan, yi_list)
         
-        # 6. 相主：忌与事主生肖相冲
+        # 5. 相主：忌与事主生肖相冲
         self._check_shengxiao_chong(sizhu, owners, ji_list)
         
-        # 7. 二十四山择吉天机检查
+        # 6. 二十四山择吉天机检查
         if shan_xiang and self.has_mountain_data:
             self._check_mountain_yearly_luck(shan_xiang, sizhu, yi_list, ji_list)
             self._check_mountain_monthly_luck(shan_xiang, date_obj, yi_list, ji_list)
             self._check_mountain_avoid_info(shan_xiang, sizhu, ji_list)
             self._check_mountain_keshan(shan_xiang, sizhu, ji_list)
         
-        # 8. 入宅专属宜忌
+        # 7. 入宅专属宜忌
         self._add_ruzhai_yi_ji(yi_list, ji_list)
         
-        # 9. 检查一票否决项
+        # 8. 检查一票否决项
         veto, veto_reason = self._check_veto_items(shan_xiang, sizhu, owners, ji_list, yi_list)
         if veto:
             ji_list.append(veto_reason)
             return yi_list, ji_list, True, veto_reason
         
         return yi_list, ji_list, False, ""
-    
-    def _check_jianchu_ruzhai(self, date_obj, yi_list, ji_list):
-        """检查建除十二神（入宅版）"""
-        if not self.get_jianchu:
-            return
-        
-        try:
-            jianchu = self.get_jianchu(date_obj)
-            ruzhai_yi = ['除', '危', '定', '执', '成', '开']
-            ruzhai_ji = ['建', '满', '平', '收', '闭', '破']
-            
-            if jianchu in ruzhai_yi:
-                yi_list.append(f'建除{jianchu}日宜入宅')
-            elif jianchu in ruzhai_ji:
-                ji_list.append(f'建除{jianchu}日忌入宅')
-        except Exception:
-            pass
     
     def _check_tiande_yuede_ruzhai(self, date_obj, yi_list):
         """检查天德、月德日（入宅版）"""

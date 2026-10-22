@@ -35,9 +35,10 @@ from datetime import date
 class BedRuleChecker(EventRuleChecker):
     """安床规则检查器"""
     
-    # 建除十二神分类
-    JIANCHU_YI = ['除', '定', '执', '成', '开']
-    JIANCHU_JI = ['破']
+    # 建除十二神分类—— 批次 2（001 §162）按卷十 L197-198 对齐：
+    # 宜安床=危；忌安床=破/平/收/闭。旧表缺「危」宜项，已补。
+    JIANCHU_YI = ['危']
+    JIANCHU_JI = ['破', '平', '收', '闭']
     
     # 基础方向五行映射（支持常用方向和二十四山）
     DIRECTION_WUXING = {

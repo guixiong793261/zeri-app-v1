@@ -38,9 +38,10 @@ class OpeningRuleChecker(EventRuleChecker):
     
     ZODIAC_TO_ZHI = {v: k for k, v in ZHI_TO_ZODIAC.items()}
     
-    # 建除十二神吉凶
-    JIANCHU_YI = ['成', '开', '定', '满']
-    JIANCHU_JI = ['破', '闭', '平']
+    # 建除十二神吉凶—— 批次 2（001 §162）按卷十 L253-254 对齐：
+    # 宜开市=满/成/开；忌开市=破/平/收/闭。旧表宜位多「定」（卷十无），已删。
+    JIANCHU_YI = ['满', '成', '开']
+    JIANCHU_JI = ['破', '平', '收', '闭']
     
     def __init__(self):
         super().__init__()
