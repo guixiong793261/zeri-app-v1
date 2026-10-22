@@ -8,25 +8,25 @@
 每年（公历岁，干支日连续）约 30 命中。
 
 与阳错/厌对不同：八专非嫁娶专属。SHENSHA_SCORES 中
-('嫁娶','八专') 与 ('*','八专') 均为 -15，另有修造/拆舍/入宅/作灶/
-移徙/入学/求医/签约 8 个事项键；checker 侧由各子类自注册
-（嫁娶神煞.py/修造神煞.py/通用神煞.py 等，发射字面量 -15），
+('嫁娶','八专') 为 -12（轻重层批次1 001 §158 由 -15 调档；月家P1 后
+通配与其余事项键已删）；checker 侧由嫁娶子类自注册
+（嫁娶神煞.py，发射字面量经键表覆写 -12），
 本批不动 checker；D（婚嫁评分算法）此前无八专分支，本批接入。
 
 入口（verify_shangshuo/verify_yangcuo 同构）：
 ① 神煞基类.is_bazhuan_by_pillar —— 全项目唯一实现（模块级，A3 批已建）
 ② ShenShaChecker._is_bazhuan —— 委托①
 ③ 婚嫁评分算法.is_bazhuan —— 委托①（本批新增）
-④ score_marriage_day details 端到端（-15，本批新增）
+④ score_marriage_day details 端到端（-12，批次1 调档）
 
 验证：
 - 权威 5 柱硬编码，绝不从软件读取；日柱由 sxtwl 直取；
 - 2025-2027 共 1095 天穷举（每年恰 30 命中，5 柱各 18 次）；
 - 2026 全年 30 个命中日+日柱硬锁；
-- 分值现状锁：嫁娶/9 事项/通配均 -15（非专属，与阳错厌对反向断言不同）；
-- monkeypatch 反事实：关闭分支后命中日总分差精确符合 -15 经 max(0)
+- 分值现状锁：嫁娶键 -12（批次1 调档；通配/其余事项键已删）；
+- monkeypatch 反事实：关闭分支后命中日总分差精确符合 -12 经 max(0)
   截断理论公式，非命中日零变化；
-- 嫁娶 checker pipeline 黄金日恰一条八专 -15（verify_a3 全年断言的
+- 嫁娶 checker pipeline 黄金日恰一条八专 -12（verify_a3 全年断言的
   单点复核）。
 """
 import sys
@@ -127,13 +127,13 @@ from modules.婚嫁评分算法 import score_marriage_day
 def adapter_d_details(d):
     try:
         r = score_marriage_day(d)
-        return [x for x in r.get('details', []) if x[0] == '八专'] == [('八专', -15)]
+        return [x for x in r.get('details', []) if x[0] == '八专'] == [('八专', -12)]
     except Exception:
         return _UNAVAILABLE
 
 
 def expected_score(d):
-    return -15
+    return -12
 
 
 def adapter_score(d):
@@ -169,8 +169,8 @@ CASES = [
                 description='_is_bazhuan 委托模块谓词，命中集逐日一致',
                 inputs=DAYS, expected=expected_pred, adapter=adapter_method,
                 compare='bool'),
-    ShenShaCase(name='八专-分值锁(嫁娶-15)', category='A',
-                description="shensha_score('嫁娶','八专')==-15",
+    ShenShaCase(name='八专-分值锁(嫁娶-12)', category='A',
+                description="shensha_score('嫁娶','八专')==-12（批次1 001 §158 调档）",
                 inputs=[datetime.date(2026, 2, 9)], expected=expected_score,
                 adapter=adapter_score, compare='eq'),
     ShenShaCase(name='八专-黄金日硬锁(2026三十天)', category='A',
@@ -183,8 +183,8 @@ CASES = [
                             '1095 天逐日一致',
                 inputs=DAYS, expected=expected_pred, adapter=adapter_d_pred,
                 compare='bool'),
-    ShenShaCase(name='八专-D端到端details(-15)', category='A',
-                description='命中日 details 恰含(八专,-15)，非命中日不含；'
+    ShenShaCase(name='八专-D端到端details(-12)', category='A',
+                description='命中日 details 恰含(八专,-12)，非命中日不含；'
                             '1095 天穷举',
                 inputs=DAYS, expected=expected_pred, adapter=adapter_d_details,
                 compare='bool'),
@@ -193,11 +193,12 @@ CASES = [
 
 def _assert_extra():
     """1) 计数锁：每年恰 30 命中、三年每柱各 18 次；
-    2) 分值现状锁：八专嫁娶专属化——仅嫁娶键 -15（2026-10-18 月家P1：
-       协纪仅忌军事+嫁娶，9 事项键+通配已删；docs/月家P1_大煞八专四击_对勘.md）；
-    3) D 反事实：关闭分支后命中日总分差精确符合 -15 经 max(0) 截断
+    2) 分值现状锁：八专嫁娶专属化——仅嫁娶键 -12（2026-10-18 月家P1：
+       协纪仅忌军事+嫁娶，9 事项键+通配已删；docs/月家P1_大煞八专四击_对勘.md；
+       轻重层批次1 001 §158 由 -15 调档）；
+    3) D 反事实：关闭分支后命中日总分差精确符合 -12 经 max(0) 截断
        理论公式，非命中日零变化；
-    4) 嫁娶 checker 黄金日恰一条八专 -15。"""
+    4) 嫁娶 checker 黄金日恰一条八专 -12。"""
     import collections
     by_year = {y: 0 for y in (2025, 2026, 2027)}
     pillar_count = collections.Counter()
@@ -210,7 +211,7 @@ def _assert_extra():
         f'柱次计数异常: {dict(pillar_count)}'
 
     from modules.事项标准 import shensha_score
-    assert shensha_score('嫁娶', '八专', None) == -15
+    assert shensha_score('嫁娶', '八专', None) == -12
     # 月家P1 删除后：通配与其余 13 事项均无键（防未来误回填）
     assert shensha_score('*', '八专', None) is None, '通配键应已删除'
     for ev in ('修造', '拆舍', '入宅', '作灶', '移徙', '入学', '求医', '签约'):
@@ -232,13 +233,13 @@ def _assert_extra():
             r_off = _H.score_marriage_day(d)
             _H.is_bazhuan = _orig
             delta = r_on['score'] - r_off['score']
-            expect_delta = -(max(0, r_off['score']) - max(0, r_off['score'] - 15))
+            expect_delta = -(max(0, r_off['score']) - max(0, r_off['score'] - 12))
             assert delta == expect_delta, \
                 f'{d} 八专总分差 {delta} ≠ 截断公式 {expect_delta}（off={r_off["score"]}）'
-            assert -15 <= delta <= 0
+            assert -12 <= delta <= 0
             assert not any(x[0] == '八专' for x in r_off['details']), \
                 f'{d} 关闭分支后 details 仍含八专'
-            if delta == -15:
+            if delta == -12:
                 n_delta += 1
         for d in miss_sample:
             if expected_pred(d):
@@ -248,7 +249,7 @@ def _assert_extra():
             _H.is_bazhuan = _orig
             assert r_off['score'] == _H.score_marriage_day(d)['score'], \
                 f'{d} 非命中日关闭分支后总分变化'
-        assert n_delta >= 1, '至少 1 个命中日应观察到 -15 总分差（未截断）'
+        assert n_delta >= 1, '至少 1 个命中日应观察到 -12 总分差（未截断）'
     finally:
         _H.is_bazhuan = _orig
 
@@ -259,8 +260,8 @@ def _assert_extra():
     c.check(_calc_sizhu(g, 12, 0))
     rows = [x for x in c.shensha_list
             if isinstance(x, dict) and x.get('name') == '八专']
-    assert [x.get('score') for x in rows] == [-15], \
-        f'嫁娶 checker 八专应恰一条 -15: {rows}'
+    assert [x.get('score') for x in rows] == [-12], \
+        f'嫁娶 checker 八专应恰一条 -12: {rows}'
 
 
 if __name__ == '__main__':

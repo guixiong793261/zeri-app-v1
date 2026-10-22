@@ -73,18 +73,18 @@ def main():
     check('A3 修造土府-20', names_of('修造', sz).get('土府') == -20)
     check('A4 动土土府-20', names_of('动土', sz).get('土府') == -20)
     sz = make_sizhu(dn[0])
-    check('A5 修造地囊-25', names_of('修造', sz).get('地囊') == -25)
-    check('A6 动土地囊-25', names_of('动土', sz).get('地囊') == -25)
-    check('A7 拆舍地囊-25（破屋坏垣典据）',
-          names_of('拆舍', sz).get('地囊') in (-25, None),  # 拆舍通道以实际发射为准，仅观察
+    check('A5 修造地囊-20（轻重层批次1 001 §158 由 -25 调档）', names_of('修造', sz).get('地囊') == -20)
+    check('A6 动土地囊-20（同上）', names_of('动土', sz).get('地囊') == -20)
+    check('A7 拆舍地囊-20（破屋坏垣典据；批次1 调档）',
+          names_of('拆舍', sz).get('地囊') in (-20, None),  # 拆舍通道以实际发射为准，仅观察
           str(names_of('拆舍', sz).get('地囊')))
 
     # ---------- B. 分值键原值 ----------
     print('[B] 分值键')
     check('B1 修造土府-20', shensha_score('修造', '土府', None) == -20)
-    check('B2 修造地囊-25', shensha_score('修造', '地囊', None) == -25)
+    check('B2 修造地囊-20（批次1 调档）', shensha_score('修造', '地囊', None) == -20)
     check('B3 动土土府-20', shensha_score('动土', '土府', None) == -20)
-    check('B4 动土地囊-25', shensha_score('动土', '地囊', None) == -25)
+    check('B4 动土地囊-20（批次1 调档）', shensha_score('动土', '地囊', None) == -20)
     iso_tufu = ['入学', '求医', '签约']
     iso_dinang = ['入宅', '移徙', '入学', '求医', '签约']
     check('B5 隔离事项土府无键', all(shensha_score(e, '土府', None) is None for e in iso_tufu))

@@ -153,7 +153,7 @@ def adapter_pred(d):
 
 def expected_e2e(d):
     mz, dg, dz = _branch(d)
-    return -20 if dz == WANGWANG_CLASSICAL.get(mz) else None
+    return -15 if dz == WANGWANG_CLASSICAL.get(mz) else None  # 批次1（001 §158）-20→-15
 
 
 def adapter_e2e(d):
@@ -169,8 +169,8 @@ def adapter_e2e(d):
                  if x.get('name') == '往亡']
         if not items:
             return None
-        if len(items) == 1 and items[0].get('score') == -20:
-            return -20
+        if len(items) == 1 and items[0].get('score') == -15:
+            return -15
         return f'BAD:{items}'
     except Exception:
         return _UNAVAILABLE
@@ -210,7 +210,7 @@ case_pred = ShenShaCase(
 
 case_e2e = ShenShaCase(
     name='往亡-端到端分值', category='B',
-    description='安葬 checker 2026 全年：命中唯一一条且 -20，未命中无条目',
+    description='安葬 checker 2026 全年：命中唯一一条且 -15（批次1 001 §158 调档），未命中无条目',
     inputs=DAYS, expected=expected_e2e, adapter=adapter_e2e, compare='eq')
 
 case_golden = ShenShaCase(
@@ -223,8 +223,8 @@ CASES = [case_pred, case_e2e, case_golden]
 
 
 def _assert_single_entry_checkers():
-    """安葬/入宅/嫁娶：2026 命中日恰好单条往亡 -20（2026-10 A6-3 异名收口后
-    全事项统一典载正名 '往亡'）。"""
+    """安葬/入宅/嫁娶：2026 命中日恰好单条往亡 -15（2026-10 A6-3 异名收口后
+    全事项统一典载正名 '往亡'；轻重层批次1 001 §158 由 -20 调档）。"""
     from modules.四柱计算器 import calculate_sizhu
     from modules.shensha.安葬神煞 import BurialShenShaChecker
     from modules.shensha.入宅神煞 import RuZhaiShenShaChecker
@@ -238,7 +238,7 @@ def _assert_single_entry_checkers():
             sz = calculate_sizhu(d, 12, 0)
             sz['date'] = d
             hits = [x for x in c.check(sz, owners=[]) if x.get('name') == name]
-            assert len(hits) == 1 and hits[0]['score'] == -20, \
+            assert len(hits) == 1 and hits[0]['score'] == -15, \
                 f'{cls.__name__} {d} {name} 条目异常 {hits}'
     for gd, gz in GOLDEN_HIT:
         sz = calculate_sizhu(gd, 12, 0)
