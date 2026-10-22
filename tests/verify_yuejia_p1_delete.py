@@ -7,7 +7,7 @@
 
 断言（走真实产品链路 calculate_sizhu → get_checker → check）：
   A. 大煞触发日：全部事项不出现大煞条目（基类年神链发射已删；谓词保留）
-  B. 八专触发日：仅嫁娶出现八专 -15，其余事项无；通配键已删
+  B. 八专触发日：仅嫁娶出现八专 -12（轻重层批次1 001 §158 调档），其余事项无；通配键已删
   C. 四击触发日：全部事项无四击；真四忌（嫁娶/安葬 -12）保留
   D. 土瘟触发日：修造/动土/作灶 -20 保留；安葬无土瘟条目且键已删
   E. P1-4 保留项不受影响：土府/地囊 修造/动土 仍发射；隔离事项仍零命中
@@ -96,17 +96,17 @@ def main():
     check('A4 谓词 _is_dasha 保留可用', _PRED._is_dasha(make_sizhu(days[0])) is True)
 
     # ---------- B. 八专 ----------
-    print('[B] 八专：仅嫁娶 -15，其余无；通配删')
+    print('[B] 八专：仅嫁娶 -12，其余无；通配删')
     bd = find_days(lambda sz: _PRED._is_bazhuan(sz), 2026, 2)
     check('B1 八专触发日存在(基线)', len(bd) == 2, str(bd))
     sz = make_sizhu(bd[0])
     for ev in EVENTS:
         names = shensha_names(ev, sz)
         if ev == '嫁娶':
-            check('B2 嫁娶八专-15保留', names.get('八专', (None,))[0] == -15, str(names.get('八专')))
+            check('B2 嫁娶八专-12保留', names.get('八专', (None,))[0] == -12, str(names.get('八专')))
         else:
             check('B3 %s无八专' % ev, '八专' not in names, str(names.get('八专')))
-    check('B4 嫁娶键-15', shensha_score('嫁娶', '八专', None) == -15)
+    check('B4 嫁娶键-12', shensha_score('嫁娶', '八专', None) == -12)
     check('B5 通配键已删', shensha_score('*', '八专', None) is None)
     others = [ev for ev in EVENTS if ev != '嫁娶']
     check('B6 其余13事项键全删', all(shensha_score(ev, '八专', None) is None for ev in others))
@@ -141,7 +141,7 @@ def main():
     # ---------- E. P1-4 保留项不受影响 ----------
     print('[E] P1-4：土府/地囊 修造/动土保留，隔离事项零命中')
     check('E1 修造土府键-20', shensha_score('修造', '土府', None) == -20)
-    check('E2 修造地囊键-25', shensha_score('修造', '地囊', None) == -25)
+    check('E2 修造地囊键-20', shensha_score('修造', '地囊', None) == -20)
     # 修造通道土府走自有谓词 _is_tufu2（寅月辰日…月支对冲映射），地囊走 _is_dinang
     _XZ = get_checker('修造')
     tf_days = find_days(lambda sz: _XZ._is_tufu2(sz), 2026, 2)

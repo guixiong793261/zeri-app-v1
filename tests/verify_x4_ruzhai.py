@@ -93,7 +93,7 @@ check('往亡双活链同拦：基类月块「往亡」带入宅排除',
 check('往亡双活链同拦：基类日块「往亡日」带入宅排除 (count>=2 防单链误删)',
       base_src.count("_is_wangwang(sizhu) and") >= 2)
 check('往亡双活链同拦：日块往亡日发射行含入宅排除',
-      "_add_shensha('往亡日', -20, '往亡日忌用')" in base_src
+      "_add_shensha('往亡日', -15, '往亡日忌用')" in base_src
       and "getattr(self, '_std_event', None) != '入宅'" in base_src)
 
 # ============ C：保留 3 不连带删 ============

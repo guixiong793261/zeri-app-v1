@@ -16,7 +16,7 @@
   M5 行为锚定（真实日）：厌对豁免日/非豁免日 checker 发射；大时/五墓 2026
      firing 日仍 -12 且无豁免键；2020–2035 扫描大时真实豁免日（未命中记
      SKIP 不判败——2026 探针已证全年零重合）；
-  M6 哨兵：2026-11-04 入宅 221/上吉、无豁免键；豁免键未注册分值（fallback 0
+  M6 哨兵：2026-11-04 入宅 224/上吉、无豁免键；豁免键未注册分值（fallback 0
      by design，防误配 -12）。
 
 退出码 0=全过 1=有失败。
@@ -180,7 +180,7 @@ def main():
     from modules.评分器 import calculate_score
     sz = calculate_sizhu(datetime.date(2026, 11, 4), 12, 0)
     r = calculate_score(sz, '入宅')
-    check('哨兵分=221', r['score'] == 221, str(r['score']))
+    check('哨兵分=224', r['score'] == 224, str(r['score']))
     check('哨兵级=上吉', '上吉' in str(r.get('level', '')))
     check('哨兵日无制化豁免键', not any(
         '制化豁免' in s['name'] for s in r.get('shensha_list', [])))

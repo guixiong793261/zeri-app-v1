@@ -204,7 +204,7 @@ SCORES = {
     '安葬': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10,
              '鸣吠日': 15, '鸣吠对日': 10},
     '签约': {'岁德': 20, '岁德合': 15, '月空': 10, '天马': 10,
-             '鸣吠日': 12, '鸣吠对日': 8},
+             '鸣吠日': 15, '鸣吠对日': 10},
 }
 DAYS_2026 = [d for d in DAYS if d.year == 2026]
 
@@ -244,7 +244,8 @@ def _make_e2e_case(event):
 
     return ShenShaCase(
         name=f'A1-{event}端到端', category='B',
-        description=f'{event} checker 2026 全年：8 神煞典载日恰一条且分值锁（鸣吠分事项口径）',
+        description=f'{event} checker 2026 全年：8 神煞典载日恰一条且分值锁'
+                    f'（鸣吠批次2 统一高档 15/10，001 §159）',
         inputs=DAYS_2026, expected=expected, adapter=adapter, compare='eq')
 
 
