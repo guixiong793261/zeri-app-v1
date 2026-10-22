@@ -323,7 +323,8 @@ class CommonShenShaChecker(ShenShaChecker):
         # 求医疗病条+陈书 p696）、入学❌（入学条无往亡）、签约❌（立劵交易条
         # 无往亡）——入学/签约子项删除，按 _std_event 拆分。
         if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) not in ('入学', '签约'):
-            self._add_shensha('往亡', -20, '往亡之日，大忌远行')
+            # 轻重层批次1（001 §158）：B6 往亡兜底字面量随注册键同步 -20→-15（消双轨）
+            self._add_shensha('往亡', -15, '往亡之日，大忌远行')
 
         # 2026-10-21 口径收口批（001 §153）：归忌主锚用忌面=般移/移徙＋远回
         # （取证稿 §1.7）；本通道仅移徙在主锚用忌面内（入学/求医/签约/通用
@@ -492,7 +493,8 @@ class CommonShenShaChecker(ShenShaChecker):
         # 双活链（同名先到先得互为占位）——仅拦月块则打戳后日块顶上，行为回弹
         # （实测 2026 全年往亡 30 天×3 事项零消失后定位）。入学/签约子项删除。
         if self._is_wangwang(sizhu) and getattr(self, '_std_event', None) not in ('入学', '签约'):
-            self._add_shensha('往亡日', -20, '往亡之日，大忌远行')
+            # 轻重层批次1（001 §158）：B6 往亡兜底字面量随注册键同步 -20→-15（消双轨）
+            self._add_shensha('往亡日', -15, '往亡之日，大忌远行')
 
         if self._is_guchen_guasu(sizhu):
             self._add_shensha('孤辰寡宿', -15, '孤辰寡宿，孤独无依')

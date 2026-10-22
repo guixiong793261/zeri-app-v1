@@ -112,9 +112,9 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         """检查月神煞"""
         super()._check_month_shensha(sizhu, **kwargs)
         
-        # 土王用事（动土大忌）
+        # 土王用事（动土大忌；轻重层批次1 001 §158：兜底字面量随注册键同步 -40→-20）
         if self._is_tuwang_yongshi(sizhu):
-            self._add_shensha('土王用事', -40, '土王当权，忌动土')
+            self._add_shensha('土王用事', -20, '土王当权，忌动土')
         
         # 月德
         if self._is_yuede(sizhu):
