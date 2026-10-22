@@ -1,0 +1,2918 @@
+{
+ "by_event_name": {},
+ "count": 364,
+ "items": [
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-01-02",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-01-02",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-01-03",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-01-03",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-01-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-01-06",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-01-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-01-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-01-09",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-01-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-01-12",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-01-13",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-01-14",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-01-15",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-01-15",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-01-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-01-18",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-01-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-01-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-01-21",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-01-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-01-24",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-01-25",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-01-26",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-01-27",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-01-27",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-01-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-01-30",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-01-31",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-02-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-02-02",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-02-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-02-06",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-02-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-02-07",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-02-08",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-02-09",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-02-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-02-11",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-02-12",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-02-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-02-14",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-02-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-02-18",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-02-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-02-19",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-02-20",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-02-21",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-02-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-02-23",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-02-24",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-02-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-02-26",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-02-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-03-02",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-03-03",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-03-03",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-03-04",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-03-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-03-06",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-03-07",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-03-09",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-03-10",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-03-12",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-03-13",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-03-14",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-03-15",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-03-15",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-03-16",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-03-16",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-03-17",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-03-18",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-03-19",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-03-21",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-03-22",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-03-24",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-03-25",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-03-26",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-03-27",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-03-27",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-03-28",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "闭",
+   "date": "2026-03-28",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-03-29",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-03-30",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-03-31",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-04-02",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-04-03",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-04-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-04-06",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-04-07",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-04-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-04-08",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-04-09",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-04-09",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-04-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-04-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-04-12",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-04-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-04-15",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-04-17",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-04-18",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-04-19",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-04-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-04-20",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-04-21",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-04-21",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-04-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-04-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-04-24",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-04-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-04-27",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-04-29",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-04-30",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-05-01",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-05-02",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-05-02",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-05-03",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "收",
+   "claimed": "闭",
+   "date": "2026-05-03",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-05-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-05-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-05-06",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-05-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-05-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-05-09",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-05-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-05-12",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-05-13",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-05-14",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-05-14",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-05-15",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-05-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-05-17",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-05-18",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-05-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-05-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-05-21",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-05-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-05-24",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-05-25",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-05-26",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-05-26",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "闭",
+   "date": "2026-05-27",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-05-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-05-29",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-05-30",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-05-31",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-06-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-06-02",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-06-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-06-05",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-06-06",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-06-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-06-07",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-06-08",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-06-08",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-06-09",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-06-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-06-11",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-06-12",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-06-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-06-14",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-06-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-06-17",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-06-18",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-06-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-06-19",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-06-20",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-06-20",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-06-21",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-06-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-06-23",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-06-24",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-06-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-06-26",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-06-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-06-29",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-06-30",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-07-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-07-01",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-07-02",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "闭",
+   "date": "2026-07-02",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-07-03",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-07-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-07-05",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-07-06",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-07-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-07-08",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-07-11",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-07-12",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-07-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-07-13",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-07-14",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-07-14",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-07-15",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-07-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-07-17",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-07-18",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-07-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-07-20",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-07-23",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-07-24",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-07-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-07-25",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-07-26",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-07-26",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-07-27",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-07-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-07-29",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-07-30",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-07-31",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-08-01",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-08-04",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-08-05",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-08-06",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-08-06",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-08-07",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "闭",
+   "date": "2026-08-07",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-08-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-08-09",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-08-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-08-12",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-08-13",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-08-15",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-08-16",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-08-17",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-08-18",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-08-18",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-08-19",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-08-19",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-08-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-08-21",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-08-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-08-24",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-08-25",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-08-27",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-08-28",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-08-29",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-08-30",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-08-30",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-08-31",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "闭",
+   "date": "2026-08-31",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-09-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-09-02",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-09-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-09-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-09-06",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-09-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-09-09",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-09-10",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-09-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-09-11",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-09-12",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-09-12",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-09-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-09-14",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-09-15",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-09-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-09-17",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-09-18",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-09-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-09-21",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-09-22",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-09-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-09-23",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-09-24",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-09-24",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-09-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-09-26",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-09-27",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-09-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-09-29",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-09-30",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-10-02",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-10-03",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-10-04",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-10-05",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-10-05",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-10-06",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "定",
+   "claimed": "闭",
+   "date": "2026-10-06",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-10-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-10-08",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-10-09",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-10-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-10-11",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-10-12",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-10-14",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-10-15",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-10-16",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-10-17",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-10-18",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-10-18",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-10-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-10-20",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-10-21",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-10-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-10-23",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-10-24",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-10-26",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "成",
+   "date": "2026-10-27",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-10-28",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-10-29",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "成",
+   "date": "2026-10-30",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "平",
+   "claimed": "闭",
+   "date": "2026-10-30",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-10-31",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-11-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "成",
+   "date": "2026-11-02",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-11-03",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "成",
+   "claimed": "满",
+   "date": "2026-11-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "收",
+   "claimed": "成",
+   "date": "2026-11-05",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "闭",
+   "claimed": "满",
+   "date": "2026-11-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-11-08",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-11-09",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-11-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-11-10",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-11-11",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-11-11",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-11-12",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-11-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-11-14",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-11-15",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-11-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-11-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-11-20",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-11-21",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-11-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-11-22",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-11-23",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-11-23",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-11-24",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "满",
+   "date": "2026-11-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "执",
+   "claimed": "成",
+   "date": "2026-11-26",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-11-27",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "满",
+   "date": "2026-11-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "满",
+   "date": "2026-12-01",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "闭",
+   "claimed": "成",
+   "date": "2026-12-02",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-12-03",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "满",
+   "date": "2026-12-04",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-12-04",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "满",
+   "claimed": "成",
+   "date": "2026-12-05",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "满",
+   "claimed": "闭",
+   "date": "2026-12-05",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-12-06",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-12-07",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-12-08",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-12-09",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-12-10",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-12-11",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-12-13",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-12-14",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-12-16",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-12-16",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-12-17",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-12-17",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-12-19",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "定",
+   "claimed": "成",
+   "date": "2026-12-20",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "执",
+   "claimed": "满",
+   "date": "2026-12-21",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "破",
+   "claimed": "满",
+   "date": "2026-12-22",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "危",
+   "claimed": "成",
+   "date": "2026-12-23",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "收",
+   "claimed": "满",
+   "date": "2026-12-25",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "开",
+   "claimed": "成",
+   "date": "2026-12-26",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "建",
+   "claimed": "满",
+   "date": "2026-12-28",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  },
+  {
+   "actual": "建",
+   "claimed": "闭",
+   "date": "2026-12-28",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "除",
+   "claimed": "成",
+   "date": "2026-12-29",
+   "event": "开业",
+   "name": "成日",
+   "score": 10
+  },
+  {
+   "actual": "除",
+   "claimed": "闭",
+   "date": "2026-12-29",
+   "event": "开业",
+   "name": "闭日",
+   "score": -15
+  },
+  {
+   "actual": "平",
+   "claimed": "满",
+   "date": "2026-12-31",
+   "event": "开业",
+   "name": "满日",
+   "score": 12
+  }
+ ]
+}

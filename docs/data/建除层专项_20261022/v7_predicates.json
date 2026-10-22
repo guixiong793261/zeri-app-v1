@@ -1,0 +1,907 @@
+{
+ "callers": {
+  "JIANCHU_TABLE": [
+   {
+    "code": "小黄道表 XIAO_HUANG_DAO_TABLE 已按正确顺序重建：",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 18
+   },
+   {
+    "code": "XIAO_HUANG_DAO_TABLE = {",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 84
+   },
+   {
+    "code": "xiao_list = self.XIAO_HUANG_DAO_TABLE.get(month_zhi, [])",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 293
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 40
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 41
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 256
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 258
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '危', '定', '执', '成', '开']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 47
+   },
+   {
+    "code": "JIANCHU_JI = ['建', '满', '平', '收', '闭', '破']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 48
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 277
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 279
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '危', '定', '成', '开']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\嫁娶规则.py",
+    "line": 163
+   },
+   {
+    "code": "JIANCHU_JI = ['建', '满', '平', '收', '闭', '破', '执']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\嫁娶规则.py",
+    "line": 164
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\嫁娶规则.py",
+    "line": 443
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\嫁娶规则.py",
+    "line": 445
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '定', '执', '成', '开']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 39
+   },
+   {
+    "code": "JIANCHU_JI = ['破']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 40
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 164
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 166
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 45
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭', '建']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 46
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 311
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 313
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定', '满']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 42
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭', '平']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 43
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 169
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 171
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '定', '成', '开']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 39
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '平', '收', '闭']",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 40
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 473
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 475
+   },
+   {
+    "code": "JIANCHU_JIXIONG = {",
+    "file": "modules\\今日黄历.py",
+    "line": 362
+   },
+   {
+    "code": "jianchu_jx = JIANCHU_JIXIONG.get(jianchu, '')",
+    "file": "modules\\今日黄历.py",
+    "line": 851
+   },
+   {
+    "code": "小黄道表 XIAO_HUANG_DAO_TABLE 已按正确顺序重建：",
+    "file": "modules\\黄道.py",
+    "line": 18
+   },
+   {
+    "code": "XIAO_HUANG_DAO_TABLE = {",
+    "file": "modules\\黄道.py",
+    "line": 96
+   },
+   {
+    "code": "# JIANCHU_YI=['成','开','定','满'] 冲突（报告会同现\"建除满日宜开业\"与",
+    "file": "modules\\黄道.py",
+    "line": 189
+   },
+   {
+    "code": "xiao_list = self.XIAO_HUANG_DAO_TABLE.get(month_zhi, [])",
+    "file": "modules\\黄道.py",
+    "line": 351
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定']",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 40
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭']",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 41
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 313
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 315
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '危', '定', '执', '成', '开']",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 47
+   },
+   {
+    "code": "JIANCHU_JI = ['建', '满', '平', '收', '闭', '破']",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 48
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 285
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 287
+   },
+   {
+    "code": "JIANCHU_YI = ['建', '除', '平', '成', '开']",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 41
+   },
+   {
+    "code": "JIANCHU_JI = ['定', '执', '破', '危', '收', '闭']",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 42
+   },
+   {
+    "code": "# 注：除/成/开/破/危/闭 与上方 JIANCHU_YI/JI 同向，故同一天会出现两条同名宜忌",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 70
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 139
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 141
+   },
+   {
+    "code": "JIANCHU_YI = ['定', '成', '开']",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 165
+   },
+   {
+    "code": "JIANCHU_JI = ['建', '满', '平', '收', '闭', '破', '执', '除', '危']",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 166
+   },
+   {
+    "code": "# 建除 JIANCHU_JI 含闭），即使闭日不在否决清单，也不补标宜\"嫁娶\"，",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 481
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 590
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 592
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '定', '执', '成', '开']",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 39
+   },
+   {
+    "code": "JIANCHU_JI = ['破']",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 40
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 168
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 170
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定']",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 45
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭', '建']",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 46
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 312
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 314
+   },
+   {
+    "code": "JIANCHU_YI = ['成', '开', '定', '满']",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 42
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '闭', '平']",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 43
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 170
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 172
+   },
+   {
+    "code": "JIANCHU_YI = ['除', '定', '成', '开']",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 47
+   },
+   {
+    "code": "JIANCHU_JI = ['破', '平', '收', '闭']",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 48
+   },
+   {
+    "code": "if jianchu in self.JIANCHU_YI:",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 476
+   },
+   {
+    "code": "elif jianchu in self.JIANCHU_JI:",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 478
+   },
+   {
+    "code": "#   / yi_list=天德日/不将日（除已由 嫁娶规则 JIANCHU_YI 移出，原\"建除除日\"移至忌项）",
+    "file": "tests\\test_huangdao_truth.py",
+    "line": 974
+   },
+   {
+    "code": "\"除日忌嫁娶\"口径冲突（嫁娶规则 JIANCHU_JI 已含'除'），故正例改用干净结果，",
+    "file": "tests\\test_huangdao_truth.py",
+    "line": 1176
+   },
+   {
+    "code": "# 口径锁：本题日为除日 → 除日忌嫁娶 → 必须被过滤（防止有人把'除'退回 JIANCHU_YI）",
+    "file": "tests\\test_huangdao_truth.py",
+    "line": 1190
+   }
+  ],
+  "_calculate_xiao_huang_dao": [
+   {
+    "code": "xiao_hd_info = huangdao_calc._calculate_xiao_huang_dao(month_zhi_for_hour, day_zhi_for_hour) if month_zhi_for_hour and d",
+    "file": "主程序.py",
+    "line": 5203
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 252
+   },
+   {
+    "code": "def _calculate_xiao_huang_dao(self, month_zhi, day_zhi):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 291
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 375
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\黄道.py",
+    "line": 465
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "modules\\黄道.py",
+    "line": 272
+   },
+   {
+    "code": "def _calculate_xiao_huang_dao(self, month_zhi, day_zhi):",
+    "file": "modules\\黄道.py",
+    "line": 349
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "modules\\黄道.py",
+    "line": 439
+   },
+   {
+    "code": "xiao_huang_dao = self._calculate_xiao_huang_dao(month_zhi, day_zhi)",
+    "file": "modules\\黄道.py",
+    "line": 529
+   },
+   {
+    "code": "r_yin = self._calc._calculate_xiao_huang_dao('寅', '寅')",
+    "file": "tests\\test_business_logic.py",
+    "line": 214
+   },
+   {
+    "code": "r_zi = self._calc._calculate_xiao_huang_dao('寅', '子')",
+    "file": "tests\\test_business_logic.py",
+    "line": 216
+   }
+  ],
+  "_check_jianchu": [
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 224
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 249
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 233
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 270
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 131
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 157
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 270
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 304
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 140
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 162
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 347
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 466
+   },
+   {
+    "code": "self._check_jianchu(sizhu)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\修造神煞扩展.py",
+    "line": 211
+   },
+   {
+    "code": "def _check_jianchu(self, sizhu):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\修造神煞扩展.py",
+    "line": 340
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 238
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 306
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 241
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 278
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 104
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 129
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 131
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 161
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 271
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 305
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 141
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 163
+   },
+   {
+    "code": "self._check_jianchu(date_obj, event_type, yi_list, ji_list)",
+    "file": "modules\\rules\\通用规则.py",
+    "line": 164
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, event_type, yi_list, ji_list):",
+    "file": "modules\\rules\\通用规则.py",
+    "line": 171
+   },
+   {
+    "code": "self._check_jianchu(date_obj, yi_list, ji_list)",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 368
+   },
+   {
+    "code": "def _check_jianchu(self, date_obj, yi_list, ji_list):",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 469
+   },
+   {
+    "code": "self._check_jianchu(sizhu)",
+    "file": "modules\\shensha\\修造神煞扩展.py",
+    "line": 145
+   },
+   {
+    "code": "def _check_jianchu(self, sizhu):",
+    "file": "modules\\shensha\\修造神煞扩展.py",
+    "line": 263
+   }
+  ],
+  "_get_xiao_huangdao": [
+   {
+    "code": "xiao_huangdao = self._get_xiao_huangdao(zhi)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\嫁娶神煞扩展.py",
+    "line": 177
+   },
+   {
+    "code": "def _get_xiao_huangdao(self, zhi):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\嫁娶神煞扩展.py",
+    "line": 235
+   },
+   {
+    "code": "xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\通用神煞.py",
+    "line": 355
+   },
+   {
+    "code": "def _get_xiao_huangdao(self, day_zhi, month_zhi):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\通用神煞.py",
+    "line": 647
+   },
+   {
+    "code": "xiao_huangdao = self._get_xiao_huangdao(zhi)",
+    "file": "modules\\shensha\\嫁娶神煞扩展.py",
+    "line": 213
+   },
+   {
+    "code": "def _get_xiao_huangdao(self, zhi):",
+    "file": "modules\\shensha\\嫁娶神煞扩展.py",
+    "line": 274
+   },
+   {
+    "code": "xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)",
+    "file": "modules\\shensha\\通用神煞.py",
+    "line": 411
+   },
+   {
+    "code": "def _get_xiao_huangdao(self, day_zhi, month_zhi):",
+    "file": "modules\\shensha\\通用神煞.py",
+    "line": 711
+   },
+   {
+    "code": "_ = chk4._get_xiao_huangdao(hz)",
+    "file": "tests\\test_integration.py",
+    "line": 1256
+   }
+  ],
+  "calc_jianchu": [
+   {
+    "code": "def calc_jianchu(month_zhi, day_zhi):",
+    "file": "modules\\今日黄历.py",
+    "line": 470
+   },
+   {
+    "code": "jianchu = calc_jianchu(month_zhi, day_zhi) if month_zhi and day_zhi else '未知'",
+    "file": "modules\\今日黄历.py",
+    "line": 850
+   },
+   {
+    "code": "return calc_jianchu(month_zhi, day_zhi)",
+    "file": "modules\\rules\\出行规则.py",
+    "line": 93
+   }
+  ],
+  "fallback_get_jianchu": [
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 129
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 150
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 132
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 129
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 157
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 132
+   }
+  ],
+  "get_jianchu": [
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 129
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\作灶规则.py",
+    "line": 255
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 150
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\修造规则.py",
+    "line": 276
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\嫁娶规则.py",
+    "line": 442
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安床规则.py",
+    "line": 163
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 132
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\安葬规则.py",
+    "line": 310
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\开业规则.py",
+    "line": 168
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\rules\\高级安葬规则.py",
+    "line": 472
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\marriage_scorer.py",
+    "line": 87
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\marriage_scorer.py",
+    "line": 164
+   },
+   {
+    "code": "def get_jianchu(date_obj):",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\marriage_shensha.py",
+    "line": 246
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\marriage_shensha.py",
+    "line": 275
+   },
+   {
+    "code": "jianchu = get_jianchu(sizhu['date'])",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\入宅神煞.py",
+    "line": 466
+   },
+   {
+    "code": "jianchu = get_jianchu(sizhu['date'])",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\嫁娶神煞.py",
+    "line": 1041
+   },
+   {
+    "code": "# 交节日口径：注入本次评分真实时柱月支，供神煞内部 get_jianchu(date)",
+    "file": "dist\\优版五行择日\\_internal\\modules\\shensha\\神煞基类.py",
+    "line": 204
+   },
+   {
+    "code": "_xn = _xo.get('name', '') or (get_jianchu(date_obj) if is_xiao_huangdao_day(date_obj) else '')",
+    "file": "modules\\婚嫁评分算法.py",
+    "line": 1039
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj)",
+    "file": "modules\\archived\\marriage_scorer.py",
+    "line": 95
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj)",
+    "file": "modules\\archived\\marriage_scorer.py",
+    "line": 172
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 129
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\作灶规则.py",
+    "line": 312
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 157
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\修造规则.py",
+    "line": 284
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\入宅规则.py",
+    "line": 90
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\动土规则.py",
+    "line": 88
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\嫁娶规则.py",
+    "line": 589
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\安床规则.py",
+    "line": 167
+   },
+   {
+    "code": "def fallback_get_jianchu(date_obj):",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 132
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\安葬规则.py",
+    "line": 311
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\开业规则.py",
+    "line": 169
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\拆舍规则.py",
+    "line": 87
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\通用规则.py",
+    "line": 177
+   },
+   {
+    "code": "jianchu = self.get_jianchu(date_obj)",
+    "file": "modules\\rules\\高级安葬规则.py",
+    "line": 475
+   },
+   {
+    "code": "def get_jianchu(date_obj, month_zhi=None):",
+    "file": "modules\\shensha\\marriage_shensha.py",
+    "line": 269
+   },
+   {
+    "code": "jianchu = get_jianchu(date_obj, month_zhi)",
+    "file": "modules\\shensha\\marriage_shensha.py",
+    "line": 304
+   },
+   {
+    "code": "jianchu = get_jianchu(sizhu['date'])",
+    "file": "modules\\shensha\\入宅神煞.py",
+    "line": 408
+   },
+   {
+    "code": "jianchu = get_jianchu(sizhu['date'])",
+    "file": "modules\\shensha\\嫁娶神煞.py",
+    "line": 949
+   },
+   {
+    "code": "# 交节日口径：注入本次评分真实时柱月支，供神煞内部 get_jianchu(date)",
+    "file": "modules\\shensha\\神煞基类.py",
+    "line": 1441
+   },
+   {
+    "code": "marriage_shensha.get_jianchu(d)",
+    "file": "tests\\test_integration.py",
+    "line": 1123
+   },
+   {
+    "code": "print('\\nget_jianchu(date) 固定12点口径 =', get_jianchu(d))",
+    "file": "tests\\fixtures\\2026-07-07_入宅_坤山艮向兼未\\_cmp_hours_0707.py",
+    "line": 61
+   }
+  ]
+ },
+ "counts": {
+  "JIANCHU_TABLE": 74,
+  "_calculate_xiao_huang_dao": 11,
+  "_check_jianchu": 32,
+  "_get_xiao_huangdao": 9,
+  "calc_jianchu": 3,
+  "fallback_get_jianchu": 6,
+  "get_jianchu": 41
+ }
+}
