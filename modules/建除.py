@@ -60,7 +60,11 @@ def _zhi_of(sizhu, keys, label):
         raise ValueError('四柱不是字典，无法取%s' % label)
     for k in keys:
         v = sizhu.get(k)
-        if isinstance(v, str) and len(v) >= 2:
+        if not isinstance(v, str) or not v:
+            continue
+        if len(v) == 1 and v in _ZHI_INDEX:
+            return v
+        if len(v) >= 2:
             return v[1]
     raise ValueError('缺少%s：%r' % (label, keys))
 

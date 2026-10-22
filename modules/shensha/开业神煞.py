@@ -38,6 +38,12 @@ try:
 except ImportError:
     from 制化引擎 import eval_dashi_chouwei_exempt, DASHI_EXEMPT_KEY
 
+# 批次 1（2026-10-22，001 §161）：建除谓词统一走 modules/建除.py
+try:
+    from ..建除 import is_jianchu as _is_jianchu
+except ImportError:
+    from 建除 import is_jianchu as _is_jianchu
+
 class OpeningShenShaChecker(ShenShaChecker):
     """开业神煞检查器"""
     
@@ -164,9 +170,10 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_chengri(sizhu):
             self._add_shensha('成日', 10, '成日适合开业')
         
-        # 破日
-        if self._is_pori(sizhu):
-            self._add_shensha('破日', -20, '破日不宜开业')
+        # 破日（批次 1，001 §161）：破日 ≡ 月破（同为月支六冲），
+        # 月破已在月神煞块扣 -30；此处原再发 '破日' -20 属双计，已删除。日下为谓词说明。
+        # if self._is_pori(sizhu):
+        #     self._add_shensha('破日', -20, '破日不宜开业')
         
         # 闭日
         if self._is_biari(sizhu):
@@ -281,33 +288,22 @@ class OpeningShenShaChecker(ShenShaChecker):
         return day_zhi in kaiye_jiri
     
     def _is_manri(self, sizhu):
-        """是否满日"""
-        day_zhi = sizhu['day_zhi']
-        manri = ['子', '寅', '卯', '巳', '午', '酉']
-        return day_zhi in manri
+        """是否满日（批次 1：统一建除谓词，废弃固定地支名单）"""
+        return _is_jianchu(sizhu, '满')
     
     def _is_chengri(self, sizhu):
-        """是否成日"""
-        day_zhi = sizhu['day_zhi']
-        chengri = ['丑', '辰', '未', '戌']
-        return day_zhi in chengri
+        """是否成日（批次 1：统一建除谓词，废弃固定地支名单）"""
+        return _is_jianchu(sizhu, '成')
     
     def _is_pori(self, sizhu):
-        """是否破日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        chong = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
-        }
-        return day_zhi == chong.get(month_zhi)
+        """是否破日（批次 1：统一建除谓词；破日 ≡ 月破）
+        保留谓词供核对，发射侧已去重（月破 -30 唯一扣分）。
+        """
+        return _is_jianchu(sizhu, '破')
     
     def _is_biari(self, sizhu):
-        """是否闭日"""
-        day_zhi = sizhu['day_zhi']
-        biari = ['亥', '子', '丑']
-        return day_zhi in biari
+        """是否闭日（批次 1：统一建除谓词，废弃固定地支名单）"""
+        return _is_jianchu(sizhu, '闭')
     
     def _check_owner_kaiye_match(self, sizhu, owner):
         """检查事主与开业日是否相合"""
