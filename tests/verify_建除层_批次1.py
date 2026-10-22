@@ -194,8 +194,8 @@ for ev in ('入学', '求医', '签约'):
 sz = calculate_sizhu(datetime.date(2026, 11, 4), 12, 0)
 sz.update({'year': 2026, 'month': 11, 'day': 4, 'date': datetime.date(2026, 11, 4)})
 sent = calculate_score(sz, '入宅')
-check('6 哨兵 2026-11-04 入宅 224/上吉',
-      sent.get('score') == 224 and '上吉' in (sent.get('level') or ''),
+check('6 哨兵 2026-11-04 入宅 214/上吉（批次2移除无据建除宜项，224→214）',
+      sent.get('score') == 214 and '上吉' in (sent.get('level') or ''),
       '%s %s' % (sent.get('score'), sent.get('level')))
 
 # ============ 7. 反向输入 ============

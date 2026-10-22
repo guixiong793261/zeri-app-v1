@@ -234,8 +234,8 @@ for ev in EV15:
     ck = get_checker(ev)
     tot[ev] = sum(s.get('score', 0) for _, sz in days for s in ck.check(sz, []))
 for ev in DEL4:
-    exp = {'开业': 6936, '作灶': -947, '通用': 8201, '安葬': -2749}[ev]
-    check('H %s 总分=%d（建除批次1 重冻：开业谓词+双计、通用倒挂清零；实得 %d）'
+    exp = {'开业': 6576, '作灶': -947, '通用': 8201, '安葬': -2749}[ev]
+    check('H %s 总分=%d（建除批次2 重冻：开业满日12→0；实得 %d）'
           % (ev, exp, tot[ev]), tot[ev] == exp)
 for ev, exp in (('入宅', 3745), ('移徙', 3745), ('嫁娶', 214),
                 ('动土', -7866), ('修造', -7972), ('拆舍', -8882),

@@ -213,8 +213,8 @@ check('场景C：score=31 等级带注凶、忌列表/调和句齐全',
 # 封顶集成（§59.9）：单凶坐山克 + 有制化 + 无否决 + 总分高分 → level 封顶凶
 r_cap1 = pure(dt.date(2023, 3, 22), [dead('甲子', '1924-03-01')], '丙山壬向')
 se_cap1 = r_cap1.get('shanzuo_eval') or {}
-check('封顶集成：2023-03-22 score=100 月德 → 等级带注凶',
-      se_cap1.get('_with_huajie') and r_cap1.get('score') == 100
+check('封顶集成：2023-03-22 score=76 月德 → 等级带注凶',
+      se_cap1.get('_with_huajie') and r_cap1.get('score') == 76
       and not (r_cap1.get('veto_reasons') or [])
       and r_cap1.get('level') == '❌ 凶（坐山克仙命，有制化：月德）')
 check('展示调和：2023-03-22 忌列表含制化条目',

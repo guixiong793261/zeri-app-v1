@@ -13,6 +13,13 @@
 范围=E105 报/不报关键判定，不含 note 文案逐字）——堵"E105 改读 detail
 其他字段时合成样例静默脱节"盲区（合成 dict 仅 reason/level 两键）。
 
+§162（2026-10-23，建除层批次 2）：删除无据「除/危/执虽黄道为吉却忌嫁娶
+-5」（卷十载嫁娶忌仅破/平/收/闭）后，一级（犯忌嫁娶封顶★平）无真实
+命中源——①A1/A2 改反向锚点：原一级样例 2026-02-22 除日断言不再
+犯忌嫁娶/降格（该日现经夫星 detail 走二级降格）；②D3/D4 真实产品
+一级 E105 对拍撤除（r_l1 已非一级，对拍会静默失真），留 D3 前提锚点；
+一级机制覆盖移至合成样例 F1/F4（caps 机制）与 D1c/D1d（E105 分支）。
+
 退出码 0=全过。
 """
 import sys, io, datetime as dt
@@ -41,11 +48,14 @@ def score_date(ds):
     sz['date'] = d; sz['year'] = d.year; sz['month'] = d.month; sz['day'] = d.day
     return Scorer().score(sz, '嫁娶', owners=OWNERS)
 
-# ===== A. 两级降格真实评分 =====
-print('A. 两级降格')
-r_l1 = score_date('2026-02-22')   # 建除除日 → 一级
-check('A1 除日 level含犯忌嫁娶', '犯忌嫁娶' in str(r_l1['level']))
-check('A2 除日 reason含降格说明', '降格' in str(r_l1['reason']))
+# ===== A. 降格真实评分 =====
+# §162：一级（犯忌嫁娶）真实命中源已随无据「除/危/执 -5」删除而清零，
+# 原一级样例 2026-02-22 除日改作反向锚点；该日现经夫星 detail 走二级。
+print('A. 降格')
+r_l1 = score_date('2026-02-22')   # 建除除日：批次2前一级样例，现二级
+check('A1 除日 level不含犯忌嫁娶（无据-5已删，反向）',
+      '犯忌嫁娶' not in str(r_l1['level']))
+check('A2 除日 reason不含降格说明（反向）', '降格' not in str(r_l1['reason']))
 
 r_l2 = score_date('2025-04-03')   # 建除闭日 → 二级
 # §69（2026-10-12）换样例：原 2024-03-02 被 §65 婚嫁本命三煞落地硬煞化
@@ -173,12 +183,13 @@ check('D5a 真实二级样例无降星说明报WARN（与D1a等价）',
 _lr_r2ok = lint_lesson(r_l2, rendered_content='等级降星一档说明')
 check('D5b 真实二级样例有降星说明通过（与D1b等价）',
       not any(i.rule_id == 'E105' for i in _lr_r2ok.issues))
-_lr_l1no = lint_lesson(r_l1, rendered_content='等级行：★ 平（犯忌嫁娶，慎用）')
-check('D3 一级无降格说明报WARN',
-      any(i.rule_id == 'E105' for i in _lr_l1no.issues))
-_lr_l1ok = lint_lesson(r_l1, rendered_content='等级降格封顶说明')
-check('D4 一级有降格说明通过',
-      not any(i.rule_id == 'E105' for i in _lr_l1ok.issues))
+# §162：一级真实命中源清零后，原 D3/D4（真实产品 r_l1 走 E105 一级分支
+# 对拍）不可维持——r_l1 现经夫星 detail 走二级分支，强拍一级会静默失真。
+# 一级分支覆盖由合成 D1c/D1d（E105 判定）与 F1/F4（caps 机制）承担。
+# 留此前提锚点：若未来新增一级真实源（details 再现"忌嫁娶"名），本锚点
+# 报警，届时须恢复真实产品一级对拍。
+check('D3 前提锚点：真实样例 r_l1 level 不含犯忌嫁娶（一级无真实源）',
+      '犯忌嫁娶' not in str(r_l1['level']))
 
 # ===== E. 裁定2 表单口径 =====
 print('E. 黄道表单')

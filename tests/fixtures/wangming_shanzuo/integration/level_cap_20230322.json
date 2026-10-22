@@ -2,7 +2,7 @@
   "schema": "wangming_shanzuo_fixture_v1",
   "case_id": "level_cap_20230322",
   "category": "integration",
-  "description": "安全阀锚点1：坐山克仙命有月德制化、无否决、final=100，等级仍封顶❌凶",
+  "description": "安全阀锚点1：坐山克仙命有月德制化、无否决、final=76，等级仍封顶❌凶",
   "input": {
     "wangming_ganzhi": "甲子",
     "wangming_nayin": "海中金",
@@ -21,7 +21,7 @@
     "veto": false,
     "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：月德）",
-    "final_score": 100
+    "final_score": 76
   },
-  "notes": "封顶正向锚点（2023-03-22 己卯日，实测确认）。两层 level 分开：level=凶中之凶（关系层），report_level=封顶后❌凶（展示层）。严格语义四要件齐备：坐山克+无否决+final=100≥60+仍判凶 → level_cap=true。制化只解否决不改凶性（§59.9）。与 basic 27 组全 false 对照。"
+  "notes": "封顶正向锚点（2023-03-22 己卯日，实测确认）。批次2（001 §162）后安葬建除从卷十忌建/破/平/收，建日新增「建除建日忌安葬」并失去旧通用「安葬」宜项，final 100→76；等级封顶语义不变。两层 level 分开：level=凶中之凶（关系层），report_level=封顶后❌凶（展示层）。严格语义四要件齐备：坐山克+无否决+final=76≥60+仍判凶 → level_cap=true。制化只解否决不改凶性（§59.9）。与 basic 27 组全 false 对照。"
 }

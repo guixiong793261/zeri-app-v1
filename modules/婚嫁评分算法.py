@@ -1014,7 +1014,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
         # 【黄道信息】显示完全一致——大黄道青龙/明堂/天德/玉堂+15、金匮/司命+10、
         # 六黑道-15；小黄道吉（除/定/执/危/成/开）+5、凶（建/满/平/破/收/闭）-10。
-        # 建星对嫁娶另有宜忌：除/危/执虽黄道为吉却忌嫁娶，按-5计。
+        # 批次 2（001 §162）：删除无据的「除/危/执虽黄道为吉却忌嫁娶，按-5计」——
+        # 卷十载嫁娶忌仅破/平/收/闭，除/危/执为黄道吉星按+5计。
         try:
             from .黄道 import calculate_huangdao as _calc_hd
         except ImportError:
