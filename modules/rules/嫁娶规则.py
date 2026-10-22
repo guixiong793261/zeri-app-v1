@@ -26,6 +26,7 @@ if __name__ == '__main__' and __package__ is None:
 
 from .规则基类 import EventRuleChecker
 from ..shensha.神煞基类 import is_yanggongji_by_lunar
+from ..建除 import get_event_yiji
 from datetime import date, datetime
 
 class MarriageRuleChecker(EventRuleChecker):
@@ -155,12 +156,11 @@ class MarriageRuleChecker(EventRuleChecker):
         '丑': {'天德': '庚', '月德': '辛'}
     }
     
-    # 建除十二神吉凶（用于嫁娶）
-    # 批次 2（001 §162）按卷十 L186-187 对齐：宜嫁娶=（无）；忌嫁娶=破/平/收/闭。
-    # 旧「除/危/执忌嫁娶」无卷十典据，已从 JIANCHU_JI、婚嫁评分算法扣分、
-    # 黄道 XIAO_HUANG_DAO_YIJI 三处同步删除。
-    JIANCHU_YI = []
-    JIANCHU_JI = ['破', '平', '收', '闭']
+    # 建除十二神吉凶（用于嫁娶）—— 批次 2（001 §162）从 建除.py 卷十事实源动态生成
+    # 卷十 L186-187：宜无；忌破平收闭
+    _yj = get_event_yiji('嫁娶')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     # 阴阳差错日
     YINYANG_CHACUO = [

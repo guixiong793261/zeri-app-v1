@@ -40,12 +40,19 @@ except ImportError:
 
 from datetime import date
 
+# 建除十二神—— 批次 2（001 §162）从 建除.py 卷十唯一事实源动态生成
+# 高级安葬同安葬（卷十 L317：宜无；忌建/破/平/收）
+try:
+    from ..建除 import get_event_yiji
+except ImportError:
+    from 建除 import get_event_yiji
+_YJ = get_event_yiji('安葬')
+
 class AdvancedBurialRuleChecker(EventRuleChecker):
     """高级安葬规则检查器"""
     
-    # 建除十二神吉凶
-    JIANCHU_YI = ['除', '定', '成', '开']
-    JIANCHU_JI = ['破', '平', '收', '闭']
+    JIANCHU_YI = _YJ['yi']
+    JIANCHU_JI = _YJ['ji']
     
     # 二十四山五行属性
     ER_SHI_SI_SHAN_WUXING = {

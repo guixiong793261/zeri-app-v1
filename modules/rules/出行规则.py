@@ -27,16 +27,17 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 
 
 class TravelRuleChecker(EventRuleChecker):
     """出行规则检查器 - 参考《协纪辨方书》卷三十二"""
 
-    # 建除十二神宜忌（出行）—— 批次 2（001 §162）按卷十 L162-163 对齐：
-    # 宜出行=建/开；忌出行=破/平/收/闭。
-    # 旧表「宜平」系误写，卷十明载「忌平（行幸遣使）」，已修正。
-    JIANCHU_YI = ['建', '开']
-    JIANCHU_JI = ['破', '平', '收', '闭']
+    # 建除十二神宜忌（出行）—— 批次 2（001 §162）从 建除.py 卷十事实源动态生成
+    # 卷十 L162-163：宜建开；忌破平收闭
+    _yj = get_event_yiji('出行')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
 
     # 出行专用吉日
     CHUXING_YI_DAYS = ['天德', '月德', '不将日', '鸣犬日', '要安日', '六合日', '天赦日']

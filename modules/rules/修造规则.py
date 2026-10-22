@@ -31,6 +31,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 from datetime import date
 
 class ConstructionRuleChecker(EventRuleChecker):
@@ -43,9 +44,11 @@ class ConstructionRuleChecker(EventRuleChecker):
     - 杨公风水大吉时
     """
     
-    # 建除十二神分类
-    JIANCHU_YI = ['除', '危', '定', '执', '成', '开']
-    JIANCHU_JI = ['建', '满', '平', '收', '闭', '破']
+    # 建除十二神分类—— 批次 2（001 §162）从 建除.py 卷十唯一事实源动态生成
+    # 卷十 L234-235：宜开；忌建/破/平/收/闭
+    _yj = get_event_yiji('修造')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     # 二十四山五行映射
     SHIERSHAN_WUXING = {

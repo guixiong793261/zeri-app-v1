@@ -13,6 +13,7 @@
 """
 
 from .修造规则 import ConstructionRuleChecker
+from ..建除 import get_event_yiji
 
 
 class ChaiSheRuleChecker(ConstructionRuleChecker):
@@ -79,19 +80,16 @@ class ChaiSheRuleChecker(ConstructionRuleChecker):
         return yi_list, ji_list, False, ""
     
     def _check_jianchu_chaishe(self, date_obj, yi_list, ji_list):
-        """检查建除十二神（拆舍版）"""
+        """检查建除十二神（拆舍版）—— 批次 2 从 建除.py 卷十事实源取"""
         if not self.get_jianchu:
             return
         
         try:
             jianchu = self.get_jianchu(date_obj)
-            # 拆舍宜：除、破（利于拆除）、危、成
-            chaishe_yi = ['除', '危', '破', '成', '开']
-            chaishe_ji = ['建', '满', '平', '收', '闭', '执', '定']
-            
-            if jianchu in chaishe_yi:
+            _yj = get_event_yiji('拆舍')  # 拆舍≈破屋坏垣：宜破；忌建
+            if jianchu in _yj['yi']:
                 yi_list.append(f'建除{jianchu}日宜拆舍')
-            elif jianchu in chaishe_ji:
+            elif jianchu in _yj['ji']:
                 ji_list.append(f'建除{jianchu}日忌拆舍')
         except Exception:
             pass
