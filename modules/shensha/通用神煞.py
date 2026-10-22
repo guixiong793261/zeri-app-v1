@@ -37,6 +37,12 @@ except ImportError:
     from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_sifei_by_pillar
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
+# 批次 1（2026-10-22，001 §161）：建除吉凶集合唯一事实源（小黄道倒挂修复）
+try:
+    from ..建除 import JI_STARS as _JC_JI_STARS
+except ImportError:
+    from 建除 import JI_STARS as _JC_JI_STARS
+
 # 制化引擎（2026-10-21 制化第一批，001 §155）：大时/五墓豁免判定单点
 try:
     from .制化引擎 import (eval_dashi_chouwei_exempt, eval_wumu_exempt,
@@ -407,10 +413,17 @@ class CommonShenShaChecker(ShenShaChecker):
         if da_huangdao:
             self._add_shensha(f'大黄道-{da_huangdao}', 15, '黄道吉日，诸事皆宜')
 
-        # 小黄道吉日（十二建星）
+        # 小黄道（十二建星）
+        # 批次 1（2026-10-22，001 §161，T4 倒挂修复）：吉星（除危定执成开）
+        # 维持 +8；凶星（建满平破收闭）原一律 +8 属分值倒挂，改 0 分并保留
+        # 识别展示。0 分无典据支撑负值，已登记 SHENSHA_WEIGHT_PENDING 待裁断。
         xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)
         if xiao_huangdao:
-            self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
+            if xiao_huangdao in _JC_JI_STARS:
+                self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
+            else:
+                self._add_shensha(f'小黄道-{xiao_huangdao}', 0,
+                                  f'{xiao_huangdao}日（建星凶，暂不计分，待轻重层裁断）')
 
         # ===== 日神类吉神 =====
         # 2026-10 A4：注册名由 '三奇-{type}' 统一为 '三奇{type}'（与基类及
