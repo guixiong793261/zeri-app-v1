@@ -129,14 +129,12 @@ class StoveRuleChecker(EventRuleChecker):
         def fallback_get_jianchu(date_obj):
             try:
                 from ..shensha.marriage_shensha import get_day_ganzhi
+                from ..建除 import star as _jianchu_star
                 month = date_obj.month
                 month_zhi = ZHI[(month - 1) % 12]
                 _, day_zhi = get_day_ganzhi(date_obj)
-                month_idx = zhi_index(month_zhi)
-                day_idx = zhi_index(day_zhi)
-                offset = (day_idx - month_idx) % 12
-                jianchu_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-                return jianchu_list[offset]
+                # 批次 1（001 §161）：偏移计算委托唯一事实源
+                return _jianchu_star(month_zhi, day_zhi)
             except:
                 return ''
         

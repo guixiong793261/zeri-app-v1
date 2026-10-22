@@ -261,26 +261,19 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     # ===== 建除十二神 =====
     
     def _check_jianchu(self, sizhu):
-        """检查建除十二神"""
+        """检查建除十二神（批次 1：星名委托 modules/建除.py）"""
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
-        
-        # 计算建除值
-        # 正月建寅，二月建卯，依此类推
-        jianzhi_map = {
-            '寅': '寅', '卯': '卯', '辰': '辰', '巳': '巳',
-            '午': '午', '未': '未', '申': '申', '酉': '酉',
-            '戌': '戌', '亥': '亥', '子': '子', '丑': '丑'
-        }
-        
-        jianzhi = jianzhi_map.get(month_zhi, '寅')
-        zh_list = DI_ZHI
-        
+
+        # 批次 1（001 §161）：星名统一由 modules/建除.py 计算；
+        # 四档分值属批次 2 口径，本批原样保留。
         try:
-            jian_idx = zh_list.index(jianzhi)
-            day_idx = zh_list.index(day_zhi)
-            offset = (day_idx - jian_idx) % 12
-            jianchu_value = self.jianchu[offset]
+            from ..建除 import star as _jianchu_star
+        except ImportError:
+            from 建除 import star as _jianchu_star
+
+        try:
+            jianchu_value = _jianchu_star(month_zhi, day_zhi)
             
             # 修造宜用：除、定、执、成、开
             # 修造忌用：建、破、平、收、闭

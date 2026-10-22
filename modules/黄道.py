@@ -24,6 +24,10 @@
 
 from datetime import datetime
 
+# 批次 1（001 §161）：建除星名计算委托唯一事实源 modules/建除.py
+from .建除 import star as _jianchu_star
+
+
 class 黄道计算器:
     """黄道计算器"""
     
@@ -347,14 +351,18 @@ class 黄道计算器:
         return self._calculate_da_huangdao_zhiri(day_zhi, month_zhi)
 
     def _calculate_xiao_huang_dao(self, month_zhi, day_zhi):
-        """计算小黄道"""
-        xiao_list = self.XIAO_HUANG_DAO_TABLE.get(month_zhi, [])
-        if not xiao_list:
+        """计算小黄道
+
+        批次 1（001 §161）：星名统一由 modules/建除.py star() 计算；
+        XIAO_HUANG_DAO 分值字典暂留（批次 2 收敛）。非法地支不再静默
+        按索引 0 计成「建」，与历史兜底一致返回「未知」。
+        """
+        if month_zhi not in self.XIAO_HUANG_DAO_TABLE:
             return {'name': '未知', 'type': '平', 'score': 0, 'description': ''}
-
-        day_idx = self.ZHI_INDEX.get(day_zhi, 0)
-
-        name = xiao_list[day_idx % 12]
+        try:
+            name = _jianchu_star(month_zhi, day_zhi)
+        except ValueError:
+            return {'name': '未知', 'type': '平', 'score': 0, 'description': ''}
         info = self.XIAO_HUANG_DAO.get(name, {'type': '平', 'score': 0, 'description': ''})
 
         return {

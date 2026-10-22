@@ -709,15 +709,12 @@ class CommonShenShaChecker(ShenShaChecker):
             return None
 
     def _get_xiao_huangdao(self, day_zhi, month_zhi):
-        """获取小黄道十二建星"""
-        jianxing_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-        zh_list = DI_ZHI
-
-        month_idx = zh_list.index(month_zhi)
-        day_idx = zh_list.index(day_zhi)
-
-        offset = (day_idx - month_idx) % 12
-        return jianxing_list[offset]
+        """获取小黄道十二建星（批次 1：委托 modules/建除.py 唯一事实源）"""
+        try:
+            from ..建除 import star as _jianchu_star
+        except ImportError:
+            from 建除 import star as _jianchu_star
+        return _jianchu_star(month_zhi, day_zhi)
 
     def _get_huangdao_shi(self, day_zhi, hour_zhi):
         """获取黄道吉时

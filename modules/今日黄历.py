@@ -9,6 +9,8 @@ from tkinter import ttk, messagebox
 from datetime import datetime, date, timedelta
 from .四柱计算器 import get_lunar_date, calculate_sizhu
 from .黄道 import huangdao_calculator
+# 批次 1（001 §161）：建除星名计算委托唯一事实源
+from .建除 import STARS as _JIANCHU_STARS, star as _jianchu_star
 
 # 尝试导入 sxtwl 进行精确节气判断
 try:
@@ -358,7 +360,7 @@ def get_lunar_month_with_jieqi(year, month, day):
 # ============================================================
 
 # ---------------- 建除十二神（小黄道，日级：以月建+日支顺推） ----------------
-JIANCHU_NAMES = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
+JIANCHU_NAMES = list(_JIANCHU_STARS)
 JIANCHU_JIXIONG = {
     '建': '吉（宜：出行、上书、授爵；忌：动土、开仓）',
     '除': '吉（宜：扫除、疗病、沐浴；忌：嫁娶、安葬）',
@@ -468,12 +470,9 @@ def is_wubuyu(hour_gan, day_gan):
 
 
 def calc_jianchu(month_zhi, day_zhi):
-    """建除十二神：以月建起建，顺推至日支。"""
+    """建除十二神：以月建起建，顺推至日支（委托 modules/建除.py）。"""
     try:
-        m_idx = DI_ZHI_ORDER.index(month_zhi)
-        d_idx = DI_ZHI_ORDER.index(day_zhi)
-        offset = (d_idx - m_idx) % 12
-        return JIANCHU_NAMES[offset]
+        return _jianchu_star(month_zhi, day_zhi)
     except Exception:
         return '未知'
 
