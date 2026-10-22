@@ -14,6 +14,7 @@
 """
 
 from .修造规则 import ConstructionRuleChecker
+from ..建除 import get_event_yiji
 
 
 class DongTuRuleChecker(ConstructionRuleChecker):
@@ -80,18 +81,16 @@ class DongTuRuleChecker(ConstructionRuleChecker):
         return yi_list, ji_list, False, ""
     
     def _check_jianchu_dongtu(self, date_obj, yi_list, ji_list):
-        """检查建除十二神（动土版）"""
+        """检查建除十二神（动土版）—— 批次 2 从 建除.py 卷十事实源取"""
         if not self.get_jianchu:
             return
         
         try:
             jianchu = self.get_jianchu(date_obj)
-            dongtu_yi = ['除', '危', '定', '执', '成', '开']
-            dongtu_ji = ['建', '满', '平', '收', '闭', '破']
-            
-            if jianchu in dongtu_yi:
+            _yj = get_event_yiji('动土')  # 兴造动土【修造同】：宜开；忌建/破/平/收/闭
+            if jianchu in _yj['yi']:
                 yi_list.append(f'建除{jianchu}日宜动土')
-            elif jianchu in dongtu_ji:
+            elif jianchu in _yj['ji']:
                 ji_list.append(f'建除{jianchu}日忌动土')
         except Exception:
             pass

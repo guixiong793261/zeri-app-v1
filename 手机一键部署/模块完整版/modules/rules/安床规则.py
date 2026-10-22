@@ -30,14 +30,17 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 from datetime import date
 
 class BedRuleChecker(EventRuleChecker):
     """安床规则检查器"""
     
-    # 建除十二神分类
-    JIANCHU_YI = ['除', '定', '执', '成', '开']
-    JIANCHU_JI = ['破']
+    # 建除十二神分类—— 批次 2（001 §162）从 建除.py 卷十事实源动态生成
+    # 卷十 L197-198：宜危；忌破平收闭
+    _yj = get_event_yiji('安床')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     # 基础方向五行映射（支持常用方向和二十四山）
     DIRECTION_WUXING = {

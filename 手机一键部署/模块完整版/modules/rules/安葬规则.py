@@ -30,6 +30,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 from datetime import date
 
 class BurialRuleChecker(EventRuleChecker):
@@ -41,9 +42,11 @@ class BurialRuleChecker(EventRuleChecker):
     - 避忌信息检查（冲山、山家三煞、阴府、克山运等）
     """
 
-    # 建除十二神分类
-    JIANCHU_YI = ['成', '开', '定']
-    JIANCHU_JI = ['破', '闭', '建']
+    # 建除十二神分类—— 批次 2（001 §162）从 建除.py 卷十唯一事实源动态生成
+    # 卷十 L317：宜（无）；忌建/破/平/收
+    _yj = get_event_yiji('安葬')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     # 二十四山五行映射
     SHANXIANG_WUXING = {
@@ -132,14 +135,12 @@ class BurialRuleChecker(EventRuleChecker):
         def fallback_get_jianchu(date_obj):
             try:
                 from ..shensha.marriage_shensha import get_day_ganzhi
+                from ..建除 import star as _jianchu_star
                 month = date_obj.month
                 month_zhi = ZHI[(month - 1) % 12]
                 _, day_zhi = get_day_ganzhi(date_obj)
-                month_idx = ZHI.index(month_zhi) if month_zhi in ZHI else 0
-                day_idx = ZHI.index(day_zhi) if day_zhi in ZHI else 0
-                offset = (day_idx - month_idx) % 12
-                jianchu_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-                return jianchu_list[offset]
+                # 批次 1（001 §161）：偏移计算委托唯一事实源
+                return _jianchu_star(month_zhi, day_zhi)
             except:
                 return ''
         

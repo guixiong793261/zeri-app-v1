@@ -35,6 +35,7 @@ EventRuleChecker()，实例化即 TypeError，导致这三类事项在评分器�
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 from datetime import date
 
 
@@ -72,7 +73,6 @@ class GenericRuleChecker(EventRuleChecker):
         super().__init__()
         self.event_type = event_type
         self._check_marriage_deps()
-        self._load_yiji_sources()
 
     def _check_marriage_deps(self):
         """初始化择日基础判定依赖（与开业/安床同源）"""
@@ -98,19 +98,6 @@ class GenericRuleChecker(EventRuleChecker):
             self.has_marriage_shensha = True
         except ImportError:
             pass
-
-    def _load_yiji_sources(self):
-        """加载两处既有宜忌权威表（失败则对应源不参与判定，不影响主流程）"""
-        try:
-            from ..黄道 import 黄道计算器
-            self._xiao_huang_dao_yiji = 黄道计算器.XIAO_HUANG_DAO_YIJI
-        except Exception:
-            self._xiao_huang_dao_yiji = {}
-        try:
-            from ..五行择日法 import WuXingZeRiFa
-            self._event_rules = WuXingZeRiFa.EVENT_RULES
-        except Exception:
-            self._event_rules = {}
 
     def _sizhu_to_date(self, sizhu):
         """从sizhu构建日期对象"""
@@ -169,7 +156,11 @@ class GenericRuleChecker(EventRuleChecker):
         return yi_list, ji_list, False, ''
 
     def _check_jianchu(self, date_obj, event_type, yi_list, ji_list):
-        """建除十二神宜忌：黄道表 + 五行择日法事项表 双源合并（冲突不计）"""
+        """建除十二神宜忌—— 批次 2（001 §162）统一从 建除.py 卷十唯一事实源取。
+
+        旧双源合并（黄道 XIAO_HUANG_DAO_YIJI + 五行择日法 EVENT_RULES）已废弃，
+        避免「同星不同事项吉凶相反」的历史遗留。卷十无载的事项返回空，不发射。
+        """
         if not self.get_jianchu or not event_type:
             return
 
@@ -180,30 +171,10 @@ class GenericRuleChecker(EventRuleChecker):
         if not jianchu:
             return
 
-        aliases = self.EVENT_ALIASES.get(event_type, (event_type,))
-        yi_hit = ji_hit = False
-
-        # 源一：小黄道十二建星宜忌表（与黄道评分同源）
-        table = self._xiao_huang_dao_yiji.get(jianchu) or {}
-        if any(a in table.get('yi', []) for a in aliases):
-            yi_hit = True
-        if any(a in table.get('ji', []) for a in aliases):
-            ji_hit = True
-
-        # 源二：正五行事项宜忌表（建除项写作"X日"）
-        rules_key = self.EVENT_RULES_KEY.get(event_type, '')
-        rules = self._event_rules.get(rules_key) or {} if rules_key else {}
-        if f'{jianchu}日' in rules.get('宜', []):
-            yi_hit = True
-        if f'{jianchu}日' in rules.get('忌', []):
-            ji_hit = True
-
-        if yi_hit and ji_hit:
-            # 两源口径冲突，不作宜忌判定，避免报告内"宜/忌"并存
-            return
-        if yi_hit:
+        _yj = get_event_yiji(event_type)
+        if jianchu in _yj['yi']:
             yi_list.append(f'建除{jianchu}日宜{event_type}')
-        elif ji_hit:
+        elif jianchu in _yj['ji']:
             ji_list.append(f'建除{jianchu}日忌{event_type}')
 
     def _check_tiande_yuede(self, date_obj, event_type, yi_list):

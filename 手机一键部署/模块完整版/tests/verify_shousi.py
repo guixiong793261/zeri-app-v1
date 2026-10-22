@@ -203,11 +203,11 @@ check('F 谓词体内无表B 映射/季节分组残留', not hits, hits[:5])
 check('F 未新增第 4 个受死日谓词（防多实现再分叉）', len(found) == 3, found)
 
 # ============ G：键表层 ============
-print('\n[G] 键表（三键已删；轻重层批次1 001 §158 后总键数=1200）')
+print('\n[G] 键表（三键已删；轻重层批次1 001 §158 后 1200 → 建除批次1 001 §161 删开业破日键 =1199）')
 from modules.事项标准 import SHENSHA_SCORES, shensha_score  # noqa: E402
 
-check('G 总键数=1200（批次1 增 (*,月德合) 通配键；实得 %d）' % len(SHENSHA_SCORES),
-      len(SHENSHA_SCORES) == 1200)
+check('G 总键数=1199（批次1 增 (*,月德合) 通配键 1200；建除批次1 删 (开业,破日) =1199；实得 %d）' % len(SHENSHA_SCORES),
+      len(SHENSHA_SCORES) == 1199)
 for ev in ('开业', '作灶', '安葬'):
     check("G ('%s','受死日') 注册键已删" % ev,
           (ev, '受死日') not in SHENSHA_SCORES)
@@ -228,20 +228,20 @@ for ev in KEEP11:
               got == -15 and (ev, '受死日') in SHENSHA_SCORES)
 
 # ============ H：总分基线 ============
-print('\n[H] 轻重层批次2（001 §159）后总分基线（2026 全年，owners=[]，实测重冻）')
+print('\n[H] 建除批次1（001 §161）后总分基线（2026 全年，owners=[]，实测重冻）')
 tot = {}
 for ev in EV15:
     ck = get_checker(ev)
     tot[ev] = sum(s.get('score', 0) for _, sz in days for s in ck.check(sz, []))
 for ev in DEL4:
-    exp = {'开业': 8172, '作灶': -947, '通用': 9689, '安葬': -2749}[ev]
-    check('H %s 总分=%d（批次1 后实测重冻；批次2 鸣吠 +368；实得 %d）'
+    exp = {'开业': 6576, '作灶': -947, '通用': 8201, '安葬': -2749}[ev]
+    check('H %s 总分=%d（建除批次2 重冻：开业满日12→0；实得 %d）'
           % (ev, exp, tot[ev]), tot[ev] == exp)
 for ev, exp in (('入宅', 3745), ('移徙', 3745), ('嫁娶', 214),
                 ('动土', -7866), ('修造', -7972), ('拆舍', -8882),
-                ('出行', 7288), ('安床', 5610), ('入学', 10526),
-                ('求医', 9224), ('签约', 9674)):
-    check('H 保留通道 %s 总分=%d（批次1 后实测重冻；批次2 鸣吠 +368；实得 %d）'
+                ('出行', 7288), ('安床', 5610), ('入学', 9038),
+                ('求医', 7736), ('签约', 8186)):
+    check('H 保留通道 %s 总分=%d（建除批次1 重冻；实得 %d）'
           % (ev, exp, tot[ev]),
           tot[ev] == exp)
 

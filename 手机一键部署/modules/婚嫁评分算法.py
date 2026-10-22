@@ -1014,7 +1014,8 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
         # 【黄道信息】显示完全一致——大黄道青龙/明堂/天德/玉堂+15、金匮/司命+10、
         # 六黑道-15；小黄道吉（除/定/执/危/成/开）+5、凶（建/满/平/破/收/闭）-10。
-        # 建星对嫁娶另有宜忌：除/危/执虽黄道为吉却忌嫁娶，按-5计。
+        # 批次 2（001 §162）：删除无据的「除/危/执虽黄道为吉却忌嫁娶，按-5计」——
+        # 卷十载嫁娶忌仅破/平/收/闭，除/危/执为黄道吉星按+5计。
         try:
             from .黄道 import calculate_huangdao as _calc_hd
         except ImportError:
@@ -1034,18 +1035,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             score -= 15  # 六黑道凶日
             details.append((f'大黄道{_da_name}黑道日', -15))
 
-        # 小黄道（建除）：吉建星+5、凶建星-10；除/危/执虽吉但嫁娶忌-5
+        # 小黄道（建除）：吉建星+5、凶建星-10
+        # 批次 2（001 §162）：删除无据的「除/危/执 -5」嫁娶特殊扣分——
+        # 卷十载嫁娶忌仅破/平/收/闭，除/危/执为黄道吉星按+5计。
         _xo = _hd.get('xiao_huang_dao') or {}
         _xn = _xo.get('name', '') or (get_jianchu(date_obj) if is_xiao_huangdao_day(date_obj) else '')
-        _jianchu_ji = {'除', '危', '执'}                 # 黄道为吉但嫁娶忌
         _jianchu_xiong = {'建', '满', '平', '破', '收', '闭'}  # 黑道凶日
-        if _xn in _jianchu_ji:
-            score -= 5
-            details.append((f'小黄道{_xn}日忌嫁娶', -5))
-        elif _xn in _jianchu_xiong:
+        if _xn in _jianchu_xiong:
             score -= 10
             details.append((f'小黄道{_xn}日（黑道凶日）', -10))
-        elif _xn:  # 定/成/开等宜嫁娶的黄道吉日
+        elif _xn:  # 除/危/定/执/成/开等黄道吉日
             _xo_score = int(_xo.get('score', 5) or 5)
             score += _xo_score
             details.append((f'小黄道{_xn}日（宜嫁娶）', _xo_score))

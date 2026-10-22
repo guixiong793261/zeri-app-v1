@@ -26,6 +26,7 @@ if __name__ == '__main__' and __package__ is None:
 
 from .规则基类 import EventRuleChecker
 from ..shensha.神煞基类 import is_yanggongji_by_lunar
+from ..建除 import get_event_yiji
 from datetime import date, datetime
 
 class MarriageRuleChecker(EventRuleChecker):
@@ -155,15 +156,11 @@ class MarriageRuleChecker(EventRuleChecker):
         '丑': {'天德': '庚', '月德': '辛'}
     }
     
-    # 建除十二神吉凶（用于嫁娶）
-    # 黄道通用口径：除、危、定、执、成、开为吉（黄道.py 小黄道表）
-    # 嫁娶专属口径：除、危、执 虽属黄道吉日，但均忌嫁娶——
-    #   见 黄道.py XIAO_HUANG_DAO_YIJI['除'/'危']['ji'] 含'嫁娶'、
-    #   婚嫁评分算法.py L923 _jianchu_ji={'除','危','执'}（-5分）、
-    #   主程序.py 嫁娶黄道段对 除/危/执 覆盖显示为 凶。
-    # 本表须与之保持一致，否则报告会同时出现"宜：建除除日"与"除日忌嫁娶"。
-    JIANCHU_YI = ['定', '成', '开']
-    JIANCHU_JI = ['建', '满', '平', '收', '闭', '破', '执', '除', '危']
+    # 建除十二神吉凶（用于嫁娶）—— 批次 2（001 §162）从 建除.py 卷十事实源动态生成
+    # 卷十 L186-187：宜无；忌破平收闭
+    _yj = get_event_yiji('嫁娶')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     # 阴阳差错日
     YINYANG_CHACUO = [

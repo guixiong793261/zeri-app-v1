@@ -24,6 +24,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
+from ..建除 import get_event_yiji
 from datetime import date
 
 class OpeningRuleChecker(EventRuleChecker):
@@ -38,9 +39,11 @@ class OpeningRuleChecker(EventRuleChecker):
     
     ZODIAC_TO_ZHI = {v: k for k, v in ZHI_TO_ZODIAC.items()}
     
-    # 建除十二神吉凶
-    JIANCHU_YI = ['成', '开', '定', '满']
-    JIANCHU_JI = ['破', '闭', '平']
+    # 建除十二神吉凶—— 批次 2（001 §162）从 建除.py 卷十事实源动态生成
+    # 卷十 L253-254：宜满成开；忌破平收闭
+    _yj = get_event_yiji('开业')
+    JIANCHU_YI = _yj['yi']
+    JIANCHU_JI = _yj['ji']
     
     def __init__(self):
         super().__init__()

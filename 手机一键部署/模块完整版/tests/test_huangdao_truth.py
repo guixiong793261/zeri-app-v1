@@ -994,17 +994,19 @@ GOLD_JQ_20260222_HUANGDAO = {
 GOLD_JQ_20260222_DETAILS = {
     # 2026-10 A6-4 批B：不将日 +25 → +15（与 SHENSHA_SCORES 全事项 15 统一），
     # 本日为丁卯日（寅月不将日）。嫁娶基础分=60（婚嫁评分算法.py L957，自始未变），
-    # 嫁娶明细求和：60(基础)+15(不将日)+20(天德)-15(大黄道)-5(小黄道)-20(冲子星)
-    # -20(耗夫星)+8(半合) = 43；总分=43+月令5 = 48。
+    # 嫁娶明细求和：60(基础)+15(不将日)+20(天德)-15(大黄道)+5(小黄道除日宜嫁娶)-20(冲子星)
+    # -20(耗夫星)+8(半合) = 53；总分=53+月令5 = 58。
     # 2026-10-15 批9 勘正：旧 gold 手算误用基础分=50 得 28/33，实为 38/43。
     # 2026-10-17 P1-C-3a：天德 15→20（B 族统一至通用值，硬编码+表键同步），
     # 五行 38→43、总分 43→48。
-    '五行评分': 43, '月令得分': 5, '喜用神得分': 0,
+    # 批次 2（001 §162）：删除无据的「除/危/执忌嫁娶 -5」扣分（卷十载嫁娶忌仅破平收闭），
+    # 除日由-5→+5，五行 43→53、总分 48→58；等级后缀「犯忌嫁娶」同步移除。
+    '五行评分': 53, '月令得分': 5, '喜用神得分': 0,
     '黄道得分_IS_NONE': True,    # 嫁娶类该项应为 None（True：None→0；若漂移为数字立即FAIL）
     '相主得分_IS_NONE': True,
-    '太阳太阴得分': 0, '总分': 48,
+    '太阳太阴得分': 0, '总分': 58,
 }
-GOLD_JQ_20260222_LEVEL = '❌ 凶（犯忌嫁娶，慎用）'
+GOLD_JQ_20260222_LEVEL = '❌ 凶'
 
 
 def _nodeduct_strict_check_jq(score_result):
@@ -1132,16 +1134,10 @@ class TestJiaQu20260222(unittest.TestCase):
         self.assertEqual(xiong_items, [],
             "嫁娶类神煞不应含凶煞（名含「凶」字），实际=%r" % (xiong_items,))
         jl = r.get('ji_list') or []
-        # 2026-09-16 修正：本题日为丁卯=建除「除」日，按用户报告2拍板口径
-        # "除日忌嫁娶"（与 modules/黄道.py XIAO_HUANG_DAO_YIJI['除']['ji'] 含'嫁娶'、
-        # 婚嫁评分算法 _jianchu_ji={'除','危','执'} 一致），忌列表应有且仅有"建除除日"；
-        # 旧断言"ji_list 必空"与现行口径冲突（故仅列示建除项，不得出现"忌嫁娶"否决文案）。
-        self.assertIn('建除除日', jl,
-            "除日嫁娶应列入忌项'建除除日'（除日忌嫁娶口径），实际=%r" % (jl,))
-        self.assertTrue(all('建除' in str(j) for j in jl),
-            "本例忌项应仅来自建除十二神（不应出现其他忌项），实际=%r" % (jl,))
-        self.assertFalse(any(str(j).strip() in ('忌嫁娶', '嫁娶') for j in jl),
-            "建除除日不得写成一票否决文案'忌嫁娶'（否决键须精确匹配），实际=%r" % (jl,))
+        # 批次 2（001 §162）：卷十载嫁娶忌仅破/平/收/闭，除/危/执不再忌嫁娶。
+        # 本题日为丁卯=建除「除」日，除不属嫁娶忌，故 ji_list 应为空。
+        self.assertEqual(jl, [],
+            "除日嫁娶：卷十无除忌嫁娶，忌列表应为空，实际=%r" % (jl,))
 
     def test_03_huangdao_zhu_que_sui_bu_fen_kou_but_info_present(self):
         """J-03 嫁娶 2026-02-22 真实黄道：朱雀凶-15/除吉+5/金匮吉+10/综合-10。
@@ -1170,11 +1166,10 @@ class TestJiaQu20260222(unittest.TestCase):
     def test_04_F2_nodeduct_zhengli_pass(self):
         """J-04 F2 严格无扣分判定（10维）：
         ①正例=全维度干净的结果 → 应不过滤（锁 _nodeduct_strict_check_jq 与主程序同构逻辑）；
-        ②真实本题日（2026-02-22 丁卯=建除「除」日）→ 按"除日忌嫁娶"口径产生忌项
-           "建除除日"，应被过滤，且过滤原因唯一为忌列表非空。
-        2026-09-16 修正：旧断言以"本题 ji_list 必空"作正例前置，与用户报告2拍板的
-        "除日忌嫁娶"口径冲突（嫁娶规则 JIANCHU_JI 已含'除'），故正例改用干净结果，
-        本题日转为口径锁。"""
+        ②真实本题日（2026-02-22 丁卯=建除「除」日）→ 批次 2（001 §162）卷十对齐后，
+           除不属嫁娶忌（嫁娶忌仅破平收闭），ji_list 为空，且神煞不含「凶」字，
+           故严格无扣分判定应通过（不过滤）。
+        批次 2 前旧口径"除日忌嫁娶"已删除（无卷十典据）。"""
         clean = {
             'wu_xing_result': {'has_deduction': False},
             'score_details': {'月令得分': 5, '喜用神得分': 0, '黄道得分': None,
@@ -1187,13 +1182,13 @@ class TestJiaQu20260222(unittest.TestCase):
         self.assertFalse(should_skip,
             "F2 严格无扣分正例被误过滤！reasons=%r" % (reasons,))
         self.assertEqual(reasons, [], "正例 reasons 应为空，实际=%r" % (reasons,))
-        # 口径锁：本题日为除日 → 除日忌嫁娶 → 必须被过滤（防止有人把'除'退回 JIANCHU_YI）
+        # 口径锁：本题日为除日 → 批次2后除不忌嫁娶 → 无建除忌项、无凶煞 → F2 通过
         should_skip2, reasons2 = _nodeduct_strict_check_jq(self.r_jq)
-        self.assertTrue(should_skip2,
-            "除日嫁娶应产生忌项而不通过严格无扣分，实际未过滤；ji_list=%r"
-            % (self.r_jq.get('ji_list'),))
-        self.assertEqual(reasons2, ['忌列表非空(1项)'],
-            "除日嫁娶的过滤原因应唯一为忌列表非空(1项)，实际=%r" % (reasons2,))
+        self.assertFalse(should_skip2,
+            "除日嫁娶（卷十无除忌嫁娶）应通过严格无扣分，实际被过滤；reasons=%r ji_list=%r"
+            % (reasons2, self.r_jq.get('ji_list')))
+        self.assertEqual(reasons2, [],
+            "除日嫁娶的过滤原因应为空，实际=%r" % (reasons2,))
 
     def test_05_F2_nodeduct_fanli_xiuzao_filtered_by_huangdao_minus10(self):
         """J-05 F2 反例：同日同时 → 改修造类（event_type=修造，无山向）。

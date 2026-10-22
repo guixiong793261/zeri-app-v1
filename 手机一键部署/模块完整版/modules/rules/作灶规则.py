@@ -36,10 +36,9 @@ from datetime import date
 class StoveRuleChecker(EventRuleChecker):
     """作灶规则检查器"""
     
-    # 建除十二神分类
-    JIANCHU_YI = ['成', '开', '定']
-    JIANCHU_JI = ['破', '闭']
-    
+    # 建除十二神：卷十无「作灶」目，零载，不参与建除宜忌判定
+    # （批次 2，001 §162）
+
     # 基础方向五行映射
     DIRECTION_WUXING = {
         '东': '木', '东南': '木',
@@ -129,14 +128,12 @@ class StoveRuleChecker(EventRuleChecker):
         def fallback_get_jianchu(date_obj):
             try:
                 from ..shensha.marriage_shensha import get_day_ganzhi
+                from ..建除 import star as _jianchu_star
                 month = date_obj.month
                 month_zhi = ZHI[(month - 1) % 12]
                 _, day_zhi = get_day_ganzhi(date_obj)
-                month_idx = zhi_index(month_zhi)
-                day_idx = zhi_index(day_zhi)
-                offset = (day_idx - month_idx) % 12
-                jianchu_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-                return jianchu_list[offset]
+                # 批次 1（001 §161）：偏移计算委托唯一事实源
+                return _jianchu_star(month_zhi, day_zhi)
             except:
                 return ''
         
@@ -234,31 +231,28 @@ class StoveRuleChecker(EventRuleChecker):
         zaoxiang = kwargs.get('zaoxiang')
         zaowei = kwargs.get('zaowei')
         
-        # 1. 建除十二神规则
-        self._check_jianchu(date_obj, yi_list, ji_list)
-        
-        # 2. 天德、月德日（依赖marriage_shensha）
+        # 1. 天德、月德日（依赖marriage_shensha）
         self._check_tiande_yuede(date_obj, yi_list)
         
-        # 3. 不将日（依赖marriage_shensha）
+        # 2. 不将日（依赖marriage_shensha）
         self._check_bujiang(date_obj, yi_list)
         
-        # 4. 月破、四离四绝（依赖marriage_shensha）
+        # 3. 月破、四离四绝（依赖marriage_shensha）
         self._check_po_and_sili(date_obj, owners, ji_list)
         
-        # 5. 作灶专用神煞
+        # 4. 作灶专用神煞
         self._check_stove_special(sizhu, yi_list, ji_list)
         
-        # 6. 忌与事主生肖相冲
+        # 5. 忌与事主生肖相冲
         self._check_shengxiao_chong(sizhu, owners, ji_list, **kwargs)
         
-        # 7. 灶向/灶位五行辅助规则（仅供参考，不影响判定）
+        # 6. 灶向/灶位五行辅助规则（仅供参考，不影响判定）
         if zaoxiang:
             self._check_zaoxiang(sizhu, zaoxiang, yi_list, ji_list)
         if zaowei:
             self._check_zaowei(sizhu, zaowei, yi_list, ji_list)
         
-        # 8. 检查一票否决项
+        # 7. 检查一票否决项
         veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
         if veto:
             return yi_list, ji_list, True, veto_reason
@@ -302,20 +296,6 @@ class StoveRuleChecker(EventRuleChecker):
             return True, "、".join(veto_reasons)
         
         return False, ""
-    
-    def _check_jianchu(self, date_obj, yi_list, ji_list):
-        """检查建除十二神"""
-        if not self.get_jianchu:
-            return
-        
-        try:
-            jianchu = self.get_jianchu(date_obj)
-            if jianchu in self.JIANCHU_YI:
-                yi_list.append(f'建除{jianchu}日宜作灶')
-            elif jianchu in self.JIANCHU_JI:
-                ji_list.append(f'建除{jianchu}日忌作灶')
-        except Exception:
-            pass
     
     def _check_tiande_yuede(self, date_obj, yi_list):
         """检查天德、月德日"""
