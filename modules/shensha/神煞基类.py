@@ -1595,9 +1595,11 @@ class ShenShaChecker:
         if self._is_mingfei(sizhu):
             # 2026-10 A1 正名：典据正名为「鸣吠日」（13 日柱），旧软件名
             # 「鸣犬日」本批全项目正名；分值按事项查 SHENSHA_SCORES。
-            self._add_shensha('鸣吠日', 12, '鸣吠日吉（金鸡鸣、玉犬吠，上下相呼）')
+            # 批次2（001 §159）发射兜底随注册键统一高档 12→15（消双轨）。
+            self._add_shensha('鸣吠日', 15, '鸣吠日吉（金鸡鸣、玉犬吠，上下相呼）')
         if self._is_mingfeidui(sizhu):
-            self._add_shensha('鸣吠对日', 8, '鸣吠对日吉（鸣吠之冲，宜破土斩草）')
+            # 批次2（001 §159）发射兜底随注册键统一高档 8→10（消双轨）。
+            self._add_shensha('鸣吠对日', 10, '鸣吠对日吉（鸣吠之冲，宜破土斩草）')
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空主空亡')
         

@@ -246,11 +246,13 @@ class CommonShenShaChecker(ShenShaChecker):
             self._add_shensha('天马', 10, '天马驰驱，出行吉利')
 
         if self._is_mingfei(sizhu):
-            # 2026-10 A1 正名：旧软件名「鸣犬日」→ 典据正名「鸣吠日」
-            self._add_shensha('鸣吠日', 12, '鸣吠日吉，诸事皆宜')
+            # 2026-10 A1 正名：旧软件名「鸣犬日」→ 典据正名「鸣吠日」；
+            # 批次2（001 §159）发射兜底随注册键统一高档 12→15（消双轨）。
+            self._add_shensha('鸣吠日', 15, '鸣吠日吉，诸事皆宜')
 
         if self._is_mingfeidui(sizhu):
-            self._add_shensha('鸣吠对日', 8, '鸣吠对日，次吉之日')
+            # 批次2（001 §159）发射兜底随注册键统一高档 8→10（消双轨）。
+            self._add_shensha('鸣吠对日', 10, '鸣吠对日，次吉之日')
 
         if self._is_yuekong(sizhu):
             self._add_shensha('月空', 10, '月空之日，诸煞皆空')
