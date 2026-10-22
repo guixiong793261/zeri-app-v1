@@ -188,7 +188,7 @@ def main():
     check(f'表内无病符键（实得 {len(bf_keys)}）', not bf_keys)
     check("通配键 ('*','岁破') 不存在", ('*', '岁破') not in SHENSHA_SCORES)
     check("通配键 ('*','病符') 不存在", ('*', '病符') not in SHENSHA_SCORES)
-    check(f'总表键数=1200（轻重层批次1 001 §158 增 (*,月德合) 通配键；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1200)
+    check(f'总表键数=1199（批次1 1200 → 建除批次1 001 §161 删 (开业,破日)；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1199)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     check(f'移徙块键数=71（§153 漂移随批次1 回填；实得 {n_yi}）', n_yi == 71)
     for ev in CH:

@@ -81,8 +81,8 @@ EXPECT_H1_FAMILIES = {
         ('月破', '月破日忌作灶'),
     ],
     '开业': [
+        # ('破日', '建除破日忌开业') 已删（建除批次1 001 §161：破日 ≡ 月破，双计消除）
         ('月破', '月破日忌开业'),
-        ('破日', '建除破日忌开业'),
     ],
     '出行': [
         ('月破', '月破日(子月午日)忌出行'), ('月破', '月破日(丑月未日)忌出行'),
@@ -286,9 +286,9 @@ def main():
             map_families.add((ev, ss_name))
             all_tx.add(tx)
             tx_by_family.setdefault((ev, ss_name), []).append(tx)
-    if len(map_families) != 40:
-        fails.append(f"A: 映射族数={len(map_families)}（应40，口径收口批删5个"
-                     f"不将日惰性族后，001 §153）")
+    if len(map_families) != 39:
+        fails.append(f"A: 映射族数={len(map_families)}（应39，口径收口批删5个"
+                     f"不将日惰性族后 40，001 §153；建除批次1 删开业破日族 39，001 §161）")
 
     # ---------- F. 映射族发射源守卫（H1-4，2026-10-20 拍板④） ----------
     # 每 tx 必须有生产发射源：① modules 源码字面量命中（剔除评分器.py 内

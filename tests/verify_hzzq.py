@@ -193,8 +193,8 @@ def main():
         check(f"F shensha_score('{ev}','红嘴朱雀')=None（无通配兜底）",
               shensha_score(ev, '红嘴朱雀') is None)
     check("F 通配键 ('*','红嘴朱雀') 不存在", ('*', '红嘴朱雀') not in SHENSHA_SCORES)
-    check(f'F 总键数=1200（轻重层批次1 001 §158 增 (*,月德合) 通配键；实得 {len(SHENSHA_SCORES)}）',
-          len(SHENSHA_SCORES) == 1200)
+    check(f'F 总键数=1199（批次1 1200 → 建除批次1 001 §161 删 (开业,破日)；实得 {len(SHENSHA_SCORES)}）',
+          len(SHENSHA_SCORES) == 1199)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     check(f'F 移徙块键数=71（§153 漂移随批次1 回填；实得 {n_yi}）', n_yi == 71)
 
