@@ -188,9 +188,9 @@ def main():
     check(f'表内无病符键（实得 {len(bf_keys)}）', not bf_keys)
     check("通配键 ('*','岁破') 不存在", ('*', '岁破') not in SHENSHA_SCORES)
     check("通配键 ('*','病符') 不存在", ('*', '病符') not in SHENSHA_SCORES)
-    check(f'总表键数=1185（批次1 1200 → 建除批次1 001 §161 删 (开业,破日) → 1199；福星批 001 §165 删 福星×14 键 → 1185；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1185)
+    check(f'总表键数=1199（批次1 1200 → 建除批次1 001 §161 删 (开业,破日) → 1199；福星批 001 §165 删 福星×14 键 → 1185；福星正统落地批 001 §169 加回 14 键 → 1199；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1199)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
-    check(f'移徙块键数=70（§153 漂移随批次1 回填 71；福星批 001 §165 删 福星×移徙 → 70；实得 {n_yi}）', n_yi == 70)
+    check(f'移徙块键数=71（§165 删 福星×移徙 → 70；福星正统落地批 001 §169 +1 恢复 → 71；实得 {n_yi}）', n_yi == 71)
     for ev in CH:
         check(f'E shensha_score({ev},岁破)=None', shensha_score(ev, '岁破') is None)
         check(f'E shensha_score({ev},病符)=None', shensha_score(ev, '病符') is None)

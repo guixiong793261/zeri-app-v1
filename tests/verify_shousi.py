@@ -203,11 +203,11 @@ check('F 谓词体内无表B 映射/季节分组残留', not hits, hits[:5])
 check('F 未新增第 4 个受死日谓词（防多实现再分叉）', len(found) == 3, found)
 
 # ============ G：键表层 ============
-print('\n[G] 键表（三键已删；建除批次1 后 1199 → 福星批 001 §165 删 福星×14 键 =1185）')
+print('\n[G] 键表（三键已删；建除批次1 后 1199 → 福星批 001 §165 删 福星×14 键 =1185 → 福星正统落地批 001 §169 加回 =1199）')
 from modules.事项标准 import SHENSHA_SCORES, shensha_score  # noqa: E402
 
-check('G 总键数=1185（建除批次1 后 1199；福星批 001 §165 删 福星×14 键 → 1185；实得 %d）' % len(SHENSHA_SCORES),
-      len(SHENSHA_SCORES) == 1185)
+check('G 总键数=1199（§165 删 福星×14 键 → 1185；福星正统落地批 001 §169 加回 14 键 → 1199；实得 %d）' % len(SHENSHA_SCORES),
+      len(SHENSHA_SCORES) == 1199)
 for ev in ('开业', '作灶', '安葬'):
     check("G ('%s','受死日') 注册键已删" % ev,
           (ev, '受死日') not in SHENSHA_SCORES)

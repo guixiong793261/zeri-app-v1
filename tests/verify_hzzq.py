@@ -193,12 +193,12 @@ def main():
         check(f"F shensha_score('{ev}','红嘴朱雀')=None（无通配兜底）",
               shensha_score(ev, '红嘴朱雀') is None)
     check("F 通配键 ('*','红嘴朱雀') 不存在", ('*', '红嘴朱雀') not in SHENSHA_SCORES)
-    check(f'F 总键数=1185（批次1 1200 → 建除批次1 001 §161 删 (开业,破日) → 1199；'
-          f'福星批 001 §165 删 福星×14 键 → 1185；实得 {len(SHENSHA_SCORES)}）',
-          len(SHENSHA_SCORES) == 1185)
+    check(f'F 总键数=1199（批次1 1200 → 建除批次1 001 §161 删 (开业,破日) → 1199；'
+          f'福星批 001 §165 删 福星×14 键 → 1185；福星正统落地批 001 §169 加回 14 键 → 1199；实得 {len(SHENSHA_SCORES)}）',
+          len(SHENSHA_SCORES) == 1199)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
-    check(f'F 移徙块键数=70（§153 漂移随批次1 回填 71；福星批 001 §165 删 福星×移徙 → 70；实得 {n_yi}）',
-          n_yi == 70)
+    check(f'F 移徙块键数=71（§165 删 福星×移徙 → 70；福星正统落地批 001 §169 +1 恢复 → 71；实得 {n_yi}）',
+          n_yi == 71)
 
     # ============ G：天次与总分基线 ============
     print('[G] 天次与总分基线（2026 全年，owners=[]）')
