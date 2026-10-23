@@ -11,6 +11,9 @@ from .四柱计算器 import get_lunar_date, calculate_sizhu
 from .黄道 import huangdao_calculator
 # 批次 1（001 §161）：建除星名计算委托唯一事实源
 from .建除 import STARS as _JIANCHU_STARS, star as _jianchu_star
+# 001 §168 收口：时辰系四表（五鼠遁/贵人时/禄神时/五不遇）单一事实源
+# 委托 modules/shensha/时辰系.py，本地重复表删除，名字保持原位供内部调用。
+from .shensha.时辰系 import WUSHU_DUN, GUIREN_SHICHEN, LU_SHICHEN, is_wubuyu as _ss_wubuyu
 
 # 尝试导入 sxtwl 进行精确节气判断
 try:
@@ -406,6 +409,8 @@ LIUYAO_JIXIONG = {
 # 六曜公式：idx = (农历月份 + 农历日期) % 6，对应 LIUYAO 新名序
 
 # ---------------- 日禄（日干→临官地支） ----------------
+# 001 §168 收口注：RI_LU 仅供日层日禄展示（本模块 calc_shichen_jixiong 之外的
+# 展示位）；时辰层禄神时统一走 modules/shensha/时辰系.LU_SHICHEN（值同表）。
 RI_LU = {
     '甲': '寅', '乙': '卯',
     '丙': '巳', '丁': '午', '戊': '巳',
@@ -434,39 +439,17 @@ SHI_CHEN_LIST = [
     ('申', '申时(15-17)'), ('酉', '酉时(17-19)'), ('戌', '戌时(19-21)'), ('亥', '亥时(21-23)')
 ]
 
-# 五鼠遁（按日干推子时天干）
-WUSHU_DUN = {'甲':'甲','己':'甲',
-             '乙':'丙','庚':'丙',
-             '丙':'戊','辛':'戊',
-             '丁':'庚','壬':'庚',
-             '戊':'壬','癸':'壬'}
+# 五鼠遁（按日干推子时天干）：001 §168 收口，表已上收 modules/shensha/时辰系.py，
+# WUSHU_DUN / GUIREN_SHICHEN / LU_SHICHEN 由模块头 import 绑定，本地定义删除。
 
 TIAN_GAN_ORDER = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
 DI_ZHI_ORDER = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
 
-# 贵人时辰（按日干查）
-GUIREN_SHICHEN = {
-    '甲': ['丑','未'], '乙': ['子','申'], '丙': ['亥','酉'], '丁': ['亥','酉'],
-    '戊': ['丑','未'], '己': ['子','申'], '庚': ['丑','未'], '辛': ['寅','午'],
-    '壬': ['卯','巳'], '癸': ['卯','巳']
-}
-
-# 禄神时辰（按日干查：日禄对应支）
-LU_SHICHEN = RI_LU  # 即日禄支
-
-# 五不遇时（时干克日干，位差6）
+# 五不遇时（时干克日干，位差6）：001 §168 收口壳委托。
+# 历史参数序 (hour_gan, day_gan) 保留（tests/verify_wubuyushi.py 依赖此签名），
+# 壳内翻转为统一口径 时辰系.is_wubuyu(day_gan, hour_gan)。
 def is_wubuyu(hour_gan, day_gan):
-    try:
-        h = TIAN_GAN_ORDER.index(hour_gan)
-        d = TIAN_GAN_ORDER.index(day_gan)
-        if (d + 6) % 10 != h:
-            return False
-        yang = {'甲','丙','戊','庚','壬'}
-        if (hour_gan in yang) == (day_gan in yang):
-            return True
-    except Exception:
-        return False
-    return False
+    return _ss_wubuyu(day_gan, hour_gan)
 
 
 def calc_jianchu(month_zhi, day_zhi):

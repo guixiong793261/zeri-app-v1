@@ -145,8 +145,10 @@ class TestHuangDaoAlgorithm(unittest.TestCase):
         try:
             import modules.黄道 as mod_hd
             import modules.婚嫁评分算法 as mod_hj
+            import modules.shensha.时辰系 as mod_ssc
             cls._hd_mod = mod_hd
             cls._hj_mod = mod_hj
+            cls._ssc_mod = mod_ssc
             cls._calc = mod_hd.黄道计算器()
         except ImportError as e:
             raise unittest.SkipTest("黄道模块导入失败: %s" % e)
@@ -218,33 +220,39 @@ class TestHuangDaoAlgorithm(unittest.TestCase):
 
     # -------- 贵人时（天乙贵人时辰表） --------
     def test_tianyi_guiren_zhixing_table(self):
-        """【硬约束】天乙贵人时辰表：甲戊庚(牛羊丑未)/乙己(鼠猴子申)/丙丁(猪鸡亥酉)/辛(马虎寅午)/壬癸(兔蛇卯巳)"""
-        G = self._hj_mod.TIANYI_GUIREN
+        """【硬约束】天乙贵人时辰表：甲戊庚(牛羊丑未)/乙己(鼠猴子申)/丙丁(猪鸡亥酉)/辛(马虎寅午)/壬癸(兔蛇卯巳)
+
+        001 §168 收口：断言对象为唯一事实源 modules/shensha/时辰系.GUIREN_SHICHEN
+        （原婚嫁评分算法.TIANYI_GUIREN 死表已删，值与本表逐键一致）。"""
+        G = self._ssc_mod.GUIREN_SHICHEN
         self.assertEqual(sorted(G['甲']), sorted(['丑','未']), "甲日贵人=丑未")
         self.assertEqual(sorted(G['戊']), sorted(['丑','未']), "戊日贵人=丑未")
+        self.assertEqual(sorted(G['己']), sorted(['子','申']), "己日贵人=子申")
+        self.assertEqual(sorted(G['庚']), sorted(['丑','未']), "庚日贵人=丑未")
         self.assertEqual(sorted(G['乙']), sorted(['子','申']), "乙日贵人=子申")
-        self.assertEqual(sorted(G['丙']), sorted(['酉','亥']), "丙日贵人=亥酉")
-        self.assertEqual(sorted(G['丁']), sorted(['酉','亥']), "丁日贵人=亥酉")
+        self.assertEqual(sorted(G['丙']), sorted(['亥','酉']), "丙日贵人=亥酉")
+        self.assertEqual(sorted(G['丁']), sorted(['亥','酉']), "丁日贵人=亥酉")
         self.assertEqual(sorted(G['辛']), sorted(['寅','午']), "辛日贵人=寅午（六辛逢马虎）")
         self.assertEqual(sorted(G['壬']), sorted(['卯','巳']), "壬日贵人=卯巳")
         self.assertEqual(sorted(G['癸']), sorted(['卯','巳']), "癸日贵人=卯巳")
 
     def test_guiren_hour_not_always_true(self):
         """【反例验证】甲日卯时不应是贵人时（贵人时≠永真）。project_memory 曾有永远为真的缺陷"""
-        # 甲日贵人时只有丑、未；卯时不是
-        G = self._hj_mod.TIANYI_GUIREN
+        # 甲日贵人时只有丑、未；卯时不是（001 §168：断言对象为唯一事实源时辰系表）
+        G = self._ssc_mod.GUIREN_SHICHEN
         self.assertIn('丑', G['甲'])
         self.assertIn('未', G['甲'])
         self.assertNotIn('卯', G['甲'], "甲日卯时不应为贵人时（证明永真缺陷已修复）")
         self.assertNotIn('戌', G['丙'], "丙日戌时不应为贵人时")
 
     def test_guiren_geng_day_main_program_vs_hunjia(self):
-        """【单点权威验证】庚日贵人时三端一致（主程序/修造/婚嫁）。口诀：甲戊庚牛羊=丑未。"""
+        """【单点权威验证】庚日贵人时三端一致（主程序/修造/时辰系）。口诀：甲戊庚牛羊=丑未。"""
         # 正宗口诀：甲戊庚牛羊 → 庚日贵人时辰地支 = [丑, 未]
         AUTHORITY_GENG = ['丑', '未']  # 主程序 L3417、修造gui_ren 均为该值
 
-        # 1. 婚嫁算法 TIANYI_GUIREN 当前值
-        hunjia_geng = sorted(self._hj_mod.TIANYI_GUIREN.get('庚', []))
+        # 1. 唯一事实源 时辰系.GUIREN_SHICHEN 当前值
+        #    （001 §168 收口：原婚嫁评分算法.TIANYI_GUIREN 死表已删，本断言改指唯一事实源）
+        shichen_geng = sorted(self._ssc_mod.GUIREN_SHICHEN.get('庚', []))
 
         # 2. 修造模块 gui_ren 当前值
         try:
@@ -263,10 +271,10 @@ class TestHuangDaoAlgorithm(unittest.TestCase):
 
         # 3. 断言：三端必须全部与权威一致（=丑未）。若不一致，属于真实业务缺陷
         self.assertEqual(
-            hunjia_geng, AUTHORITY_GENG,
+            shichen_geng, AUTHORITY_GENG,
             "庚日贵人时三端不一致！口诀甲戊庚牛羊=[丑,未]；"
-            "主程序=%s；修造=%s；婚嫁算法TIANYI_GUIREN[庚]=%s → 婚嫁算法需修正"
-            % (AUTHORITY_GENG, xz_geng_list if xz_geng_list else '?', hunjia_geng)
+            "主程序=%s；修造=%s；时辰系GUIREN_SHICHEN[庚]=%s → 唯一事实源需修正"
+            % (AUTHORITY_GENG, xz_geng_list if xz_geng_list else '?', shichen_geng)
         )
         if xz_geng_list:
             self.assertEqual(

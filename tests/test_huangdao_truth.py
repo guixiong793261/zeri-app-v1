@@ -262,15 +262,15 @@ class TestGuiRenGoldTruth(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # 取婚嫁评分算法的 TIANYI_GUIREN（已修：庚=丑未）
+        # 取唯一事实源 modules/shensha/时辰系.GUIREN_SHICHEN（001 §168 收口：原婚嫁死表已删）
         try:
-            import modules.婚嫁评分算法 as mod_hm
-            cls.GUIREN_TABLE = mod_hm.TIANYI_GUIREN
+            import modules.shensha.时辰系 as mod_ssc
+            cls.GUIREN_TABLE = mod_ssc.GUIREN_SHICHEN
         except ImportError as e:
             raise unittest.SkipTest("模块导入失败: %s" % e)
 
     def test_gui_geng_equals_gold_niu_yang(self):
-        """【庚日贵人时 正例】甲戊庚牛羊=丑未。婚嫁算法版 TIANYI_GUIREN['庚'] 必须= ['丑','未']"""
+        """【庚日贵人时 正例】甲戊庚牛羊=丑未。时辰系 GUIREN_SHICHEN['庚'] 必须= ['丑','未']"""
         self.assertEqual(self.GUIREN_TABLE.get('庚'), GOLD_TRUTH_GUIREN_GENG,
             "庚日贵人时偏离黄金基准！口诀甲戊庚牛羊应为丑未，实际=%s" % self.GUIREN_TABLE.get('庚'))
 
@@ -448,8 +448,9 @@ class TestGuiRen10GanFull(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        import modules.婚嫁评分算法 as mod_hm
-        cls.GUIREN = mod_hm.TIANYI_GUIREN
+        # 001 §168 收口：断言对象改指唯一事实源 modules/shensha/时辰系.GUIREN_SHICHEN
+        import modules.shensha.时辰系 as mod_ssc
+        cls.GUIREN = mod_ssc.GUIREN_SHICHEN
 
     def test_all_10gan_positive_cases(self):
         """正例：每个天干 2 个贵人地支 必须完全等于黄金基准"""

@@ -35,11 +35,23 @@ if __name__ == '__main__' and __package__ is None:
 try:
     from .修造神煞 import ConstructionShenShaChecker
     from .神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
+    from .时辰系 import (
+        WUSHU_DUN,
+        get_gui_ren_shichen as _ss_gui_ren,
+        get_lu_shichen as _ss_lu,
+        is_wubuyu as _ss_wubuyu,
+    )
     from ..工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from ..二十四山 import ZhengTiWuXingSelectorDB
 except ImportError:
     from 修造神煞 import ConstructionShenShaChecker
     from 神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
+    from 时辰系 import (
+        WUSHU_DUN,
+        get_gui_ren_shichen as _ss_gui_ren,
+        get_lu_shichen as _ss_lu,
+        is_wubuyu as _ss_wubuyu,
+    )
     from 工具函数 import SANSHA_MAP, TIAN_GAN, DI_ZHI, TIANDE, YUEDE
     from 二十四山 import ZhengTiWuXingSelectorDB
 
@@ -710,41 +722,21 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         return liuhe_map.get(zhi1) == zhi2
     
     def _get_gui_ren_shichen(self, gan):
-        """返回某天干的贵人时辰地支列表"""
-        gui_map = {
-            '甲': ['丑', '未'], '乙': ['子', '申'], '丙': ['亥', '酉'], '丁': ['亥', '酉'],
-            '戊': ['丑', '未'], '己': ['子', '申'], '庚': ['丑', '未'], '辛': ['寅', '午'],
-            '壬': ['卯', '巳'], '癸': ['卯', '巳']
-        }
-        return gui_map.get(gan, [])
-    
+        """返回某天干的贵人时辰地支列表（委托单一事实源 modules/shensha/时辰系.py，001 §168 收口）"""
+        return _ss_gui_ren(gan)
+
     def _get_lu_shichen(self, gan):
-        """返回某天干的禄神时辰地支"""
-        lu_map = {'甲':'寅','乙':'卯','丙':'巳','丁':'午','戊':'巳','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'}
-        return lu_map.get(gan)
-    
+        """返回某天干的禄神时辰地支（委托单一事实源 modules/shensha/时辰系.py，001 §168 收口）"""
+        return _ss_lu(gan)
+
     def _is_wubuyu(self, hour_gan, day_gan):
-        """检查五不遇时
-        五不遇时：时干克日干，且阳日阳时、阴日阴时
-        正确算法：时干与日干相差6位（甲日庚时、乙日辛时等）
+        """检查五不遇时（委托单一事实源 modules/shensha/时辰系.py，001 §168 收口）
+
+        历史参数序 (hour_gan, day_gan) 保留，壳内翻转为统一口径 is_wubuyu(day_gan, hour_gan)。
+        原实现裸 except: pass 已随委托消除；原"阴阳属性相同"附加检查数学上恒真
+        （日干与时干相差6位必同奇偶同阴阳），委托纯相差6位判定完全等价。
         """
-        gan_list = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-        yang_gan = ['甲', '丙', '戊', '庚', '壬']
-        yin_gan = ['乙', '丁', '己', '辛', '癸']
-
-        try:
-            hour_idx = gan_list.index(hour_gan)
-            day_idx = gan_list.index(day_gan)
-
-            # 时干克日干：时干为日干后6位（庚克甲、辛克乙、...）
-            if (day_idx + 6) % 10 == hour_idx:
-                # 检查阴阳属性：阳日阳时、阴日阴时
-                hour_is_yang = hour_gan in yang_gan
-                day_is_yang = day_gan in yang_gan
-                return hour_is_yang == day_is_yang
-        except:
-            pass
-        return False
+        return _ss_wubuyu(day_gan, hour_gan)
     
     # ===== 太阳太阴到山到向 =====
     
@@ -1150,12 +1142,8 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             '酉': '酉时(17-19)', '戌': '戌时(19-21)', '亥': '亥时(21-23)'
         }
         
-        # 五鼠遁时干：根据日干推算子时天干
-        wushu_dun = {
-            '甲': '甲', '乙': '丙', '丙': '戊', '丁': '庚', '戊': '壬',
-            '己': '甲', '庚': '丙', '辛': '戊', '壬': '庚', '癸': '壬'
-        }
-        zi_gan = wushu_dun.get(day_gan, '甲')
+        # 五鼠遁时干：单一事实源 modules/shensha/时辰系.py（001 §168 收口）
+        zi_gan = WUSHU_DUN.get(day_gan, '甲')
         zi_idx = TIAN_GAN.index(zi_gan)
         
         for i, zhi in enumerate(DI_ZHI):
