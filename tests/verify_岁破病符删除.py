@@ -29,7 +29,7 @@
      shensha_score 对两名返回 None。
   F. 谓词：_is_suipo／_is_bingfu／_get_suipo／_is_sui_po_day／_h1_is_veto_reason
      全库不可调用（剥注释后无定义、无调用）；_get_suipo 保留（日破/月破消费）例外。
-  G. 总分基线：入宅/移徙 3745、嫁娶 214（2026 全年，owners=[]；轻重层批次1
+  G. 总分基线：入宅/移徙 3435、嫁娶 -96（2026 全年，owners=[]；轻重层批次1
      001 §158 B 组 10 项调档后实测重冻 3377；批次2 001 §159 鸣吠统一高档
      +368 重冻 3745；前值 4464/-612，含红嘴朱雀批与
      受死日收敛批 +616）。
@@ -188,9 +188,9 @@ def main():
     check(f'表内无病符键（实得 {len(bf_keys)}）', not bf_keys)
     check("通配键 ('*','岁破') 不存在", ('*', '岁破') not in SHENSHA_SCORES)
     check("通配键 ('*','病符') 不存在", ('*', '病符') not in SHENSHA_SCORES)
-    check(f'总表键数=1199（批次1 1200 → 建除批次1 001 §161 删 (开业,破日)；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1199)
+    check(f'总表键数=1185（批次1 1200 → 建除批次1 001 §161 删 (开业,破日) → 1199；福星批 001 §165 删 福星×14 键 → 1185；实得 {len(SHENSHA_SCORES)}）', len(SHENSHA_SCORES) == 1185)
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
-    check(f'移徙块键数=71（§153 漂移随批次1 回填；实得 {n_yi}）', n_yi == 71)
+    check(f'移徙块键数=70（§153 漂移随批次1 回填 71；福星批 001 §165 删 福星×移徙 → 70；实得 {n_yi}）', n_yi == 70)
     for ev in CH:
         check(f'E shensha_score({ev},岁破)=None', shensha_score(ev, '岁破') is None)
         check(f'E shensha_score({ev},病符)=None', shensha_score(ev, '病符') is None)
@@ -228,7 +228,9 @@ def main():
 
     # ============ G：总分基线 ============
     print('[G] 总分基线（2026 全年，owners=[]）')
-    for ev, exp in (('入宅', 3745), ('移徙', 3745), ('嫁娶', 214)):
+    # 福星批（001 §165）：删伪福星，凡持键通道各 -310（31 天次×10）——
+    # 入宅/移徙 3745→3435、嫁娶 214→-96（对拍探针批前批后实测）。
+    for ev, exp in (('入宅', 3435), ('移徙', 3435), ('嫁娶', -96)):
         ck = get_checker(ev)
         tot = 0
         for _, sz in days:
