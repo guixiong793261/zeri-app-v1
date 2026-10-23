@@ -37,6 +37,12 @@ except ImportError:
     from 神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_sifei_by_pillar
     from 工具函数 import TIANDE, YUEDE, DI_ZHI
 
+# 批次 1（2026-10-22，001 §161）：建除吉凶集合唯一事实源（小黄道倒挂修复）
+try:
+    from ..建除 import JI_STARS as _JC_JI_STARS
+except ImportError:
+    from 建除 import JI_STARS as _JC_JI_STARS
+
 # 制化引擎（2026-10-21 制化第一批，001 §155）：大时/五墓豁免判定单点
 try:
     from .制化引擎 import (eval_dashi_chouwei_exempt, eval_wumu_exempt,
@@ -87,8 +93,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩加临，恩泽深厚')
 
-        if self._is_fuxing(sizhu):
-            self._add_shensha('福星', 10, '福星照临，主福泽')
+        # 2026-10-23 福星批（001 §165）：'福星' 通用分支发射删除——原 _is_fuxing
+        # 「年支+6 冲位」起例与最凶神岁破同构；协纪正例为时辰派（日干生时干），
+        # 挂账「时辰层神煞专项」。基类谓词已墓碑留档。
 
         # ===== 凶煞 =====
         if self._is_jiesha(sizhu):
@@ -407,10 +414,17 @@ class CommonShenShaChecker(ShenShaChecker):
         if da_huangdao:
             self._add_shensha(f'大黄道-{da_huangdao}', 15, '黄道吉日，诸事皆宜')
 
-        # 小黄道吉日（十二建星）
+        # 小黄道（十二建星）
+        # 批次 1（2026-10-22，001 §161，T4 倒挂修复）：吉星（除危定执成开）
+        # 维持 +8；凶星（建满平破收闭）原一律 +8 属分值倒挂，改 0 分并保留
+        # 识别展示。0 分无典据支撑负值，已登记 SHENSHA_WEIGHT_PENDING 待裁断。
         xiao_huangdao = self._get_xiao_huangdao(day_zhi, month_zhi)
         if xiao_huangdao:
-            self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
+            if xiao_huangdao in _JC_JI_STARS:
+                self._add_shensha(f'小黄道-{xiao_huangdao}', 8, '建星吉日')
+            else:
+                self._add_shensha(f'小黄道-{xiao_huangdao}', 0,
+                                  f'{xiao_huangdao}日（建星凶，暂不计分，待轻重层裁断）')
 
         # ===== 日神类吉神 =====
         # 2026-10 A4：注册名由 '三奇-{type}' 统一为 '三奇{type}'（与基类及
@@ -709,15 +723,12 @@ class CommonShenShaChecker(ShenShaChecker):
             return None
 
     def _get_xiao_huangdao(self, day_zhi, month_zhi):
-        """获取小黄道十二建星"""
-        jianxing_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-        zh_list = DI_ZHI
-
-        month_idx = zh_list.index(month_zhi)
-        day_idx = zh_list.index(day_zhi)
-
-        offset = (day_idx - month_idx) % 12
-        return jianxing_list[offset]
+        """获取小黄道十二建星（批次 1：委托 modules/建除.py 唯一事实源）"""
+        try:
+            from ..建除 import star as _jianchu_star
+        except ImportError:
+            from 建除 import star as _jianchu_star
+        return _jianchu_star(month_zhi, day_zhi)
 
     def _get_huangdao_shi(self, day_zhi, hour_zhi):
         """获取黄道吉时
