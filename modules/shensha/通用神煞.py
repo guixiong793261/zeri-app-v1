@@ -93,8 +93,9 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩加临，恩泽深厚')
 
-        if self._is_fuxing(sizhu):
-            self._add_shensha('福星', 10, '福星照临，主福泽')
+        # 2026-10-23 福星批（001 §165）：'福星' 通用分支发射删除——原 _is_fuxing
+        # 「年支+6 冲位」起例与最凶神岁破同构；协纪正例为时辰派（日干生时干），
+        # 挂账「时辰层神煞专项」。基类谓词已墓碑留档。
 
         # ===== 凶煞 =====
         if self._is_jiesha(sizhu):
