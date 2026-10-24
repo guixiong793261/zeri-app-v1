@@ -1247,6 +1247,21 @@ _SHENSHA_ALIAS_KEY = {
 }
 
 
+# ===== 年家族「识别展示，不计分」集合（2026-10-24 P0 大清理批 B，001 §172） =====
+# 协纪卷四·义例二（279222）：「官符白虎皆岁神方位……若其在日则定成为月建三合，
+# 何凶之有？历家特误以年方配日辰耳……今既不用白虎，应亦不用官符也。」
+# 卷三各条一律作「所理之地/方」，无一条作「其日忌」。拍板 D-P0-3：16 项年家神煞
+# 整体从「日辰扣分」剥离，保留命中识别与展示。
+# 本集合为 16 项中的 12 条活链；另 4 条：畜官（§171 已休眠，谓词/键留档）、
+# 岁害/天耗/地耗（P0 大清理 A 已删发射与键，001 §172）。
+# 分值收口方式同三煞（§66 方案A）：SHENSHA_SCORES 表值留档不回改，实际分值
+# 以本集合置 0 为准，description 追加标注，供展示层区分。
+_YEAR_GOD_DISPLAY_ONLY = {
+    '黄幡', '豹尾', '丧门', '吊客', '官符', '蚕官', '五鬼',
+    '岁刑', '力士', '大祸', '破败', '亡神',
+}
+
+
 class ShenShaChecker:
     """神煞检查器基类"""
     
@@ -1503,8 +1518,11 @@ class ShenShaChecker:
             self._add_shensha('大祸', -15, '大祸主凶')
         if self._is_suixing(sizhu):
             self._add_shensha('岁刑', -12, '岁刑主刑伤')
-        if self._is_suihai(sizhu):
-            self._add_shensha('岁害', -12, '岁害主妨害')
+        # 岁害发射已删（2026-10-24 P0 大清理批 A，001 §172）：三库全卷扫零载
+        # （协纪 1276 命中无「岁害」条目、考原 138/陈书 282 均无），伪神煞。
+        # 拍板 D-P0-5「删除发射与键表」。原发射为：
+        #     if self._is_suihai(sizhu):
+        #         self._add_shensha('岁害', -12, '岁害主妨害')
         if self._is_lishi(sizhu):
             self._add_shensha('力士', -10, '力士主冲撞')
         if self._is_canguan(sizhu):
@@ -1518,8 +1536,13 @@ class ShenShaChecker:
             self._add_shensha('破败', -10, '破败主破败')
         if self._is_guanfu(sizhu):
             self._add_shensha('官符', -10, '官符主官讼')
-        if self._is_chuguansheng(sizhu):
-            self._add_shensha('畜官', -10, '畜官主畜灾')
+        # 畜官发射停用（2026-10-24 实现 Bug 清理，001 §171）：_is_chuguansheng
+        # 直接 return _is_canguan（同谓词同值），与上方蚕官同日双扣 -20。
+        # 拍板「合并/去重」：保留名实相符的蚕官单发；畜官起例是否为独立一神
+        # 待《未验干支类 P0 取证》裁决，谓词与 SHENSHA_SCORES 键暂留（休眠）
+        # 以便取证后直接分列，禁止在未取证前删除谓词/键。原发射为：
+        #     if self._is_chuguansheng(sizhu):
+        #         self._add_shensha('畜官', -10, '畜官主畜灾')
         if self._is_sangmen(sizhu):
             self._add_shensha('丧门', -15, '丧门主丧亡')
         if self._is_diaoke(sizhu):
@@ -1530,10 +1553,13 @@ class ShenShaChecker:
         # 发射原为：
         #     if self._is_bingfu(sizhu):
         #         self._add_shensha('病符', -12, '病符主疾病')
-        if self._is_tianhao(sizhu):
-            self._add_shensha('天耗', -10, '天耗主损耗')
-        if self._is_dihao(sizhu):
-            self._add_shensha('地耗', -10, '地耗主损耗')
+        # 天耗/地耗发射已删（2026-10-24 P0 大清理批 A，001 §172）：三库全卷扫
+        # 零载（协纪/考原/陈书无一作日辰忌），伪神煞。拍板 D-P0-5「删除发射
+        # 与键表」。原发射为：
+        #     if self._is_tianhao(sizhu):
+        #         self._add_shensha('天耗', -10, '天耗主损耗')
+        #     if self._is_dihao(sizhu):
+        #         self._add_shensha('地耗', -10, '地耗主损耗')
     
     def _check_month_shensha(self, sizhu, **kwargs):
         """检查月神煞（通用）"""
@@ -1829,8 +1855,12 @@ class ShenShaChecker:
             self._add_shensha('四离日', -35, '四离日大忌')
         if self._is_sijue(sizhu):
             self._add_shensha('四绝日', -35, '四绝日大忌')
-        if self._is_guchen_guasu(sizhu):
-            self._add_shensha('孤辰寡宿', -15, '孤辰寡宿凶')
+        # 孤辰寡宿（年支法）发射已删（2026-10-24 P0 大清理批 A，001 §172）：
+        # 年支法系合婚命理法，协纪卷三十六·辨讹明斥（「孤辰寡宿…乃合婚
+        # 命理之法，非择日所用」），考原零载；嫁娶保留月令正法（见
+        # 嫁娶神煞._is_guchen）。拍板 D-P0-1「全面停用/删除」。原发射为：
+        #     if self._is_guchen_guasu(sizhu):
+        #         self._add_shensha('孤辰寡宿', -15, '孤辰寡宿凶')
         if self._is_hongsha(sizhu):
             self._add_shensha('红砂日', -15, '红砂日凶')
         if self._is_yanggongji(sizhu):
@@ -1913,6 +1943,13 @@ class ShenShaChecker:
                 score = 0
                 if '（识别展示，不计分）' not in description:
                     description += '（识别展示，不计分）'
+            # 2026-10-24 P0 大清理批 B（001 §172，D-P0-3）：年家族 16 项属岁神
+            # 方位，协纪卷四明判「历家误以年方配日辰」「今既不用官符」，从日辰
+            # 扣分整体剥离，仅保留识别展示。表值不回改（同三煞惯例）。
+            if name in _YEAR_GOD_DISPLAY_ONLY:
+                score = 0
+                if '（岁神方位，日辰仅识别展示，不计分）' not in description:
+                    description += '（岁神方位，日辰仅识别展示，不计分）'
             self.shensha_list.append({
                 'name': name,
                 'score': score,
@@ -3021,25 +3058,10 @@ class ShenShaChecker:
             day_zhi = sizhu['日柱'][1]
         return is_shangshuo_by_ganzhi(sizhu.get('year_gan', ''), day_gan, day_zhi)
     
-    def _is_guchen_guasu(self, sizhu):
-        """孤辰寡宿（年支查法）
-        亥子丑年寅、寅卯辰年巳、巳午未年申、申酉戌年亥
-        """
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        guchen_map = {
-            '亥': '寅', '子': '寅', '丑': '寅',
-            '寅': '巳', '卯': '巳', '辰': '巳',
-            '巳': '申', '午': '申', '未': '申',
-            '申': '亥', '酉': '亥', '戌': '亥'
-        }
-        guasu_map = {
-            '亥': '戌', '子': '戌', '丑': '戌',
-            '寅': '丑', '卯': '丑', '辰': '丑',
-            '巳': '辰', '午': '辰', '未': '辰',
-            '申': '未', '酉': '未', '戌': '未'
-        }
-        return day_zhi == guchen_map.get(year_zhi) or day_zhi == guasu_map.get(year_zhi)
+    # _is_guchen_guasu 已删（2026-10-24 P0 大清理批 A，001 §172）：年支查法系
+    # 合婚命理法（协纪卷三十六辨讹明斥、考原零载），拍板 D-P0-1 全面停用。
+    # 原实现（亥子丑年寅、寅卯辰年巳…）随发射行一并删除；嫁娶月令正法见
+    # 嫁娶神煞._is_guchen，勿复用本表。
     
     def _is_hongsha(self, sizhu):
         """红砂日（《协纪辨方书》辨讹：四孟月巳日、四仲月酉日、四季月丑日）
@@ -3366,21 +3388,8 @@ class ShenShaChecker:
         }
         return day_zhi == xing_map.get(year_zhi)
     
-    def _is_suihai(self, sizhu):
-        """岁害（年支六害位）
-        子未相害、丑午相害、寅巳相害、卯辰相害、申亥相害、酉戌相害
-        """
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        hai_map = {
-            '子': '未', '未': '子',
-            '丑': '午', '午': '丑',
-            '寅': '巳', '巳': '寅',
-            '卯': '辰', '辰': '卯',
-            '申': '亥', '亥': '申',
-            '酉': '戌', '戌': '酉'
-        }
-        return day_zhi == hai_map.get(year_zhi)
+    # _is_suihai 已删（2026-10-24 P0 大清理批 A，001 §172）：三库零载伪神煞，
+    # 拍板 D-P0-5 删除发射与键表；无 caller，谓词一并删除。原实现为年支六害位。
     
     def _is_lishi(self, sizhu):
         """力士（年支前一位）"""
@@ -3447,27 +3456,9 @@ class ShenShaChecker:
         """畜官（年支后三位）"""
         return self._is_canguan(sizhu)
     
-    def _is_tianhao(self, sizhu):
-        """天耗（年支前四位）"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        if year_zhi in zh_list:
-            idx = zh_list.index(year_zhi)
-            tianhao = zh_list[(idx + 4) % 12]
-            return day_zhi == tianhao
-        return False
-    
-    def _is_dihao(self, sizhu):
-        """地耗（年支后四位）"""
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        if year_zhi in zh_list:
-            idx = zh_list.index(year_zhi)
-            dihao = zh_list[(idx - 4) % 12]
-            return day_zhi == dihao
-        return False
+    # _is_tianhao/_is_dihao 已删（2026-10-24 P0 大清理批 A，001 §172）：三库
+    # 零载伪神煞，拍板 D-P0-5 删除发射与键表；无 caller，谓词一并删除。
+    # 原实现：天耗＝年支+4、地耗＝年支-4。
     
     def _is_tianen(self, sizhu):
         """天恩（15 日柱固定干支，《协纪辨方书》卷五·义例三）

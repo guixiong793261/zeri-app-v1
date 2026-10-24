@@ -292,12 +292,12 @@ def get_jianchu(date_obj, month_zhi=None):
         month_zhi = zhi_order[(idx + 2) % 12]  # 调整偏移：农历1月(寅)对应索引2
     
     _, day_zhi = get_day_ganzhi(date_obj)
-    # 地支顺序索引
-    month_idx = zhi_index(month_zhi)
-    day_idx = zhi_index(day_zhi)
-    offset = (day_idx - month_idx) % 12
-    jianchu_list = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭']
-    return jianchu_list[offset]
+    # 批次 1（001 §161）：偏移计算委托唯一事实源
+    try:
+        from ..建除 import star as _jianchu_star
+    except ImportError:
+        from 建除 import star as _jianchu_star
+    return _jianchu_star(month_zhi, day_zhi)
 
 def is_xiao_huangdao_day(date_obj, month_zhi=None):
     """小黄道（建除）吉日：除、危、定、执、成、开"""

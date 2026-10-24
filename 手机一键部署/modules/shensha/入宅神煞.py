@@ -114,13 +114,14 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self._is_shousi(sizhu):
             self._add_shensha('受死日', -22, '受死日不宜入宅')
         
-        # 大耗
-        if self._is_dahao(sizhu):
-            self._add_shensha('大耗', -20, '大耗日入宅主耗财')
-        
-        # 小耗
-        if self._is_xiaohao(sizhu):
-            self._add_shensha('小耗', -15, '小耗日入宅主小损')
+        # 大耗/小耗「土府次日」伪链停用（2026-10-24 P0 大清理批 B，001 §172，
+        # D-P0-6）：主锚大耗＝月建+6≡月破、小耗＝月建+5（执日），不可串推；
+        # 原实现为土府映射月支+2 → 大耗+3 → 小耗+4。移徙同 canonical 同步。
+        # 原发射为：
+        #     if self._is_dahao(sizhu):
+        #         self._add_shensha('大耗', -20, '大耗日入宅主耗财')
+        #     if self._is_xiaohao(sizhu):
+        #         self._add_shensha('小耗', -15, '小耗日入宅主小损')
         
         # 月刑×入宅已删（x4 般移映射删除批，2026-10-19，001 §127）：三库零逐字
         # 明文（陈书 p647 月刑属納畜/六畜欄条忌列，非入宅忌列）。本行原为死链
@@ -436,55 +437,9 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         }
         return day_zhi == shousi_map.get(month_zhi)
     
-    def _is_dahao(self, sizhu):
-        """大耗日
-        传统大耗日规则（依据《协纪辨方书》）：
-        - 大耗日为土府日之次日
-        - 土府日映射：寅月辰日、卯月巳日、辰月午日、巳月未日
-                     午月申日、未月酉日、申月戌日、酉月亥日
-                     戌月子日、亥月丑日、子月寅日、丑月卯日
-        - 大耗日忌动土、修造、嫁娶、入宅等大事
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        
-        tufu2_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu2_zhi = tufu2_map.get(month_zhi)
-        if not tufu2_zhi:
-            return False
-        tufu2_idx = zh_list.index(tufu2_zhi)
-        dahao_zhi = zh_list[(tufu2_idx + 1) % 12]
-        return day_zhi == dahao_zhi
-
-    def _is_xiaohao(self, sizhu):
-        """小耗日
-        传统小耗日规则（依据《协纪辨方书》）：
-        - 小耗日为大耗日之次日
-        - 大耗日为土府日之次日
-        - 小耗日忌求财、交易、出行等
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        
-        tufu2_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu2_zhi = tufu2_map.get(month_zhi)
-        if not tufu2_zhi:
-            return False
-        tufu2_idx = zh_list.index(tufu2_zhi)
-        xiaohao_zhi = zh_list[(tufu2_idx + 2) % 12]
-        return day_zhi == xiaohao_zhi
+    # _is_dahao/_is_xiaohao 已删（2026-10-24 P0 大清理批 B，001 §172）：
+    # 原实现为「土府次日」伪链（月支+2 → +3 → +4），主锚大耗＝月建+6（≡月破）、
+    # 小耗＝月建+5（执日），不可串推；发射行已删除。勿复用。
     
     def _is_yuexing(self, sizhu):
         """月刑日"""

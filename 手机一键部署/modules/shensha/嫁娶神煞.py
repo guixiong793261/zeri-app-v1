@@ -225,7 +225,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_tiangou(sizhu):
             self._add_shensha('天狗日', -12, '天狗日不宜婚嫁')
         
-        # 孤辰寡宿
+        # 孤辰寡宿（月令法，2026-10-24 P0 大清理批 A，001 §172 保留并正名）
+        # 正法：令前一辰为孤辰，令后一辰为寡宿（春寅卯辰→孤巳/寡丑，见 _is_guchen）。
+        # 年支法系合婚命理法，协纪辨方书辨讹明斥、考原零载，已全面删停用；
+        # 本通道为 15 事项唯一保留项（拍板 D-P0-2）。
         if self._is_guchen(sizhu):
             self._add_shensha('孤辰寡宿', -15, '孤辰寡宿主孤独，忌婚嫁')
         
@@ -963,7 +966,12 @@ class MarriageShenShaChecker(ShenShaChecker):
         return False
     
     def _is_guchen(self, sizhu):
-        """是否孤辰寡宿"""
+        """是否孤辰寡宿（月令法，嫁娶正法）
+
+        正法：令前一辰为孤辰，令后一辰为寡宿（春寅卯辰→孤巳/寡丑；
+        协纪卷三十四/三十六逐字同）。年支法系合婚命理法，协纪辨讹明斥、
+        考原零载，2026-10-24 拍板删除（001 §172）。
+        """
         month_zhi = sizhu['month_zhi']
         day_zhi = sizhu['day_zhi']
         

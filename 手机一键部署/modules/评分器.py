@@ -1264,6 +1264,12 @@ class Scorer:
                         if _yr_mrg:
                             shensha_list.append(_yr_mrg)
 
+                        # 福星贵人计分（时辰派，001 §169）：婚嫁路径与通用事项同口径，
+                        # 日干见时支（时干食神），仅查时柱；('嫁娶','福星') 键 +10
+                        _fx_mrg = self._build_fuxing_shensha(sizhu, event_type)
+                        if _fx_mrg:
+                            shensha_list.append(_fx_mrg)
+
                         # 2026-10-02 修2：非veto分支同步回填 marriage_details 负分项
                         # （黄沙日/四废/八专/夫星受克等）进 shensha_list，使【神煞信息】
                         # 与【评分详情】口径一致——此前仅 veto 分支回填，非 veto 日
@@ -5016,6 +5022,11 @@ class Scorer:
         _yr = self._build_yangren_shensha(sizhu, event_type)
         if _yr and not any(isinstance(_s, dict) and _s.get('name') == '羊刃' for _s in self.shensha_list):
             self.shensha_list.append(_yr)
+
+        # 福星贵人计分（时辰派，001 §169）：日干见时支（时干食神），仅查时柱；十四通道 +10
+        _fx = self._build_fuxing_shensha(sizhu, event_type)
+        if _fx and not any(isinstance(_s, dict) and _s.get('name') == '福星' for _s in self.shensha_list):
+            self.shensha_list.append(_fx)
         
         # 检查宜忌规则
         rule_checker = get_rule_checker(event_type)
@@ -5416,7 +5427,21 @@ class Scorer:
             from 玄空飞星引擎 import score_feixing
         return score_feixing(sizhu, full_shan_xiang)
 
-    # 羊刃（冠带派）日干→地支映射：甲卯乙辰丙午丁未戊午己未庚酉辛戌壬子癸丑
+    # 羊刃日干→地支映射：甲卯乙辰丙午丁未戊午己未庚酉辛戌壬子癸丑
+    # 【表源·2026-10-23 羊刃表源批（001 §167），三库取证报告：
+    #   docs/羊刃表源派别取证报告_20261023.md】
+    # 起例＝「禄前一位」（陈书《论李广箭即刃》八干全表＋年家阳刃图口诀
+    #   「羊刃者禄前一位是，飞刃者对冲是也」通用顺数，三库无阴干逆行条款）：
+    #   阳干顺数一位得帝旺（甲禄寅→卯），阴干顺数一位得冠带（乙禄卯→辰）。
+    # 典据双轨（用户拍板 2026-10-23）：
+    #   阳干五刃（甲卯/丙午/戊午/庚酉/壬子）——协纪主锚有载（卷八岁禄条
+    #     「帝旺为刃」＋附录宗镜实例「甲山用卯」＋卷三十四「羊刃即阳刃」），
+    #     陈书同表互证；
+    #   阴干四刃（乙辰/丁未/辛戌/癸丑）——【阴刃起例源自陈书，协纪主锚不载】
+    #     （协纪全卷「陰刃」零记载，仅卷一按语认可阴干十二宫逆转框架；
+    #     陈书明载陰刀四位），典据归属陈书轨，不得引协纪为阴刃典源；
+    #   己未——待证：禄前口诀直推（己禄午→未），三库无明文实例
+    #     （陈书八干表无己＝二十四山无己山；年家图己年行 OCR 残损）。
     _YANGREN_MAP = {
         '甲': '卯', '乙': '辰', '丙': '午', '丁': '未',
         '戊': '午', '己': '未', '庚': '酉', '辛': '戌',
@@ -5424,7 +5449,11 @@ class Scorer:
     }
 
     def _build_yangren_shensha(self, sizhu, event_type):
-        """构建羊刃神煞计分条目（冠带派，日干查地支）。
+        """构建羊刃神煞计分条目（禄前一位派，日干查地支）。
+
+        表源（2026-10-23 羊刃表源批，001 §167）：见 _YANGREN_MAP 上方
+        典据双轨注释——阳干五刃协纪/陈书均有载，阴干四刃唯陈书（协纪
+        主锚不载），己未待证（禄前口诀直推，三库无明文实例）。
 
         单见：分值取 SHENSHA_SCORES[('*','羊刃')] = -15；
         两见以上：-25。典籍依据：羊刃为刚暴之星，传统命理以"喜一位而忌重见"
@@ -5433,6 +5462,10 @@ class Scorer:
         2026-09-18 用户拍板（口径B）：保留两见加重并补此典籍注释。
         说明（2026-09-18 核对）：劫煞/灾煞按日支单查，结构上不会两见，
         -25 并非"对齐其两见规则"，而是"羊刃重见 ≈ 一次劫煞级别"的分量对齐。
+        【忌法轻重敞口（2026-10-23 表源取证，登记于 事项标准.py
+        SHENSHA_WEIGHT_PENDING 注释区，挂轻重层专项统一裁断）】：
+        软件单见即 -15 严于两库明文——陈书"弓箭两全方忌，单有弓无箭不忌"
+        （刃+飞刃同犯方忌）、协纪本命篇"羊刃四柱切忌多见"（忌多见非一见）。
         无命中返回 None。仅在评分器内调用，不改任何现有神煞分值。
         """
         day_zhu = sizhu.get('日柱', '')
@@ -5459,6 +5492,45 @@ class Scorer:
             'name': '羊刃',
             'score': score,
             'description': f"羊刃（日干{day_gan}见{desc}）",
+        }
+
+    def _build_fuxing_shensha(self, sizhu, event_type):
+        """构建福星贵人计分条目（时辰派：日干生时干曰食神，仅查时柱）。
+
+        表源（2026-10-23 时辰层专项福星正统落地，001 §169）：
+        modules/shensha/时辰系.FUXING_SHICHEN——《钦定协纪辨方书》卷七·
+        义例五「神煞起例日干生时干曰福星贵人」；陈书附录福星訣同派互证
+        （淮南子派：甲寅、乙丑/亥、丙子/戌、丁酉、戊申、己未、庚午、辛巳、
+        壬辰、癸卯）。判定：日干对应时支在表内，只查时柱地支（福星系时神，
+        四柱全支扫会在甲日寅年/寅月误报，001 §165 伪福星批已立此口径；
+        原伪福星谓词＝年支+6冲位查日支，与岁破同构，已随 §165 删除）。
+        分值：SHENSHA_SCORES ('XX','福星'):10 十四通道键（嫁娶/修造/动土/
+        拆舍/入宅/开业/出行/安床/作灶/移徙/入学/求医/签约/安葬，§165 删除
+        本批正统加回）；条目带 _std_event 戳，保证事项拆分条件在产品链路生效。
+        无命中返回 None。仅在评分器内调用，不改任何现有神煞分值。
+        """
+        day_zhu = sizhu.get('日柱', '')
+        day_gan = day_zhu[0] if len(day_zhu) >= 1 else sizhu.get('day_gan', '')
+        hour_zhu = sizhu.get('时柱', '')
+        hour_zhi = hour_zhu[1] if len(hour_zhu) >= 2 else sizhu.get('hour_zhi', '')
+        if not day_gan or not hour_zhi:
+            return None
+        try:
+            from .时辰系 import get_fuxing_shichen
+        except ImportError:
+            from modules.shensha.时辰系 import get_fuxing_shichen
+        if hour_zhi not in get_fuxing_shichen(day_gan):
+            return None
+        std_ev = _canonical_event(event_type)
+        try:
+            from .事项标准 import shensha_score as _ss
+        except ImportError:
+            from 事项标准 import shensha_score as _ss
+        return {
+            'name': '福星',
+            'score': _ss(std_ev, '福星', 10),
+            'description': f"福星贵人（日干{day_gan}见时支{hour_zhi}，时干为食神）",
+            '_std_event': std_ev,
         }
 
     def _generate_wu_xing_details(self, sizhu, owners, is_demo_hour=True):
@@ -5724,17 +5796,16 @@ class Scorer:
         # 来源：《钦定协纪辨方书》卷七·义例五：「神煞起例日干生时干曰福星贵人」
         # （淮南子派：甲寅、乙丑/亥、丙子/戌、丁酉、戊申、己未、庚午、辛巳、
         # 壬辰、癸卯）。
-        # 注：2026-10-23 福星批（001 §165）——原表托名百度百科、扫描四柱全支，
-        # 与协纪主锚不符；今按协纪正例重立，扫描范围收口仅时柱（福星系时神，
-        # 四柱全支扫会在甲日寅年/寅月误报）。
-        fuxing_map = {
-            '甲': ['寅'], '乙': ['丑', '亥'], '丙': ['子', '戌'], '丁': ['酉'],
-            '戊': ['申'], '己': ['未'], '庚': ['午'], '辛': ['巳'],
-            '壬': ['辰'], '癸': ['卯'],
-        }
-        if day_gan in fuxing_map:
+        # 001 §169：散装 fuxing_map 已删，判定源收口唯一事实源
+        # modules/shensha/时辰系.FUXING_SHICHEN（值逐键全等）；计分接入
+        # _build_fuxing_shensha（本类），此处为吉神展示同源判定。
+        try:
+            from .时辰系 import get_fuxing_shichen as _fuxing_of
+        except ImportError:
+            from modules.shensha.时辰系 import get_fuxing_shichen as _fuxing_of
+        if day_gan:
             for zhi_name, zhi in zhis:
-                if zhi_name == '时柱' and zhi in fuxing_map[day_gan]:
+                if zhi_name == '时柱' and zhi in _fuxing_of(day_gan):
                     details['吉神'].append(f"福星贵人: 日干{day_gan}见{zhi_name}{zhi}")
         
         # 9. 禄神查法（以日干查地支）
