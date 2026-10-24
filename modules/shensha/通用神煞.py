@@ -145,8 +145,12 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_guanfu(sizhu):
             self._add_shensha('官符', -10, '官符缠身，主有官非')
 
-        if self._is_chuguansheng(sizhu):
-            self._add_shensha('畜官', -10, '畜官临位，不利畜养')
+        # 畜官发射停用（2026-10-24 实现 Bug 清理，001 §171）：与蚕官同谓词
+        # （_is_chuguansheng → _is_canguan）同日双扣 -20，去重后仅留蚕官。
+        # 起例归属待《未验干支类 P0 取证》裁决，谓词与分值键暂留休眠。
+        # 原发射为：
+        #     if self._is_chuguansheng(sizhu):
+        #         self._add_shensha('畜官', -10, '畜官临位，不利畜养')
 
         if self._is_sangmen(sizhu):
             self._add_shensha('丧门', -15, '丧门临头，主有丧事')
@@ -282,10 +286,21 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟（四季土旺日）临日，大忌动土')
 
-        if self._is_dahao(sizhu):
+        # 大耗/小耗×月破日截断（2026-10-24 实现 Bug 清理，001 §171）：
+        # 本类的 _is_dahao/_is_xiaohao 以月支+6 / 月支-6 起例（模12同值），
+        # 与上方月破（日支冲月支）完全同表 —— 月破日原实得
+        # 月破 -30 + 大耗 -20 + 小耗 -15 = -65 三重扣。拍板先「隔离/截断」：
+        # 月破日不再叠加二耗（该日凶性已由月破承载），二耗起例归属待
+        # 《未验干支类 P0-3 三库取证》裁决后统一。
+        # 注：修造/动土/拆舍/入宅/移徙/作灶 六通道的二耗为「土府之次日 /
+        # 土府后二日」独立起例（修造神煞/入宅神煞/作灶神煞），不经本分支，
+        # 本批零改动。
+        _is_yuepo_day = day_zhi == self._get_yuepo(month_zhi)
+
+        if not _is_yuepo_day and self._is_dahao(sizhu):
             self._add_shensha('大耗', -20, '大耗临身，破财耗气')
 
-        if self._is_xiaohao(sizhu):
+        if not _is_yuepo_day and self._is_xiaohao(sizhu):
             self._add_shensha('小耗', -15, '小耗之日，略有损耗')
 
         if self._is_dashi(sizhu):

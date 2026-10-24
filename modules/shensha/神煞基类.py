@@ -1518,8 +1518,13 @@ class ShenShaChecker:
             self._add_shensha('破败', -10, '破败主破败')
         if self._is_guanfu(sizhu):
             self._add_shensha('官符', -10, '官符主官讼')
-        if self._is_chuguansheng(sizhu):
-            self._add_shensha('畜官', -10, '畜官主畜灾')
+        # 畜官发射停用（2026-10-24 实现 Bug 清理，001 §171）：_is_chuguansheng
+        # 直接 return _is_canguan（同谓词同值），与上方蚕官同日双扣 -20。
+        # 拍板「合并/去重」：保留名实相符的蚕官单发；畜官起例是否为独立一神
+        # 待《未验干支类 P0 取证》裁决，谓词与 SHENSHA_SCORES 键暂留（休眠）
+        # 以便取证后直接分列，禁止在未取证前删除谓词/键。原发射为：
+        #     if self._is_chuguansheng(sizhu):
+        #         self._add_shensha('畜官', -10, '畜官主畜灾')
         if self._is_sangmen(sizhu):
             self._add_shensha('丧门', -15, '丧门主丧亡')
         if self._is_diaoke(sizhu):

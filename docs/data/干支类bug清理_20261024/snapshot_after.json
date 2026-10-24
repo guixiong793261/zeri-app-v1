@@ -1,0 +1,368 @@
+{
+  "year": 2026,
+  "bug1_canguan_chuguan": {
+    "before_both_days_total": 0,
+    "before_penalty_per_day": -20,
+    "after_penalty_per_day": -10
+  },
+  "bug2_dahao_yuepo": {
+    "generic_family": [
+      "入学",
+      "求医",
+      "签约",
+      "通用"
+    ],
+    "before_yuepo65_days_total": 0
+  },
+  "per_event_before": {
+    "嫁娶": {
+      "total": -1956,
+      "days": 365,
+      "neg_items": 1494,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "修造": {
+      "total": -7972,
+      "days": 365,
+      "neg_items": 1571,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "动土": {
+      "total": -10036,
+      "days": 365,
+      "neg_items": 1410,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "拆舍": {
+      "total": -11052,
+      "days": 365,
+      "neg_items": 1664,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "入宅": {
+      "total": 3125,
+      "days": 365,
+      "neg_items": 1017,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "移徙": {
+      "total": 3125,
+      "days": 365,
+      "neg_items": 1017,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "作灶": {
+      "total": -3117,
+      "days": 365,
+      "neg_items": 1324,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "安床": {
+      "total": 3440,
+      "days": 365,
+      "neg_items": 1117,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "开业": {
+      "total": 4406,
+      "days": 365,
+      "neg_items": 1016,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "出行": {
+      "total": 5118,
+      "days": 365,
+      "neg_items": 1087,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "安葬": {
+      "total": -4919,
+      "days": 365,
+      "neg_items": 1196,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "入学": {
+      "total": 6279,
+      "days": 365,
+      "neg_items": 1318,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "求医": {
+      "total": 4977,
+      "days": 365,
+      "neg_items": 1411,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "签约": {
+      "total": 5427,
+      "days": 365,
+      "neg_items": 1381,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "通用": {
+      "total": 9286,
+      "days": 365,
+      "neg_items": 1194,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    }
+  },
+  "per_event_after_virtual": {
+    "嫁娶": {
+      "total": -1956,
+      "days": 365,
+      "neg_items": 1494,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "修造": {
+      "total": -7972,
+      "days": 365,
+      "neg_items": 1571,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "动土": {
+      "total": -10036,
+      "days": 365,
+      "neg_items": 1410,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "拆舍": {
+      "total": -11052,
+      "days": 365,
+      "neg_items": 1664,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "入宅": {
+      "total": 3125,
+      "days": 365,
+      "neg_items": 1017,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "移徙": {
+      "total": 3125,
+      "days": 365,
+      "neg_items": 1017,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "作灶": {
+      "total": -3117,
+      "days": 365,
+      "neg_items": 1324,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 31,
+      "xiaohao_days": 30
+    },
+    "安床": {
+      "total": 3440,
+      "days": 365,
+      "neg_items": 1117,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "开业": {
+      "total": 4406,
+      "days": 365,
+      "neg_items": 1016,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "出行": {
+      "total": 5118,
+      "days": 365,
+      "neg_items": 1087,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "安葬": {
+      "total": -4919,
+      "days": 365,
+      "neg_items": 1196,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "入学": {
+      "total": 6279,
+      "days": 365,
+      "neg_items": 1318,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "求医": {
+      "total": 4977,
+      "days": 365,
+      "neg_items": 1411,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "签约": {
+      "total": 5427,
+      "days": 365,
+      "neg_items": 1381,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    },
+    "通用": {
+      "total": 9286,
+      "days": 365,
+      "neg_items": 1194,
+      "canguan_days": 31,
+      "chuguan_days": 0,
+      "both_days": 0,
+      "yuepo65_days": 0,
+      "dahao_days": 0,
+      "xiaohao_days": 0
+    }
+  },
+  "delta_total": {
+    "嫁娶": 0,
+    "修造": 0,
+    "动土": 0,
+    "拆舍": 0,
+    "入宅": 0,
+    "移徙": 0,
+    "作灶": 0,
+    "安床": 0,
+    "开业": 0,
+    "出行": 0,
+    "安葬": 0,
+    "入学": 0,
+    "求医": 0,
+    "签约": 0,
+    "通用": 0
+  }
+}
