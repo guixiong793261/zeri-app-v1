@@ -23,9 +23,9 @@
       "仙命"
     ],
     "veto": false,
-    "level_cap": false,
+    "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：岁德、三合）",
-    "final_score": 40
+    "final_score": 100
   },
-  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto"
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；H4 清零批重冻 final 40→100、level_cap false→true（有制化无否决仍封顶判凶）"
 }

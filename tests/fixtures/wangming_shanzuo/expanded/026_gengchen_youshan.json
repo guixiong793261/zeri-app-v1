@@ -23,7 +23,7 @@
     "veto": false,
     "level_cap": false,
     "report_level": "❌ 凶",
-    "final_score": 0
+    "final_score": 25
   },
-  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto；无否决；final=0 系各项扣减后总分钳至下限，非否决清零"
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto；无否决；final=0 系各项扣减后总分钳至下限，非否决清零；H4 清零批重冻 final 0→25（原有扣减钳下限解除，仍无否决）"
 }

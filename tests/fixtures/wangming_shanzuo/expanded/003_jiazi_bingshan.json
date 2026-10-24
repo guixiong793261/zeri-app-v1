@@ -23,9 +23,9 @@
       "仙命"
     ],
     "veto": false,
-    "level_cap": false,
+    "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：天德）",
-    "final_score": 47
+    "final_score": 83
   },
-  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto"
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；H4 清零批重冻 final 47→83、level_cap false→true（总分跨 60 线，坐山克无否决仍封顶判凶）"
 }

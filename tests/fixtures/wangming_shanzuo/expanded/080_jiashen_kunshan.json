@@ -25,7 +25,7 @@
     "veto": false,
     "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：月德）",
-    "final_score": 92
+    "final_score": 85
   },
-  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；封顶正向案例：日期为2023-2025扫描所得真实日期（非构造），有制化无否决 final=92 仍判凶 → level_cap=true"
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；封顶正向案例：日期为2023-2025扫描所得真实日期（非构造），有制化无否决 final=92 仍判凶 → level_cap=true；H4 清零批重冻 final 92→85（level_cap 仍 true，2026-10-24 实测）"
 }

@@ -134,9 +134,12 @@ def _assert_locks():
               '移徙', '入学', '求医', '签约', '安葬')
     for ev in all_ev:
         exp_tiande = None if ev == '动土' else 20
+        # 入宅/移徙 月破键随删除批（入宅 x4 001 §127；移徙删候10键 001 §125）
+        # 移除，现行口径 shensha_score 返回 None（H4 批同步，不再锁 -30）。
+        exp_yuepo = None if ev in ('入宅', '移徙') else -30
         assert shensha_score(ev, '天德', None) == exp_tiande, f'{ev} 天德应保持 {exp_tiande}'
         assert shensha_score(ev, '月德', None) == 18, f'{ev} 月德应保持 18'
-        assert shensha_score(ev, '月破', None) == -30, f'{ev} 月破应保持 -30'
+        assert shensha_score(ev, '月破', None) == exp_yuepo, f'{ev} 月破应保持 {exp_yuepo}'
     for ev in ('入学', '求医', '签约'):
         assert shensha_score(ev, '天罡日', None) == -10, f'{ev} 天罡日应保持 -10'
         assert shensha_score(ev, '河魁日', None) == -10, f'{ev} 河魁日应保持 -10'

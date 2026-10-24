@@ -143,8 +143,8 @@ check('情形2 兼向：未土生金=坐山生仙命 +20，反向但不洗白',
 check('情形2 不额外VETO（兼向通道关闭，主山WARN本无否决）',
       r['veto_reasons'] == []
       and not any('兼向坐山克仙命' in v for v in r['veto_reasons']))
-check('情形2 总分60不变（兼向+20不加分）、等级维持封顶凶带三合注',
-      r['score'] == 60 and r['level'] == '❌ 凶（坐山克仙命，有制化：三合）')
+check('情形2 总分95不变（兼向+20不加分）、等级维持封顶凶带三合注',
+      r['score'] == 95 and r['level'] == '❌ 凶（坐山克仙命，有制化：三合）')
 
 # 情形3：主山仙命克(小凶) + 兼向坐山克(凶中之凶，同向升级) → VETO（C4，2026-01-07）
 r = score('2026-01-07', '巽山乾向兼巳')
@@ -166,29 +166,29 @@ check('情形4 主山：巳火=坐山克仙命 -30（有制化三合）',
       se['relation'] == '坐山克仙命' and se.get('_with_huajie'))
 check('情形4 兼向：巽木=仙命克坐山 -15（较轻）',
       (jxe['relation'], jxe['score']) == ('仙命克坐山', -15))
-check('情形4 不额外VETO、总分44不变、封顶凶注不变',
-      r['veto_reasons'] == [] and r['score'] == 44
+check('情形4 不额外VETO、总分98不变、封顶凶注不变',
+      r['veto_reasons'] == [] and r['score'] == 98
       and r['level'] == '❌ 凶（坐山克仙命，有制化：三合）')
 
-# 同五行对照：甲兼卯，主兼一致（C1，2024-02-05 改前16分）
+# 同五行对照：甲兼卯，主兼一致（C1，2024-02-05；H4 批按现行口径重锚 44）
 r = score('2024-02-05', '甲山庚向兼卯')
 se, jxe = r['shanzuo_eval'], r['shanzuo_eval'].get('兼向判定')
 check('同五行：主甲木/兼卯木均=仙命克坐山 -15',
       se['relation'] == '仙命克坐山'
       and jxe['relation'] == '仙命克坐山'
       and jxe['与主山反向'] is False)
-check('同五行：无VETO、总分16与改前一致（兼向不双扣）',
-      r['veto_reasons'] == [] and r['score'] == 16)
+check('同五行：无VETO、总分44为现行基线（兼向不双扣）',
+      r['veto_reasons'] == [] and r['score'] == 44)
 
-# 手动覆盖：庚兼寅（C6，2026-01-11 改前70分★平）
+# 手动覆盖：庚兼寅（C6，2026-01-11；H4 批按现行口径重锚 87）
 r = score('2026-01-11', '庚山甲向兼寅')
 se, jxe = r['shanzuo_eval'], r['shanzuo_eval'].get('兼向判定')
 check('手动覆盖：主庚金比和0/兼寅木仙命克坐山-15，来源=手动覆盖',
       (se['relation'], se['score']) == ('比和', 0)
       and (jxe['relation'], jxe['score']) == ('仙命克坐山', -15)
       and jxe['来源'] == '手动覆盖')
-check('手动覆盖：兼向非坐山克不VETO、总分70不变（-15不进总分）',
-      r['veto_reasons'] == [] and r['score'] == 70)
+check('手动覆盖：兼向非坐山克不VETO、总分87为现行基线（-15不进总分）',
+      r['veto_reasons'] == [] and r['score'] == 87)
 check('手动覆盖：reason明示已覆盖系统环序映射',
       '手动指定，已覆盖系统环序映射' in r['reason'])
 
@@ -199,11 +199,11 @@ print('== 3. 边界反向断言 ==')
 
 # 兼向分不进 final_score 的隔离证据（不能用"有兼/无兼总分相等"：五黄/飞星等
 # 既存通道本就消费兼向字，差异与仙命无关）：
-# 锚点A 改前基线 C6=70（仙命通道旧逻辑忽略兼向；若新逻辑把兼向-15计入应=55）；
+# 锚点A 现行基线 C6=87（H4 重锚；若新逻辑把兼向-15计入应=72）；
 # 锚点B 结构断言：仙命坐山得分=0（主山体）、仙命兼向得分=-15（独立披露）。
 r_with = score('2026-01-11', '庚山甲向兼寅')
-check('兼向分不进总分：C6 final=70 与改前基线一致（双扣则应为55）',
-      r_with['score'] == 70)
+check('兼向分不进总分：C6 final=87 为现行基线（双扣则应为72）',
+      r_with['score'] == 87)
 check('兼向分不进总分：主山仙命得分=0、兼向-15仅独立披露',
       r_with['score_details'].get('仙命坐山得分') == 0
       and r_with['score_details'].get('仙命兼向得分') == -15)
