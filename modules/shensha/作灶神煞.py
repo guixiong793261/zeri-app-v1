@@ -81,17 +81,15 @@ class StoveShenShaChecker(ShenShaChecker):
         if self._is_yuepo(sizhu):
             self._add_shensha('月破', -30, '月破日忌作灶')
         
-        # 土府日
-        if self._is_tufu2(sizhu):
-            self._add_shensha('土府日', -20, '土府日忌作灶')
-        
-        # 大耗
-        if self._is_dahao(sizhu):
-            self._add_shensha('大耗', -20, '大耗日忌作灶')
-        
-        # 小耗
-        if self._is_xiaohao(sizhu):
-            self._add_shensha('小耗', -15, '小耗日忌作灶')
+        # 土府日/大耗/小耗「土府次日」整链停用（2026-10-24 P0 大清理批 B，
+        # 001 §172，D-P0-6）：主锚土府＝建日（+0）、大耗＝月建+6≡月破、
+        # 小耗＝月建+5（执日），三神分属建/破/执，不可串推。原发射为：
+        #     if self._is_tufu2(sizhu):
+        #         self._add_shensha('土府日', -20, '土府日忌作灶')
+        #     if self._is_dahao(sizhu):
+        #         self._add_shensha('大耗', -20, '大耗日忌作灶')
+        #     if self._is_xiaohao(sizhu):
+        #         self._add_shensha('小耗', -15, '小耗日忌作灶')
     
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
@@ -312,43 +310,9 @@ class StoveShenShaChecker(ShenShaChecker):
         }
         return day_zhi == chong_map.get(month_zhi)
     
-    def _is_dahao(self, sizhu):
-        """是否大耗日（土府日之次日）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        
-        # 使用基类的土府映射表
-        tufu_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu_zhi = tufu_map.get(month_zhi)
-        if not tufu_zhi:
-            return False
-        tufu_idx = zh_list.index(tufu_zhi)
-        dahao_zhi = zh_list[(tufu_idx + 1) % 12]
-        return day_zhi == dahao_zhi
-    
-    def _is_xiaohao(self, sizhu):
-        """是否小耗日（大耗日之次日）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-        
-        # 使用基类的土府映射表
-        tufu_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu_zhi = tufu_map.get(month_zhi)
-        if not tufu_zhi:
-            return False
-        tufu_idx = zh_list.index(tufu_zhi)
-        xiaohao_zhi = zh_list[(tufu_idx + 2) % 12]
-        return day_zhi == xiaohao_zhi
+    # _is_dahao/_is_xiaohao 已删（2026-10-24 P0 大清理批 B，001 §172）：
+    # 原实现为「土府次日」伪链（月支+2 → +3 → +4），主锚大耗＝月建+6（≡月破）、
+    # 小耗＝月建+5（执日），不可串推；发射行已删除。勿复用。
     
     def _is_chong(self, zhi1, zhi2):
         """检查两个地支是否相冲"""

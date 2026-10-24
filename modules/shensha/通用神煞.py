@@ -289,22 +289,21 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_tuwen(sizhu):
             self._add_shensha('土瘟', -20, '土瘟（四季土旺日）临日，大忌动土')
 
-        # 大耗/小耗×月破日截断（2026-10-24 实现 Bug 清理，001 §171）：
-        # 本类的 _is_dahao/_is_xiaohao 以月支+6 / 月支-6 起例（模12同值），
-        # 与上方月破（日支冲月支）完全同表 —— 月破日原实得
-        # 月破 -30 + 大耗 -20 + 小耗 -15 = -65 三重扣。拍板先「隔离/截断」：
-        # 月破日不再叠加二耗（该日凶性已由月破承载），二耗起例归属待
-        # 《未验干支类 P0-3 三库取证》裁决后统一。
-        # 注：修造/动土/拆舍/入宅/移徙/作灶 六通道的二耗为「土府之次日 /
-        # 土府后二日」独立起例（修造神煞/入宅神煞/作灶神煞），不经本分支，
-        # 本批零改动。
+        # 大耗/小耗×月破日归一口径（2026-10-24 P0 大清理批 B，001 §172，D-P0-7）：
+        # 本类 _is_dahao 以月支+6 起例（模12），与月破（日支冲月支）完全同表，
+        # 协纪卷四「大耗者……与月破同位」——大耗即月破异名，不可独立计分。
+        # 拍板「异名归一」：保留大耗起例（✅ 全等）但打月破日截断戳（§171 方案），
+        # 使其永不叠加；实际扣分统一由上方月破 -30 承载。小耗 +6 系错值
+        # （主锚月建+5＝执日），拍板删除，发射与谓词一并移除。
         _is_yuepo_day = day_zhi == self._get_yuepo(month_zhi)
 
         if not _is_yuepo_day and self._is_dahao(sizhu):
-            self._add_shensha('大耗', -20, '大耗临身，破财耗气')
+            self._add_shensha('大耗', -20, '大耗临身，破财耗气（大耗＝月破异名，已归一至月破，不叠加计分）')
 
-        if not _is_yuepo_day and self._is_xiaohao(sizhu):
-            self._add_shensha('小耗', -15, '小耗之日，略有损耗')
+        # 小耗发射已删（D-P0-6）：原 +6 起例错（主锚执日 +5），谓词同步移除。
+        # 原发射为：
+        #     if not _is_yuepo_day and self._is_xiaohao(sizhu):
+        #         self._add_shensha('小耗', -15, '小耗之日，略有损耗')
 
         if self._is_dashi(sizhu):
             # 2026-10-21 制化第一批（001 §155，矩阵#9）：丑未月二德并止忌军事
@@ -836,16 +835,8 @@ class CommonShenShaChecker(ShenShaChecker):
             return day_zhi == dahao
         return False
 
-    def _is_xiaohao(self, sizhu):
-        """小耗（月支后六位）"""
-        month_zhi = sizhu.get('month_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        zh_list = DI_ZHI
-        if month_zhi in zh_list:
-            idx = zh_list.index(month_zhi)
-            xiaohao = zh_list[(idx - 6) % 12]
-            return day_zhi == xiaohao
-        return False
+    # _is_xiaohao 已删（2026-10-24 P0 大清理批 B，001 §172，D-P0-6）：原实现
+    # 月支-6（模12≡+6），与主锚月建+5（执日）不符；发射行同步删除。勿复用。
 
     # _is_fuduan 已删除（2026-10 A6-3）：旧为"月支冲日支"副本（与月破同表），
     # 统一继承基类 _is_fuduan（委托 is_fuduan_by_zhi，月支相害日支六害口径）。

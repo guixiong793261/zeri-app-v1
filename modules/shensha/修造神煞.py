@@ -81,9 +81,12 @@ class ConstructionShenShaChecker(ShenShaChecker):
         if self._is_tufu(sizhu):
             self._add_shensha('土符', -20, '忌动土、修造，犯之主灾')
         
-        # 土府
-        if self._is_tufu2(sizhu):
-            self._add_shensha('土府', -20, '忌动土，犯之主败')
+        # 土府/大耗/小耗「土府次日」整链停用（2026-10-24 P0 大清理批 B，001 §172，
+        # D-P0-6）：主锚土府＝建日（+0）、大耗＝月建+6≡月破、小耗＝月建+5（执日），
+        # 三神分属建/破/执，不可串推；软件原把三者写成连续日链（+2/+3/+4）且
+        # 土府基线错设，无典据。整链删除（动土/拆舍经继承同步）。原发射为：
+        #     if self._is_tufu2(sizhu):
+        #         self._add_shensha('土府', -20, '忌动土，犯之主败')
         
         # 土瘟（四季土旺日；P1-5 正名限定词，与建除满日「土瘟小吉」分名不合并）
         if self._is_tuwen(sizhu):
@@ -95,13 +98,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 月破（已在基类中检查）
         
-        # 大耗
-        if self._is_dahao(sizhu):
-            self._add_shensha('大耗', -20, '忌动土，犯之主耗财')
-        
-        # 小耗
-        if self._is_xiaohao(sizhu):
-            self._add_shensha('小耗', -15, '忌动土，犯之主小损')
+        # 大耗/小耗属「土府次日」伪链，发射已随土府整链删除（见上）。
         
         # ===== 补充年神检查（劫煞/灾煞为年支查表，不属月神；因基类
         # _check_year_shensha 已查过并去重，此处重加仅保证事项专属文案） =====
@@ -512,53 +509,10 @@ class ConstructionShenShaChecker(ShenShaChecker):
         return is_tuwang_yongshi_by_date(
             sizhu.get('year'), sizhu.get('month'), sizhu.get('day'))
     
-    def _is_dahao(self, sizhu):
-        """是否大耗
-        传统大耗日规则（依据《协纪辨方书》）：
-        - 大耗日为土府日之次日
-        - 土府日映射：寅月辰日、卯月巳日、辰月午日、巳月未日
-                     午月申日、未月酉日、申月戌日、酉月亥日
-                     戌月子日、亥月丑日、子月寅日、丑月卯日
-        - 大耗日忌动土、修造、嫁娶、入宅等大事
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        zh_list = DI_ZHI
-        
-        tufu2_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu2_zhi = tufu2_map.get(month_zhi)
-        if not tufu2_zhi:
-            return False
-        tufu2_idx = zh_list.index(tufu2_zhi)
-        dahao_zhi = zh_list[(tufu2_idx + 1) % 12]
-        return day_zhi == dahao_zhi
-
-    def _is_xiaohao(self, sizhu):
-        """是否小耗
-        传统小耗日规则（依据《协纪辨方书》）：
-        - 小耗日为大耗日之次日
-        - 大耗日为土府日之次日
-        - 小耗日忌求财、交易、出行等
-        """
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        zh_list = DI_ZHI
-        
-        tufu2_map = {
-            '寅': '辰', '卯': '巳', '辰': '午', '巳': '未',
-            '午': '申', '未': '酉', '申': '戌', '酉': '亥',
-            '戌': '子', '亥': '丑', '子': '寅', '丑': '卯'
-        }
-        tufu2_zhi = tufu2_map.get(month_zhi)
-        if not tufu2_zhi:
-            return False
-        tufu2_idx = zh_list.index(tufu2_zhi)
-        xiaohao_zhi = zh_list[(tufu2_idx + 2) % 12]
-        return day_zhi == xiaohao_zhi
+    # _is_dahao/_is_xiaohao 已删（2026-10-24 P0 大清理批 B，001 §172）：
+    # 原实现为「土府次日」伪链（土府映射错设月支+2 → 大耗+3 → 小耗+4），
+    # 主锚大耗＝月建+6（≡月破）、小耗＝月建+5（执日）、土府＝建日，三神
+    # 分属建/破/执，不可串推；发射行已随土府整链删除。勿复用。
     
     # 【保留·无禄日历法概念载体】（2026-10-19 全删批·一档）：起例 10 干支日与
     # 协纪/考原无禄日 12/12 全等，概念合典据，谓词保留不删；日课扣分发射行
