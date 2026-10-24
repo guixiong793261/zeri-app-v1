@@ -6,7 +6,8 @@
 1. 表值断言：FUXING_SHICHEN 十干表（甲寅/乙丑亥/丙子戌/丁酉/戊申/己未/庚午/辛巳/壬辰/癸卯）；
 2. 食神自洽：与五鼠遁全网格闭环——时支在福星表 ⇔ 五鼠遁推出的时干恰为日干食神（同性所生）；
 3. 评分器接入：辛巳日 10:00 calculate_score 福星条目 +10 且带 _std_event 戳；
-4. 反例：壬日午时（2026-11-04 哨兵日 12:00）不触发，哨兵 214/上吉 零改判；
+4. 反例：壬日午时（2026-11-04 哨兵日 12:00）不触发，哨兵 226/上吉 零改判
+   （§172 P0 大清理岁刑-12置0，214→226）；
 5. 分值键：SHENSHA_SCORES 十四通道 ('XX','福星'):10 存在。
 
 退出码：0＝全部通过；1＝存在断言失败（供 CI 集成）。
@@ -99,8 +100,8 @@ sz2.update({'year': 2026, 'month': 11, 'day': 4, 'date': d2})
 r2 = calculate_score(sz2, '入宅')
 fx2 = [s for s in r2.get('shensha_list', []) if isinstance(s, dict) and s.get('name') == '福星']
 check(not fx2, '反例：壬日午时不应触发福星（午不在壬表）')
-check(r2.get('score') == 214 and '上吉' in str(r2.get('level')),
-      f'哨兵：2026-11-04 入宅 12:00 = {r2.get("score")}/{r2.get("level")}，冻结值 214/上吉 遭改判')
+check(r2.get('score') == 226 and '上吉' in str(r2.get('level')),
+      f'哨兵：2026-11-04 入宅 12:00 = {r2.get("score")}/{r2.get("level")}，冻结值 226/上吉（§172）遭改判')
 
 # 婚嫁路径接入（同日）
 r3 = calculate_score(sz, '嫁娶')
@@ -115,7 +116,7 @@ for ev in FOURTEEN:
 
 # ---- 汇总 ----
 print(f'表值断言：10 干；食神闭环：120 网格（福星支 {n_pos}/非福星 {n_neg}）；'
-      f'评分器接入：通用/嫁娶两路径；哨兵 214 零改判；十四通道键 14/14')
+      f'评分器接入：通用/嫁娶两路径；哨兵 226 零改判（§172）；十四通道键 14/14')
 if errors:
     print(f'\n断言失败 {len(errors)} 项：')
     for e in errors:
