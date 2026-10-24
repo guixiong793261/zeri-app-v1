@@ -81,11 +81,15 @@ class StoveShenShaChecker(ShenShaChecker):
         if self._is_yuepo(sizhu):
             self._add_shensha('月破', -30, '月破日忌作灶')
         
-        # 土府日/大耗/小耗「土府次日」整链停用（2026-10-24 P0 大清理批 B，
-        # 001 §172，D-P0-6）：主锚土府＝建日（+0）、大耗＝月建+6≡月破、
-        # 小耗＝月建+5（执日），三神分属建/破/执，不可串推。原发射为：
-        #     if self._is_tufu2(sizhu):
-        #         self._add_shensha('土府日', -20, '土府日忌作灶')
+        # 土府日（建日 +0，典据保留）：2026-10-24 P0 大清理批 B 校正——实测
+        # _is_tufu2 委托 is_tufu_by_zhi（日支＝月支），非报告推测的月支+2；
+        # 既有回归锁 verify_20261009_s64 D2-3b 锁定本通道 -20，故保留发射。
+        if self._is_tufu2(sizhu):
+            self._add_shensha('土府日', -20, '土府日忌作灶')
+        
+        # 大耗/小耗「土府次日/后二日」伪链停用（2026-10-24 P0 大清理批 B，
+        # 001 §172，D-P0-6）：主锚大耗＝月建+6≡月破、小耗＝月建+5（执日），
+        # 与土府（建日）分属建/破/执，不可串推。原发射为：
         #     if self._is_dahao(sizhu):
         #         self._add_shensha('大耗', -20, '大耗日忌作灶')
         #     if self._is_xiaohao(sizhu):
