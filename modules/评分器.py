@@ -673,7 +673,90 @@ class Scorer:
                         logger.error(f"提取新郎八字失败: {e}")
         
         return bride_bazi, groom_bazi
-    
+
+    # ========== 阶段1（2026-10-24 拍板 Q1-A）：增量字段契约 ==========
+    # 以下两个审计 helper 只读既有结果（shensha_list / marriage_result），
+    # 不改任何计分、不改任何展示文案；为 score() 各返回点补 'pipeline' 与
+    # 'shensha_audit' 观测键，供后续两套架构统一的平滑过渡核对数据流。
+    def _build_shensha_audit_general(self, shensha_list=None):
+        """通用链神煞审计：每条 {name, score, contributed, display_only, source}。
+
+        score       = 展示分（shensha_list 条目上的分值）；
+        contributed = 实际入账分（进入五行评分的分值）；display_only=True 的条目
+                      展示分保留但实际入账 0。source 口径：
+          'sansha_channel'    三煞4族（年三煞/劫煞/灾煞/岁煞）入表置0
+                              （§66方案A），真实扣分走三煞通道；
+          'year_god'          年家12项岁神方位入表置0（001 §172，D-P0-3）；
+          'xiangzhu_channel'  相主0分明细条目（真实分走相主得分独立入总分）；
+          'mountain_backfill' 坐山三煞劫煞/灾煞位回填0分（desc 含"仅展示"）；
+          'normal'            其余，contributed=score。
+        """
+        try:
+            from .shensha.神煞基类 import _YEAR_GOD_DISPLAY_ONLY
+        except ImportError:
+            try:
+                from shensha.神煞基类 import _YEAR_GOD_DISPLAY_ONLY
+            except ImportError:
+                # 导入不可达时降级为普通条目（年家12项 score 本就为 0，
+                # contributed=score 数值不变，仅 source 标记退化）
+                _YEAR_GOD_DISPLAY_ONLY = frozenset()
+        audit = []
+        for s in ((shensha_list if shensha_list is not None else self.shensha_list) or []):
+            if not isinstance(s, dict):
+                continue
+            name = s.get('name')
+            sc = s.get('score', 0)
+            desc = s.get('description', '') or ''
+            if sc == 0 and '仅展示' in desc:
+                source = 'mountain_backfill'
+            elif name in ('年三煞', '劫煞', '灾煞', '岁煞'):
+                source = 'sansha_channel'
+            elif name in _YEAR_GOD_DISPLAY_ONLY:
+                source = 'year_god'
+            elif name == '相主' and sc == 0:
+                source = 'xiangzhu_channel'
+            else:
+                source = 'normal'
+            disp = source != 'normal'
+            audit.append({
+                'name': name,
+                'score': sc,
+                'contributed': 0 if disp else sc,
+                'display_only': disp,
+                'source': source,
+            })
+        return audit
+
+    def _build_marriage_shensha_audit(self, shensha_list, marriage_result):
+        """婚嫁链神煞审计：婚嫁总分不消费 shensha_list（总分=嫁娶评分+喜用+
+        月令+太阳太阴），故全部条目 contributed=0、source='marriage_parallel_list'；
+        counted_via_details 按名前缀（split('（')[0].split('(')[0].strip()，与
+        婚嫁 details 回填去重同口径）是否命中 marriage_result['details'] 名前缀，
+        区分"经婚嫁算法 details 计分"（大利月/羊刃等）与"真不计分"（福星等）。
+        """
+        detail_prefixes = set()
+        for d in ((marriage_result or {}).get('details') or []):
+            if isinstance(d, (list, tuple)) and len(d) >= 1:
+                p = str(d[0]).split('（')[0].split('(')[0].strip()
+                if p:
+                    detail_prefixes.add(p)
+        audit = []
+        for s in (shensha_list or []):
+            if not isinstance(s, dict):
+                continue
+            name = s.get('name')
+            sc = s.get('score', 0)
+            prefix = str(name).split('（')[0].split('(')[0].strip()
+            audit.append({
+                'name': name,
+                'score': sc,
+                'contributed': 0,
+                'display_only': True,
+                'source': 'marriage_parallel_list',
+                'counted_via_details': bool(prefix) and prefix in detail_prefixes,
+            })
+        return audit
+
     def score(self, sizhu, event_type, owners=None, house_type=None, shan_xiang=None,
               zaoxiang=None, zaowei=None, chuangwei=None, direction=None, jian_xiang=None,
               zaozhu_mode=None, zeli_mode='feixing'):  # _zm0915
@@ -1017,7 +1100,10 @@ class Scorer:
                                 'sun_moon_info': sun_moon_info,
                                 'sizhu': sizhu,
                                 'sansha_info': sansha_info,
-                                'shan_xiang': shan_xiang
+                                'shan_xiang': shan_xiang,
+                                'pipeline': 'marriage',  # 阶段1增量字段
+                                'shensha_audit': self._build_marriage_shensha_audit(
+                                    self.shensha_list, marriage_result),
                             }
                         
                         # 计算正五行喜用神得分（作为补充）
@@ -1192,7 +1278,10 @@ class Scorer:
                                     # 否则五行评分只显示"73分"无法追溯来源。
                                     'marriage_details': marriage_result.get('details', []),
                                     'sansha_info': {},
-                                    'shan_xiang': shan_xiang
+                                    'shan_xiang': shan_xiang,
+                                    'pipeline': 'marriage',  # 阶段1增量字段
+                                    'shensha_audit': self._build_marriage_shensha_audit(
+                                        self.shensha_list, marriage_result),
                                 }
                         else:
                             self.yi_list, self.ji_list = result
@@ -1374,7 +1463,10 @@ class Scorer:
                             'sun_moon_info': sun_moon_info,
                             'sizhu': sizhu,
                             'sansha_info': {},
-                            'shan_xiang': shan_xiang
+                            'shan_xiang': shan_xiang,
+                            'pipeline': 'marriage',  # 阶段1增量字段
+                            'shensha_audit': self._build_marriage_shensha_audit(
+                                shensha_list, marriage_result),
                         }
                     else:
                         # date_obj为None，无法进行婚嫁评分，继续执行通用评分逻辑
@@ -1900,7 +1992,9 @@ class Scorer:
                     'sansha_info': sansha_info,
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
-                    'shanzuo_eval': shanzuo_eval      # §59.3 否决日携带
+                    'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
+                    'pipeline': 'general',  # 阶段1增量字段
+                    'shensha_audit': self._build_shensha_audit_general(),
                 }
 
             # 第二步：月令对日主的帮助评分
@@ -2313,7 +2407,9 @@ class Scorer:
                 'sizhu': sizhu,
                 'sansha_info': sansha_info,  # 添加三煞信息
                 'shan_xiang': shan_xiang,  # 添加山向信息
-                'feixing_info': feixing_info  # 玄空飞星评分信息
+                'feixing_info': feixing_info,  # 玄空飞星评分信息
+                'pipeline': 'general',  # 阶段1增量字段
+                'shensha_audit': self._build_shensha_audit_general(),
             }
 
         except Exception as e:
@@ -2437,6 +2533,20 @@ class Scorer:
             except Exception:
                 pass
 
+            # 阶段1增量字段（异常兜底同样带观测键；构建失败则留空不掩盖原异常）
+            try:
+                _fb_pipeline = 'marriage' if _event_profile(event_type).get('marriage') else 'general'
+            except Exception:
+                _fb_pipeline = 'unknown'
+            try:
+                if _fb_pipeline == 'marriage':
+                    _fb_audit = self._build_marriage_shensha_audit(
+                        fallback_shensha, locals().get('marriage_result') or {})
+                else:
+                    _fb_audit = self._build_shensha_audit_general(fallback_shensha)
+            except Exception:
+                _fb_audit = []
+
             # 返回错误结果而不是崩溃
             return {
                 'score': 0,
@@ -2453,6 +2563,8 @@ class Scorer:
                 'sansha_info': fallback_ss if isinstance(fallback_ss, dict) else {},
                 'shan_xiang': shan_xiang,
                 'sizhu': sizhu,
+                'pipeline': _fb_pipeline,  # 阶段1增量字段
+                'shensha_audit': _fb_audit,
             }
 
     def _get_year_month_feixing_at_mountain(self, year, year_zhi, month_zhi, mountain):
