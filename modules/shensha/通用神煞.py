@@ -122,8 +122,10 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_suixing(sizhu):
             self._add_shensha('岁刑', -12, '岁刑加身，刑克缠身')
 
-        if self._is_suihai(sizhu):
-            self._add_shensha('岁害', -12, '岁害相侵，诸事不顺')
+        # 岁害发射已删（2026-10-24 P0 大清理批 A，001 §172）：三库全卷扫零载，
+        # 伪神煞；拍板 D-P0-5「删除发射与键表」。原发射为：
+        #     if self._is_suihai(sizhu):
+        #         self._add_shensha('岁害', -12, '岁害相侵，诸事不顺')
 
         if self._is_lishi(sizhu):
             self._add_shensha('力士', -10, '力士当权，动作不顺')
@@ -163,11 +165,12 @@ class CommonShenShaChecker(ShenShaChecker):
         #     if self._is_bingfu(sizhu):
         #         self._add_shensha('病符', -12, '病符加身，提防疾病')
 
-        if self._is_tianhao(sizhu):
-            self._add_shensha('天耗', -10, '天耗临身，虚耗破财')
-
-        if self._is_dihao(sizhu):
-            self._add_shensha('地耗', -10, '地耗当令，损耗不绝')
+        # 天耗/地耗发射已删（2026-10-24 P0 大清理批 A，001 §172）：三库全卷扫
+        # 零载，伪神煞；拍板 D-P0-5「删除发射与键表」。原发射为：
+        #     if self._is_tianhao(sizhu):
+        #         self._add_shensha('天耗', -10, '天耗临身，虚耗破财')
+        #     if self._is_dihao(sizhu):
+        #         self._add_shensha('地耗', -10, '地耗当令，损耗不绝')
 
         # 2026-09-16修复（第二批）：删除年作用域的 '天医'/'天巫' 两条。
         # 原实现按"年支"起例（_is_tianyi_year 年支+8、_is_tianwu_year 年支后八位），
@@ -527,8 +530,11 @@ class CommonShenShaChecker(ShenShaChecker):
             # 轻重层批次1（001 §158）：B6 往亡兜底字面量随注册键同步 -20→-15（消双轨）
             self._add_shensha('往亡日', -15, '往亡之日，大忌远行')
 
-        if self._is_guchen_guasu(sizhu):
-            self._add_shensha('孤辰寡宿', -15, '孤辰寡宿，孤独无依')
+        # 孤辰寡宿（年支法）发射已删（2026-10-24 P0 大清理批 A，001 §172）：
+        # 年支法系合婚命理法（协纪辨讹明斥、考原零载）；嫁娶保留月令正法。
+        # 拍板 D-P0-1「全面停用/删除」。原发射为：
+        #     if self._is_guchen_guasu(sizhu):
+        #         self._add_shensha('孤辰寡宿', -15, '孤辰寡宿，孤独无依')
 
         if self._is_hongsha(sizhu):
             self._add_shensha('红砂日', -15, '红砂日，诸事不宜')
@@ -906,25 +912,9 @@ class CommonShenShaChecker(ShenShaChecker):
         day_zhi = sizhu.get('day_zhi', '')
         return day_zhi in ('寅', '卯')
 
-    def _is_guchen_guasu(self, sizhu):
-        """孤辰寡宿（年支查法）
-        亥子丑年寅、寅卯辰年巳、巳午未年申、申酉戌年亥
-        """
-        year_zhi = sizhu.get('year_zhi', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        guchen_map = {
-            '亥': '寅', '子': '寅', '丑': '寅',
-            '寅': '巳', '卯': '巳', '辰': '巳',
-            '巳': '申', '午': '申', '未': '申',
-            '申': '亥', '酉': '亥', '戌': '亥'
-        }
-        guasu_map = {
-            '亥': '戌', '子': '戌', '丑': '戌',
-            '寅': '丑', '卯': '丑', '辰': '丑',
-            '巳': '辰', '午': '辰', '未': '辰',
-            '申': '未', '酉': '未', '戌': '未'
-        }
-        return day_zhi == guchen_map.get(year_zhi) or day_zhi == guasu_map.get(year_zhi)
+    # _is_guchen_guasu 已删（2026-10-24 P0 大清理批 A，001 §172）：年支查法系
+    # 合婚命理法（协纪辨讹明斥、考原零载），拍板 D-P0-1 全面停用；发射行与
+    # 谓词一并删除，勿复用。
 
     def _is_yanggongji(self, sizhu):
         """杨公忌日（2026-09-20 收敛：改委托基类模块级 is_yanggongji_by_lunar）
