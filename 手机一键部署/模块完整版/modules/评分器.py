@@ -739,15 +739,73 @@ class Scorer:
             name = s.get('name')
             sc = s.get('score', 0)
             prefix = str(name).split('（')[0].split('(')[0].strip()
+            _counted = bool(prefix) and prefix in detail_prefixes
             audit.append({
                 'name': name,
                 'score': sc,
                 'contributed': 0,
                 'display_only': True,
                 'source': 'marriage_parallel_list',
-                'counted_via_details': bool(prefix) and prefix in detail_prefixes,
+                'counted_via_details': _counted,
+                # 001 §178：清单出处——经婚嫁算法 details 计分，或通用神煞检查器
+                # 识别（嫁娶评分不消费，仅供展示；校验器 E007 反向出处检查据此豁免）
+                'origin': 'marriage_details' if _counted else 'general_checker',
             })
         return audit
+
+    # ========== 001 §178（2026-10-25 拍板）：嫁娶神煞展示清单统一 ==========
+    def _unify_marriage_shensha(self, base_list, branch_list, marriage_details):
+        """婚嫁神煞展示清单统一收口：否决分支与正常分支同源同口径。
+
+        base_list       通用神煞检查器清单（否决分支取 _check_wu_xing 已填的
+                        self.shensha_list；正常分支取 get_checker(event).check）；
+        branch_list     分支自有条目（利月/羊刃/福星）；
+        marriage_details 婚嫁算法评分明细（负分项回填，按名称前缀去重）。
+
+        去重口径：利月类同名去重并统一 大利月+30 / 小利月+15（与婚嫁算法一致）；
+        其余按名称前缀去重（'羊刃（日干壬见…）'与'羊刃'视为同项）。
+        本清单仅用于【神煞信息】展示与 shensha_audit；计分侧继续读
+        'shensha_list_scoring'（改动前口径），保证计分零漂移。
+        """
+        _LI = ('大利月', '小利月', '妨夫月', '妨妻月', '逐夫月', '逐妇月')
+        out, seen = [], set()
+        # 分支自有条目优先（保住 _std_event 戳与嫁娶专有描述），检查器条目补足
+        for s in list(branch_list or []) + list(base_list or []):
+            if not isinstance(s, dict):
+                continue
+            nm = str(s.get('name', ''))
+            p = nm.split('（')[0].split('(')[0].strip()
+            if nm in _LI:
+                if nm in seen:
+                    continue
+                seen.add(nm)
+                s = dict(s)
+                if nm == '大利月':
+                    s['score'] = 30
+                elif nm == '小利月':
+                    s['score'] = 15
+            elif not p or p in seen:
+                continue
+            else:
+                seen.add(p)
+            out.append(s)
+        for d in (marriage_details or []):
+            if not (isinstance(d, (list, tuple)) and len(d) >= 2):
+                continue
+            nm = str(d[0])
+            try:
+                sc = int(d[1])
+            except (TypeError, ValueError):
+                continue
+            if sc >= 0:
+                continue
+            p = nm.split('（')[0].split('(')[0].strip()
+            if p and p in seen:
+                continue
+            if p:
+                seen.add(p)
+            out.append({'name': nm, 'description': nm, 'score': sc})
+        return out
 
     def score(self, sizhu, event_type, owners=None, house_type=None, shan_xiang=None,
               zaoxiang=None, zaowei=None, chuangwei=None, direction=None, jian_xiang=None,
@@ -1037,6 +1095,13 @@ class Scorer:
                                                 'score': _ms
                                             })
                             
+                            # 001 §178（2026-10-25 拍板）：计分口径冻结 + 展示清单统一。
+                            # 否决分支原本已展示通用检查器全量，此处仅按统一去重口径
+                            # （利月同名/名称前缀）收敛重复项；计分侧清单原样另存。
+                            _scoring_shensha = list(self.shensha_list)
+                            self.shensha_list = self._unify_marriage_shensha(
+                                self.shensha_list, [], marriage_result.get('details'))
+
                             # 生成综合评语（2026-09-17：与正常嫁娶路径同结构——
                             # 否决横幅/宜/忌为独立行 ＋ "月令分析："起的完整正五行 tail，
                             # 既保证否决日也有日主/合局/吉神等完整分析，又使主程序(5')
@@ -1081,6 +1146,7 @@ class Scorer:
                                 'level': '❌ 凶',
                                 'reason': final_reason,
                                 'shensha_list': self.shensha_list,
+                                'shensha_list_scoring': _scoring_shensha,  # 001 §178
                                 'yi_list': self.yi_list,
                                 'ji_list': _reject_ji_list,
                                 'veto_reasons': veto_reasons,
@@ -1251,6 +1317,20 @@ class Scorer:
                                     _dedup.append(_s)
                                 self.shensha_list = _dedup
 
+                                # 001 §178（2026-10-25 拍板）：规则否决的嫁娶日
+                                # 同样统一展示口径（原此分支仅含 details 负分项，
+                                # 无通用检查器吉神，与正常分支同一缺陷）；计分清单原样另存。
+                                _scoring_shensha = list(self.shensha_list)
+                                _base_ss = []
+                                try:
+                                    _base_ss = get_checker(event_type).check(sizhu, owners)
+                                except Exception as _ss_e:
+                                    logger.error(
+                                        f"嫁娶通用神煞检查失败（展示降级为分支清单）: {_ss_e}")
+                                self.shensha_list = self._unify_marriage_shensha(
+                                    _base_ss, self.shensha_list,
+                                    marriage_result.get('details'))
+
                                 return {
                                     'score': 0,
                                     'level': '❌ 凶',  # 添加缺失的level键
@@ -1260,6 +1340,7 @@ class Scorer:
                                     # 读不到否决原因（凶而无因）。
                                     'veto_reasons': [veto_reason] if veto_reason else [],
                                     'shensha_list': self.shensha_list,
+                                    'shensha_list_scoring': _scoring_shensha,  # 001 §178
                                     'yi_list': self.yi_list,
                                     'ji_list': [veto_reason],
                                     'huangdao_info': self.huangdao_info,
@@ -1376,6 +1457,21 @@ class Scorer:
                                             'score': _ms
                                         })
                         
+                        # 001 §178（2026-10-25 拍板）：婚嫁正常分支与否决分支统一
+                        # 神煞展示口径——同样接入通用神煞检查器清单（否决分支由
+                        # _check_wu_xing 填入），再并入分支自有条目与评分明细负分项，
+                        # 消除"否决日 12 项 vs 正常日 3 项"的展示错乱。
+                        # 计分侧清单（改动前口径）另存 shensha_list_scoring，供主程序
+                        # 时辰择优/分金制化判据读取，保证计分零漂移。
+                        _scoring_shensha = list(shensha_list)
+                        _base_ss = []
+                        try:
+                            _base_ss = get_checker(event_type).check(sizhu, owners)
+                        except Exception as _ss_e:
+                            logger.error(f"嫁娶通用神煞检查失败（展示降级为分支清单）: {_ss_e}")
+                        shensha_list = self._unify_marriage_shensha(
+                            _base_ss, shensha_list, marriage_result.get('details'))
+
                         # 生成综合评语（2026-09-03 问题4：格式化+分节，避免本命三煞/月令混排）
                         # 结构：嫁娶评分要点 → 宜 → 忌 → 月令分析（独立小标题）
                         reason_parts = []
@@ -1425,14 +1521,16 @@ class Scorer:
                         # return前回填神煞汇总（shensha_list在利月检查块已填充），避免UnboundLocal
                         if 'shensha_list' not in locals() or not isinstance(shensha_list, list):
                             shensha_list = []
+                        # 001 §178：神煞分项/神煞明细属【评分详情】，仍按计分清单汇总，
+                        # 与嫁娶评分（marriage_details）逐项对应，口径与改动前一致。
                         shensha_total = sum(
-                            int(s.get('score', 0)) for s in shensha_list
+                            int(s.get('score', 0)) for s in _scoring_shensha
                             if isinstance(s, dict) and isinstance(s.get('score'), (int, float))
                         )
                         score_details['神煞分项(利月/天德等)'] = shensha_total
                         score_details['神煞明细'] = [
                             (s.get('name'), int(s.get('score', 0)), s.get('description', ''))
-                            for s in shensha_list if isinstance(s, dict)
+                            for s in _scoring_shensha if isinstance(s, dict)
                         ]
                         # 交叉引用：让正体五行分析段ji_yu与reason一致（同数据源）
                         if wu_xing_result and isinstance(wu_xing_result, dict):
@@ -1443,6 +1541,7 @@ class Scorer:
                             'level': level,
                             'reason': final_reason,
                             'shensha_list': shensha_list,
+                            'shensha_list_scoring': _scoring_shensha,  # 001 §178
                             'yi_list': self.yi_list,
                             'ji_list': self.ji_list,
                             'huangdao_info': self.huangdao_info,

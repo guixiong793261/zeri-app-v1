@@ -293,6 +293,21 @@ def _fenjin_preview_penalty(sx_full, nian, yue, ri, shi, yi_list, ssl):
         return 0, 0
 
 
+def _scoring_shensha(r):
+    """计分侧神煞清单（001 §178，2026-10-25 拍板）。
+
+    嫁娶两分支的展示清单已统一接入通用神煞检查器；计分侧（时辰择优的
+    杀师/分金制化判据、block(6) 吉神制化）必须继续读改动前的清单
+    'shensha_list_scoring'，保证计分零漂移。非嫁娶路径无该键，回退原键。
+    """
+    if isinstance(r, dict):
+        _s = r.get('shensha_list_scoring')
+        if isinstance(_s, list):
+            return _s
+        return r.get('shensha_list') or []
+    return []
+
+
 def _fmt_feixing(feixing_info):
     """结果表"玄空"列文本（2026-09-02）：飞星等级+带符号评分，如"大吉+15"/"大凶-20"。
     0分显示"大凶0"（与_fmt_score的0显示规则一致）。
@@ -3202,7 +3217,7 @@ class ZeriApp:
                         # sha-shi hour is a craft-hour-only heavy evil (-30):
                         # not a veto, but never the preferred pick on a tie.
                         try:
-                            for _s in (_rr.get('shensha_list') or []):
+                            for _s in _scoring_shensha(_rr):
                                 if isinstance(_s, dict) and '\u6740\u5e08' in str(_s.get('name', '')):
                                     return 1
                         except Exception:
@@ -3235,7 +3250,7 @@ class ZeriApp:
                         _fl, _fd = _fenjin_preview_penalty(
                             _sxf_full, str(_gs.get('年柱', '')), str(_gs.get('月柱', '')),
                             str(_gs.get('日柱', '')), str(_gs.get('时柱', '')),
-                            _rr.get('yi_list') or [], _rr.get('shensha_list') or [])
+                            _rr.get('yi_list') or [], _scoring_shensha(_rr))
                         _zw = int((_rr.get('score_details') or {}).get('五行评分') or 0)
                         _ck = _ck_scores.get(_z, 0) * _ck_w
                         return (len(_rr.get('veto_reasons') or []) + (1 if _fl == 2 else 0),
@@ -3529,7 +3544,7 @@ class ZeriApp:
                                 _severe = (isinstance(_fj_score, (int, float)) and
                                            _fj_score <= -50)
                                 _jid_list = score_result.get('yi_list') or []
-                                _ssl = score_result.get('shensha_list') or []
+                                _ssl = _scoring_shensha(score_result)
                                 _good_qual = (isinstance(_ssl, list) and
                                               any(isinstance(_s, dict) and
                                                   int(_s.get('score', 0)) >= 10
@@ -3761,10 +3776,10 @@ class ZeriApp:
                 _hs_veto = len(_hr.get('veto_reasons') or [])
                 _cur_ss = int(any(isinstance(_s, dict)
                                   and '\u6740\u5e08' in str(_s.get('name', ''))
-                for _s in (_best_r.get('shensha_list') or [])))
+                for _s in _scoring_shensha(_best_r)))
                 _hs_ss = int(any(isinstance(_s, dict)
                                  and '\u6740\u5e08' in str(_s.get('name', ''))
-                for _s in (_hr.get('shensha_list') or [])))
+                for _s in _scoring_shensha(_hr)))
                 _cur_wx = int((_best_r.get('score_details') or {}).get('五行评分') or 0)
                 _hs_wx = int((_hr.get('score_details') or {}).get('五行评分') or 0)
                 # fenjin (6) preview for incumbent and candidate
@@ -3773,11 +3788,11 @@ class ZeriApp:
                 _cfl, _cfd = _fenjin_preview_penalty(
                     _sxf_full, str(_cfg.get('年柱', '')), str(_cfg.get('月柱', '')),
                     str(_cfg.get('日柱', '')), str(_cfg.get('时柱', '')),
-                    _best_r.get('yi_list') or [], _best_r.get('shensha_list') or [])
+                    _best_r.get('yi_list') or [], _scoring_shensha(_best_r))
                 _hfl, _hfd = _fenjin_preview_penalty(
                     _sxf_full, str(_hfg.get('年柱', '')), str(_hfg.get('月柱', '')),
                     str(_hfg.get('日柱', '')), str(_hfg.get('时柱', '')),
-                    _hr.get('yi_list') or [], _hr.get('shensha_list') or [])
+                    _hr.get('yi_list') or [], _scoring_shensha(_hr))
                 # 越小越优 + <（与 _inject_best_hour (5.5) 的 _skey 同口径）：
                 # fewer vetoes(+severe) > higher checker score (时辰表分数, # _ck0915 嫁娶专用)
                 # > higher post-(6) score > no sha-shi > clean fenjin > higher raw wuxing。

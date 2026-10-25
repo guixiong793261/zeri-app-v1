@@ -649,6 +649,15 @@ def rule_e007(ctx):
               and _name_prefix(d[0]) != '基础分']
     ss_items = [s for s in ctx.shensha_list if isinstance(s, dict)]
     _LIYUE = ('大利月', '小利月')
+    # 001 §178（2026-10-25）：嫁娶神煞展示清单统一后，正常分支与 veto 分支
+    # 同源接入通用神煞检查器清单。这些条目的出处是检查器本身（嫁娶评分
+    # 不消费），shensha_audit.origin='general_checker'。反向出处检查仅对
+    # “经婚嫁算法 details 计分”的条目（origin='marriage_details'）生效，
+    # 避免把通用检查器识别的煞名误报为“凭空列煞”。
+    _origin = {}
+    for _a in (ctx.detail.get('shensha_audit') or []):
+        if isinstance(_a, dict) and _a.get('name'):
+            _origin[str(_a['name'])] = _a.get('origin')
 
     # 正向：评分扣了 → 神煞段必须有
     for d in md_neg:
@@ -670,6 +679,8 @@ def rule_e007(ctx):
             continue
         if _name_prefix(name) in _LIYUE or '利月' in name:
             continue
+        if _origin.get(name) == 'general_checker':
+            continue  # 通用神煞检查器出处，非嫁娶评分项（001 §178）
         found = any(_shensha_name_match(name, d[0]) for d in md_neg)
         if not found:
             ctx.issue(
