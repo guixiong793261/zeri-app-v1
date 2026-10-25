@@ -5899,6 +5899,9 @@ class ZeriApp:
                 text.insert(tk.END, "\n   ──")
                 for r in blocked_reasons:
                     text.insert(tk.END, f"\n   ❌ {r}")
+                    # R3 月冲山正名（2026-10-25 拍板）：详情页加注协纪典据原文
+                    if '月冲山' in str(r):
+                        text.insert(tk.END, "\n        （协纪辨方书：月破山方皆凶，坐山尤凶，造葬皆不可犯）")
             if mountain_warnings:
                 text.insert(tk.END, "\n\n   【⚠️ 山家警告 · 须谨慎】")
                 text.insert(tk.END, "\n   ──")

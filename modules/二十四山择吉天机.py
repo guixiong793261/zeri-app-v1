@@ -5721,11 +5721,15 @@ def check_mountain_day(date_info: dict, mountain_name: str, event_type: str = '�
 
     # 1.1 冲山检查（岁破）：年/月/日冲山所有事由均禁用；
     #     时冲山按 R2（2026-10-25 拍板）降级——一票否决豁免，改走 Layer2 重度扣分
+    #     月冲山＝协纪「月破山」：279252「月破山方皆凶，坐山尤凶，造葬皆不可犯」，
+    #     一票否决有据保留（R3 取证 7f1a6bf）；展示层正名「月冲山（月破山方）」加注典据
     for pos, gan, zhi in [('年', year_gan, year_zhi), ('月', month_gan, month_zhi),
                              ('日', day_gan, day_zhi)]:
         if zhi and check_chong_shan(mountain_name, zhi):
             if pos == '日':
                 result['凶煞'].append(f'{pos}冲山（日破）')
+            elif pos == '月':
+                result['凶煞'].append('月冲山（月破山方）')
             else:
                 result['凶煞'].append(f'{pos}冲山')
             result['可用'] = False
