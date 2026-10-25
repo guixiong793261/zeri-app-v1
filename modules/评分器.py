@@ -1913,9 +1913,11 @@ class Scorer:
                         # 项写成大忌（否则与三煞检查、山家警告文案自相矛盾）。
                         _real_hard = list(_hard_need) + [
                             j for j in _mountain_need if j not in _hard_need]
-                        _shown = '、'.join(str(x) for x in _real_hard[:3])
-                        if len(_real_hard) > 3:
-                            _shown += '等'
+                        # R5（2026-10-25 拍板）：硬煞全量展示 Top10+等N项，
+                        # 消除 [:3] 截断造成的否决原因统计遮蔽
+                        _shown = '、'.join(str(x) for x in _real_hard[:10])
+                        if len(_real_hard) > 10:
+                            _shown += f'等{len(_real_hard)}项'
                         wu_xing_result['ji_yu'] = (
                             f'五行严重不合格，犯大忌，坚决不用（大忌：{_shown}）')
                 elif str(wu_xing_result.get('ji_yu', '')).startswith('五行严重不合格'):
@@ -5652,9 +5654,11 @@ class Scorer:
                 else:
                     _soft_items.append(_t)
             if _hard_items:
-                shown = '、'.join(str(x) for x in _hard_items[:3])
-                if len(_hard_items) > 3:
-                    shown += '等'
+                # R5（2026-10-25 拍板）：硬煞全量展示 Top10+等N项，
+                # 消除 [:3] 截断造成的否决原因统计遮蔽
+                shown = '、'.join(str(x) for x in _hard_items[:10])
+                if len(_hard_items) > 10:
+                    shown += f'等{len(_hard_items)}项'
                 base += f'（大忌：{shown}）'
                 if _soft_items:
                     base += (f'；另有{len(_soft_items)}项为扣分或已有制化项，'
