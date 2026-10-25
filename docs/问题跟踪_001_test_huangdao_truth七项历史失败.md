@@ -9785,6 +9785,7 @@ ot shan_xiang → 「玄空飞星：本事项无坐山，玄空飞星段不适�
 - **179.6 测试重冻**：`verify_h1_anchor_map.py` B' 段"等级=总分纯函数"不变式保持强断言，纯函数定义更新为 `_get_level(map(score), map(wx))`（映射单调，同分仍同级）；非放宽。
 - **179.7 全量回归**：110/110 PASS（exit 0）。哨兵 `score(2026-11-04 12:00, 入宅)` = 226/★★★★★ 上吉不变。
 - **179.8 六副本同步**：评分器/主程序各两份部署副本 + 模块完整版 tests/verify_h1_anchor_map.py 同 commit 覆盖。单文件版本批未重建（展示层改动不涉及闭包结构，待下一批次随重建）。
+- **179.9 终极验证与补重冻**（同日收尾批）：① 发现上轮回归 runner 仅 glob `verify_*.py` 漏掉 `test_*.py`，`test_huangdao_truth.py` J-02 用例 level 基准 ❌凶 → 新口径 ★★★吉（小忌，降一格）（总分58/五行53 分项锁全过不变；总分映射 103.6 大吉档、二级降一格；旧❌凶系 60 底线对 60 基础分链错杀的典型样本）——按拍板口径重冻基准并注释溯源。② 主仓全量回归含 test_*.py 共 **115/115 PASS（exit 0）**。③ 部署层（手机一键部署 + 模块完整版）冒烟：可运行测试全过（含 verify_shensha_score_3level、verify_h1_anchor_map、verify_福星贵人、test_huangdao_truth 双端 OK）；`verify_hongsha/verify_a5_pianyi/verify_jielu/verify_b8_mucang` 4 个 FAIL 为**历史遗留**——部署层 tests 目录稀疏，缺 `shensha_verify_engine.py` 等测试基建模块（按 §177「仅覆盖已有同名」口径从未新建），与 §179 无关，挂账待是否补齐基建的拍板。
 
 
 
