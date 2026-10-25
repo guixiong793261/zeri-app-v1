@@ -107,6 +107,9 @@ if project_root not in sys.path:
 
 from modules.四柱计算器 import calculate_sizhu, analyze_sizhu, get_lunar_date
 from modules.评分器 import calculate_score, Scorer
+from modules.评分器 import (ENABLE_LEVEL_NORMALIZATION,
+                            map_marriage_level_score,
+                            map_marriage_level_wx)  # 阶段3·方案A（001 §179）
 from modules.工具函数 import DI_ZHI_WUXING, TIAN_GAN_WUXING
 from modules.黄道 import 黄道计算器
 from modules.喜用神计算器 import calculate_xishen_yongshen
@@ -3441,9 +3444,18 @@ class ZeriApp:
                                             _sd['总分'] = (_sd.get('总分') or 0) + _delta
                                     score_result['score'] = (score_result.get('score') or 0) + _delta
                                     # 等级重判（与评分器同阈值，两级婚嫁调整走统一方法）
+                                    # 阶段3·方案A（001 §179）：与评分器嫁娶分支同口径，
+                                    # 等级判定输入走分位归一化（仅影响 level，不改 score）。
+                                    if ENABLE_LEVEL_NORMALIZATION:
+                                        _lv_in_total = map_marriage_level_score(score_result['score'])
+                                        _lv_in_wx = map_marriage_level_wx(
+                                            (_sd.get('五行评分') or 0) if isinstance(_sd, dict) else 0)
+                                    else:
+                                        _lv_in_total = score_result['score']
+                                        _lv_in_wx = (_sd.get('五行评分') or 0) if isinstance(_sd, dict) else 0
                                     _lv_new = _rds._get_level(
-                                        score_result['score'],
-                                        {'score': (_sd.get('五行评分') or 0) if isinstance(_sd, dict) else 0},
+                                        _lv_in_total,
+                                        {'score': _lv_in_wx},
                                         score_result.get('huangdao_info') or {})
                                     _lv_new, _cap_l1, _cap_l2 = _rds._apply_marriage_level_caps(
                                         _lv_new,

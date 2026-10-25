@@ -110,7 +110,10 @@ def _worker(task):
     import sys
     sys.stdout = open(os.devnull, 'w')
     from modules.四柱计算器 import calculate_sizhu
-    from modules.评分器 import Scorer, H1_ANCHOR_MAP
+    from modules.评分器 import (Scorer, H1_ANCHOR_MAP,
+                                ENABLE_LEVEL_NORMALIZATION,
+                                map_marriage_level_score,
+                                map_marriage_level_wx)
     from modules.事项标准 import canonical_event, event_profile
 
     ev, o0, o1 = task
@@ -187,7 +190,17 @@ def _worker(task):
                     for _d in mrg_details
                     if isinstance(_d, (list, tuple)) and len(_d) >= 1)
                 ORDER = scorer.MARRIAGE_LEVEL_ORDER
-                chk_lvl = scorer._get_level(r['score'], wx, r.get('huangdao_info'))
+                # 阶段3·方案A（001 §179，2026-10-25 拍板）：嫁娶等级判定输入
+                # 走分位归一化——level 仍是 score 的纯函数（映射单调），但纯函数
+                # 定义变为 _get_level(map(score), map(wx))。测试侧同步口径重冻；
+                # 开关关闭时回退旧直算口径。
+                if ENABLE_LEVEL_NORMALIZATION:
+                    chk_lvl = scorer._get_level(
+                        map_marriage_level_score(r['score']),
+                        {'score': map_marriage_level_wx((wx or {}).get('score', 0))},
+                        r.get('huangdao_info'))
+                else:
+                    chk_lvl = scorer._get_level(r['score'], wx, r.get('huangdao_info'))
                 if has_ji:
                     # 一级封顶：必带 suf1、不带 suf2，基础级≤★平
                     if not c1 or c2 or base_lvl not in ('❌ 凶', '★ 平'):

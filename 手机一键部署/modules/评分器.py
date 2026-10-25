@@ -294,6 +294,50 @@ H1_ANCHOR_MAP = {
 # 原实现：
 #     return isinstance(text, str) and text.startswith('岁破日：日支') and text.endswith('，大事忌用')
 
+# ============ 阶段3·方案A：嫁娶等级归一化视图（2026-10-25 拍板，001 §179） ============
+# 背景：嫁娶链基础分 60、通用链基础分 100，同一张 105/100/85/75/60 阈值表压在两种
+# 分布上，2025+2026 两年实测嫁娶 93.7% 判凶（其中否决日 72.3% 属正常铁律，但
+# 非否决日亦因尺度错位大面积错杀）。方案 A 不动任何计分本体，只在【等级判定输入】
+# 前插一层分位映射：嫁娶非否决日原始分 → 入宅链同分位刻度。
+# 否决日隔离：一票否决日 level 已被强制 ❌ 凶，不经过本映射。
+# 通用链恒等：本映射仅嫁娶分支调用，其余管线不触碰。
+# 开关：ENABLE_LEVEL_NORMALIZATION=False 即整体回退旧口径（原始分直进 _get_level）。
+ENABLE_LEVEL_NORMALIZATION = True
+
+# 分位锚点（2025+2026 两年 730 天实测，样本：新郎1998-10-13/新娘1999-04-05，12:00；
+# 嫁娶取非否决日 202 个）。左列=嫁娶原始分 P10/25/50/75/90/95，右列=入宅同分位目标。
+_MARRIAGE_MAP_TOTAL = [(4.1, 0.0), (18.0, 31.0), (50.0, 83.0),
+                       (71.0, 137.0), (88.9, 178.0), (105.0, 197.55)]
+# T2 底线（五行分<60判凶）的输入映射：嫁娶评分自身分位 → 同一目标刻度。
+_MARRIAGE_MAP_WX = [(4.0, 0.0), (19.0, 31.0), (49.0, 83.0),
+                    (65.75, 137.0), (90.0, 178.0), (100.0, 197.55)]
+
+
+def _piecewise_percentile_map(x, anchors):
+    """单调分段线性插值；端点外按端段斜率外延。anchors 按源分升序。"""
+    if not isinstance(x, (int, float)):
+        return x
+    x = float(x)
+    (x0, y0), (x1, y1) = anchors[0], anchors[1]
+    if x <= x0:
+        return y0 if x1 == x0 else y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+    for (xa, ya), (xb, yb) in zip(anchors, anchors[1:]):
+        if xa <= x <= xb:
+            return ya if xb == xa else ya + (x - xa) * (yb - ya) / (xb - xa)
+    (xa, ya), (xb, yb) = anchors[-2], anchors[-1]
+    return yb if xb == xa else yb + (x - xb) * (yb - ya) / (xb - xa)
+
+
+def map_marriage_level_score(total_score):
+    """嫁娶【总分】等级判定输入归一化（仅等级用，不回写 score）。"""
+    return _piecewise_percentile_map(total_score, _MARRIAGE_MAP_TOTAL)
+
+
+def map_marriage_level_wx(marriage_score):
+    """嫁娶【五行分(=嫁娶评分)】T2 底线判定输入归一化。"""
+    return _piecewise_percentile_map(marriage_score, _MARRIAGE_MAP_WX)
+
+
 class Scorer:
     """评分器"""
 
@@ -1190,9 +1234,18 @@ class Scorer:
                         # 给出不同等级（如98分既出★★次吉又出★★★吉），即"同分不同级"。
                         # 婚嫁路径的"五行评分"即嫁娶评分(marriage_result['score'])，
                         # 故五行<60直接判凶的质量底线同样适用。
+                        # 阶段3·方案A（001 §179）：等级判定输入走分位归一化
+                        # （仅影响 level，total_score/score_details 等计分字段不动；
+                        # T2 底线输入同步归一，消除 60/100 基础分错杀）。
+                        if ENABLE_LEVEL_NORMALIZATION:
+                            _lv_total = map_marriage_level_score(total_score)
+                            _lv_wx = map_marriage_level_wx(marriage_result['score'])
+                        else:
+                            _lv_total = total_score
+                            _lv_wx = marriage_result['score']
                         level = self._get_level(
-                            total_score,
-                            {'score': marriage_result['score']},
+                            _lv_total,
+                            {'score': _lv_wx},
                             self.huangdao_info
                         )
 
