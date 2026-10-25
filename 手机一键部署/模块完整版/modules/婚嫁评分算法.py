@@ -1420,20 +1420,10 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     result['score'] = max(0, score)
     result['details'] = details
     
-    # 等级映射
-    if result['score'] >= 150:
-        result['level'] = '★★★★★ 上吉'
-    elif result['score'] >= 130:
-        result['level'] = '★★★★ 大吉'
-    elif result['score'] >= 110:
-        result['level'] = '★★★ 吉'
-    elif result['score'] >= 90:
-        result['level'] = '★★ 次吉'
-    elif result['score'] >= 70:
-        result['level'] = '★ 平'
-    else:
-        result['level'] = '❌ 凶'
-    
+    # （2026-10-25 阶段3·方案C：删除150/130/110/90/70内部等级映射死代码——
+    #  产品链唯一等级出口为 评分器._get_level(105/100/85/75/60)，本函数返回的
+    #  level 无任何消费方；'level' 键保留为空串以维持返回结构兼容。）
+
     # 生成理由文本
     positive = [f"{d[0]}" for d in details if d[1] > 0]
     negative = [f"{d[0]}" for d in details if d[1] < 0]
@@ -1446,12 +1436,12 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     
     result['reason'] = '；'.join(reason_parts) if reason_parts else '普通日课'
 
-    # 否决日：明细完整保留供追溯，但等级强制为凶、理由前置否决原因
+    # 否决日：明细完整保留供追溯，理由前置否决原因（等级判定统一在评分器
+    # _get_level 完成，本函数不再自赋等级——2026-10-25 阶段3·方案C）
     # 日支冲新娘本命/阴胎/阳气等否决项在第4节才写入 result['reject_reason']，此处回读
     reject_reason = result.get('reject_reason') or reject_reason
     is_reject = bool(reject_reason)
     if is_reject:
-        result['level'] = '❌ 凶'
         result['reason'] = f'【一票否决：{reject_reason}】' + result['reason']
     
     # 添加四柱信息到结果中，供后续处理使用
@@ -1484,7 +1474,6 @@ def test_score_marriage():
     print("婚嫁日课评分测试结果：")
     print(f"日期：{test_date}")
     print(f"评分：{result['score']}")
-    print(f"等级：{result['level']}")
     print(f"理由：{result['reason']}")
     print(f"详情：{result['details']}")
     print(f"警告：{result['warnings']}")
