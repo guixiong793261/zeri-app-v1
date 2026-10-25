@@ -110,6 +110,7 @@ try:
         get_rule_checker as _std_get_rule_checker,
         get_shensha_checker as _std_get_shensha_checker,
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
+        display_only_info as _display_only_info,
     )
 except ImportError:
     from 事项标准 import (
@@ -119,6 +120,7 @@ except ImportError:
         get_rule_checker as _std_get_rule_checker,
         get_shensha_checker as _std_get_shensha_checker,
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
+        display_only_info as _display_only_info,
     )
 
 # ============================================================================
@@ -691,15 +693,8 @@ class Scorer:
           'mountain_backfill' 坐山三煞劫煞/灾煞位回填0分（desc 含"仅展示"）；
           'normal'            其余，contributed=score。
         """
-        try:
-            from .shensha.神煞基类 import _YEAR_GOD_DISPLAY_ONLY
-        except ImportError:
-            try:
-                from shensha.神煞基类 import _YEAR_GOD_DISPLAY_ONLY
-            except ImportError:
-                # 导入不可达时降级为普通条目（年家12项 score 本就为 0，
-                # contributed=score 数值不变，仅 source 标记退化）
-                _YEAR_GOD_DISPLAY_ONLY = frozenset()
+        # 阶段2「一表四读」（拍板 Q2-A）：sansha_channel/year_god 判定改读
+        # DISPLAY_ONLY_REGISTRY（display_only_info，顶部已导入），不再自备硬编码。
         audit = []
         for s in ((shensha_list if shensha_list is not None else self.shensha_list) or []):
             if not isinstance(s, dict):
@@ -709,14 +704,11 @@ class Scorer:
             desc = s.get('description', '') or ''
             if sc == 0 and '仅展示' in desc:
                 source = 'mountain_backfill'
-            elif name in ('年三煞', '劫煞', '灾煞', '岁煞'):
-                source = 'sansha_channel'
-            elif name in _YEAR_GOD_DISPLAY_ONLY:
-                source = 'year_god'
             elif name == '相主' and sc == 0:
                 source = 'xiangzhu_channel'
             else:
-                source = 'normal'
+                _do = _display_only_info(name)
+                source = _do['source'] if _do else 'normal'
             disp = source != 'normal'
             audit.append({
                 'name': name,

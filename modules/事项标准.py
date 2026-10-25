@@ -1595,6 +1595,43 @@ def shensha_score(event_type, name, default=None):
     return default
 
 
+# ==================== 只展示不计分注册表（2026-10-24 阶段2「一表四读」，拍板 Q2-A） ====================
+# 把「命中照常识别展示、入表置 0 不计分」的散装硬编码收拢为单一注册表，
+# 四个读取点统一查本表：
+#   ① 展示：神煞基类 _add_shensha 置 0 并追加 note 标注文案；
+#   ② 审计：评分器 _build_shensha_audit_general 的 source/display_only 判定；
+#   ③ 计分：经 ① 置 0 后 Σ神煞得分天然为 0，无需另行排除；
+#   ④ 统计：下游审计/报表按 source 字段聚合。
+# 16 键构成 = 三煞4族（§66 方案A，真实扣分走三煞通道）
+#           + 年家12项（001 §172，D-P0-3：岁神方位，日辰仅识别展示）。
+# SHENSHA_SCORES 表值按对账惯例不回改，实际分值以本注册表置 0 为准。
+DISPLAY_ONLY_REGISTRY = {
+    # —— 三煞4族（§66 方案A）——
+    '年三煞': {'source': 'sansha_channel', 'note': '（识别展示，不计分）'},
+    '劫煞':   {'source': 'sansha_channel', 'note': '（识别展示，不计分）'},
+    '灾煞':   {'source': 'sansha_channel', 'note': '（识别展示，不计分）'},
+    '岁煞':   {'source': 'sansha_channel', 'note': '（识别展示，不计分）'},
+    # —— 年家12项（001 §172，D-P0-3）——
+    '黄幡': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '豹尾': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '丧门': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '吊客': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '官符': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '蚕官': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '五鬼': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '岁刑': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '力士': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '大祸': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '破败': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+    '亡神': {'source': 'year_god', 'note': '（岁神方位，日辰仅识别展示，不计分）'},
+}
+
+
+def display_only_info(name):
+    """查只展示不计分注册表；命中返回 {'source','note'}，未命中返回 None。"""
+    return DISPLAY_ONLY_REGISTRY.get(name)
+
+
 # ==================== 轻重层待证冻结集（2026-10-22 轻重层批次2，001 §159） ====================
 # 轻重层专项只读盘点（docs/轻重层专项_只读盘点_20261021.md，29 项全量清单）
 # 已裁断：B 组 10 项调档（批次1，001 §158）、A 组 20 项维持（含红嘴朱雀 -30 作 L4
