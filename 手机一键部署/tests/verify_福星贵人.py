@@ -8,7 +8,9 @@
 3. 评分器接入：辛巳日 10:00 calculate_score 福星条目 +10 且带 _std_event 戳；
 4. 反例：壬日午时（2026-11-04 哨兵日 12:00）不触发，哨兵 226/上吉 零改判
    （§172 P0 大清理岁刑-12置0，214→226）；
-5. 分值键：SHENSHA_SCORES 十四通道 ('XX','福星'):10 存在。
+5. 分值键：SHENSHA_SCORES 十四通道 ('XX','福星'):10 存在；
+6. 嫁娶通道计分接入（001 §176）：辛巳日嫁娶 details 必含福星 +10 且审计
+   counted_via_details=True；反向壬午日嫁娶不得出现福星计分项。
 
 退出码：0＝全部通过；1＝存在断言失败（供 CI 集成）。
 """
@@ -114,13 +116,34 @@ for ev in FOURTEEN:
     v = SHENSHA_SCORES.get((ev, '福星'))
     check(v == 10, f'分值键：("{ev}","福星") = {v} != 10')
 
+# ---- 6. 嫁娶通道计分接入（001 §176，2026-10-25 Q3 拍板方案A）----
+# 修复前：嫁娶仅由评分器 _build_fuxing_shensha 写 shensha_list 展示 +10，
+# 婚嫁算法无对应 details 项（"福星展示不计分"缺口）。本段正反双向锁死：
+# 正向——辛巳日（辛表含巳）嫁娶 details 必含福星 +10，且阶段1审计
+# counted_via_details=True；反向——壬午日（壬表含辰，午不在表）嫁娶不得
+# 出现福星计分项。
+r4 = calculate_score(sz, '嫁娶')
+_fx_d = [x for x in (r4.get('marriage_details') or [])
+         if isinstance(x, (list, tuple)) and len(x) >= 2 and '福星' in str(x[0])]
+check(len(_fx_d) == 1 and _fx_d[0][1] == 10,
+      f'嫁娶计分：辛巳日嫁娶 details 福星项应恰 1 条且分值 10，实际 {_fx_d}')
+_fx_a = [a for a in (r4.get('shensha_audit') or []) if a.get('name') == '福星']
+check(len(_fx_a) == 1 and _fx_a[0].get('contributed') == 0
+      and _fx_a[0].get('counted_via_details') is True,
+      f'嫁娶审计：福星 counted_via_details 应为 True（经 details 计分），实际 {_fx_a}')
+r5 = calculate_score(sz2, '嫁娶')
+_fx_d2 = [x for x in (r5.get('marriage_details') or [])
+          if isinstance(x, (list, tuple)) and len(x) >= 1 and '福星' in str(x[0])]
+check(not _fx_d2, f'嫁娶计分反向：壬午日（午不在壬表）嫁娶不得出现福星计分项，实际 {_fx_d2}')
+
 # ---- 汇总 ----
 print(f'表值断言：10 干；食神闭环：120 网格（福星支 {n_pos}/非福星 {n_neg}）；'
-      f'评分器接入：通用/嫁娶两路径；哨兵 226 零改判（§172）；十四通道键 14/14')
+      f'评分器接入：通用/嫁娶两路径；嫁娶计分接入（§176）正反双向；'
+      f'哨兵 226 零改判（§172）；十四通道键 14/14')
 if errors:
     print(f'\n断言失败 {len(errors)} 项：')
     for e in errors:
         print(f'  ✗ {e}')
     sys.exit(1)
-print('全部断言通过：福星贵人正统落地（001 §169）五组验证零缺陷。')
+print('全部断言通过：福星贵人正统落地（001 §169）＋嫁娶计分接入（§176）六组验证零缺陷。')
 sys.exit(0)

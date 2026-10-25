@@ -1256,9 +1256,15 @@ _SHENSHA_ALIAS_KEY = {
 # 岁害/天耗/地耗（P0 大清理 A 已删发射与键，001 §172）。
 # 分值收口方式同三煞（§66 方案A）：SHENSHA_SCORES 表值留档不回改，实际分值
 # 以本集合置 0 为准，description 追加标注，供展示层区分。
+# 2026-10-24 阶段2「一表四读」（拍板 Q2-A）：集合本体迁至
+# modules/事项标准.py 的 DISPLAY_ONLY_REGISTRY（source='year_god' 的 12 键），
+# 此处保留同名兼容别名（从注册表派生），防止外部引用断裂。
+try:
+    from ..事项标准 import DISPLAY_ONLY_REGISTRY as _DISPLAY_ONLY_REGISTRY
+except ImportError:
+    from 事项标准 import DISPLAY_ONLY_REGISTRY as _DISPLAY_ONLY_REGISTRY
 _YEAR_GOD_DISPLAY_ONLY = {
-    '黄幡', '豹尾', '丧门', '吊客', '官符', '蚕官', '五鬼',
-    '岁刑', '力士', '大祸', '破败', '亡神',
+    _k for _k, _v in _DISPLAY_ONLY_REGISTRY.items() if _v.get('source') == 'year_god'
 }
 
 
@@ -1926,30 +1932,25 @@ class ShenShaChecker:
             # （动态名如"三奇{xx}"、或同名但分值随上下文变化者）沿用调用处默认值，
             # 保证任何情况下评分行为不回退。
             try:
-                from ..事项标准 import shensha_score as _shensha_score
+                from ..事项标准 import (shensha_score as _shensha_score,
+                                        display_only_info as _display_only_info)
                 _resolved = _shensha_score(getattr(self, '_std_event', None), name, score)
                 if _resolved is not None:
                     score = _resolved
             except Exception:
                 pass
-            # 2026-10-12 ③（§66 拍板方案A）：三煞家族神煞通道「识别展示，不计分」收口。
-            # 年三煞(-18)/劫煞(-25)/灾煞(-25)/岁煞(-20) 的注册默认分与 SHENSHA_SCORES
-            # 表值在解析层统一置 0：典据收口（B-b 轨一 §9.10/§9.12）判定两口径均无典据，
-            # 且与评分器通道甲（三煞扣分体系 §63/§64）同日并存属双重计分（实测受影响日
-            # 三笔并存 -18+-15+-30）。注册保留、命中照常识别展示（description 追加标注）；
-            # 评分器通道甲、忌事通道（ji -15）原样不动，嫁娶路径本就仅展示不受影响。
-            # SHENSHA_SCORES 表值按对账惯例不回改，实际分值以本收口为准。
-            if name in ('年三煞', '劫煞', '灾煞', '岁煞'):
+            # 2026-10-24 阶段2「一表四读」（拍板 Q2-A）：原两段「置 0 + 追加标注」
+            # 硬编码——三煞4族（2026-10-12 ③ §66 方案A：典据收口 B-b 轨一 §9.10/§9.12
+            # 判定无典据，与三煞通道甲并存属双重计分；注册保留、命中照常识别展示，
+            # 真实扣分走评分器三煞通道）与年家12项（2026-10-24 P0 大清理批 B
+            # 001 §172，D-P0-3：岁神方位，协纪卷四明判「历家误以年方配日辰」，
+            # 从日辰扣分剥离仅识别展示）——收拢为 DISPLAY_ONLY_REGISTRY 单次查表。
+            # 两族不相交，判定与原顺序逐字等价；SHENSHA_SCORES 表值按惯例不回改。
+            _do = _display_only_info(name)
+            if _do:
                 score = 0
-                if '（识别展示，不计分）' not in description:
-                    description += '（识别展示，不计分）'
-            # 2026-10-24 P0 大清理批 B（001 §172，D-P0-3）：年家族 16 项属岁神
-            # 方位，协纪卷四明判「历家误以年方配日辰」「今既不用官符」，从日辰
-            # 扣分整体剥离，仅保留识别展示。表值不回改（同三煞惯例）。
-            if name in _YEAR_GOD_DISPLAY_ONLY:
-                score = 0
-                if '（岁神方位，日辰仅识别展示，不计分）' not in description:
-                    description += '（岁神方位，日辰仅识别展示，不计分）'
+                if _do['note'] not in description:
+                    description += _do['note']
             self.shensha_list.append({
                 'name': name,
                 'score': score,
