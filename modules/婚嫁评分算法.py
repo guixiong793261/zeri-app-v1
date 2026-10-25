@@ -995,6 +995,26 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             # P1-C-3a：嫁娶月德 15→18，与通用口径统一
             score += 18  # 月德
             details.append(('月德', 18))
+
+        # 福星贵人（2026-10-25 001 §175，Q3 拍板方案A「单点补福星」）
+        # 时辰派「日干生时干曰福星贵人」，只查时支（001 §169 时辰层正统落地；
+        # §165 伪福星谓词已删）。此前嫁娶仅由评分器 _build_fuxing_shensha 写入
+        # shensha_list 展示 +10，婚嫁算法无对应 details 项 → 「福星展示不计分」
+        # 缺口（实测 2026 全年正常嫁娶日 19 天 × +10 = +190，2 天跨档）。
+        # 本批补计分，与羊刃同构（展示/计分双源，分值同查 SHENSHA_SCORES
+        # ('嫁娶','福星')=10）。评分器调用本函数时 hour 由当前时柱反算
+        # （评分器.py:909-912 _ZHI2HOUR），故与展示条目时支恒一致。
+        try:
+            from .shensha.时辰系 import get_fuxing_shichen as _get_fuxing_shichen
+            from .事项标准 import shensha_score as _ss_score
+        except ImportError:
+            from shensha.时辰系 import get_fuxing_shichen as _get_fuxing_shichen
+            from 事项标准 import shensha_score as _ss_score
+        _fx_day_gan = (sizhu.get('日柱') or '')[:1]
+        if _fx_day_gan and sizhu.get('hour_zhi') in _get_fuxing_shichen(_fx_day_gan):
+            _fx_score = _ss_score('嫁娶', '福星', 10)
+            score += _fx_score
+            details.append(('福星', _fx_score))
         
         # 大黄道（十二神值日）/小黄道（建除十二神）计分
         # 2026-02-05 统一口径：分值一律取自黄道模块（modules/黄道.py），与详情页
