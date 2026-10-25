@@ -4688,7 +4688,7 @@ MOUNTAIN_WUXING = {
 }
 
 MOUNTAIN_CHONG = {
-    '壬': '巳', '子': '午', '癸': '巳',
+    '壬': '午', '子': '午', '癸': '午',
     '丑': '未', '艮': '坤', '寅': '申',
     '甲': '庚', '卯': '酉', '乙': '辛',
     '辰': '戌', '巽': '乾', '巳': '亥',
@@ -4876,8 +4876,11 @@ def check_chong_shan(mountain_name: str, zhi: str) -> bool:
                 if isinstance(value, str):
                     import re
                     match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', value)
-                    if match and match.group(1) == zhi:
-                        return True
+                    if match:
+                        # 兼向静态规则完备：忌地支已解析即按静态口径定夺，不回退，
+                        # 避免回退映射叠加污染兼向规则（如兼亥巳忌巳，回退壬→午不得再忌午）
+                        return match.group(1) == zhi
+                # 静态忌为非地支（如忌癸/忌甲）或不可解析：预存缺口，保持原回退行为，另立专项
 
     # 回退到MOUNTAIN_CHONG映射
     mountain_zhi = mountain_name[0]
@@ -5716,9 +5719,10 @@ def check_mountain_day(date_info: dict, mountain_name: str, event_type: str = '�
     # Layer 1: 绝对禁忌检查（不可制化）
     # ========================================================================
 
-    # 1.1 冲山检查（岁破）：所有事由均禁用
+    # 1.1 冲山检查（岁破）：年/月/日冲山所有事由均禁用；
+    #     时冲山按 R2（2026-10-25 拍板）降级——一票否决豁免，改走 Layer2 重度扣分
     for pos, gan, zhi in [('年', year_gan, year_zhi), ('月', month_gan, month_zhi),
-                             ('日', day_gan, day_zhi), ('时', hour_gan, hour_zhi)]:
+                             ('日', day_gan, day_zhi)]:
         if zhi and check_chong_shan(mountain_name, zhi):
             if pos == '日':
                 result['凶煞'].append(f'{pos}冲山（日破）')
@@ -5774,6 +5778,16 @@ def check_mountain_day(date_info: dict, mountain_name: str, event_type: str = '�
             '位置': '兼向',
             '煞类型': '年家二黑（病符）',
             '说明': erhei_result['说明']
+        })
+
+    # 2.2 时冲山（R2 2026-10-25 拍板）：时辰择日有据，但一票否决过苛
+    # （一日 12 时辰不宜全否决）——降级为重度扣分走警告/制化通道；
+    # 具体分值挂 PENDING 待轻重层定夺
+    if hour_zhi and check_chong_shan(mountain_name, hour_zhi):
+        condition_shas.append({
+            '位置': '时',
+            '煞类型': '时冲山',
+            '说明': '时冲山（降级扣分，分值待轻重层定）'
         })
 
     # 2.2 劫煞/灾煞检查（可被吉神制化）
