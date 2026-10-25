@@ -25,7 +25,8 @@
     "veto": false,
     "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：岁德、月德、三合）",
-    "final_score": 100
+    "final_score": 121
   },
-  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；封顶正向案例：日期为2023-2025扫描所得真实日期（非构造），有制化无否决 final=100 仍判凶 → level_cap=true"
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；封顶正向案例：日期为2023-2025扫描所得真实日期（非构造），有制化无否决 final=100 仍判凶 → level_cap=true",
+  "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→121 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。"
 }

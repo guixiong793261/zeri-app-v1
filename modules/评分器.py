@@ -2477,7 +2477,14 @@ class Scorer:
                     fx = feixing_info['feixing_score']  # -20~+20
                     _zhengwu = self.final_score  # 加权前的正五行总分
                     _feixing_mapped = 50 + fx  # 映射到30~70区间
-                    self.final_score = max(0, min(100, int(_zhengwu * 0.7 + _feixing_mapped * 0.3)))
+                    # 2026-10-25 修造专项 W2-a3（用户拍板）：取消 clamp 上限 100——
+                    # W1 多坐山采样实测未封顶原始分自然冲高 152~232，clamp(0,100)
+                    # 导致飞星模式上吉（105）结构性不可达，而 pure 模式本无上限
+                    # （实测极值 190~359），属两模式天花板错位的纯错杀。
+                    # 现与 pure 同权：仅保留下限 max(0,·)，上限放开。
+                    # 对拍证明（docs/修造W1多坐山采样快照_20261025.md §二）：
+                    # 仅还原被压线的上吉日，其余等级桶/否决日/低分日零变化。
+                    self.final_score = max(0, int(_zhengwu * 0.7 + _feixing_mapped * 0.3))
                     self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info, shanzuo_eval)
                     score_details['飞星评分'] = fx
                     score_details['飞星等级'] = feixing_info['feixing_level']

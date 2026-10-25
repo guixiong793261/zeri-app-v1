@@ -224,8 +224,10 @@ check('展示调和：2023-03-22 综合评语含"可用须谨慎"',
 
 r_cap2 = pure(dt.date(2023, 6, 13), [dead('甲子', '1924-03-01')], '丙山壬向')
 se_cap2 = r_cap2.get('shanzuo_eval') or {}
-check('封顶集成：2023-06-13 吉神叠满 score=100 → 等级带注凶',
-      r_cap2.get('score') == 100 and not (r_cap2.get('veto_reasons') or [])
+# 001 §180（2026-10-25 修造专项W2-a3）：score 100→159 系 feixing clamp(0,100)
+# 上限取消后的真实值还原（旧值100为钳位伪影）；等级封顶凶逻辑不受影响。
+check('封顶集成：2023-06-13 吉神叠满 score=159 → 等级带注凶',
+      r_cap2.get('score') == 159 and not (r_cap2.get('veto_reasons') or [])
       and r_cap2.get('level')
       # §59.11（2026-10-07）：坐山克场景太阳到山改写为"太阳到坐山正照制化"并置顶
       == '❌ 凶（坐山克仙命，有制化：太阳到坐山正照制化、天德、三合）'
