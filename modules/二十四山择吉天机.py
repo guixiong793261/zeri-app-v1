@@ -4688,7 +4688,7 @@ MOUNTAIN_WUXING = {
 }
 
 MOUNTAIN_CHONG = {
-    '壬': '巳', '子': '午', '癸': '巳',
+    '壬': '午', '子': '午', '癸': '午',
     '丑': '未', '艮': '坤', '寅': '申',
     '甲': '庚', '卯': '酉', '乙': '辛',
     '辰': '戌', '巽': '乾', '巳': '亥',
@@ -4876,8 +4876,11 @@ def check_chong_shan(mountain_name: str, zhi: str) -> bool:
                 if isinstance(value, str):
                     import re
                     match = re.search(r'忌([子丑寅卯辰巳午未申酉戌亥])', value)
-                    if match and match.group(1) == zhi:
-                        return True
+                    if match:
+                        # 兼向静态规则完备：忌地支已解析即按静态口径定夺，不回退，
+                        # 避免回退映射叠加污染兼向规则（如兼亥巳忌巳，回退壬→午不得再忌午）
+                        return match.group(1) == zhi
+                # 静态忌为非地支（如忌癸/忌甲）或不可解析：预存缺口，保持原回退行为，另立专项
 
     # 回退到MOUNTAIN_CHONG映射
     mountain_zhi = mountain_name[0]

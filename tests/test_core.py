@@ -211,6 +211,34 @@ class TestTwentyFourMountains(unittest.TestCase):
             "子山午向，寅支不应冲山"
         )
 
+    def test_chong_shan_ren_gui_wu(self):
+        """R1（2026-10-25）：壬/癸山岁破口径=地支六冲（坎宫对冲午方）；
+        兼向静态规则完备，不回退映射叠加忌支"""
+        self.assertTrue(
+            self._mod.check_chong_shan('壬山丙向', '午'),
+            "壬山（坎宫正北）午年岁破在子方，应冲山"
+        )
+        self.assertFalse(
+            self._mod.check_chong_shan('壬山丙向', '巳'),
+            "2025巳年岁破在亥方（乾宫），壬山不应冲山（原表壬→巳误判）"
+        )
+        self.assertTrue(
+            self._mod.check_chong_shan('癸山丁向', '午'),
+            "癸山（坎宫正北）午年岁破在子方，应冲山"
+        )
+        self.assertFalse(
+            self._mod.check_chong_shan('癸山丁向', '巳'),
+            "2025巳年癸山不应冲山（原表癸→巳误判）"
+        )
+        self.assertTrue(
+            self._mod.check_chong_shan('壬山丙向兼亥巳', '巳'),
+            "兼亥巳静态忌巳，应冲山"
+        )
+        self.assertFalse(
+            self._mod.check_chong_shan('壬山丙向兼亥巳', '午'),
+            "兼亥巳静态只忌巳，回退映射不得叠加忌午"
+        )
+
     # ------------------------------------------------------------------
     # 三煞检测（纯地支映射）
     # ------------------------------------------------------------------
