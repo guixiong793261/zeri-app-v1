@@ -1907,7 +1907,7 @@ class ShenShaChecker:
         """检查特殊神煞"""
         pass
     
-    def _add_shensha(self, name, score, description):
+    def _add_shensha(self, name, score, description, force_desc=False):
         """
         添加神煞（异名归一到典载正名后按同名去重）
 
@@ -1921,11 +1921,25 @@ class ShenShaChecker:
             name: 神煞名称
             score: 分数（默认值）
             description: 描述
+            force_desc: 同名已存在时是否强制更新文案（不新增、不改计分）。
+                用于子类对基类同名注册的神煞覆盖展示文案（如"宜出行"）。
+                只改动 description，score / display_only 语义保持基类既有解析。
         """
         # 2026-10 A6-3：异名归一到典载正名（往亡日→往亡、旺日→王日、母仓日→母仓…）
         name = _SHENSHA_ALIAS_KEY.get(name, name)
         # 去重检查
         existing_names = [s['name'] for s in self.shensha_list]
+        if name in existing_names:
+            # 2026-10-26 双通道割裂修复（E，001 §183）：同名已存在（常见为基类
+            # super 先行注册）时，若不强制覆盖文案则沿用既有条目（基类文案，
+            # 分值已解析正确）。force_desc=True 时仅覆盖 descriptions，不新增、
+            # 不重复计分、不改变 display_only 置 0 语义。
+            if force_desc:
+                for s in self.shensha_list:
+                    if s['name'] == name:
+                        s['description'] = description
+                        break
+            return
         if name not in existing_names:
             # 2026-09-16 口径统一：分值以 modules/事项标准.py 的 SHENSHA_SCORES
             # 单一表为准（按 self._std_event 规范事项取数）；表中未登记的神煞

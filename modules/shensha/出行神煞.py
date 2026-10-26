@@ -74,7 +74,7 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 月破
         if self._is_yuepo(sizhu):
-            self._add_shensha('月破', -30, '月破日不宜出行')
+            self._add_shensha('月破', -30, '月破日不宜出行', force_desc=True)
         
         # 往亡
         if self._is_wangwang(sizhu):
@@ -85,7 +85,7 @@ class TravelShenShaChecker(ShenShaChecker):
 
         # 月恩
         if self._is_yueen(sizhu):
-            self._add_shensha('月恩', 10, '月恩吉星，宜出行')
+            self._add_shensha('月恩', 10, '月恩吉星，宜出行', force_desc=True)
         
         # 2026-10 批4（001 §74）：'吉期' 重加删除——基类月作用域已统一
         # 注册 '吉期' +10（E3 修正后委托典载《历例》"常居月建前一辰"表），
@@ -93,11 +93,11 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 阳德
         if self._is_yangde(sizhu):
-            self._add_shensha('阳德', 10, '阳德吉星，宜出行')
+            self._add_shensha('阳德', 10, '阳德吉星，宜出行', force_desc=True)
         
         # 阴德
         if self._is_yinde(sizhu):
-            self._add_shensha('阴德', 10, '阴德吉星，宜出行')
+            self._add_shensha('阴德', 10, '阴德吉星，宜出行', force_desc=True)
         
         # 不将日×出行已删（2026-10-21 口径收口批，001 §153）：不将日三库一致
         # 「嫁娶专用」，出行无载（取证稿 §1.2 判 ❌）。原发射为：
@@ -106,11 +106,11 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 月厌
         if self._is_yueyan(sizhu):
-            self._add_shensha('月厌', -15, '月厌日不宜出行')
+            self._add_shensha('月厌', -15, '月厌日不宜出行', force_desc=True)
         
         # 月刑
         if self._is_yuexing(sizhu):
-            self._add_shensha('月刑', -15, '月刑日不宜出行')
+            self._add_shensha('月刑', -15, '月刑日不宜出行', force_desc=True)
         
         # 月害条目已删（2026-10-18 P2 删除批，001 §122）：月害×出行三库无载
         # （docs/月家P2_月害大时往亡五墓_续取证.md §六）；本行原为死链
@@ -128,11 +128,11 @@ class TravelShenShaChecker(ShenShaChecker):
         
         # 天吏（致死）
         if self._is_tianli(sizhu):
-            self._add_shensha('天吏', -15, '天吏（致死）主凶，不宜出行')
+            self._add_shensha('天吏', -15, '天吏（致死）主凶，不宜出行', force_desc=True)
         
         # 四废
         if self._is_sifei(sizhu):
-            self._add_shensha('四废', -15, '四废日不宜出行')
+            self._add_shensha('四废', -15, '四废日不宜出行', force_desc=True)
     
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
@@ -153,19 +153,19 @@ class TravelShenShaChecker(ShenShaChecker):
 
         # 天德
         if self._is_tiande(sizhu):
-            self._add_shensha('天德', 20, '天德吉星，宜出行')
+            self._add_shensha('天德', 20, '天德吉星，宜出行', force_desc=True)
         
         # 月德
         if self._is_yuede(sizhu):
-            self._add_shensha('月德', 18, '月德吉星，宜出行')
+            self._add_shensha('月德', 18, '月德吉星，宜出行', force_desc=True)
         
         # 天德合
         if self._is_tiande_he(sizhu):
-            self._add_shensha('天德合', 15, '天德合吉星，宜出行')
+            self._add_shensha('天德合', 15, '天德合吉星，宜出行', force_desc=True)
         
         # 月德合
         if self._is_yuede_he(sizhu):
-            self._add_shensha('月德合', 12, '月德合吉星，宜出行')
+            self._add_shensha('月德合', 12, '月德合吉星，宜出行', force_desc=True)
         
         # 2026-10 A4：异名 '三奇' 重加删除——基类 super 日块已按顺布连珠
         # 单点注册 '三奇{日/月/星}'；旧日块异名 '三奇' 与其同日双扣（各 +15），
@@ -173,31 +173,31 @@ class TravelShenShaChecker(ShenShaChecker):
 
         # 将星
         if self._is_jiangxing(sizhu):
-            self._add_shensha('将星', 12, '将星吉星，宜出行')
+            self._add_shensha('将星', 12, '将星吉星，宜出行', force_desc=True)
         
         # 六合
         if self._is_liuhe(sizhu):
-            self._add_shensha('六合', 12, '六合日利于出行')
+            self._add_shensha('六合', 12, '六合日利于出行', force_desc=True)
         
         # 三合
         if self._is_sanhe(sizhu):
-            self._add_shensha('三合', 10, '三合日利于出行')
+            self._add_shensha('三合', 10, '三合日利于出行', force_desc=True)
         
         # 天赦
         if self._is_tianshe(sizhu):
-            self._add_shensha('天赦', 25, '天赦大吉，宜出行')
+            self._add_shensha('天赦', 25, '天赦大吉，宜出行', force_desc=True)
         
         # 母仓
         if self._is_mucang(sizhu):
-            self._add_shensha('母仓', 10, '母仓吉星，宜出行')
+            self._add_shensha('母仓', 10, '母仓吉星，宜出行', force_desc=True)
         
         # 受死日
         if self._is_shousi_day(sizhu):
-            self._add_shensha('受死日', -22, '受死日不宜出行')
+            self._add_shensha('受死日', -22, '受死日不宜出行', force_desc=True)
         
         # 往亡日
         if self._is_wangwang(sizhu):
-            self._add_shensha('往亡日', -20, '往亡日不宜出行')
+            self._add_shensha('往亡日', -20, '往亡日不宜出行', force_desc=True)
         
         # 十恶大败发射行已注释（2026-10-19 全删批·一档，001 §139）：三库无
         # 「十恶大败」普适日课忌明文（取证 aa47dcd／快照 2ca7b4e；协纪
@@ -210,7 +210,7 @@ class TravelShenShaChecker(ShenShaChecker):
 
         # 上朔日
         if self._is_shangshuo(sizhu):
-            self._add_shensha('上朔日', -10, '上朔日不宜出行')
+            self._add_shensha('上朔日', -10, '上朔日不宜出行', force_desc=True)
     
     def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""
@@ -223,6 +223,26 @@ class TravelShenShaChecker(ShenShaChecker):
         # 截路空亡时（D4 A1 重建：原路空日正名为时辰凶煞）
         if self._is_jielu_kongwang(sizhu):
             self._add_shensha('截路空亡', -15, '截路空亡时不宜出行')
+
+        # 日破时（2026-10-26 双通道割裂修复 A/B/E，001 §183）：
+        # 选时通道（推荐时柱 get_lucky_hours 既有日破时检查）一直生效，
+        # 选日通道此前缺失，导致选日不扣/选时扣——本批补发，去向对齐。
+        # 分值经 _add_shensha 走 SHENSHA_SCORES 解析出（出行,日破时）=-10。
+        if self._is_ripo_shi(sizhu):
+            self._add_shensha('日破时', -10, '时辰与日支相冲，不宜出行')
+
+    def _is_ripo_shi(self, sizhu):
+        """是否日破时（时支冲日支）——选日通道补齐，与选时通道口径一致"""
+        day_zhi = sizhu.get('day_zhi', '')
+        hour_zhi = sizhu.get('hour_zhi', '')
+        if not day_zhi or not hour_zhi:
+            return False
+        chong = {
+            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+        }
+        return chong.get(day_zhi) == hour_zhi
     
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（出行者）生肖与日课的冲合"""

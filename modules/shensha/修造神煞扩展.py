@@ -518,6 +518,25 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         except:
             return False
     
+    def _is_jielu_kongwang_shi(self, day_gan, hour_zhi):
+        """是否截路空亡时（出行选时通道，2026-10-26 A 修复，001 §183）
+
+        谓词与选日通道求（出行神煞._is_jielu_kongwang 的 day_gan 查表口径）一致，
+        《历例》甲己日申酉时、乙庚日午未时、丙辛日辰巳时、丁壬日寅卯时、
+        戊癸日子丑戌亥时；《考原》五鼠遁得壬申癸酉时为截路空亡。
+        day_gan 为日干，hour_zhi 为候选时支（get_lucky_hours 已归一）。
+        """
+        if not day_gan or not hour_zhi:
+            return False
+        jielu = {
+            '甲': ['申', '酉'], '己': ['申', '酉'],
+            '乙': ['午', '未'], '庚': ['午', '未'],
+            '丙': ['辰', '巳'], '辛': ['辰', '巳'],
+            '丁': ['寅', '卯'], '壬': ['寅', '卯'],
+            '戊': ['子', '丑', '戌', '亥'], '癸': ['子', '丑', '戌', '亥']
+        }
+        return hour_zhi in jielu.get(day_gan, [])
+    
     def _is_chongshan_hour(self, sizhu):
         """是否冲山时"""
         if not self.zuoshan:
@@ -1155,6 +1174,15 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             if self._is_chong_zhi(day_zhi, zhi):
                 hour_score += self._hour_delta('日破时', -20)
                 reasons.append('日破时')
+            
+            # 2026-10-26 双通道割裂修复（A，001 §183）：出行选时补截路空亡。
+            # 选日通道（出行神煞 hour 块）早已发射，选时通道此前缺失——本批按
+            # _std_event=='出行' 补齐，分值经 _hour_delta 走 SHENSHA_SCORES解析
+            # （出行,截路空亡）=-15，与选日同价。谓词按《历例》甲己日申酉时…
+            # 戊癸日子丑戌亥时；仅出行适用，其它事项选时不受影响。
+            if getattr(self, '_std_event', None) == '出行' and self._is_jielu_kongwang_shi(day_gan, zhi):
+                hour_score += self._hour_delta('截路空亡', -15)
+                reasons.append('截路空亡')
             
             # 时辰刑害扣分（年/月/日支全量检查；刑-15/害-10，不同支扣分叠加；冲已由日破时处理）
             xh_pen, xh_reasons = self._get_xinghai_penalty_all(sizhu, zhi)
