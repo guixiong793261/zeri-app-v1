@@ -301,16 +301,28 @@ class TravelShenShaChecker(ShenShaChecker):
                 self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
     
     def _is_taisui_fangwei(self, sizhu):
-        """是否太岁方位"""
+        """是否太岁方位（2026-10-26 D1 复活，001 §185）
+
+        典据：协纪卷三「太岁所在之辰必不可犯」、卷八「太岁可坐不可向」。
+        本谓词原为硬编码 return False 死链（L48 注册 -10 全年 0 命中，
+        C 专项取证与设计书 D1 项），经用户拍板复活。
+
+        口径（用户拍板 2026-10-26）：出行日课链路无方位入参，日支即当日
+        所临之位——日支临流年太岁支（day_zhi == year_zhi）判为「太岁方位」。
+        岁破侧（日支冲太岁）不在本谓词发射：岁破已由岁破批（001 §140）
+        按山向/扶山语境单列，不在此重复扣分。
+        """
         year_zhi = sizhu['year_zhi']
-        # 太岁方位
+        day_zhi = sizhu.get('day_zhi', '')
+        # 流年太岁方位表（保留自原实现，供展示层/未来方位入参接入后细化）：
+        # 子年太岁在北（子方），丑寅年在东北……亥年在西北
         taisui_fangwei = {
             '子': '北', '丑': '东北', '寅': '东北', '卯': '东',
             '辰': '东南', '巳': '东南', '午': '南', '未': '西南',
             '申': '西南', '酉': '西', '戌': '西北', '亥': '西北'
         }
-        # 简化判断
-        return False
+        # 日支临太岁支＝日临太岁位（无方位入参下的代理口径，死链修复批冻结）
+        return bool(year_zhi and day_zhi == year_zhi)
     
     def _is_yuexing(self, sizhu):
         """是否月刑"""

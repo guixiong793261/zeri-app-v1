@@ -347,10 +347,10 @@ class Scorer:
     # 【2026-10-20 岁破批·保留并标注】列表内 '岁破' 不删——日课普适岁破注册已删，
     # 但 '岁破' 在 ji_list 中仍有非日课消费者：修造规则.py 扶山冲突 ji 文本含
     # 「（岁破日）」（山向/扶山语境，001 §140 §七），整条删会误伤。属「山向/扶山语境」。
-    # 【另行立项·本批不动】同列表 '日支未冲太岁' 全库无生产者（死关键词），
-    # 语义与岁破同族，登记待议，不在本批删除面。
+    # 【2026-10-26 死链批·已删】原列表成员 '日支未冲太岁' 全库无生产者（死关键
+    # 词，001 §140 登记、C 专项取证与设计书 D2），经用户拍板彻底删除（001 §185）。
     _HARD_VETO_KEYWORDS = (
-        '年三煞', '月三煞', '年家三煞', '岁煞', '岁破', '日破', '日支未冲太岁',
+        '年三煞', '月三煞', '年家三煞', '岁煞', '岁破', '日破',
         '五黄到坐山', '五黄在', '犯五黄', '犯二黑', '二黑到坐山',
         '双干', '乙庚合化金克木，.*大凶', '克山运',
         '大凶（一票否决）', '大凶.*一票否决', '日冲山（', '切忌动土',
@@ -1644,6 +1644,12 @@ class Scorer:
             # 三煞评分逻辑（根据避忌原则：年三煞最重，月三煞次之，日三煞又次之）
             total_sansha_penalty = 0
             total_sansha_detail = []  # 2026-09-10：三煞扣分构成明细（如年三煞犯时柱-20），供展示层对账
+            # 向方判定层独立扣分通道（2026-10-26 §185）：与三煞分账，总分公式与
+            # score_details 经 xiangfang_penalty 键接入（final_score 会被 L2220 重算覆盖，
+            # 结构化通道是唯一存活的扣分路径——向方月破首版直接 final_score += 的
+            # 扣分因此丢失，冒烟对拍发现后改为通道化）
+            total_xiangfang_penalty = 0
+            total_xiangfang_detail = []
             
             # 年三煞检查（最重，月、日、时柱不可犯）
             if sansha_info.get('year_sansha_month_fan'):
@@ -1714,6 +1720,44 @@ class Scorer:
                 if '日三煞(山向)' not in self.ji_list:
                     self.ji_list.append('日三煞(山向)')
 
+            # ========== 向方判定层（2026-10-26 拍板·镜像解读，001 §185）==========
+            # 向首与坐山恒为对宫，坐/向两通道天然互斥，无叠计。
+            # 典据：协纪279252:163「月破可向不可坐」、卷八「太岁可坐不可向，
+            # 三煞可向不可坐」、陈书13处「三煞可向不可坐，不得以向杀忌之」。
+            # 口径：向侧一律重扣分不否决（(向方) 项已被 _hard_filter 与
+            # _generate_wu_xing_jiyu 双排除，见 §185 注）。
+            # 镜像承接（本批不另计）：向首犯岁破⟺坐太岁＝轻侧，由「坐太岁可用」
+            # 信息项承接；向首犯太岁⟺坐山犯岁破，由 Layer1.1+analyze_year 双否决承接。
+            if full_shan_xiang:
+                if sansha_info.get('xiangfang_yuepo'):
+                    penalty = -20  # PENDING档：向方月破权重待轻重层专项规范
+                    total_xiangfang_penalty += penalty
+                    total_xiangfang_detail.append('向方月破（-20分·PENDING档）')
+                    self.final_score += penalty
+                    if '向方月破' not in self.ji_list:
+                        self.ji_list.append('向方月破')
+                if sansha_info.get('year_sansha_xiang_fan'):
+                    penalty = -25
+                    total_sansha_penalty += penalty
+                    total_sansha_detail.append('年三煞(向方)（-25分）')
+                    self.final_score += penalty
+                    if '年三煞(向方)' not in self.ji_list:
+                        self.ji_list.append('年三煞(向方)')
+                if sansha_info.get('month_sansha_xiang_fan'):
+                    penalty = -20
+                    total_sansha_penalty += penalty
+                    total_sansha_detail.append('月三煞(向方)（-20分）')
+                    self.final_score += penalty
+                    if '月三煞(向方)' not in self.ji_list:
+                        self.ji_list.append('月三煞(向方)')
+                if sansha_info.get('day_sansha_xiang_fan'):
+                    penalty = -15
+                    total_sansha_penalty += penalty
+                    total_sansha_detail.append('日三煞(向方)（-15分）')
+                    self.final_score += penalty
+                    if '日三煞(向方)' not in self.ji_list:
+                        self.ji_list.append('日三煞(向方)')
+
             # 月、日三煞同时犯时柱（2026-09-02用户确认）：双重煞叠加，扣分加重
             # 例：月犯时-15 + 日犯时-10 + 叠加-15 = -40
             if sansha_info.get('month_sansha_hour_fan') and sansha_info.get('day_sansha_hour_fan'):
@@ -1726,6 +1770,9 @@ class Scorer:
             
             sansha_info['sansha_penalty'] = total_sansha_penalty
             sansha_info['sansha_penalty_detail'] = total_sansha_detail
+            # 向方判定层独立通道回写（001 §185）
+            sansha_info['xiangfang_penalty'] = total_xiangfang_penalty
+            sansha_info['xiangfang_penalty_detail'] = total_xiangfang_detail
             
             # 山家专业检查结果处理（来自二十四山择吉天机模块）
             if sansha_info.get('mountain_blocked'):
@@ -1880,6 +1927,10 @@ class Scorer:
 
                 def _hard_filter(_j):
                     _jt = str(_j)
+                    if '(向方)' in _jt:
+                        # 向方判定层（2026-10-26 拍板·镜像解读，001 §185）：
+                        # 向首犯三煞/月破为向侧轻档，重扣分不否决，不阻断放宽
+                        return False
                     if self._is_dayhour_pillar_sansha_item(_jt):
                         return False
                     if _spv_mode is False and (self._is_pillar_sansha_item(_jt)
@@ -1896,10 +1947,15 @@ class Scorer:
                     if not _hard_need and not _mountain_need:
                         # 豁免：所有硬凶煞均已被制化或不存在，作为合格继续走正常加权流程
                         wu_xing_result['he_ge'] = True
+                        # §185：未制化项计数排除向方项——向方判定层分项不属硬凶煞
+                        # 范畴（重扣分不否决、无需制化），计入会虚增计数误导对账
+                        _len_ji_nonxf = len([
+                            j for j in self.ji_list
+                            if str(j) != '向方月破' and '(向方)' not in str(j)])
                         wu_xing_result['_he_ge_note'] = (
                             f"放宽合格：原得分{_wx_sc}未达60分，硬凶煞项全部带制化标记"
                             f"或属四柱临方扣分不否决项，按正常加减分走，不否决"
-                            f"（未制化项={len(self.ji_list)-len(_hard_hit)}）"
+                            f"（未制化项={_len_ji_nonxf-len(_hard_hit)}）"
                         )
                         # 在评语末尾补上制化说明
                         _orig = wu_xing_result.get('ji_yu', '')
@@ -2029,6 +2085,8 @@ class Scorer:
                 try:
                     score_details['三煞扣分'] = sansha_info.get('sansha_penalty', 0)
                     score_details['三煞扣分明细'] = sansha_info.get('sansha_penalty_detail', [])
+                    score_details['向方扣分'] = sansha_info.get('xiangfang_penalty', 0)
+                    score_details['向方扣分明细'] = sansha_info.get('xiangfang_penalty_detail', [])
                     score_details['月令详细'] = {
                         '旺衰得分': self._calculate_wangxiang(sizhu),
                         '支支关系得分': self._calculate_zhizhi_relation(sizhu),
@@ -2176,8 +2234,8 @@ class Scorer:
 
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
             # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
-            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + shanzuo_score
+            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + shanzuo_score
 
             # 不设置分数上限，显示实际计算的总分
 
@@ -2416,6 +2474,8 @@ class Scorer:
                 '太阳太阴得分': sun_moon_score,
                 '三煞扣分': sansha_info.get('sansha_penalty', 0),
                 '三煞扣分明细': sansha_info.get('sansha_penalty_detail', []),
+                '向方扣分': sansha_info.get('xiangfang_penalty', 0),
+                '向方扣分明细': sansha_info.get('xiangfang_penalty_detail', []),
                 '总分': self.final_score
             }
 
@@ -4127,6 +4187,16 @@ class Scorer:
             'year_sansha_fan': False,
             'month_sansha_fan': False,
             'day_sansha_fan': False,
+            # 向方判定层（2026-10-26 拍板·镜像解读，001 §185）：向首＝「向」字
+            # 前一山，与坐山恒为对宫。向首犯月破⟺坐山临月建（月建可坐不可向）、
+            # 向首犯三煞独立；向首犯岁破⟺坐太岁（轻侧，由「坐太岁可用」承接）、
+            # 向首犯太岁⟺坐山犯岁破（Layer1.1+analyze_year 已否决），后两者本层
+            # 不产键不另计。此处仅产键，分值由 score() 向方判定层发放。
+            'year_sansha_xiang_fan': False,
+            'month_sansha_xiang_fan': False,
+            'day_sansha_xiang_fan': False,
+            'xiangfang_yuepo': False,
+            'xiangfang_zhis': [],
             # 四柱犯年三煞（年管月日时）
             'year_sansha_month_fan': False,
             'year_sansha_day_fan': False,
@@ -4250,6 +4320,36 @@ class Scorer:
                         info['month_sansha_fan'] = True
                     if zhi in info['day_sansha']:
                         info['day_sansha_fan'] = True
+
+            # 向首解析（镜像 analyze_year 口径：「向」字前一字）。四维宫（艮巽坤乾）
+            # 借兼向消歧：兼针语义沿坐山口径（'兼X'∈本宫三山才收窄，否则全宫两支
+            # 并判——偏保守，向侧兼针歧义与坐山侧同源，001 §185 记录）。
+            xiangshou = ''
+            if '向' in shan_xiang and shan_xiang.find('向') > 0:
+                xiangshou = shan_xiang[shan_xiang.find('向') - 1]
+            if xiangshou:
+                if xiangshou in ('艮', '巽', '坤', '乾'):
+                    _xg_palace = {'艮': ['丑', '寅'], '巽': ['辰', '巳'],
+                                  '坤': ['未', '申'], '乾': ['戌', '亥']}[xiangshou]
+                    xiang_zhis = list(_xg_palace)
+                    if has_jianxiang:
+                        for _pz in _xg_palace:
+                            if f'兼{_pz}' in shan_xiang:
+                                xiang_zhis = [_pz]
+                                break
+                else:
+                    xiang_zhis = [shan_to_zhi.get(xiangshou, '')]
+                xiang_zhis = [z for z in xiang_zhis if z]
+                info['xiangfang_zhis'] = xiang_zhis
+                for z in xiang_zhis:
+                    if z in info['year_sansha']:
+                        info['year_sansha_xiang_fan'] = True
+                    if z in info['month_sansha']:
+                        info['month_sansha_xiang_fan'] = True
+                    if z in info['day_sansha']:
+                        info['day_sansha_xiang_fan'] = True
+                    if month_zhi and self.check_liuchong(month_zhi, z):
+                        info['xiangfang_yuepo'] = True
             
             # 注意：不需要扩展检查相邻地支
             # 三煞检查以坐山本身为准，对于天干山（坤、艮、巽、乾）：
@@ -4861,7 +4961,11 @@ class Scorer:
         「与{事主}岁破」）语境，作为叠重煞判定仍成立，不删。
         """
         hits = []
-        _ji_blob = ' '.join(str(j) for j in self.ji_list)
+        # §185（2026-10-26 向方禁忌批）：向方判定层各分项（向方月破/*三煞(向方)）
+        # 为向侧轻档、重扣分不否决，不入叠重煞 blob——否则 '三煞'/'月破' 子串
+        # 误命中，坐山克仙命/真冲会被向方项误触发一票否决（e003/锚点2实案）
+        _ji_blob = ' '.join(str(j) for j in self.ji_list
+                            if j != '向方月破' and '(向方)' not in str(j))
         for k in ('三煞', '岁破', '月破', '日破'):
             if k in _ji_blob:
                 hits.append(k)
@@ -5193,6 +5297,11 @@ class Scorer:
             # 须显式排除——扣分单列'分金扣分'键
             # （通道真实分值），否则忌事-15+单列-35 双重扣分
             if _t.startswith(('分金大凶', '正体大凶')):
+                continue
+            # §185（2026-10-26 向方禁忌批）：向方判定层各分项已走专属通道扣分
+            # （三煞(向方)→sansha_penalty 通道、向方月破→xiangfang_penalty 通道），
+            # 忌事不重复 -15（双扣防杜绝：否则同一项扣两遍且对账口径被污染）
+            if _t == '向方月破' or '(向方)' in _t:
                 continue
             # §64（2026-10-09 拍板：D2 防双扣）：天火/地火/土府规则 ji——
             # 当日神煞通道命中时由神煞分承担（-15/-10/-20），忌事不重复 -15；
@@ -5643,6 +5752,10 @@ class Scorer:
                 elif self._is_dayhour_pillar_sansha_item(_t):
                     # §64（2026-10-09 拍板：B3）：日/时柱临三煞两类事项统一
                     # 强扣分不否决，一律不列大忌
+                    _soft_items.append(_t)
+                elif '(向方)' in _t:
+                    # 向方判定层（2026-10-26 拍板·镜像解读，001 §185）：
+                    # 向首犯三煞/月破为向侧轻档，重扣分不否决，不列大忌
                     _soft_items.append(_t)
                 elif (not _spv_mode) and (self._is_pillar_sansha_item(_t)
                                           or '月三煞(山向)' in _t):
