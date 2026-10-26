@@ -1,4 +1,4 @@
-﻿# 问题跟踪 001：test_huangdao_truth 七项历史失败
+# 问题跟踪 001：test_huangdao_truth 七项历史失败
 
 - **立项日期**：2026-09-07
 - **状态**：**已关闭（2026-09-18，七项全部处置完毕，L3C 7/7）**
@@ -9857,3 +9857,23 @@ ot shan_xiang → 「玄空飞星：本事项无坐山，玄空飞星段不适�
 
 
 - **183.8 commit 与 SHA**：产品 commit `3d27ae4`（4 产品模块＋三副本）；测试重冻 commit `243f827`；本 §183 记账＋D/C 立项书由 docs commit 回填。六副本 SHA：事项标准 `72d58caf` / 出行神煞 `b0e1e2f8` / 修造神煞扩展 `a7205a6b` / 神煞基类 `43ca6b62`；重冻测试件 verify_shousi `86384f7f` / verify_hzzq `1fcaac72` / verify_岁破病符删除 `0fcdd7e3` / verify_a5_pianyi（check_six_copies 全一致）。主仓三副本 SHA 全部一致（check_six_copies FAIL 0）；统一版仓未同步（§182.6 收敛规则，主仓连续批完成后快照式同步）。
+
+- **184.1 H1 锚点重冻（用户拍板批准）**
+  - **根因（非 R2 直接根因）**：生产 `_build_wu_xing_breakdown`（评分器.py L5186-5206）只对分解时点 `self.ji_list` 内非 H1-stopped／非分金／非作灶归退条目各 -15（L5205）；一票否决理由（玄空飞星「飞星N分，一票否决」）是分解后 L2510 才追加入 `self.ji_list`，不在 `忌事明细`、从不参与 -15。测试旧逻辑改用输出 `ji_list` 算 exp_ji，导致每个否决理由被多算 -15（恒差 +15）；R2 时冲山降级只是暴露更多样本，非直接根因。
+  - **D 段**：`level_changes`（real_lvl）为报告区纯信息输出（L413-424），不加入 `fails`，属既有「真实等级跨档日」统计，本批未改。
+  - **重冻动作**：verify_h1_anchor_map.py B 段 exp_ji 改用分解时点 `bd['忌事明细']` 快照为源、`_po_bd`/`_fj_bd` 从快照提取；修复 L275 悬空 `_fj_items`→`_fj_bd`（NameError 隐患）。重冻后 rc=0。
+  - **commit**：`16a040c`（主仓根 test H1 重冻）＋`3688530`（主仓手机一键部署/模块完整版两副本同步 verify_h1_anchor_map）。
+
+- **184.2 建除十二神×出行评分落地（D 专项，用户拍板「修造同款档位」）**
+  - **立项**：docs/建除十二神出行评分落地专项_立项书_20261026.md；出行盘点实证建除在出行评分层「零计分」（探针 2024-01-08 破日 ji_list/忌事明细无建除文本）。
+  - **档位（拍板）**：卷十「宜建开；忌破平收闭」。宜建/开 +5、忌破 -15、忌平/收/闭 -5；仅 6 星发射（建开宜、破平收闭忌）；除/满/定/执/危/成 卷十出行无宜忌、不发射不入表。
+  - **复用底座（不重造轮子）**：`modules/建除.py` 为星名/宜忌唯一事实源。出行神煞.py 日块新增发射，`star_by_sizhu(sizhu)` 取星、`get_event_yiji('出行')` 取宜忌（EVENT_YIJI['出行']={'yi':['建','开'],'ji':['破','平','收','闭']}，与卷十逐字一致），档位字面量不内嵌（评分只在 SHENSHA_SCORES）。
+  - **双计无悔**：score() 无 date_obj 参数，出行规则 `_check_jianchu` 建除文本不进 score() 忌事明细，故新建除 shensha 计分与规则文本无双计；`_add_shensha` 经 `shensha_score(SHENSHA_SCORES)` 解析、建除十二神名无 alias 重映射。
+  - **SHENSHA_SCORES**（事项标准.py）：新增 6 键 `('出行','建除十二神-建/开'):5`、`('出行','建除十二神-破'):-15`、`('出行','建除十二神-平/收/闭'):-5`；总键 1148→1154。
+  - **验证**：新增 tests/verify_d_jianchu_chuxing.py（子/卯/午/酉 4 月×12 日黄金矩阵 48/48 点对＋分值经 SHENSHA_SCORES 解析＋6 键恰存＋复用底座逆向断言），rc=0；verify_a5_pianyi 键数断言 1148→1154 重冻，rc=0。
+  - **影响面**：出行计分新增建除宜忌（宜建/开日 +5、忌破日 -15、忌平/收/闭日 -5）；其它事项零变化（建除键仅出行块）。
+  - **commit 与 SHA**：产品 commit `a6badc6`（出行神煞/事项标准）；测试 commit `d0d03b4`（verify_a5_pianyi/verify_d_jianchu_chuxing 等 5 件）；六副本同步 commit `0d468d2`（主仓两手机副本）；本 §184 记账由 docs commit 回填。六副本 check_six_copies FAIL 0、各组 SHA 一致（出行神煞 `efbe3f1f`/事项标准 `daceb6b3`/verify_shousi `c15c2438`/verify_hzzq `29bacde9`/verify_岁破病符删除 `89ce4d0b`/verify_a5_pianyi `19490b65`/verify_d_jianchu_chuxing `56b0b62e`）。
+
+- **184.3 统一版仓快照式同步（用户拍板批准）**
+  - 主仓连续完成修造/出行（§182-§184 含 D 专项）等批次后快照式同步；统一版仓三层（根/手机一键部署/模块完整版）自主仓核心范围全量镜像（modules/、tests/、根应用脚本，排除打包产物），核心文件六副本 SHA 全等（check_six_copies FAIL 0）。
+  - **待拍板**：统一版仓是否落本地 commit。项目文档 L1031「禁止在统一版目录提交」与既有 sync commit 实践（`2f4c038 同步主仓 R1-R6 修造北山修复至统一版仓`）存在矛盾，本批统一版只做文件系统同步、不落 commit，待用户拍板口径。
