@@ -249,8 +249,13 @@ def _worker(task):
                              for ss, tx in H1_ANCHOR_MAP.get(cev, []))]
             _fj_bd = [t for t in _bd_ji
                       if t.startswith(('分金大凶', '正体大凶'))]
+            # §185（2026-10-26 向方禁忌批）：向方判定层分项（向方月破/*三煞(向方)）
+            # 走 sansha_penalty/xiangfang_penalty 专属通道，生产 _build_wu_xing_
+            # breakdown 已显式排除不计忌事 -15（评分器 L5296-5300），公式同步剔除。
+            _xf_bd = [t for t in _bd_ji
+                      if t == '向方月破' or '(向方)' in str(t)]
             exp_yi = 10 * (len(yi) - len(po_yi))
-            exp_ji = -15 * (len(_bd_ji) - len(_po_bd) - len(_fj_bd))
+            exp_ji = -15 * (len(_bd_ji) - len(_po_bd) - len(_fj_bd) - len(_xf_bd))
             if bd.get('宜事得分') != exp_yi:
                 fails.append(f"B: {d} {ev} 宜事分={bd.get('宜事得分')} 期望={exp_yi} yi={yi}")
             if bd.get('忌事得分') != exp_ji:

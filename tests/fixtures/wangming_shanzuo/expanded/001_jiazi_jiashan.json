@@ -25,7 +25,7 @@
     "veto": false,
     "level_cap": false,
     "report_level": "❌ 凶",
-    "final_score": 44
+    "final_score": 34
   },
-  "notes": "2.2扩大集；公理推导=仙命克坐山/-15/小凶；cross=True；集成state=no_veto；H4 清零批重冻 final 16→44（批准批次累积抬分，2026-10-24 实测）"
+  "notes": "2.2扩大集；公理推导=仙命克坐山/-15/小凶；cross=True；集成state=no_veto；H4 清零批重冻 final 16→44（批准批次累积抬分，2026-10-24 实测）；向方禁忌批001§185(2026-10-26)重冻 final 44->34"
 }

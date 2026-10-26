@@ -24,9 +24,9 @@
     ],
     "veto": false,
     "level_cap": false,
-    "report_level": "★★★★★ 上吉",
-    "final_score": 125
+    "report_level": "★★ 中吉",
+    "final_score": 83
   },
-  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto",
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto；向方禁忌批001§185(2026-10-26)重冻 final 125->83",
   "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→125 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。"
 }
