@@ -236,15 +236,27 @@ def _worker(task):
             #   ① 忌事分期望 = -15×(忌项-被停-大凶条数)；
             #   ② 各大凶条目文本内「得分N」取 -abs(N) 合计 == breakdown['分金扣分']
             #      （验证扣分真实落入单列键、未丢失）。
-            _fj_items = [t for t in ji if t.startswith(('分金大凶', '正体大凶'))]
+            # 2026-10-26 重冻（001 §184）：生产 _build_wu_xing_breakdown
+            # （评分器.py L5186-5206）只对分解时点 self.ji_list 内非 H1-stopped/
+            # 非分金/非作灶归退的条目各 -15（L5205），而一票否决理由（玄空飞星
+            # 大忌「飞星N分，一票否决」等）为分解后 L2510 才追加入 self.ji_list，
+            # 不在忌事明细中、从不参与 -15。故期望值必须以分解时点快照
+            # breakdown['忌事明细'] 为源（而非输出 ji_list），否则每个否决理由
+            # 被测试多算 -15（曾致恒差 +15）。R2 时冲山降级仅暴露更多此类样本。
+            _bd_ji = bd.get('忌事明细') or []
+            _po_bd = [t for t in _bd_ji
+                      if any(t == tx and ss in ss_names
+                             for ss, tx in H1_ANCHOR_MAP.get(cev, []))]
+            _fj_bd = [t for t in _bd_ji
+                      if t.startswith(('分金大凶', '正体大凶'))]
             exp_yi = 10 * (len(yi) - len(po_yi))
-            exp_ji = -15 * (len(ji) - len(po_ji) - len(_fj_items))
+            exp_ji = -15 * (len(_bd_ji) - len(_po_bd) - len(_fj_bd))
             if bd.get('宜事得分') != exp_yi:
                 fails.append(f"B: {d} {ev} 宜事分={bd.get('宜事得分')} 期望={exp_yi} yi={yi}")
             if bd.get('忌事得分') != exp_ji:
                 fails.append(f"B: {d} {ev} 忌事分={bd.get('忌事得分')} 期望={exp_ji} ji={ji}")
             _exp_fj = 0
-            for _t in _fj_items:
+            for _t in _fj_bd:
                 _m = re.search(r'得分(-?\d+)', _t)
                 if not _m:
                     fails.append(f"B: {d} {ev} 大凶条目无『得分N』可校: {_t}")
@@ -260,7 +272,7 @@ def _worker(task):
                         and r.get('score', 1) == 0):
                     fails.append(
                         f"B: {d} {ev} 分金扣分={bd.get('分金扣分', 0)} "
-                        f"期望={_exp_fj} 大凶条目={_fj_items}")
+                        f"期望={_exp_fj} 大凶条目={_fj_bd}")
             # D：非veto日总分/等级硬对账
             if r.get('score', 0) > 0:
                 delta = 10 * len(po_yi) - 15 * len(po_ji)
