@@ -211,6 +211,25 @@ class TravelShenShaChecker(ShenShaChecker):
         # 上朔日
         if self._is_shangshuo(sizhu):
             self._add_shensha('上朔日', -10, '上朔日不宜出行', force_desc=True)
+
+        # 建除十二神×出行（D 专项落地，2026-10-26，001 §184）：卷十「宜建开；忌破平收闭」。
+        # 复用 建除.py 单一事实源——star_by_sizhu 取当日星名、get_event_yiji('出行') 取
+        # 出行宜忌（不得在此重造轮子）。档位为「修造同款」：宜星 +5、忌破 -15、忌平/收/闭 -5，
+        # 与 SHENSHA_SCORES 表值一致（_add_shensha 经 shensha_score 解析）。
+        try:
+            from ..建除 import star_by_sizhu as _jc_star_by_sizhu
+            from ..建除 import get_event_yiji as _jc_get_event_yiji
+        except ImportError:
+            from 建除 import star_by_sizhu as _jc_star_by_sizhu
+            from 建除 import get_event_yiji as _jc_get_event_yiji
+        _jc_name = _jc_star_by_sizhu(sizhu)
+        _jc_yiji = _jc_get_event_yiji('出行')   # {'yi': ['建','开'], 'ji': ['破','平','收','闭']}
+        if _jc_name in _jc_yiji['yi']:
+            self._add_shensha(f'建除十二神-{_jc_name}', 5, f'建除{_jc_name}日宜出行')
+        elif _jc_name == '破':
+            self._add_shensha('建除十二神-破', -15, '建除破日忌出行')
+        elif _jc_name in _jc_yiji['ji']:
+            self._add_shensha(f'建除十二神-{_jc_name}', -5, f'建除{_jc_name}日忌出行')
     
     def _check_hour_shensha(self, sizhu, **kwargs):
         """检查时神煞"""
