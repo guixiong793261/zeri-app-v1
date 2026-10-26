@@ -266,14 +266,15 @@ H1_ANCHOR_MAP = {
         ('月破', '月破日(戌月辰日)忌出行'),
         ('月破', '月破日(亥月巳日)忌出行'),
     ],
-    '安葬': [            # 7 族（注释原误写 9，H1-5 批 2026-10-20 更正；不将日族
-        # 已删：口径收口批 001 §153，不将日三库一致「嫁娶专用」，安葬无载）
+    '安葬': [            # 8 族（§186 补三丧族，消除神煞-25与规则忌事-15双扣）
+        # 已删：不将日族（口径收口批 001 §153，不将日三库一致「嫁娶专用」，安葬无载）
         # ('不将日', '不将日宜安葬') 已删（口径收口批 001 §153）
         ('鸣吠日', '鸣吠日宜安葬'),
         ('鸣吠对日', '鸣吠对日宜安葬'),
         ('往亡', '往亡日忌安葬'),
         ('重丧', '重丧日忌安葬'),
         ('年重丧', '年重丧忌安葬'),
+        ('三丧', '三丧日忌安葬'),
         ('复日', '复日忌安葬'),
         ('月破', '月破日忌安葬'),
     ],
@@ -3392,6 +3393,38 @@ class Scorer:
                                 # 如果分数低于60，设置为小凶
                                 if analysis['score'] < 60:
                                     analysis['level'] = '小凶'
+
+                        # §186（2026-10-26）：日干犯阴府——强扣分不否决
+                        # （与月干阴府同忌干表，日干临之亦忌，口径统一不搞双重标准）
+                        # 与月干检查同级独立判定：月干不犯阴府时本检查照常生效。
+                        _day_gan = (day_sizhu or {}).get('day_gan', '')
+                        if _day_gan and _day_gan in ji_gan_list:
+                            if yinfu_type == '正阴府':
+                                analysis['reasons'].append(
+                                    f"日干{_day_gan}为{shan_xiang}正阴府（强扣分不否决）")
+                                analysis['score'] -= 20
+                            else:
+                                analysis['reasons'].append(
+                                    f"日干{_day_gan}为{shan_xiang}傍阴府（强扣分不否决）")
+                                analysis['score'] -= 10
+                            if analysis['score'] < 60:
+                                analysis['level'] = '小凶'
+
+                        # §186：阴府太岁（年干化气克山）——强扣分不否决
+                        # 正阴府口诀：甲己之年艮巽凶，乙庚乾兑祸重重…
+                        # 即年干落入山之忌干对化 → 该年该山犯阴府太岁
+                        _year_gan = (day_sizhu or {}).get('year_gan', '')
+                        if _year_gan and _year_gan in ji_gan_list:
+                            if yinfu_type == '正阴府':
+                                analysis['reasons'].append(
+                                    f"年干{_year_gan}为{shan_xiang}阴府太岁（强扣分不否决）")
+                                analysis['score'] -= 25
+                            else:
+                                analysis['reasons'].append(
+                                    f"年干{_year_gan}为{shan_xiang}阴府太岁（傍，强扣分不否决）")
+                                analysis['score'] -= 15
+                            if analysis['score'] < 60:
+                                analysis['level'] = '小凶'
                 except ImportError:
                     pass
             

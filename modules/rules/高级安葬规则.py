@@ -291,21 +291,30 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         zuoshan = self._extract_zuoshan(shan_xiang)
         
         # ===== 一票否决项（大凶）=====
+        # §186（2026-10-26）：重丧/三丧/复日/年重丧升级为一票否决。
+        # 古籍「重丧不葬，三丧绝嗣」——极凶日绝不能仅扣分，必须否决。
+        # 制化豁免：三库确认有特定制化能解时另行豁免，当前绝对禁用。
+        _daxiong_veto = []
+
         # 1. 重丧日（按月查日干）
         if month_zhi and day_gan and self._is_zhongsang(month_zhi, day_gan):
             ji_list.append('重丧日忌安葬')
+            _daxiong_veto.append('重丧日')
         
         # 2. 年重丧（按年支查日干）
         if year_zhi and day_gan and self._is_nian_zhongsang(year_zhi, day_gan):
             ji_list.append('年重丧忌安葬')
+            _daxiong_veto.append('年重丧')
         
         # 3. 三丧日（按季节查日支）
         if month_zhi and day_zhi and self._is_sansang(month_zhi, day_zhi):
             ji_list.append('三丧日忌安葬')
+            _daxiong_veto.append('三丧日')
         
         # 4. 复日（重丧类）
         if month_zhi and day_gan and self._is_furi(month_zhi, day_gan):
             ji_list.append('复日忌安葬')
+            _daxiong_veto.append('复日')
         
         # 5. 十恶大败日——已删（2026-10-19 全删批·二档）：三库无「十恶大败
         # 忌安葬」明文，无典据不得一票否决（拍板逐项批准）；编号保留防错位。
@@ -365,7 +374,13 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         if year_zhi and zuoshan and self._is_sui_po_direction(year_zhi, zuoshan):
             ji_list.append(f'{zuoshan}山犯岁破')
         
-        # 如果有一票否决项，直接返回
+        # §186：大凶日（重丧/三丧/复日/年重丧）一票否决，返回 4-tuple
+        if _daxiong_veto:
+            ji_list.append('安葬')
+            _veto_reason = '、'.join(_daxiong_veto) + '忌安葬（一票否决）'
+            return yi_list, ji_list, True, _veto_reason
+
+        # 如果有其他忌项（月破/往亡/冲山等，扣分不否决），直接返回
         if ji_list:
             ji_list.append('安葬')
             return yi_list, ji_list
