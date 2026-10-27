@@ -295,6 +295,15 @@ H1_ANCHOR_MAP = {
 # 原实现：
 #     return isinstance(text, str) and text.startswith('岁破日：日支') and text.endswith('，大事忌用')
 
+# §190 C3（2026-10-27）：中文生肖→地支映射。外部接口（API/批量扫描）事主
+# 仅给 '生肖' 中文名（如「蛇」）时，相主/流年冲太岁通道直接以中文名入
+# check_liuchong 恒判 False（死链）。与神煞基类._shengxiao_to_zhi 同源口径；
+# 命中映射则转地支，未命中（已是地支或其他串）原样透传。
+_SHENGXIAO_TO_ZHI = {
+    '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯', '龙': '辰', '蛇': '巳',
+    '马': '午', '羊': '未', '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥',
+}
+
 # ============ 阶段3·方案A：嫁娶等级归一化视图（2026-10-25 拍板，001 §179） ============
 # 背景：嫁娶链基础分 60、通用链基础分 100，同一张 105/100/85/75/60 阈值表压在两种
 # 分布上，2025+2026 两年实测嫁娶 93.7% 判凶（其中否决日 72.3% 属正常铁律，但
@@ -3085,7 +3094,7 @@ class Scorer:
                     # 检查所有方向是否在煞方
                     for shan_xiang_dir in shan_xiang_dirs:
                         if shan_xiang_dir in sansha_fang:
-                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯年三煞，不利修造")
+                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯年三煞，不利{_canonical_event(event_type)}")
                             analysis['details']['山向犯煞'] = True
                             analysis['suitable'] = False
                             analysis['score'] = 0
@@ -3097,7 +3106,7 @@ class Scorer:
                     # direction可能是完整字符串，需要提取主要方向
                     direction_dir = direction[0] if direction else direction
                     if direction_dir in sansha_fang:
-                        analysis['reasons'].append(f"动土方位{direction}犯年三煞，不利修造")
+                        analysis['reasons'].append(f"动土方位{direction}犯年三煞，不利{_canonical_event(event_type)}")
                         analysis['details']['动土犯煞'] = True
                         analysis['suitable'] = False
                         analysis['score'] = 0
@@ -3181,7 +3190,7 @@ class Scorer:
                     # 检查所有方向是否犯岁破
                     for shan_xiang_dir in shan_xiang_dirs:
                         if shan_xiang_dir == suipo_fang:
-                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯岁破，不利修造")
+                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯岁破，不利{_canonical_event(event_type)}")
                             analysis['details']['山向犯岁破'] = True
                             analysis['suitable'] = False
                             analysis['score'] = 0
@@ -3192,7 +3201,7 @@ class Scorer:
                 if direction:
                     direction_dir = direction[0] if direction else direction
                     if direction_dir == suipo_fang:
-                        analysis['reasons'].append(f"动土方位{direction}犯岁破，不利修造")
+                        analysis['reasons'].append(f"动土方位{direction}犯岁破，不利{_canonical_event(event_type)}")
                         analysis['details']['动土犯岁破'] = True
                         analysis['suitable'] = False
                         analysis['score'] = 0
@@ -3705,7 +3714,7 @@ class Scorer:
                             break
                     
                     if zuoshan_fan_sansha:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}坐山犯月三煞，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}坐山犯月三煞，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯月煞'] = True
                         # 月三煞（犯坐山）扣 20 分，判为"凶"
                         analysis['score'] -= 20
@@ -3735,7 +3744,7 @@ class Scorer:
                 if shan_xiang:
                     shan_xiang_dir = shan_xiang[0]
                     if shan_xiang_dir == yuepo_fang:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}犯月破，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}犯月破，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯月破'] = True
                     
                     # 检查月支与坐山地支是否相冲（真正的月破）
@@ -3849,7 +3858,7 @@ class Scorer:
                 if shan_xiang:
                     shan_xiang_dir = shan_xiang[0]
                     if shan_xiang_dir in anjian_fang:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}犯暗建煞，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}犯暗建煞，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯暗建煞'] = True
             
             # 五行择月法分析
@@ -5229,7 +5238,8 @@ class Scorer:
                 if len(sizhu_parts) >= 1:
                     owner_year_zhi = sizhu_parts[0][1]  # 年柱地支
             elif '生肖' in owner:
-                owner_year_zhi = owner['生肖']
+                # §190 C3：中文生肖→地支映射，修复外部接口中文名死链
+                owner_year_zhi = _SHENGXIAO_TO_ZHI.get(owner['生肖'], owner['生肖'])
             
             # 获取事主日柱（从sizhu字段或birth_date计算）
             owner_day_zhi = ''
