@@ -89,13 +89,18 @@ def main():
           any('阴府' in str(j) and '无制化' in str(j)
               for j in rb.get('ji_list') or []))
 
-    print('[d7] 忌项长句逐句拆分')
+    print('[d7] 年运长句逐句拆分（宜入宜项 / 否定句入参考块）')
     rz = score('修造', '2024-10-02', 14, SHAN)
     check('宜：甲辰年利', '坤山艮向兼未甲辰年利' in rz.get('yi_list'))
     check('宜：甲辰年兼申大利',
           '坤山艮向兼未甲辰年兼申：大利' in rz.get('yi_list'))
-    check('忌：甲辰年兼末不利犯三煞',
-          '坤山艮向兼未甲辰年兼末：不利，犯三煞' in rz.get('ji_list'))
+    # §189 P2（2026-10-27 拍板·方案A）：年运表否定句移出忌项，改入
+    # mountain_year_ref（未计分参考块），忌事通道不再隐性 -15/条。
+    check('参考：甲辰年兼末不利犯三煞（未计分）',
+          '坤山艮向兼未甲辰年兼末：不利，犯三煞'
+          in (rz.get('mountain_year_ref') or []))
+    check('忌：年运否定句不再入忌项',
+          not any('兼末：不利' in str(j) for j in rz.get('ji_list') or []))
     check('忌项无混合长句（年利。）',
           not any('年利。' in str(j) for j in rz.get('ji_list') or []))
 

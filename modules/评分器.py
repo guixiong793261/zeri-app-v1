@@ -2235,6 +2235,12 @@ class Scorer:
                     'sun_moon_info': sun_moon_info,
                     'sizhu': sizhu,
                     'sansha_info': sansha_info,
+                    # §189 P2/P3：否决日同样透传展示层数据，避免 GUI/校验
+                    # 在否决日丢失“山向年运参考（未计分）/相主提示”段落。
+                    'mountain_year_ref': list(
+                        getattr(self, 'mountain_year_ref', []) or []),
+                    'xiangzhu_notes': list(
+                        getattr(self, 'xiangzhu_notes', []) or []),
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
                     'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
