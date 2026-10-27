@@ -5328,11 +5328,14 @@ class Scorer:
                         owner_year_zhi = _parts[0][1]
                 elif '生肖' in owner:
                     owner_year_zhi = owner['生肖']
-                if not owner_year_zhi and owner.get('birth_date') and \
-                        _is_wangming_role(owner.get('role', '')):
-                    # 仅仙命需要 birth_date 解析（冲太岁硬否决）。
-                    # 普通事主保持旧口径：只认 sizhu/生肖 键，不在此扩展，
-                    # 避免激活历史死档漂移锁定基线（2021金课 事主4 未冲丑）。
+                if not owner_year_zhi and owner.get('birth_date'):
+                    # §187 Q2（2026-10-27 修造深水区批）：取消「仅仙命」限定。
+                    # 年命冲收口为相主判定唯一事实源——普通事主与仙命同口径
+                    # 解析 birth_date，GUI 批量扫描路径（owner 仅有 birth_date 键）
+                    # 与 sizhu 直传路径得同一分，根除 +3/-12 分叉。
+                    # 原限定注释：仅仙命需要 birth_date 解析（冲太岁硬否决），
+                    # 普通事主保持旧口径以锁「2021金课 事主4 未冲丑」基线；
+                    # 该基线即本轮用户报告课，按拍板属于必须收敛的分叉，予以解除。
                     _osz = calculate_sizhu(owner['birth_date'],
                                            owner.get('birth_hour', 12),
                                            owner.get('birth_minute', 0),
