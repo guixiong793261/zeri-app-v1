@@ -2243,7 +2243,14 @@ class Scorer:
                         str(_d).replace('[硬性门槛]', '').replace('，不可用', '')
                         + '（相主硬门槛，一票否决）'
                         for _d in xiangzhu_details
-                        if str(_d).startswith('[硬性门槛]')],  # _fc0915
+                        if str(_d).startswith('[硬性门槛]')] + (
+                        # §190 C1 补：五行门槛提前否决日同样申报受死日否决
+                        # （此时 shensha_list 已在五行检查内填充；结果同为
+                        # score=0/❌凶，补全 veto 文案防止漏报归因）
+                        ['受死日：受死日不宜入宅，大忌不用（一票否决）']
+                        if _canonical_event(event_type) == '入宅' and any(
+                            isinstance(_s, dict) and _s.get('name') == '受死日'
+                            for _s in self.shensha_list) else []),  # _fc0915
                     'huangdao_info': self.huangdao_info,
                     'wu_xing_result': wu_xing_result,
                     'score_details': score_details,
