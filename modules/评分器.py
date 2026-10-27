@@ -890,6 +890,8 @@ class Scorer:
             self.shensha_list = []
             self.yi_list = []
             self.ji_list = []
+            # §189 P2：山向年运参考（未计分）展示数据，随评分重置防跨日残留
+            self.mountain_year_ref = []
             self.huangdao_info = {}
             # 三煞口径开关：True=四柱不犯（嫁娶等事主中心），False=仅坐山修方论
             # （修造等山向中心，四柱临方扣分不否决）。默认True走严口径，
@@ -2686,6 +2688,7 @@ class Scorer:
                 'sun_moon_info': sun_moon_info,
                 'sizhu': sizhu,
                 'sansha_info': sansha_info,  # 添加三煞信息
+                'mountain_year_ref': list(getattr(self, 'mountain_year_ref', []) or []),
                 'shan_xiang': shan_xiang,  # 添加山向信息
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
                 'pipeline': 'general',  # 阶段1增量字段
@@ -2841,6 +2844,7 @@ class Scorer:
                 'sun_moon_info': fallback_sm if isinstance(fallback_sm, dict) else {},
                 'error': error_msg,
                 'sansha_info': fallback_ss if isinstance(fallback_ss, dict) else {},
+                'mountain_year_ref': [],
                 'shan_xiang': shan_xiang,
                 'sizhu': sizhu,
                 'pipeline': _fb_pipeline,  # 阶段1增量字段
@@ -5540,6 +5544,9 @@ class Scorer:
         for _j in (_rule_ji or []):
             if _j not in self.ji_list:
                 self.ji_list.append(_j)
+        # §189 P2：规则层年运表纯文本仅作参考展示，不进忌事通道
+        self.mountain_year_ref = list(
+            getattr(rule_checker, 'mountain_year_ref', []) or [])
 
         # Q4（2026-10-08 拍板）：已制化且不禁用的正阴府干，其规则层静态忌项
         # （年运表“…年犯正阴府”及配套“…年不利”；

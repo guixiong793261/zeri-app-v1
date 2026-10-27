@@ -6732,6 +6732,18 @@ class ZeriApp:
                 content += f"  • {_mw}\n"
             content += "\n"
 
+        # §189 P2（2026-10-27 拍板·方案A）：年运表纯文本独立展示，不参与计分，
+        # 不再进忌项；与 E008“忌项须有扣分出处”的口径一致。
+        _myref = detail.get('mountain_year_ref') or []
+        if _myref:
+            content += """【山向年运参考（未计分）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  以下为二十四山年运表的原文提示，仅供参详，不计入评分与忌项：
+"""
+            for _mr in _myref:
+                content += f"  • {_mr}\n"
+            content += "\n"
+
         # 评语
         if detail.get('reason'):
             content += f"""【综合评语】

@@ -230,6 +230,8 @@ class ConstructionRuleChecker(EventRuleChecker):
         """检查修建规则"""
         yi_list = []
         ji_list = []
+        # §189 P2：年运表纯文本不再入忌项，改为独立“山向年运参考（未计分）”展示
+        self.mountain_year_ref = []
         
         date_obj = self._sizhu_to_date(sizhu)
         if not date_obj:
@@ -531,6 +533,7 @@ class ConstructionRuleChecker(EventRuleChecker):
         根据二十四山择吉天机数据，检查当前年份对山向的吉凶
         """
         if not self.has_mountain_data or not self.check_year_luck:
+            self.mountain_year_ref = getattr(self, 'mountain_year_ref', []) or []
             return
         
         try:
@@ -557,7 +560,11 @@ class ConstructionRuleChecker(EventRuleChecker):
                     _neg = ('不利' in sent or '忌' in sent
                             or '凶' in sent or '犯' in sent)
                     if _neg:
-                        ji_list.append(f'{shan_xiang}{year_ganzhi}年{sent}')
+                        # §189 P2（2026-10-27 拍板·方案A）：年运表负面句无独立
+                        # 神煞通道，原入忌项会经通用忌事 -15/条隐性扣分；现移入
+                        # 参考块，不再参与计分，E008 同时清零。
+                        self.mountain_year_ref.append(
+                            f'{shan_xiang}{year_ganzhi}年{sent}')
                     elif '利' in sent or '吉' in sent:
                         yi_list.append(f'{shan_xiang}{year_ganzhi}年{sent}')
         except Exception:
