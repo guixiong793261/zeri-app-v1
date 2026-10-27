@@ -5646,7 +5646,18 @@ class ZeriApp:
                         text.insert(tk.END, f"({gender})")
                     
                     # 显示事主的公历和农历日期、四柱、喜用神
-                    if 'year' in owner_info:
+                    # §187 Q1（2026-10-27）：未填出生日期的事主（详情按 GUI 全量卡片
+                    # 渲染，含姓名默认＝角色名的占位卡，如"事主4"）显式标识，
+                    # 不再让空日期 int('') 抛 ValueError 后被裸 except 静默吞掉
+                    _q1_yv = owner_info.get('year')
+                    _q1_mv = owner_info.get('month')
+                    _q1_dv = owner_info.get('day')
+                    _q1_yv = _q1_yv.get() if hasattr(_q1_yv, 'get') else (_q1_yv or '')
+                    _q1_mv = _q1_mv.get() if hasattr(_q1_mv, 'get') else (_q1_mv or '')
+                    _q1_dv = _q1_dv.get() if hasattr(_q1_dv, 'get') else (_q1_dv or '')
+                    if not (str(_q1_yv).strip() and str(_q1_mv).strip() and str(_q1_dv).strip()):
+                        text.insert(tk.END, "\n     未提供出生日期（不参与相主计算）")
+                    elif 'year' in owner_info:
                         try:
                             # 添加防御性检查
                             year_val = owner_info['year'].get() if hasattr(owner_info['year'], 'get') else owner_info.get('year', '')
@@ -5753,8 +5764,9 @@ class ZeriApp:
                                         text.insert(tk.END, f"\n    阳气：{get_yangqi(month_zhu[:1], month_zhu[1:])}")
                                 except:
                                     pass
-                        except:
-                            pass
+                        except Exception as _q1_err:
+                            # §187 Q1：异常隔离告警——绝不静默吞掉算分边界
+                            text.insert(tk.END, f"\n     出生信息解析失败：{_q1_err}")
         else:
             text.insert(tk.END, "\n  暂无事主信息")
 

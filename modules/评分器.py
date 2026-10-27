@@ -898,6 +898,9 @@ class Scorer:
             # Q4：本轮已制化正阴府干集合（供 _check_wu_xing 规则合并后清理
             # 年运/日月干静态忌项），随评分重置防跨日残留
             self._mitigated_yinfu_gans = set()
+            # §187 Q4（2026-10-27 修造深水区批）：已在三煞/山向专属通道计分的
+            # 忌项名集合——忌事通道不得二次 -15（双扣根除），随评分重置防跨日残留
+            self._sansha_scored_ji = set()
             # §62（2026-10-09 拍板·方案二）：多人口家庭自动主次打标。
             # 非婚嫁类事项且事主≥2 且无任何显式 _zaozhu_weight 打标时，自动按
             # "首位=主事人1.0、其余=家眷0.5"打标：辅助成员被日支冲/自刑等
@@ -1774,6 +1777,13 @@ class Scorer:
             # 向方判定层独立通道回写（001 §185）
             sansha_info['xiangfang_penalty'] = total_xiangfang_penalty
             sansha_info['xiangfang_penalty_detail'] = total_xiangfang_detail
+            # §187 Q4（2026-10-27）：三煞通道计分项登记——归一化去掉尾部
+            # 「（-N分）」，得到与 ji_list 文本同形的项名集合，供
+            # _build_wu_xing_breakdown 的忌事通道排除，杜绝二次 -15。
+            import re as _re_q4
+            self._sansha_scored_ji = {
+                _re_q4.sub(r'（-\d+分）$', '', _d) for _d in total_sansha_detail
+            }
             
             # 山家专业检查结果处理（来自二十四山择吉天机模块）
             if sansha_info.get('mountain_blocked'):
@@ -1781,6 +1791,8 @@ class Scorer:
                 for reason in blocked_reasons:
                     if reason not in self.ji_list:
                         self.ji_list.append(reason)
+                    # §187 Q4：该忌项扣分已由山家封禁通道承担，登记后忌事不再 -15
+                    self._sansha_scored_ji.add(reason)
                     self.final_score -= 15
                     total_sansha_penalty -= 15
                     total_sansha_detail.append('山家封禁：%s（-15分）' % reason)  # _fc0915
@@ -1815,6 +1827,9 @@ class Scorer:
                         self.ji_list.append(warn_text)
                     # 无制化条件凶煞（时灾煞/时曜煞等）独立扣分，与"日三煞(时柱)"同级
                     if '（无制化）' in warn_text:
+                        # §187 Q4：该忌项扣分已由无制化条件凶煞通道承担，
+                        # 登记后忌事不再 -15（时灾煞/剑锋煞等）
+                        self._sansha_scored_ji.add(warn_text)
                         self.final_score -= 10
                         total_sansha_penalty -= 10
                         total_sansha_detail.append('%s（-10分）' % warn_text)
@@ -5391,6 +5406,12 @@ class Scorer:
             # （三煞(向方)→sansha_penalty 通道、向方月破→xiangfang_penalty 通道），
             # 忌事不重复 -15（双扣防杜绝：否则同一项扣两遍且对账口径被污染）
             if _t == '向方月破' or '(向方)' in _t:
+                continue
+            # §187 Q4（2026-10-27 修造深水区批）：三煞/山向专属通道已计分的
+            # 忌项（年/月/日三煞、月日叠犯、时灾煞、剑锋煞、山家封禁）不得在
+            # 忌事通道二次 -15。集合由评分主流程按 sansha_penalty_detail 归一化
+            # 生成，与 §185 向方排除同构，确保任何时柱/坐向均无双扣。
+            if _t in getattr(self, '_sansha_scored_ji', ()):
                 continue
             # §64（2026-10-09 拍板：D2 防双扣）：天火/地火/土府规则 ji——
             # 当日神煞通道命中时由神煞分承担（-15/-10/-20），忌事不重复 -15；
