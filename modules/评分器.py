@@ -892,6 +892,10 @@ class Scorer:
             self.ji_list = []
             # §189 P2：山向年运参考（未计分）展示数据，随评分重置防跨日残留
             self.mountain_year_ref = []
+            # §189 P3：相主提示（仅展示）与隐藏计分忌事（保持 -15 总分不变），
+            # 随评分重置防跨日残留
+            self.xiangzhu_notes = []
+            self.ji_advisory_scored = []
             self.huangdao_info = {}
             # 三煞口径开关：True=四柱不犯（嫁娶等事主中心），False=仅坐山修方论
             # （修造等山向中心，四柱临方扣分不否决）。默认True走严口径，
@@ -2689,6 +2693,7 @@ class Scorer:
                 'sizhu': sizhu,
                 'sansha_info': sansha_info,  # 添加三煞信息
                 'mountain_year_ref': list(getattr(self, 'mountain_year_ref', []) or []),
+                'xiangzhu_notes': list(getattr(self, 'xiangzhu_notes', []) or []),
                 'shan_xiang': shan_xiang,  # 添加山向信息
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
                 'pipeline': 'general',  # 阶段1增量字段
@@ -2845,6 +2850,7 @@ class Scorer:
                 'error': error_msg,
                 'sansha_info': fallback_ss if isinstance(fallback_ss, dict) else {},
                 'mountain_year_ref': [],
+                'xiangzhu_notes': [],
                 'shan_xiang': shan_xiang,
                 'sizhu': sizhu,
                 'pipeline': _fb_pipeline,  # 阶段1增量字段
@@ -5432,6 +5438,15 @@ class Scorer:
             sc -= 15
         if self.ji_list:
             bd['忌事明细'] = list(self.ji_list)
+        # §189 P3（2026-10-27 拍板·方案A）：扶山×事主年命冲的忌项已移入
+        # 【相主提示】如实描述，但 -15 分值必须保持不变——由此隐藏列表
+        # 单独承载，不进 ji_list/E008 出处校验，也不进忌事明细展示。
+        for _ja in (getattr(self, 'ji_advisory_scored', None) or ()):
+            _jt = _ja.get('name', '') if isinstance(_ja, dict) else str(_ja)
+            if _jt in self.ji_list:
+                continue
+            bd['忌事得分'] -= 15
+            sc -= 15
         if HAS_BAZI_TOOLS:
             zs, _zs_lines = self._calc_zhangsheng_detail(sizhu)
             bd['十二长生得分'] = zs; sc += zs
@@ -5547,6 +5562,12 @@ class Scorer:
         # §189 P2：规则层年运表纯文本仅作参考展示，不进忌事通道
         self.mountain_year_ref = list(
             getattr(rule_checker, 'mountain_year_ref', []) or [])
+        # §189 P3：相主提示仅作展示；扶山×事主年命冲的 -15 由隐藏计分承载，
+        # 保证总分与改动前一致（忌项列表不再出现该条）。
+        self.xiangzhu_notes = list(
+            getattr(rule_checker, 'xiangzhu_notes', []) or [])
+        self.ji_advisory_scored = list(
+            getattr(rule_checker, 'ji_advisory_scored', []) or [])
 
         # Q4（2026-10-08 拍板）：已制化且不禁用的正阴府干，其规则层静态忌项
         # （年运表“…年犯正阴府”及配套“…年不利”；

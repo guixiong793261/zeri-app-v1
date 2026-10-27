@@ -6896,6 +6896,15 @@ class ZeriApp:
                     content += "\n  【扶山·相主·补龙】\n"
                     for item in fushan_items:
                         content += f"    • {item}\n"
+
+                # §189 P3（2026-10-27 拍板·方案A）：扶山×事主年命冲如实描述，
+                # 从忌项移入相主提示；分值不变（-15 仍计，按相主档 2 扣分不否决）。
+                _xz_notes = detail.get('xiangzhu_notes') or []
+                if _xz_notes:
+                    content += "\n  【相主提示】\n"
+                    for _xn in _xz_notes:
+                        content += f"    • {_xn}\n"
+                    content += "    （该项按相主档 2 已计 -15 分，月/时柱冲年命不否决）\n"
                 
                 if shanjia_items:
                     content += "\n  【山家吉凶】\n"

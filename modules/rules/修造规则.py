@@ -92,6 +92,12 @@ class ConstructionRuleChecker(EventRuleChecker):
     
     def __init__(self):
         super().__init__()
+        # §189 P2/P3：展示层透传字段在基类初始化，动土/入宅/拆舍等子类
+        # 复用 _check_fushan / _check_mountain_yearly_luck 时不再缺属性。
+        # get_rule_checker 每次新建实例，无跨日残留。
+        self.mountain_year_ref = []
+        self.xiangzhu_notes = []
+        self.ji_advisory_scored = []
         self._init_dependencies()
         self._init_mountain_data()
     
@@ -232,6 +238,10 @@ class ConstructionRuleChecker(EventRuleChecker):
         ji_list = []
         # §189 P2：年运表纯文本不再入忌项，改为独立“山向年运参考（未计分）”展示
         self.mountain_year_ref = []
+        # §189 P3：相主提示（仅展示，不落忌项）；扶山×事主年命冲的 -15
+        # 由 ji_advisory_scored 隐藏计分承载，保证总分不变、忌项不掺相主提示
+        self.xiangzhu_notes = []
+        self.ji_advisory_scored = []
         
         date_obj = self._sizhu_to_date(sizhu)
         if not date_obj:
@@ -382,20 +392,36 @@ class ConstructionRuleChecker(EventRuleChecker):
             # 非日课普适岁破注册；岁破批（2026-10-20，001 §140）不删此项，且为
             # 评分器.py _HARD_VETO_KEYWORDS '岁破' 保留之依据（不得连带删）。
             if self.SHENG.get(zhi_wuxing) == zuoshan_wuxing:
-                conflicts = []
+                _sui_po = []
                 if zhi == day_zhi and year_zhi and self.ZHI_CHONG.get(zhi) == year_zhi:
-                    conflicts.append(f'{zhi}冲太岁{year_zhi}（岁破日）')
+                    _sui_po.append(f'{zhi}冲太岁{year_zhi}（岁破日）')
+                _clash_names = []
                 if owners:
-                    clash_names = []
                     for owner in owners:
                         sx_zhi = self._get_owner_year_zhi(owner) or (owner.get('生肖', '') or '')
                         if sx_zhi and self.ZHI_CHONG.get(zhi) == sx_zhi:
-                            clash_names.append(f"{owner.get('name', '事主')}生肖{sx_zhi}")
-                    if clash_names:
-                        conflicts.append(f'{zhi}冲{"、".join(clash_names)}')
-                if conflicts:
-                    ji_list.append(f'{zuoshan}山虽得{zhi}生扶，惟{"、".join(conflicts)}，冲主大忌优先，扶山不论')
-                else:
+                            _clash_names.append(f"{owner.get('name', '事主')}生肖{sx_zhi}")
+                # §189 P3（2026-10-27 拍板·方案A）：扶山×事主年命冲不再作忌项，
+                # 移入【相主提示】如实描述；分值不变（-15 由隐藏计分承载），
+                # 月/时柱冲年命按相主档 2 扣分不否决，与冻结口径一致。
+                if _clash_names:
+                    self.xiangzhu_notes.append(
+                        f'{zuoshan}山虽得{zhi}生扶，惟{zhi}冲事主年命'
+                        f'（{"、".join(_clash_names)}），扶山不宜单列为宜；'
+                        f'年命冲按相主档 2 扣分（月/时柱不否决）')
+                _conflicts = list(_sui_po)
+                if _clash_names:
+                    _conflicts.append(f'{zhi}冲{"、".join(_clash_names)}')
+                if _sui_po:
+                    # 岁破日（山向造命语境）仍为忌项：-15 落忌事通道，
+                    # 若同时冲事主年命，相主提示仅展示，不再叠加分值。
+                    ji_list.append(
+                        f'{zuoshan}山虽得{zhi}生扶，惟{"、".join(_conflicts)}，冲主大忌优先，扶山不论')
+                elif _clash_names:
+                    # 纯粹事主年命冲：忌项移出，-15 转隐藏计分，总分不变。
+                    self.ji_advisory_scored.append(
+                        self.xiangzhu_notes[-1])
+                if not _conflicts:
                     yi_list.append(f'{zuoshan}山得{zhi}生扶')
                 return
             
