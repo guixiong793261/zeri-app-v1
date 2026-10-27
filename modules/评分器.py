@@ -2503,11 +2503,24 @@ class Scorer:
             if jianxiang_veto and jianxiang_veto not in veto_reasons:
                 veto_reasons.append(jianxiang_veto)
 
+            # §190 C1（2026-10-27 用户拍板）：受死日×入宅升级 HARD_VETO 一票否决。
+            # 原仅经 ('入宅','受死日') 注册键扣 -15 普通分（2026-01-05 实测入宅
+            # 102 大吉），与「受死日不宜入宅」的大忌定性严重不匹配；升级后与
+            # 三煞大忌/相主硬门槛/山家封禁并列，触发即综合分归零、等级❌凶。
+            # 移徙 canonical 归并入宅，同受本否决覆盖。
+            _shousi_veto = ''
+            if _canonical_event(event_type) == '入宅' and any(
+                    isinstance(_s, dict) and _s.get('name') == '受死日'
+                    for _s in self.shensha_list):
+                _shousi_veto = '受死日：受死日不宜入宅，大忌不用（一票否决）'
+                veto_reasons.append(_shousi_veto)
+
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
                     or wangming_veto or shanzuo_veto or dual_veto
                     or wm_shan_chong_veto
-                    or jianxiang_veto or jianxiang_dual_veto):
+                    or jianxiang_veto or jianxiang_dual_veto
+                    or _shousi_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -2534,6 +2547,9 @@ class Scorer:
                     _v_text = _v.replace('[硬性门槛]', '')
                     if _v_text not in self.ji_list:
                         self.ji_list.append(_v_text)
+                # §190 C1：受死日否决同步入忌列表（文案与 veto_reasons 一致）
+                if _shousi_veto and _shousi_veto not in self.ji_list:
+                    self.ji_list.append(_shousi_veto)
             else:
                 self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info, shanzuo_eval)
 
