@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """§64 验证（2026-10-09 拍板）：B3 四柱临三煞按柱分级 + D2 作灶次级神煞降级
 + 必修1 §63 降级回弹修复（真/假低分区分）+ 必修2 山向类/事主类日时柱口径对齐。
 
@@ -151,17 +151,22 @@ _n_ji = len(_bd.get('忌事明细', []))
 # §185（2026-10-26 向方禁忌批）：明细 5→7 条——乙巳年煞东+丑日煞东，艮宫借
 # 丑寅两支并判，寅∈东煞 → 年三煞(向方)+日三煞(向方) 入明细；向方项走专属
 # 通道不重复忌事-15（防双扣排除生效），忌事得分仍 -60=4×15
-check('D2-1d 防双扣：天火 ji 不重复忌事-15（7条明细仍-60=4×15，+2向方项§185）',
-      _n_ji == 7 and _bd.get('忌事得分') == -60,
+# §187 Q4（2026-10-27 修造深水区批）：三煞双扣根除——年三煞(月柱)/年三煞(向方)/
+# 日三煞(向方)/月灾煞/正阴府 5 项均已由 sansha_penalty 通道计分（合计-90），
+# 忌事循环排除后仅「天火日忌作灶」计一笔 -15（年柱巳冲属 H1 锚点仅展示）。
+# 明细条数仍 7，双扣杜绝语义由「通道-90 + 忌事-15」两笔独立证明。
+check('D2-1d 防双扣：三煞/正阴府归通道不重复忌事（7条明细，忌事仅天火一笔-15）',
+      _n_ji == 7 and _bd.get('忌事得分') == -15,
       f"明细{_n_ji}条 忌事得分={_bd.get('忌事得分')}")
 # D2-1e §172（2026-10-24）重锚：本批抬分后 score <30→59 跨 30 分线，
 # 假低分回退分支切换为 60 分线制化放宽（同 D2-4c §68 先例，行为殊途同归：
 # 均放行 he_ge=True、无 veto）。天火神煞分 -15 的在册与防双扣由 D2-1b/d 保持。
-check('D2-1e 60分线制化放宽（§172后分支切换：score59/未制化项=5）',
-      wx(r).get('score') == 59
-      and '放宽合格：原得分59未达60分' in (wx(r).get('_he_ge_note') or '')
-      and '（未制化项=5）' in (wx(r).get('_he_ge_note') or ''),
-      wx(r).get('_he_ge_note'))
+# §187 Q4（2026-10-27）：三煞双扣根除后 wx 59→104，跨 60 分线直升五行大吉
+# （note=None）；60 分线制化放宽分支覆盖改由 M1（2024-01-04）独扛。
+check('D2-1e §187 Q4 后直升五行吉日（score104/note=None）',
+      wx(r).get('score') == 104 and wx(r).get('_he_ge_note') is None
+      and wx(r).get('he_ge') is True,
+      f"score={wx(r).get('score')} note={wx(r).get('_he_ge_note')}")
 
 # D2-2 地火日规则/神煞公式分叉日：2024-01-02（规则 ji 命中、神煞未注册）
 r = run(dt.date(2024, 1, 2), '作灶', OWNER1, shan=KUN)
@@ -169,8 +174,9 @@ _v, _jl, _ss, _bd = vetos(r), ji_of(r), ss_map(r), bd_of(r)
 check('D2-2a 地火日不再否决', not _v, '; '.join(_v))
 check('D2-2b 规则 ji 命中', '地火日忌作灶' in _jl, str(_jl))
 check('D2-2c 当日神煞通道无地火（分叉实证）', '地火日' not in _ss, str(_ss))
-check('D2-2d 分叉日走忌事-15强扣（忌事-45=3×15，地火必落一笔）',
-      _bd.get('忌事得分') == -45, str(_bd.get('忌事得分')))
+check('D2-2d §187 Q4 分叉日忌事仅地火一笔-15（三煞3项归通道-50）',
+      _bd.get('忌事得分') == -15 and '地火日忌作灶' in _bd.get('忌事明细', []),
+      f"忌事={_bd.get('忌事得分')} 明细={_bd.get('忌事明细')}")
 
 # D2-3 土府日神煞通道单扣：2024-01-14（神煞-20 命中、规则公式未命中）
 r = run(dt.date(2024, 1, 14), '作灶', OWNER1, shan=KUN)
@@ -194,8 +200,10 @@ check('D2-4b 保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in _jl,
 # 本批抬分后直升「五行吉日」，不再走任何放宽分支（note=None）。灶君忌事 -15
 # 仍落忌事明细 4 条（防双扣语义由 D2-1d 保持）；"回退分支+灶君"组合覆盖由
 # D2-4d 独扛（D2-4e 备样例已跨线，重扫确认无替代日）。
-check('D2-4c 直升五行吉日（§172后：score113/note=None）',
-      wx(r).get('score') == 113 and wx(r).get('_he_ge_note') is None
+# §187 Q4（2026-10-27）：三煞双扣根除后本日 wx 113→158（Δ45=3×15），
+# 仍直升「五行大吉」、不走任何放宽分支（note=None）。
+check('D2-4c 直升五行吉日（§187 Q4：score158/note=None）',
+      wx(r).get('score') == 158 and wx(r).get('_he_ge_note') is None
       and wx(r).get('he_ge') is True,
       f"score={wx(r).get('score')} note={wx(r).get('_he_ge_note')}")
 
@@ -211,28 +219,29 @@ check('D2-4c 直升五行吉日（§172后：score113/note=None）',
 # 重扫工具：tools/audit/s68_stage2_probe/zuozao_below30_probe.py
 # 操作路径：规则变化 → 重跑该工具 → 样例失效则更新 D2-4d/e 样例日与分数锚定。
 _RESCAN = '；样例绑定§66后规则版本，漂移请重跑 tools/audit/s68_stage2_probe/zuozao_below30_probe.py 重扫'
+# §187 Q4（2026-10-27）重锚留痕：三煞双扣根除后作灶全年抬分，2025-09-20 五行
+# 1→76、2025-10-02 五行 52→112，均跨 60 分线直升吉日（note=None）。重扫
+# 2024-01-01~2026-12-31 同口径确认：五行<30 且忌事含灶君且「回退降级项」分支
+# 生效日 = 0（Q4 前唯一 2 日已全部抬出），"假低分回退分支+灶君"组合覆盖在本
+# 语料内已无替代样本——该分支覆盖改由 M5 动态扫描（修造口径）与 M1（60分线
+# 制化放宽）承接，本组 D2-4d/e 重锚为「直升吉日+灶君忌项保留」形态留痕。
 r = run(dt.date(2025, 9, 20), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
-# §172 重锚：锚 -21→实测 1；仍走假低分回退（回退75分→76 达线，降级项=5），
-# 组合覆盖仍有效。
-check('D2-4d 主样例五行1（§172重锚，负分边界→正1仍回退）', _w.get('score') == 1,
+# §187 Q4 重锚：1→76（五行平平，直升），灶君忌项与无 veto 语义保持。
+check('D2-4d 主样例五行76（§187 Q4：1→76 直升五行平平）', _w.get('score') == 76,
       f'五行={_w.get("score")}{_RESCAN}')
-check('D2-4d 主样例回退分支放行 he_ge=True', _w.get('he_ge') is True,
+check('D2-4d 主样例直升吉日 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
 check('D2-4d 主样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
       f'{ji_of(r)}{_RESCAN}')
 check('D2-4d 主样例无 veto', not vetos(r), f'{"; ".join(vetos(r))}{_RESCAN}')
 r = run(dt.date(2025, 10, 2), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
-# §172 重锚：锚 10→实测 52，本批抬分后跨 30 分线、改走 60 分线制化放宽
-# （未制化项=6），不再承载"假低分回退+灶君"组合；重扫确认 1096 日内该组合
-# 仅余 2025-09-20（D2-4d 主样例）一日，备样例无替代，本日重锚为新形态留痕。
-check('D2-4e 备样例五行52（§172重锚，已跨线改走60分线制化放宽）',
-      _w.get('score') == 52
-      and '放宽合格：原得分52未达60分' in (_w.get('_he_ge_note') or '')
-      and '（未制化项=6）' in (_w.get('_he_ge_note') or ''),
+# §187 Q4 重锚：52→112（五行吉日，直升）。
+check('D2-4e 备样例五行112（§187 Q4：52→112 直升五行吉日）',
+      _w.get('score') == 112 and _w.get('_he_ge_note') is None,
       f'五行={_w.get("score")} note={_w.get("_he_ge_note")}{_RESCAN}')
-check('D2-4e 备样例制化放宽放行 he_ge=True', _w.get('he_ge') is True,
+check('D2-4e 备样例直升吉日放行 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
 check('D2-4e 备样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
       f'{ji_of(r)}{_RESCAN}')
@@ -254,21 +263,25 @@ check('D2-6b 同日天火 ji 仍记录但不改变否决构成', '天火日忌�
 # 本批抬分后 score 9→61 跨 60 分线失效）。新样例经 2024~2026 全量重扫锁定：
 # wx=23；月三煞时柱/山向 2 条降级忌事-30（构成与原样例全等），回退后 53≥30，
 # 无未制化硬煞。
+# §187 Q4（2026-10-27）：三煞双扣根除后 wx 23→48，30 分线回退分支不再适用，
+# 改走 60 分线制化放宽（原得分48/未制化项=8），行为同型：放行 he_ge=True、无 veto。
 r = run(dt.date(2024, 1, 4), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M1-1a 假低分放行 he_ge=True', _w.get('he_ge') is True)
 check('M1-1b 无 veto', not vetos(r), '; '.join(vetos(r)))
-check('M1-1c 回退30分（2条降级忌事）', '回退降级项' in (_w.get('_he_ge_note') or '')
-      and '扣分30分' in (_w.get('_he_ge_note') or ''), _w.get('_he_ge_note'))
+check('M1-1c §187 Q4 后走60分线制化放宽（原得分48/未制化项=8）',
+      '放宽合格：原得分48未达60分' in (_w.get('_he_ge_note') or '')
+      and '（未制化项=8）' in (_w.get('_he_ge_note') or ''), _w.get('_he_ge_note'))
 
 # M2 回退仅判定用：展示分保持原值不变
-check('M2 假低分展示分不变（仍为23分）',
-      _w.get('score') == 23 and '原得分23分' in (_w.get('ji_yu') or ''),
+check('M2 假低分展示分不变（§187 Q4：仍为48分）',
+      _w.get('score') == 48 and '原得分48' in (_w.get('ji_yu') or ''),
       f"score={_w.get('score')} jiyu={_w.get('ji_yu')}")
 
-# M3 反向真低分：2024-01-01 修造（§172 实测 wx=-88；地支刑冲结构性低分，
-# 回退降级忌事后仍 <30 → 维持否决；断言不含具体分数，仅锁分支形态）
-r = run(dt.date(2024, 1, 1), '修造', OWNER1, shan=KUN)
+# M3 反向真低分：2024-01-14 修造（§187 Q4 重锚：原 2024-01-01 三煞双扣根除后
+# wx -13、回退75→62 达线转为假低分；重扫 2024-2030 取现行真低分日 2024-01-14
+# wx=-40，降级项回退后仍 <30 → 维持否决；断言不含具体分数，仅锁分支形态）
+r = run(dt.date(2024, 1, 14), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M3-1a 真低分维持 he_ge=False', _w.get('he_ge') is False)
 check('M3-1b 真低分维持五行否决',
@@ -310,13 +323,18 @@ check('F1 天火日 breakdown 加总==五行分（神煞/忌事各一笔不重�
       _s == wx(r).get('score'), f'加总={_s} 五行分={wx(r).get("score")}')
 
 # F2 B3 通道分与忌事分两笔独立：2024-01-09 开业（通道-40、忌事-30）
+# §187 Q4（2026-10-27）：三煞双扣根除后忌事得分 -30→0——年三煞(日柱)/日三煞(时柱)
+# 两项已由 sansha_penalty 通道扣 -40（-30/-10），忌事不再重复；两笔独立语义
+# 由「通道-40 + 忌事0 + 明细仍保留 2 条三煞项（仅展示）」共同证明。
 r = run(dt.date(2024, 1, 9), '开业', OWNER1)
 _si = (r.get('sansha_info') or {}).get('sansha_info') or (r.get('sansha_info') or {})
 check('F2-1 三煞通道合计-40（日柱-30+时柱-10，保留入总分）',
       (r.get('sansha_info') or {}).get('sansha_penalty') == -40,
       str((r.get('sansha_info') or {}).get('sansha_penalty')))
-check('F2-2 忌事通道独立-30（2条三煞忌项）',
-      bd_of(r).get('忌事得分') == -30, str(bd_of(r).get('忌事得分')))
+check('F2-2 §187 Q4 忌事通道零重复（2条三煞项归通道，忌事得分=0）',
+      bd_of(r).get('忌事得分') == 0
+      and len(bd_of(r).get('忌事明细') or []) == 2,
+      f"忌事={bd_of(r).get('忌事得分')} 明细={bd_of(r).get('忌事明细')}")
 
 print()
 if FAILS:
@@ -324,3 +342,4 @@ if FAILS:
     sys.exit(1)
 print('ALL PASS')
 sys.exit(0)
+
