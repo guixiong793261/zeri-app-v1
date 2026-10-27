@@ -1905,6 +1905,21 @@ class Scorer:
                         shanzuo_eval['兼向原始'] = _parsed_sz.get('兼向原始')
             shanzuo_score = (shanzuo_eval or {}).get('score', 0)
 
+            # §186（2026-10-27 拍板7）：仙命地支六冲坐山——命中布尔与分值提前
+            # （三级否决判定需 sansha_info/sun_moon_info，在综合评定区执行）。
+            # 坐山仅地支山有六冲概念；天干山/卦山不触发。分值对齐仙命真冲 -30。
+            _wsc_hit = False
+            _wsc_score = 0
+            if wangming_info and shanzuo_eval:
+                _wm_gz0 = wangming_info.get('年柱', '') or ''
+                _wm_zhi0 = _wm_gz0[1] if len(_wm_gz0) >= 2 else ''
+                _zs0 = shanzuo_eval.get('坐山', '') or ''
+                if (_wm_zhi0 and _zs0 in ('子', '丑', '寅', '卯', '辰', '巳',
+                                          '午', '未', '申', '酉', '戌', '亥')
+                        and check_liuchong(_zs0, _wm_zhi0)):
+                    _wsc_hit = True
+                    _wsc_score = -30
+
             # 第一步：正五行审核（核心门槛）
             wu_xing_result = self._check_wu_xing(sizhu, event_type, owners,
                                                     house_type, shan_xiang,
@@ -2103,6 +2118,8 @@ class Scorer:
                 # 否决通道的制化/双凶叠加判定未运行，相关明细标注"因否决未计算"。
                 if shanzuo_eval:
                     score_details['仙命坐山得分'] = shanzuo_score
+                    if _wsc_hit:
+                        score_details['仙命冲坐山六冲'] = _wsc_score
                     score_details['仙命坐山详情'] = (
                         shanzuo_eval.get('reason', '')
                         + '（因否决未计入总分，仅披露）')
@@ -2236,7 +2253,7 @@ class Scorer:
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
             # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
             # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + shanzuo_score
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + shanzuo_score + _wsc_score
 
             # 不设置分数上限，显示实际计算的总分
 
@@ -2326,6 +2343,33 @@ class Scorer:
                             f"仙命真冲无制化：亡命{wangming_info['name']}年命{_wm_gz[1]}与日支{_day_zhi}相冲，"
                             f"四柱无天德/月德/岁德/太阳到山/天赦/天愿/三合/六合等吉神制化，"
                             f"大忌不用（一票否决）")
+
+            # §186（2026-10-27 拍板7）：仙命地支六冲坐山三级判定
+            # （口径同真冲：叠重煞→直接否决；无制化→一票否决；有制化→WARN 扣分）。
+            # 分值 -30 已在 shanzuo_score 区提前计入 final_score。
+            wm_shan_chong_veto = ''
+            _wsc_resolvers = []
+            if _wsc_hit:
+                _wsc_heavy = self._check_veto_overlay(sansha_info)
+                _zs1 = shanzuo_eval.get('坐山', '')
+                if _wsc_heavy:
+                    wm_shan_chong_veto = (
+                        f"仙命冲坐山叠大忌：亡命{wangming_info['name']}年命{_wm_zhi0}"
+                        f"与坐山{_zs1}六冲，叠{'/'.join(_wsc_heavy)}，"
+                        f"大忌不用（一票否决）")
+                else:
+                    _wsc_resolvers = self._detect_wm_resolvers(
+                        wu_xing_result, sun_moon_info)
+                    if _wsc_resolvers:
+                        # 有制化：仅扣分（-30 已计入），忌项明示防等级/忌列表脱节
+                        _ji_wsc = f"仙命冲坐山（有制化：{'、'.join(_wsc_resolvers)}）"
+                        if _ji_wsc not in self.ji_list:
+                            self.ji_list.append(_ji_wsc)
+                    else:
+                        wm_shan_chong_veto = (
+                            f"仙命冲坐山无制化：亡命{wangming_info['name']}年命{_wm_zhi0}"
+                            f"与坐山{_zs1}六冲，四柱无天德/月德/岁德/太阳到山/天赦/天愿/"
+                            f"三合/六合等吉神制化，大忌不用（一票否决）")
 
             # 仙命×坐山纳音三级判定（第二阶段 2.1）：
             #   坐山克仙命（地克人/地不容此命）= 凶中之凶，复用同套叠忌/化解检查
@@ -2425,6 +2469,8 @@ class Scorer:
                     veto_reasons.append(wangming_veto)
                 if shanzuo_veto:
                     veto_reasons.append(shanzuo_veto)
+            if wm_shan_chong_veto and wm_shan_chong_veto not in veto_reasons:
+                veto_reasons.append(wm_shan_chong_veto)
             if jianxiang_dual_veto and jianxiang_dual_veto not in veto_reasons:
                 veto_reasons.append(jianxiang_dual_veto)
             if jianxiang_veto and jianxiang_veto not in veto_reasons:
@@ -2433,6 +2479,7 @@ class Scorer:
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
                     or wangming_veto or shanzuo_veto or dual_veto
+                    or wm_shan_chong_veto
                     or jianxiang_veto or jianxiang_dual_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
@@ -2494,6 +2541,8 @@ class Scorer:
             if shanzuo_eval:
                 score_details['仙命坐山得分'] = shanzuo_score
                 score_details['仙命坐山详情'] = shanzuo_eval.get('reason', '')
+                if _wsc_hit:
+                    score_details['仙命冲坐山六冲'] = _wsc_score
                 _jxe = shanzuo_eval.get('兼向判定')
                 if _jxe:
                     score_details['仙命兼向得分'] = _jxe.get('score', 0)
@@ -3397,16 +3446,21 @@ class Scorer:
                         # §186（2026-10-26）：日干犯阴府——强扣分不否决
                         # （与月干阴府同忌干表，日干临之亦忌，口径统一不搞双重标准）
                         # 与月干检查同级独立判定：月干不犯阴府时本检查照常生效。
+                        # §186 Commit3 修正：补 _mp_penalty 隔离——扣分不否决档
+                        # 须剔出末尾 suitable<50 兜底阈值（同 §63 正阴府无制化口径），
+                        # 否则月分跌破 50 会反转成否决，违背「强扣分不否决」拍板。
                         _day_gan = (day_sizhu or {}).get('day_gan', '')
                         if _day_gan and _day_gan in ji_gan_list:
                             if yinfu_type == '正阴府':
                                 analysis['reasons'].append(
                                     f"日干{_day_gan}为{shan_xiang}正阴府（强扣分不否决）")
                                 analysis['score'] -= 20
+                                analysis['_mp_penalty'] -= 20
                             else:
                                 analysis['reasons'].append(
                                     f"日干{_day_gan}为{shan_xiang}傍阴府（强扣分不否决）")
                                 analysis['score'] -= 10
+                                analysis['_mp_penalty'] -= 10
                             if analysis['score'] < 60:
                                 analysis['level'] = '小凶'
 
@@ -3419,10 +3473,12 @@ class Scorer:
                                 analysis['reasons'].append(
                                     f"年干{_year_gan}为{shan_xiang}阴府太岁（强扣分不否决）")
                                 analysis['score'] -= 25
+                                analysis['_mp_penalty'] -= 25
                             else:
                                 analysis['reasons'].append(
                                     f"年干{_year_gan}为{shan_xiang}阴府太岁（傍，强扣分不否决）")
                                 analysis['score'] -= 15
+                                analysis['_mp_penalty'] -= 15
                             if analysis['score'] < 60:
                                 analysis['level'] = '小凶'
                 except ImportError:

@@ -20,8 +20,12 @@
     跨年边界：2027-02-03（2027 立春 02-04 前一日）必须命中。
 
 正当缺位说明（非缺陷，已断言验证）：
-    2026-02-03 普通安葬无四离四绝文案——该日为丑月戊日＝重丧日，
-    一票否决提前返回，优先级高于四离四绝，属正当业务逻辑。
+    2026-02-03 普通安葬曾无四离四绝文案（旧死模块 安葬规则.py 重丧日
+    一票否决 early-return 在四离四绝检查之前）。
+    §186（2026-10-27 安葬深水区批）：安葬规则.py 废弃为薄别名继承
+    高级安葬规则；活跃口径中大凶日否决 return 位于四离四绝等全部
+    凶项检查之后——否决日忌项完整披露（含四离四绝）再否决，更为
+    合理。02-03（丑月戊日=重丧）现四离四绝文案在位，正当。
 
 入口：
   ① modules/shensha/marriage_shensha.py::is_sili_sijue —— 11 个 rules 检查器共用
@@ -46,8 +50,10 @@ AUTH_SIJUE_2026 = ['2026-02-03', '2026-05-04', '2026-08-06', '2026-11-06']
 AUTH_ALL_2026 = set(AUTH_SILI_2026) | set(AUTH_SIJUE_2026)
 AUTH_2027_LICHUN_EVE = '2027-02-03'
 
-# 普通安葬正当缺位日（重丧日一票否决提前返回）
-NORMAL_BURIAL_VETO_OK = {'2026-02-03'}
+# 普通安葬正当缺位日——§186 起为空集：安葬规则.py 废弃为薄别名继承
+# 高级安葬规则后，大凶日否决 return 在四离四绝检查之后，否决日文案
+# 完整披露（含四离四绝），不再缺位。
+NORMAL_BURIAL_VETO_OK = set()
 
 
 def _sxtwl_sili_sijue(year):
@@ -187,13 +193,17 @@ _boundary_notes.append('2027-02-03 跨年命中（立冬/冬至后取次年立�
 assert len(AUTH_ALL_2026) == 8 and len(AUTH_SILI_2026) == 4 and len(AUTH_SIJUE_2026) == 4
 _boundary_notes.append('2026 黄金清单 8 天 = 四离4(二分二至前) + 四绝4(四立前)')
 
-# 边界4：普通安葬 2026-02-03 重丧日一票否决正当缺位
+# 边界4：普通安葬 2026-02-03 重丧日一票否决 + 四离四绝文案完整披露（§186）
 _b = next(c for t, c, _, _ in _RULE_CHECKERS if t == '安葬')
 _sz = dict(calculate_sizhu(_d(2026, 2, 3), 12, 0))
 _sz['date'] = _d(2026, 2, 3)
-_ji = _b._check_rules(_sz, date_obj=_d(2026, 2, 3))[1]
-assert any('重丧日' in str(x) for x in _ji), '2026-02-03 安葬应被重丧日一票否决（正当缺位依据）'
-_boundary_notes.append('02-03 普通安葬缺四离四绝文案＝重丧日(丑月戊日)一票否决提前返回，正当')
+_res4 = _b._check_rules(_sz, date_obj=_d(2026, 2, 3))
+_ji = _res4[1]
+assert any('重丧日' in str(x) for x in _ji), '2026-02-03 安葬应被重丧日一票否决'
+assert any('四离四绝' in str(x) for x in _ji), \
+    '2026-02-03 安葬否决日四离四绝文案应在位（§186 完整披露口径）'
+assert len(_res4) == 4 and _res4[2] is True, '2026-02-03 应返回 4-tuple 否决位'
+_boundary_notes.append('02-03 普通安葬＝重丧日(丑月戊日)一票否决，四离四绝文案在位（§186 完整披露）')
 
 # 边界5：单桩正反抽检（修复前桩恒 False 的直接反证）
 assert _impl(_d(2026, 3, 19)) is True, '春分前一日应命中四离'
@@ -237,7 +247,7 @@ for _tag, _, _text, _ in _RULE_CHECKERS:
     cases.append(ShenShaCase(
         name=f'文案链({_tag}rules忌项端到端)', category='B',
         description=f'_check_rules 忌项应含"{_text}"；8 天全可达'
-                    + ('（02-03 重丧日一票否决正当缺位）' if _tag == '安葬' else ''),
+                    + ('（02-03 重丧否决日文案完整披露在位，§186）' if _tag == '安葬' else ''),
         inputs=INPUTS_2026, expected=_rules_expected(_tag), adapter=_rules_ad(_tag),
         compare='bool'))
 

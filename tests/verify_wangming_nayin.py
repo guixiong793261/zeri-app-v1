@@ -122,8 +122,11 @@ r_no = pure_score(D0119, owners_chong)
 xz_no = (r_no.get('score_details') or {}).get('相主详情') or []
 check('反向：巳日无仙命真冲条', not any('真冲' in str(d) for d in xz_no))
 
-# 3b. 叠重煞直否：2026-04-25 巳日乙亥仙命，叠月三煞 → 直接否决（不论制化）
-r_heavy = pure_score(dt.date(2026, 4, 25), [dead('乙亥命', '1935-03-01')])
+# 3b. 叠重煞直否：2026-08-23 巳日乙亥仙命，叠月三煞 → 直接否决（不论制化）
+# §186 重冻：原锚点 2026-04-25 己巳日犯重丧（辰月戊己），大凶日一票否决
+# 短路在前，真冲三级判定不运行；扫描 2019-2030 取语义等价替代日
+# 2026-08-23（己巳日，申月三煞在巳午未，巳日叠月三煞，直否文案在位）。
+r_heavy = pure_score(dt.date(2026, 8, 23), [dead('乙亥命', '1935-03-01')])
 _vh = [v for v in (r_heavy.get('veto_reasons') or []) if '仙命真冲叠大忌' in v]
 check('叠三煞 → "仙命真冲叠大忌"显式否决',
       bool(_vh) and '叠三煞' in _vh[0]
@@ -136,8 +139,11 @@ check('无化解吉神 → "仙命真冲无制化"显式否决',
       bool(_vb) and '大忌不用' in _vb[0]
       and r_bare.get('score') == 0 and r_bare.get('level') == '❌ 凶')
 
-# 3d. 有制化 WARN：2026-02-22 卯日乙酉仙命，天德制化 → 仅 -30 扣分，不否决
-r_warn = pure_score(dt.date(2026, 2, 22), [dead('乙酉命', '1945-08-15')])
+# 3d. 有制化 WARN：2019-11-14 卯日乙酉仙命，天德+三合制化 → 仅 -30 扣分，不否决
+# §186 重冻：原锚点 2026-02-22 丁卯日犯年重丧（午年丁癸），大凶日一票
+# 否决短路在前；扫描 2019-2030 全期间「天德制化不否决」候选仅 2 例，
+# 取 2019-11-14（乙亥月丁卯日，score=143，真冲行含"有制化：天德、三合"）。
+r_warn = pure_score(dt.date(2019, 11, 14), [dead('乙酉命', '1945-08-15')])
 xz_warn = (r_warn.get('score_details') or {}).get('相主详情') or []
 _wline = [str(d) for d in xz_warn if '真冲' in str(d)]
 check('有制化：真冲行标注"（有制化：天德）"',

@@ -94,13 +94,24 @@ for m in ZH:
 check('2 144 格 × 4 路等价', not path_bad, 'diff=%d' % len(path_bad))
 
 _rules_ok = True
-for fn in ('修造规则.py', '作灶规则.py', '安葬规则.py'):
+# §186（2026-10-27 安葬深水区批·拍板6）：安葬规则.py 废弃为薄别名继承
+# 高级安葬规则（死模块清理），本无任何建除代码——活跃安葬建除走父类
+# get_jianchu 注入通道（建除.py 唯一事实源 get_event_yiji 动态生成）。
+# 故安葬规则.py 只断言"无独立偏移表"（_jianchu_star 字样随死模块清空而
+# 消失属正当），修造/作灶两处维持原"已委托且无独立偏移表"双条件判定。
+for fn in ('修造规则.py', '作灶规则.py'):
     p = os.path.join(ROOT, 'modules', 'rules', fn)
     with io.open(p, encoding='utf-8') as f:
         src = f.read()
     if 'offset = (day_idx - month_idx) % 12' in src or '_jianchu_star' not in src:
         _rules_ok = False
-check('2b rules 三处 fallback 已委托（无独立偏移表）', _rules_ok)
+_p_burial = os.path.join(ROOT, 'modules', 'rules', '安葬规则.py')
+with io.open(_p_burial, encoding='utf-8') as _f:
+    _src_burial = _f.read()
+if 'offset = (day_idx - month_idx) % 12' in _src_burial:
+    _rules_ok = False
+check('2b rules 三处 fallback 已委托（无独立偏移表；安葬规则.py §186 薄别名仅查无偏移表）',
+      _rules_ok)
 
 # ============ 3. 2026 全年六路口径 ============
 d0, d1 = datetime.date(2026, 1, 1), datetime.date(2026, 12, 31)

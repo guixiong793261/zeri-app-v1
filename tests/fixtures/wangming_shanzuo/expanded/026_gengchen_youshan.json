@@ -9,7 +9,7 @@
     "wangming_nayin_wuxing": "金",
     "shanzuo": "酉山卯向",
     "shanzuo_wuxing": "金",
-    "date": "2023-01-06",
+    "date": "2023-01-01",
     "wangming_birth_date": "1940-03-01",
     "event": "安葬"
   },
@@ -23,7 +23,7 @@
     "veto": false,
     "level_cap": false,
     "report_level": "❌ 凶",
-    "final_score": 11
+    "final_score": 0
   },
-  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto；无否决；final=0 系各项扣减后总分钳至下限，非否决清零；H4 清零批重冻 final 0→25（原有扣减钳下限解除，仍无否决）；向方禁忌批001§185(2026-10-26)重冻 final 25->11"
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True；集成state=no_veto；无否决；final=0 系各项扣减后总分钳至下限，非否决清零；H4 清零批重冻 final 0→25（原有扣减钳下限解除，仍无否决）；向方禁忌批001§185(2026-10-26)重冻 final 25->11；§186（2026-10-27）大凶否决升级重冻：原日期2023-01-06犯重丧/复日/年重丧一票否决（§186拍板3），平移至2023-01-01，final 11→0、report_level ❌ 凶→❌ 凶（新逻辑实测）"
 }
