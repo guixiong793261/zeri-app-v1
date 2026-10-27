@@ -915,8 +915,14 @@ class Scorer:
             # 作灶 UI 显式打标（已有 _zaozhu_weight 键）优先，不覆盖。
             # 全年影响面实测（2024-2027×16事项×4人口，坤山艮向兼未）：各事项
             # 否决率下降 +3~+19pp，单人口基线不变。
+            # §190 C2（2026-10-27 用户拍板）：入宅多事主平权——入宅为民用最高频
+            # 事项，同一屋檐下任一事主年命被日支六冲均为大忌，第2位及之后事主
+            # 不得降半权，全员以 1.0 权重参与硬否决（若某人事主相冲，直接一票
+            # 否决）。移徙 canonical 归并入宅，同享平权。无打标时相主链默认
+            # 1.0 全权（L5199-5200），故此处仅排除入宅的自动打标即可。
             if (owners and len(owners) >= 2
                     and event_type not in ('嫁娶', '订婚', '纳采')
+                    and _canonical_event(event_type) != '入宅'
                     and not any('_zaozhu_weight' in _o for _o in owners)):
                 for _i, _o in enumerate(owners):
                     _o['_zaozhu_weight'] = 1.0 if _i == 0 else 0.5
@@ -2244,6 +2250,11 @@ class Scorer:
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
                     'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
+                    # §190 C2：否决日同样携带山向缺失警示（无山向时五行门槛
+                    # 亦可能否决，此时警示不可缺）
+                    'warnings': (['⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用']
+                                 if _canonical_event(event_type) == '入宅'
+                                 and not shan_xiang else []),
                     'pipeline': 'general',  # 阶段1增量字段
                     'shensha_audit': self._build_shensha_audit_general(),
                 }
@@ -2698,6 +2709,16 @@ class Scorer:
                     'score': 0,
                 })
 
+            # §190 C2（2026-10-27 用户拍板）：入宅未填山向顶层警示。
+            # 入宅 need_shan=True，山向缺失时山家三煞/向方/年运等方位通道全部
+            # 静默跳过，分数虚高（2026-01-05 实测 102 大吉即在此口径下产生），
+            # 必须在结果顶层强制显式警示，防止用户盲目采用。仅入宅 canonical
+            # （含移徙归并）启用，其余事项本批不动。
+            _shan_warnings = []
+            if _canonical_event(event_type) == '入宅' and not shan_xiang:
+                _shan_warnings.append(
+                    '⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用')
+
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -2708,6 +2729,7 @@ class Scorer:
                 'yi_list': self.yi_list,
                 'ji_list': self.ji_list,
                 'veto_reasons': veto_reasons,
+                'warnings': _shan_warnings,
                 'huangdao_info': self.huangdao_info,
                 'wu_xing_result': wu_xing_result,
                 'score_details': score_details,

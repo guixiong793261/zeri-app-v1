@@ -5464,6 +5464,9 @@ class ZeriApp:
                            font=("微软雅黑", 15, "bold"))
         # ⚠ 警告图标金色前景（仅图标着色，不充填底色）
         text.tag_configure("warn_icon", foreground="#FFD700")
+        # §190 C2：顶层警示整行红字（如山向缺失）
+        text.tag_configure("red_warn", foreground="#FF0000",
+                           font=("微软雅黑", 13, "bold"))
         
         detail = result['detail']
         # 2026-09-06 修正：权威四柱覆盖块重建 detail['sizhu'] 时会丢 'date' 键，
@@ -7440,7 +7443,26 @@ class ZeriApp:
                 f'  校验器自身执行异常：{type(_lint_err).__name__}: {_lint_err}\n'
                 '  （校验通道故障，不影响报告内容，但须排查校验器）')
 
+        # §190 C2：顶层警示（如入宅未填山向）——红字块置顶，插入后再打标
+        _top_warn_lines = 0
+        try:
+            _warns = list((detail.get('warnings') if isinstance(detail, dict) else None) or [])
+        except Exception:
+            _warns = []
+        if _warns:
+            _wblock = ('【⚠ 重要警示】\n'
+                       + '\n'.join(str(_w) for _w in _warns)
+                       + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
+            content = _wblock + content
+            _top_warn_lines = _wblock.count('\n')  # 警示块占用行数（含分隔线与空行）
+
         text.insert(tk.END, content)
+        # 顶层警示块整行红字打标
+        if _top_warn_lines:
+            try:
+                text.tag_add("red_warn", "1.0", f"{_top_warn_lines + 1}.0")
+            except Exception:
+                pass
         # 全文标记：★金色 / ✗红色（content中出现的符号一并着色）
         try:
             pos = '1.0'
