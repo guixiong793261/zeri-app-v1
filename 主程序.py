@@ -7444,22 +7444,24 @@ class ZeriApp:
                 '  （校验通道故障，不影响报告内容，但须排查校验器）')
 
         # §190 C2：顶层警示（如入宅未填山向）——红字块置顶，插入后再打标
+        # §191 修复：原实现把警示块拼到 content 前，但 content 是在表头/事主/山向等
+        # 增量 insert 之后才 tk.END 追加的，警示块实际落在窗口中段，且 tag_add 硬编码
+        # 1.0 误把红字染到表头行。改为 content 追加完成后在 "1.0" 处前插警示块再打标。
         _top_warn_lines = 0
         try:
             _warns = list((detail.get('warnings') if isinstance(detail, dict) else None) or [])
         except Exception:
             _warns = []
+
+        text.insert(tk.END, content)
+        # 顶层警示块整行红字打标（真置顶：1.0 前插）
         if _warns:
             _wblock = ('【⚠ 重要警示】\n'
                        + '\n'.join(str(_w) for _w in _warns)
                        + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
-            content = _wblock + content
             _top_warn_lines = _wblock.count('\n')  # 警示块占用行数（含分隔线与空行）
-
-        text.insert(tk.END, content)
-        # 顶层警示块整行红字打标
-        if _top_warn_lines:
             try:
+                text.insert("1.0", _wblock)
                 text.tag_add("red_warn", "1.0", f"{_top_warn_lines + 1}.0")
             except Exception:
                 pass

@@ -295,6 +295,15 @@ H1_ANCHOR_MAP = {
 # 原实现：
 #     return isinstance(text, str) and text.startswith('岁破日：日支') and text.endswith('，大事忌用')
 
+# §190 C3（2026-10-27）：中文生肖→地支映射。外部接口（API/批量扫描）事主
+# 仅给 '生肖' 中文名（如「蛇」）时，相主/流年冲太岁通道直接以中文名入
+# check_liuchong 恒判 False（死链）。与神煞基类._shengxiao_to_zhi 同源口径；
+# 命中映射则转地支，未命中（已是地支或其他串）原样透传。
+_SHENGXIAO_TO_ZHI = {
+    '鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯', '龙': '辰', '蛇': '巳',
+    '马': '午', '羊': '未', '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥',
+}
+
 # ============ 阶段3·方案A：嫁娶等级归一化视图（2026-10-25 拍板，001 §179） ============
 # 背景：嫁娶链基础分 60、通用链基础分 100，同一张 105/100/85/75/60 阈值表压在两种
 # 分布上，2025+2026 两年实测嫁娶 93.7% 判凶（其中否决日 72.3% 属正常铁律，但
@@ -890,6 +899,12 @@ class Scorer:
             self.shensha_list = []
             self.yi_list = []
             self.ji_list = []
+            # §189 P2：山向年运参考（未计分）展示数据，随评分重置防跨日残留
+            self.mountain_year_ref = []
+            # §189 P3：相主提示（仅展示）与隐藏计分忌事（保持 -15 总分不变），
+            # 随评分重置防跨日残留
+            self.xiangzhu_notes = []
+            self.ji_advisory_scored = []
             self.huangdao_info = {}
             # 三煞口径开关：True=四柱不犯（嫁娶等事主中心），False=仅坐山修方论
             # （修造等山向中心，四柱临方扣分不否决）。默认True走严口径，
@@ -909,8 +924,14 @@ class Scorer:
             # 作灶 UI 显式打标（已有 _zaozhu_weight 键）优先，不覆盖。
             # 全年影响面实测（2024-2027×16事项×4人口，坤山艮向兼未）：各事项
             # 否决率下降 +3~+19pp，单人口基线不变。
+            # §190 C2（2026-10-27 用户拍板）：入宅多事主平权——入宅为民用最高频
+            # 事项，同一屋檐下任一事主年命被日支六冲均为大忌，第2位及之后事主
+            # 不得降半权，全员以 1.0 权重参与硬否决（若某人事主相冲，直接一票
+            # 否决）。移徙 canonical 归并入宅，同享平权。无打标时相主链默认
+            # 1.0 全权（L5199-5200），故此处仅排除入宅的自动打标即可。
             if (owners and len(owners) >= 2
                     and event_type not in ('嫁娶', '订婚', '纳采')
+                    and _canonical_event(event_type) != '入宅'
                     and not any('_zaozhu_weight' in _o for _o in owners)):
                 for _i, _o in enumerate(owners):
                     _o['_zaozhu_weight'] = 1.0 if _i == 0 else 0.5
@@ -2222,16 +2243,34 @@ class Scorer:
                         str(_d).replace('[硬性门槛]', '').replace('，不可用', '')
                         + '（相主硬门槛，一票否决）'
                         for _d in xiangzhu_details
-                        if str(_d).startswith('[硬性门槛]')],  # _fc0915
+                        if str(_d).startswith('[硬性门槛]')] + (
+                        # §190 C1 补：五行门槛提前否决日同样申报受死日否决
+                        # （此时 shensha_list 已在五行检查内填充；结果同为
+                        # score=0/❌凶，补全 veto 文案防止漏报归因）
+                        ['受死日：受死日不宜入宅，大忌不用（一票否决）']
+                        if _canonical_event(event_type) == '入宅' and any(
+                            isinstance(_s, dict) and _s.get('name') == '受死日'
+                            for _s in self.shensha_list) else []),  # _fc0915
                     'huangdao_info': self.huangdao_info,
                     'wu_xing_result': wu_xing_result,
                     'score_details': score_details,
                     'sun_moon_info': sun_moon_info,
                     'sizhu': sizhu,
                     'sansha_info': sansha_info,
+                    # §189 P2/P3：否决日同样透传展示层数据，避免 GUI/校验
+                    # 在否决日丢失“山向年运参考（未计分）/相主提示”段落。
+                    'mountain_year_ref': list(
+                        getattr(self, 'mountain_year_ref', []) or []),
+                    'xiangzhu_notes': list(
+                        getattr(self, 'xiangzhu_notes', []) or []),
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
                     'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
+                    # §190 C2：否决日同样携带山向缺失警示（无山向时五行门槛
+                    # 亦可能否决，此时警示不可缺）
+                    'warnings': (['⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用']
+                                 if _canonical_event(event_type) == '入宅'
+                                 and not shan_xiang else []),
                     'pipeline': 'general',  # 阶段1增量字段
                     'shensha_audit': self._build_shensha_audit_general(),
                 }
@@ -2491,11 +2530,24 @@ class Scorer:
             if jianxiang_veto and jianxiang_veto not in veto_reasons:
                 veto_reasons.append(jianxiang_veto)
 
+            # §190 C1（2026-10-27 用户拍板）：受死日×入宅升级 HARD_VETO 一票否决。
+            # 原仅经 ('入宅','受死日') 注册键扣 -15 普通分（2026-01-05 实测入宅
+            # 102 大吉），与「受死日不宜入宅」的大忌定性严重不匹配；升级后与
+            # 三煞大忌/相主硬门槛/山家封禁并列，触发即综合分归零、等级❌凶。
+            # 移徙 canonical 归并入宅，同受本否决覆盖。
+            _shousi_veto = ''
+            if _canonical_event(event_type) == '入宅' and any(
+                    isinstance(_s, dict) and _s.get('name') == '受死日'
+                    for _s in self.shensha_list):
+                _shousi_veto = '受死日：受死日不宜入宅，大忌不用（一票否决）'
+                veto_reasons.append(_shousi_veto)
+
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
                     or wangming_veto or shanzuo_veto or dual_veto
                     or wm_shan_chong_veto
-                    or jianxiang_veto or jianxiang_dual_veto):
+                    or jianxiang_veto or jianxiang_dual_veto
+                    or _shousi_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -2522,6 +2574,9 @@ class Scorer:
                     _v_text = _v.replace('[硬性门槛]', '')
                     if _v_text not in self.ji_list:
                         self.ji_list.append(_v_text)
+                # §190 C1：受死日否决同步入忌列表（文案与 veto_reasons 一致）
+                if _shousi_veto and _shousi_veto not in self.ji_list:
+                    self.ji_list.append(_shousi_veto)
             else:
                 self.level = self._get_level(self.final_score, wu_xing_result, self.huangdao_info, shanzuo_eval)
 
@@ -2670,6 +2725,16 @@ class Scorer:
                     'score': 0,
                 })
 
+            # §190 C2（2026-10-27 用户拍板）：入宅未填山向顶层警示。
+            # 入宅 need_shan=True，山向缺失时山家三煞/向方/年运等方位通道全部
+            # 静默跳过，分数虚高（2026-01-05 实测 102 大吉即在此口径下产生），
+            # 必须在结果顶层强制显式警示，防止用户盲目采用。仅入宅 canonical
+            # （含移徙归并）启用，其余事项本批不动。
+            _shan_warnings = []
+            if _canonical_event(event_type) == '入宅' and not shan_xiang:
+                _shan_warnings.append(
+                    '⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用')
+
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -2680,12 +2745,15 @@ class Scorer:
                 'yi_list': self.yi_list,
                 'ji_list': self.ji_list,
                 'veto_reasons': veto_reasons,
+                'warnings': _shan_warnings,
                 'huangdao_info': self.huangdao_info,
                 'wu_xing_result': wu_xing_result,
                 'score_details': score_details,
                 'sun_moon_info': sun_moon_info,
                 'sizhu': sizhu,
                 'sansha_info': sansha_info,  # 添加三煞信息
+                'mountain_year_ref': list(getattr(self, 'mountain_year_ref', []) or []),
+                'xiangzhu_notes': list(getattr(self, 'xiangzhu_notes', []) or []),
                 'shan_xiang': shan_xiang,  # 添加山向信息
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
                 'pipeline': 'general',  # 阶段1增量字段
@@ -2841,6 +2909,8 @@ class Scorer:
                 'sun_moon_info': fallback_sm if isinstance(fallback_sm, dict) else {},
                 'error': error_msg,
                 'sansha_info': fallback_ss if isinstance(fallback_ss, dict) else {},
+                'mountain_year_ref': [],
+                'xiangzhu_notes': [],
                 'shan_xiang': shan_xiang,
                 'sizhu': sizhu,
                 'pipeline': _fb_pipeline,  # 阶段1增量字段
@@ -3031,7 +3101,7 @@ class Scorer:
                     # 检查所有方向是否在煞方
                     for shan_xiang_dir in shan_xiang_dirs:
                         if shan_xiang_dir in sansha_fang:
-                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯年三煞，不利修造")
+                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯年三煞，不利{_canonical_event(event_type)}")
                             analysis['details']['山向犯煞'] = True
                             analysis['suitable'] = False
                             analysis['score'] = 0
@@ -3043,7 +3113,7 @@ class Scorer:
                     # direction可能是完整字符串，需要提取主要方向
                     direction_dir = direction[0] if direction else direction
                     if direction_dir in sansha_fang:
-                        analysis['reasons'].append(f"动土方位{direction}犯年三煞，不利修造")
+                        analysis['reasons'].append(f"动土方位{direction}犯年三煞，不利{_canonical_event(event_type)}")
                         analysis['details']['动土犯煞'] = True
                         analysis['suitable'] = False
                         analysis['score'] = 0
@@ -3127,7 +3197,7 @@ class Scorer:
                     # 检查所有方向是否犯岁破
                     for shan_xiang_dir in shan_xiang_dirs:
                         if shan_xiang_dir == suipo_fang:
-                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯岁破，不利修造")
+                            analysis['reasons'].append(f"所选山向{full_shan_xiang}犯岁破，不利{_canonical_event(event_type)}")
                             analysis['details']['山向犯岁破'] = True
                             analysis['suitable'] = False
                             analysis['score'] = 0
@@ -3138,7 +3208,7 @@ class Scorer:
                 if direction:
                     direction_dir = direction[0] if direction else direction
                     if direction_dir == suipo_fang:
-                        analysis['reasons'].append(f"动土方位{direction}犯岁破，不利修造")
+                        analysis['reasons'].append(f"动土方位{direction}犯岁破，不利{_canonical_event(event_type)}")
                         analysis['details']['动土犯岁破'] = True
                         analysis['suitable'] = False
                         analysis['score'] = 0
@@ -3651,7 +3721,7 @@ class Scorer:
                             break
                     
                     if zuoshan_fan_sansha:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}坐山犯月三煞，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}坐山犯月三煞，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯月煞'] = True
                         # 月三煞（犯坐山）扣 20 分，判为"凶"
                         analysis['score'] -= 20
@@ -3681,7 +3751,7 @@ class Scorer:
                 if shan_xiang:
                     shan_xiang_dir = shan_xiang[0]
                     if shan_xiang_dir == yuepo_fang:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}犯月破，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}犯月破，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯月破'] = True
                     
                     # 检查月支与坐山地支是否相冲（真正的月破）
@@ -3795,7 +3865,7 @@ class Scorer:
                 if shan_xiang:
                     shan_xiang_dir = shan_xiang[0]
                     if shan_xiang_dir in anjian_fang:
-                        analysis['reasons'].append(f"所选山向{shan_xiang}犯暗建煞，不利修造")
+                        analysis['reasons'].append(f"所选山向{shan_xiang}犯暗建煞，不利{_canonical_event(event_type)}")
                         analysis['details']['山向犯暗建煞'] = True
             
             # 五行择月法分析
@@ -5175,7 +5245,8 @@ class Scorer:
                 if len(sizhu_parts) >= 1:
                     owner_year_zhi = sizhu_parts[0][1]  # 年柱地支
             elif '生肖' in owner:
-                owner_year_zhi = owner['生肖']
+                # §190 C3：中文生肖→地支映射，修复外部接口中文名死链
+                owner_year_zhi = _SHENGXIAO_TO_ZHI.get(owner['生肖'], owner['生肖'])
             
             # 获取事主日柱（从sizhu字段或birth_date计算）
             owner_day_zhi = ''
@@ -5428,6 +5499,15 @@ class Scorer:
             sc -= 15
         if self.ji_list:
             bd['忌事明细'] = list(self.ji_list)
+        # §189 P3（2026-10-27 拍板·方案A）：扶山×事主年命冲的忌项已移入
+        # 【相主提示】如实描述，但 -15 分值必须保持不变——由此隐藏列表
+        # 单独承载，不进 ji_list/E008 出处校验，也不进忌事明细展示。
+        for _ja in (getattr(self, 'ji_advisory_scored', None) or ()):
+            _jt = _ja.get('name', '') if isinstance(_ja, dict) else str(_ja)
+            if _jt in self.ji_list:
+                continue
+            bd['忌事得分'] -= 15
+            sc -= 15
         if HAS_BAZI_TOOLS:
             zs, _zs_lines = self._calc_zhangsheng_detail(sizhu)
             bd['十二长生得分'] = zs; sc += zs
@@ -5540,6 +5620,15 @@ class Scorer:
         for _j in (_rule_ji or []):
             if _j not in self.ji_list:
                 self.ji_list.append(_j)
+        # §189 P2：规则层年运表纯文本仅作参考展示，不进忌事通道
+        self.mountain_year_ref = list(
+            getattr(rule_checker, 'mountain_year_ref', []) or [])
+        # §189 P3：相主提示仅作展示；扶山×事主年命冲的 -15 由隐藏计分承载，
+        # 保证总分与改动前一致（忌项列表不再出现该条）。
+        self.xiangzhu_notes = list(
+            getattr(rule_checker, 'xiangzhu_notes', []) or [])
+        self.ji_advisory_scored = list(
+            getattr(rule_checker, 'ji_advisory_scored', []) or [])
 
         # Q4（2026-10-08 拍板）：已制化且不禁用的正阴府干，其规则层静态忌项
         # （年运表“…年犯正阴府”及配套“…年不利”；

@@ -338,7 +338,11 @@ class RuZhaiShenShaChecker(ShenShaChecker):
         if self.owner_zodiac:
             # 与宅主相冲
             if self._is_chong_owner(sizhu):
-                self._add_shensha('冲宅主', -25, f'日支与宅主生肖({self.owner_zodiac})相冲，大忌')
+                # §190 C1（2026-10-27 用户拍板）：停发「冲宅主 -25」——与评分器相主
+                # 通道档1硬否决（年命×日支六冲 -30）构成同一事象双扣（2026-06-18
+                # 实测 -55）。按「同一事象只保留最严格一项」原则，保留相主 -30
+                # 硬否决，本普通扣分项停发（谓词保留，合/害/刑宅主不受影响）。
+                pass
             # 与宅主相合
             elif self._is_he_owner(sizhu):
                 self._add_shensha('合宅主', 15, f'日支与宅主生肖({self.owner_zodiac})相合，大吉')

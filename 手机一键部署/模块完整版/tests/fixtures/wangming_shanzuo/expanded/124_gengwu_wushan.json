@@ -1,0 +1,33 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e124",
+  "category": "expanded",
+  "description": "庚午亡命（路旁土/土）× 午山子向（火）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "庚午",
+    "wangming_nayin": "路旁土",
+    "wangming_nayin_wuxing": "土",
+    "shanzuo": "午山子向",
+    "shanzuo_wuxing": "火",
+    "date": "2023-01-08",
+    "wangming_birth_date": "1930-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "★★★★★ 上吉",
+    "final_score": 135
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto；向方禁忌批001§185(2026-10-26)重冻 final 142->114",
+  "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→142 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。",
+  "refreeze_note_20261027": "重冻溯源（001 §187，2026-10-27 修造深水区修复批 Q4）：final 114→135、report_level ★★★★★ 上吉→★★★★★ 上吉。系三煞项已在 sansha_penalty 通道扣分后被 _build_wu_xing_breakdown 忌事循环重复 -15 的「双扣」根除所致：正五行总分 139→169（Δ30），飞星加权综合分 = int(0.7×正五行 + 0.3×(50+飞星)) 随之还原；否决状态与 fixture 判定语义不变。"
+}

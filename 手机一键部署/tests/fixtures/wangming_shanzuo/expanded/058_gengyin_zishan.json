@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e058",
+  "category": "expanded",
+  "description": "庚寅亡命（松柏木/木）× 子山午向（水）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "庚寅",
+    "wangming_nayin": "松柏木",
+    "wangming_nayin_wuxing": "木",
+    "shanzuo": "子山午向",
+    "shanzuo_wuxing": "水"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True"
+}

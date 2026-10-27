@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e122",
+  "category": "expanded",
+  "description": "庚午亡命（路旁土/土）× 卯山酉向（木）→ 坐山克仙命",
+  "input": {
+    "wangming_ganzhi": "庚午",
+    "wangming_nayin": "路旁土",
+    "wangming_nayin_wuxing": "土",
+    "shanzuo": "卯山酉向",
+    "shanzuo_wuxing": "木",
+    "date": "2023-01-01",
+    "wangming_birth_date": "1930-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": [
+      "坐山",
+      "克",
+      "仙命"
+    ],
+    "veto": true,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=veto；veto 来自日期外部因素（月份不宜: 月破; 年家二黑到坐山卯，多病破财，修造慎之），非 relation 判定"
+}

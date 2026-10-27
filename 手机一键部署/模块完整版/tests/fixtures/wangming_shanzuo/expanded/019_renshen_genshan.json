@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e019",
+  "category": "expanded",
+  "description": "壬申亡命（剑锋金/金）× 艮山坤向（土）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "壬申",
+    "wangming_nayin": "剑锋金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "艮山坤向",
+    "shanzuo_wuxing": "土"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True"
+}

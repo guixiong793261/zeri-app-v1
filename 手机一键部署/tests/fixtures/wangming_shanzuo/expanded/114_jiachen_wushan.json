@@ -1,0 +1,22 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e114",
+  "category": "expanded",
+  "description": "甲辰亡命（覆灯火/火）× 午山子向（火）→ 比和",
+  "input": {
+    "wangming_ganzhi": "甲辰",
+    "wangming_nayin": "覆灯火",
+    "wangming_nayin_wuxing": "火",
+    "shanzuo": "午山子向",
+    "shanzuo_wuxing": "火"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True"
+}

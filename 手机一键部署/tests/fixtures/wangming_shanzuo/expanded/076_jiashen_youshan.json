@@ -1,0 +1,32 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e076",
+  "category": "expanded",
+  "description": "甲申亡命（泉中水/水）× 酉山卯向（金）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "甲申",
+    "wangming_nayin": "泉中水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "酉山卯向",
+    "shanzuo_wuxing": "金",
+    "date": "2025-02-08",
+    "wangming_birth_date": "1944-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 2
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；Q2并列化补寅申刑、巳申刑破等，五行49→21<60门槛否决（关系分-7→-35，补三刑-24一破-4；性质由原钳下限变为否决清零）；H4 清零批重冻 veto true→false（原五行 21<30 门槛早退；现 wx=53≥30 不触发），final 仍 0（当日无制化、各项扣减钳下限，非否决清零）",
+  "refreeze_note_20261027": "重冻溯源（001 §187，2026-10-27 修造深水区修复批 Q4）：final 0→2、report_level ❌ 凶→❌ 凶。系三煞项已在 sansha_penalty 通道扣分后被 _build_wu_xing_breakdown 忌事循环重复 -15 的「双扣」根除所致：正五行总分 -42→-12（Δ30），飞星加权综合分 = int(0.7×正五行 + 0.3×(50+飞星)) 随之还原；否决状态与 fixture 判定语义不变。"
+}

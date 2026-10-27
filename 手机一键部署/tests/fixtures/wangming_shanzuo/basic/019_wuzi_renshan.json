@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "019",
+  "category": "basic",
+  "description": "戊子亡命（霹雳火/火） × 壬山丙向（水）→ 坐山克仙命",
+  "input": {
+    "wangming_ganzhi": "戊子",
+    "wangming_nayin": "霹雳火",
+    "wangming_nayin_wuxing": "火",
+    "shanzuo": "壬山丙向",
+    "shanzuo_wuxing": "水",
+    "date": "2024-03-21",
+    "wangming_birth_date": "1948-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": [
+      "坐山",
+      "克",
+      "仙命"
+    ],
+    "veto": true,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "公理推导=坐山克仙命/-30/凶中之凶；与判定函数交叉一致=True；veto 来自坐山克仙命（relation）判定"
+}

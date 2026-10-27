@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e085",
+  "category": "expanded",
+  "description": "壬辰亡命（长流水/水）× 庚山甲向（金）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "壬辰",
+    "wangming_nayin": "长流水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "庚山甲向",
+    "shanzuo_wuxing": "金"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True"
+}

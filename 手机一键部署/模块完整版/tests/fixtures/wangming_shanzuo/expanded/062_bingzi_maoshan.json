@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e062",
+  "category": "expanded",
+  "description": "丙子亡命（涧下水/水）× 卯山酉向（木）→ 仙命生坐山",
+  "input": {
+    "wangming_ganzhi": "丙子",
+    "wangming_nayin": "涧下水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "卯山酉向",
+    "shanzuo_wuxing": "木"
+  },
+  "expected": {
+    "relation": "仙命生坐山",
+    "score": 10,
+    "level": "小吉",
+    "reason_contains": [
+      "仙命",
+      "生",
+      "坐山"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True"
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e090",
+  "category": "expanded",
+  "description": "壬辰亡命（长流水/水）× 坤山艮向（土）→ 坐山克仙命",
+  "input": {
+    "wangming_ganzhi": "壬辰",
+    "wangming_nayin": "长流水",
+    "wangming_nayin_wuxing": "水",
+    "shanzuo": "坤山艮向",
+    "shanzuo_wuxing": "土"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": [
+      "坐山",
+      "克",
+      "仙命"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True"
+}

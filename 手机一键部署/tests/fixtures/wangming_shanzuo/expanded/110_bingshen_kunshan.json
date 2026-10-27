@@ -1,0 +1,24 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e110",
+  "category": "expanded",
+  "description": "丙申亡命（山下火/火）× 坤山艮向（土）→ 仙命生坐山",
+  "input": {
+    "wangming_ganzhi": "丙申",
+    "wangming_nayin": "山下火",
+    "wangming_nayin_wuxing": "火",
+    "shanzuo": "坤山艮向",
+    "shanzuo_wuxing": "土"
+  },
+  "expected": {
+    "relation": "仙命生坐山",
+    "score": 10,
+    "level": "小吉",
+    "reason_contains": [
+      "仙命",
+      "生",
+      "坐山"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=仙命生坐山/10/小吉；cross=True"
+}

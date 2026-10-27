@@ -1,0 +1,22 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e042",
+  "category": "expanded",
+  "description": "壬午亡命（杨柳木/木）× 卯山酉向（木）→ 比和",
+  "input": {
+    "wangming_ganzhi": "壬午",
+    "wangming_nayin": "杨柳木",
+    "wangming_nayin_wuxing": "木",
+    "shanzuo": "卯山酉向",
+    "shanzuo_wuxing": "木"
+  },
+  "expected": {
+    "relation": "比和",
+    "score": 0,
+    "level": "平",
+    "reason_contains": [
+      "比和"
+    ]
+  },
+  "notes": "2.2扩大集；公理推导=比和/0/平；cross=True"
+}

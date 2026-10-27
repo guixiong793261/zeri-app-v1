@@ -77,7 +77,15 @@ class RuZhaiRuleChecker(ConstructionRuleChecker):
             return yi_list, ji_list, True, veto_reason
         
         return yi_list, ji_list, False, ""
-    
+
+    def _check_bujiang(self, date_obj, yi_list):
+        """§190 C3（2026-10-27 用户拍板）：入宅通道停发不将日。
+        不将日系嫁娶专用吉神（§153 已拍板，三库一致「嫁娶专用」，
+        神煞层已收口嫁娶单通道 _std_event 门控）；本类继承自修造规则，
+        原样继承会在入宅详情误挂「不将日宜修造」文案（规则层漏网），
+        故覆盖为空实现。"""
+        return
+
     def _check_tiande_yuede_ruzhai(self, date_obj, yi_list):
         """检查天德、月德日（入宅版）"""
         if not self.has_marriage_shensha:

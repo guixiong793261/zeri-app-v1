@@ -1,0 +1,32 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e057",
+  "category": "expanded",
+  "description": "庚寅亡命（松柏木/木）× 壬山丙向（水）→ 坐山生仙命",
+  "input": {
+    "wangming_ganzhi": "庚寅",
+    "wangming_nayin": "松柏木",
+    "wangming_nayin_wuxing": "木",
+    "shanzuo": "壬山丙向",
+    "shanzuo_wuxing": "水",
+    "date": "2023-03-06",
+    "wangming_birth_date": "1950-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山生仙命",
+    "score": 20,
+    "level": "大吉",
+    "reason_contains": [
+      "坐山",
+      "生",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "★★★★★ 上吉",
+    "final_score": 153
+  },
+  "notes": "2.2扩大集；公理推导=坐山生仙命/20/大吉；cross=True；集成state=no_veto；H4 清零批重冻 final 68→100、等级 ★平→★★★★大吉（批准批次累积抬分）",
+  "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→153 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。"
+}

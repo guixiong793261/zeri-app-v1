@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "004",
+  "category": "basic",
+  "description": "甲子亡命（海中金/金） × 壬山丙向（水）→ 仙命生坐山",
+  "input": {
+    "wangming_ganzhi": "甲子",
+    "wangming_nayin": "海中金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "壬山丙向",
+    "shanzuo_wuxing": "水",
+    "date": "2024-03-21",
+    "wangming_birth_date": "1924-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "仙命生坐山",
+    "score": 10,
+    "level": "小吉",
+    "reason_contains": [
+      "仙命",
+      "生",
+      "坐山"
+    ],
+    "veto": true,
+    "level_cap": false,
+    "report_level": "❌ 凶",
+    "final_score": 0
+  },
+  "notes": "公理推导=仙命生坐山/10/小吉；与判定函数交叉一致=True；veto 来自日期外部因素（玄空飞星大忌），非 relation 判定"
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "wangming_shanzuo_fixture_v1",
+  "case_id": "e024",
+  "category": "expanded",
+  "description": "庚辰亡命（白蜡金/金）× 午山子向（火）→ 坐山克仙命",
+  "input": {
+    "wangming_ganzhi": "庚辰",
+    "wangming_nayin": "白蜡金",
+    "wangming_nayin_wuxing": "金",
+    "shanzuo": "午山子向",
+    "shanzuo_wuxing": "火",
+    "date": "2023-02-04",
+    "wangming_birth_date": "1940-03-01",
+    "event": "安葬"
+  },
+  "expected": {
+    "relation": "坐山克仙命",
+    "score": -30,
+    "level": "凶中之凶",
+    "reason_contains": [
+      "坐山",
+      "克",
+      "仙命"
+    ],
+    "veto": false,
+    "level_cap": false,
+    "report_level": "❌ 凶（坐山克仙命，有制化：岁德）",
+    "final_score": 32
+  },
+  "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；Q2并列化补寅巳刑-8，五行33→25<60门槛否决（原final15为漏报前提下的结果）；H4 清零批重冻 veto true→false（原五行 25<30 门槛早退；现 wx=78≥30 且得岁德制化 → WARN）、final 0→46、等级 ❌凶→❌凶（坐山克仙命，有制化：岁德）；向方禁忌批001§185(2026-10-26)重冻 final 46->32"
+}
