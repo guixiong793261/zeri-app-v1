@@ -112,11 +112,11 @@ def main():
         d += datetime.timedelta(days=1)
     check('入宅/作灶 2026 全年无五墓/豁免键发射', not bad, str(bad[:5]))
 
-    print('== E. 哨兵：2026-11-04 入宅 226/上吉（§172 P0 大清理：岁刑-12置0，214→226；§162 起真值 214，§159 冻结 224 漏更） ==')
+    print('== E. 哨兵：2026-11-04 入宅 216/上吉（§172 P0 大清理：岁刑-12置0，214→226；§190 C3 不将日×入宅停发（嫁娶专用误挂 +10 清理），226→216，等级不变；§162 起真值 214，§159 冻结 224 漏更） ==')
     from modules.评分器 import calculate_score
     sz = calculate_sizhu(datetime.date(2026, 11, 4), 12, 0)
     r = calculate_score(sz, '入宅')
-    check('哨兵分=226', r['score'] == 226, str(r['score']))
+    check('哨兵分=216', r['score'] == 216, str(r['score']))
     check('哨兵级=上吉', '上吉' in str(r.get('level', '')))
     check('哨兵日无五墓/豁免键', not any(
         s['name'] in ('五墓', WUMU_EXEMPT_KEY) for s in r.get('shensha_list', [])))
