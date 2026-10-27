@@ -1169,6 +1169,9 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             hour_gan = TIAN_GAN[(zi_idx + i) % 10]
             hour_score = 0
             reasons = []
+            # §189 P1（2026-10-27 拍板·方案A）：五不遇时为选时硬黑名单，
+            # 只影响推荐引擎的候选/择优，不改变分值与其他事项口径。
+            hour_disabled = False
             
             # 日破时（2026-09-16 口径统一：分值走 SHENSHA_SCORES 单一表）
             if self._is_chong_zhi(day_zhi, zhi):
@@ -1212,6 +1215,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
             if self._is_wubuyu(hour_gan, day_gan):
                 hour_score += self._hour_delta('五不遇时', -15)
                 reasons.append('五不遇时')
+                hour_disabled = True
 
             # 与坐山关系
             if self.zuoshan:
@@ -1249,7 +1253,8 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
                 '地支': zhi,
                 '天干': hour_gan,
                 '分值': hour_score,
-                '说明': reasons
+                '说明': reasons,
+                '禁用': hour_disabled
             })
         
         results.sort(key=lambda x: x['分值'], reverse=True)

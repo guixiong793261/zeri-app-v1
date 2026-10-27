@@ -3232,6 +3232,11 @@ class ZeriApp:
                     for _h in lucky_hours:
                         if isinstance(_h, dict):
                             _ck_scores[str(_h.get('地支', ''))] = int(_h.get('分值', 0) or 0)
+                    # §189 P1：选时硬黑名单（当前=五不遇时）——禁用时辰不得成为
+                    # 推荐柱，且优先于“否决数/总分”排序，杜绝负分时辰被总分覆盖。
+                    _disabled_zhi = {
+                        str(_h.get('地支', '')) for _h in lucky_hours
+                        if isinstance(_h, dict) and _h.get('禁用')}
                     # 代表时辰地支（午时基准）
                     _rep_zhi = ''
                     _rv = wushu_sizhu.get('时柱', '') if isinstance(wushu_sizhu, dict) else ''
@@ -3256,7 +3261,8 @@ class ZeriApp:
                             _rr.get('yi_list') or [], _scoring_shensha(_rr))
                         _zw = int((_rr.get('score_details') or {}).get('五行评分') or 0)
                         _ck = _ck_scores.get(_z, 0) * _ck_w
-                        return (len(_rr.get('veto_reasons') or []) + (1 if _fl == 2 else 0),
+                        return (1 if _z in _disabled_zhi else 0,
+                                len(_rr.get('veto_reasons') or []) + (1 if _fl == 2 else 0),
                                 -_ck,
                                 -(int(_rr.get('score') or 0) - (_fd if _fl >= 1 else 0)),
                                 _shashi_hour(_rr), _fl, -_zw)
@@ -3721,6 +3727,11 @@ class ZeriApp:
             for _h in _lh:
                 if isinstance(_h, dict):
                     _ck_scores[str(_h.get('地支', ''))] = int(_h.get('分值', 0) or 0)
+        # §189 P1：选时硬黑名单（五不遇时）——与注入阶段同口径，禁用时辰
+        # 不得占据代表柱，且该标记优先于否决数/总分。
+        _disabled_zhi = {
+            str(_h.get('地支', '')) for _h in (_lh or [])
+            if isinstance(_h, dict) and _h.get('禁用')}
         # _ck0915：仅嫁娶事件将时辰表分数纳入排序优先级；非嫁娶仍以完整评分器总分为准
         # 2026-09-17 隐患1 方案C收口：两处 _ck_w 统一以注册表 MARRIAGE_EVENTS
         #   （嫁娶/订婚/纳采）为唯一口径，禁止再硬编码事项列表。
@@ -3816,11 +3827,13 @@ class ZeriApp:
                 _rv = _best_sz.get('时柱', '') if isinstance(_best_sz, dict) else ''
                 if isinstance(_rv, str) and len(_rv) >= 2:
                     _cur_sz_hz = _rv[1]
-                _bet = ((_hs_veto + (1 if _hfl == 2 else 0),
+                _bet = (((1 if _hz in _disabled_zhi else 0),
+                         _hs_veto + (1 if _hfl == 2 else 0),
                          -(_ck_scores.get(_hz, 0) * _ck_w),
                          -(_hs_sc - (_hfd if _hfl >= 1 else 0)),
                          _hs_ss, _hfl, -_hs_wx) <
-                        (_cur_veto + (1 if _cfl == 2 else 0),
+                        ((1 if _cur_sz_hz in _disabled_zhi else 0),
+                         _cur_veto + (1 if _cfl == 2 else 0),
                          -(_ck_scores.get(_cur_sz_hz, 0) * _ck_w),
                          -(_cur_sc - (_cfd if _cfl >= 1 else 0)),
                          _cur_ss, _cfl, -_cur_wx))
