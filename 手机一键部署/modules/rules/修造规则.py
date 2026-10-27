@@ -334,13 +334,18 @@ class ConstructionRuleChecker(EventRuleChecker):
             #     if year_zhi and self.is_year_break(date_obj, year_zhi):
             #         ji_list.append('岁破日忌修造')
             
-            # 与事主年支相冲
-            if owners:
-                for owner in owners:
-                    owner_zhi = self._get_owner_year_zhi(owner)
-                    if owner_zhi and self.is_year_break(date_obj, owner_zhi):
-                        name = owner.get('name', '事主')
-                        ji_list.append(f'与{name}年命相冲，忌修造')
+            # 与事主年支相冲——§187 Q2（2026-10-27 修造深水区批）停用：
+            # 本块判 日课日支×事主年支 六冲，与评分器相主判定档1
+            # （年命×日支六冲 -30 硬否决，支持 birth_date 兜底）完全同口径，
+            # 原发忌项致忌事通道重复 -15（相主 -30 + 忌事 -15 双计）。
+            # 年命冲收口为相主判定唯一事实源，本块不再发忌项。
+            # 原实现：
+            #     if owners:
+            #         for owner in owners:
+            #             owner_zhi = self._get_owner_year_zhi(owner)
+            #             if owner_zhi and self.is_year_break(date_obj, owner_zhi):
+            #                 name = owner.get('name', '事主')
+            #                 ji_list.append(f'与{name}年命相冲，忌修造')
         except Exception:
             pass
     
@@ -479,35 +484,37 @@ class ConstructionRuleChecker(EventRuleChecker):
             if not target_chong_zhi:
                 continue
             
+            # §187 Q2（2026-10-27 修造深水区批）：非家长（普通事主）的四柱
+            # 冲年命忌项停发——与评分器相主判定档1/档2/流年档完全重复，
+            # 原发忌项致忌事通道再 -15（一例双扣）。年命冲收口为相主判定
+            # 唯一事实源；本块仅保留宅主/家长一票否决（安全阀）。
+            # 原非家长分支：
+            #     年柱冲 → ji_list.append(f'年柱{year_zhi}冲{name}生肖{shengxiao}')
+            #     月柱冲 → ji_list.append(f'月柱{month_zhi}冲{name}生肖{shengxiao}')
+            #     日柱冲 → ji_list.append(f'日柱{day_zhi}冲{name}生肖{shengxiao}')
+            #     时柱冲 → ji_list.append(f'时柱{hour_zhi}冲{name}生肖{shengxiao}')
+
             # 检查年柱
             if year_zhi == target_chong_zhi:
                 if is_parent:
                     ji_list.append(f'家长{name}年命被年柱{year_zhi}冲，一票否决')
                     return  # 直接返回，一票否决
-                else:
-                    ji_list.append(f'年柱{year_zhi}冲{name}生肖{shengxiao}')
-            
+
             # 检查月柱
             if month_zhi == target_chong_zhi:
                 if is_parent:
                     ji_list.append(f'家长{name}年命被月柱{month_zhi}冲')
-                else:
-                    ji_list.append(f'月柱{month_zhi}冲{name}生肖{shengxiao}')
-            
+
             # 检查日柱
             if day_zhi == target_chong_zhi:
                 if is_parent:
                     ji_list.append(f'家长{name}年命被日柱{day_zhi}冲，一票否决')
                     return  # 直接返回，一票否决
-                else:
-                    ji_list.append(f'日柱{day_zhi}冲{name}生肖{shengxiao}')
-            
+
             # 检查时柱
             if hour_zhi == target_chong_zhi:
                 if is_parent:
                     ji_list.append(f'家长{name}年命被时柱{hour_zhi}冲')
-                else:
-                    ji_list.append(f'时柱{hour_zhi}冲{name}生肖{shengxiao}')
     
     def _add_general_yi_ji(self, yi_list, ji_list):
         """添加通用修造动土宜忌"""

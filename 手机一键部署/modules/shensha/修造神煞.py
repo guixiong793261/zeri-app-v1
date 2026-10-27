@@ -335,55 +335,21 @@ class ConstructionShenShaChecker(ShenShaChecker):
         super()._check_hour_shensha(sizhu, **kwargs)
 
     def _check_special_shensha(self, sizhu, owners, **kwargs):
-        """检查特殊神煞，主要处理事主（宅主/工匠）生肖与日课的冲合"""
-        if not owners:
-            return
-        
-        for i, owner in enumerate(owners):
-            owner_zodiac = owner.get('生肖', '')
-            owner_year_zhi = owner.get('年支', '')
-            owner_name = owner.get('姓名', f'事主{i+1}')
-            is_zhuzhu = owner.get('is_zhuzhu', False)  # 是否宅主/家长
-            
-            if not owner_zodiac and not owner_year_zhi:
-                continue
-            
-            # 宅主/家长冲克权重更重
-            base_penalty = 1.0
-            if is_zhuzhu:
-                base_penalty = 1.5  # 宅主冲克扣分乘1.5倍
-            
-            # 年支相冲
-            year_zhi = sizhu['year_zhi']
-            if self._is_chong(year_zhi, owner_year_zhi or owner_zodiac):
-                penalty = int(-25 * base_penalty)
-                self._add_shensha(f'年冲{owner_name}', penalty, f'年支与{owner_name}生肖相冲')
-            
-            # 月支相冲
-            month_zhi = sizhu['month_zhi']
-            if self._is_chong(month_zhi, owner_year_zhi or owner_zodiac):
-                penalty = int(-15 * base_penalty)
-                self._add_shensha(f'月冲{owner_name}', penalty, f'月支与{owner_name}生肖相冲')
-            
-            # 日支相冲
-            day_zhi = sizhu['day_zhi']
-            if self._is_chong(day_zhi, owner_year_zhi or owner_zodiac):
-                penalty = int(-35 * base_penalty)
-                self._add_shensha(f'日冲{owner_name}', penalty, f'日支与{owner_name}生肖相冲，大忌')
-            elif self._is_liuhe(day_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'日合{owner_name}', 10, f'日支与{owner_name}生肖六合')
-            elif self._is_sanhe_pair(day_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'日半三合{owner_name}', 5, f'日支与{owner_name}生肖半三合')
-            
-            # 时支相冲
-            hour_zhi = sizhu.get('hour_zhi', '')
-            if hour_zhi and self._is_chong(hour_zhi, owner_year_zhi or owner_zodiac):
-                penalty = int(-12 * base_penalty)
-                self._add_shensha(f'时冲{owner_name}', penalty, f'时支与{owner_name}生肖相冲')
-            elif hour_zhi and self._is_liuhe(hour_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖六合')
-            elif hour_zhi and self._is_sanhe_pair(hour_zhi, owner_year_zhi or owner_zodiac):
-                self._add_shensha(f'时半三合{owner_name}', 3, f'时支与{owner_name}生肖半三合')
+        """§187 Q2（2026-10-27 修造深水区批）：本通道冲合计分停用。
+
+        原实现按 生肖/年支/姓名 三键判 年/月/日/时支 冲合，发
+        -25/-15/-35/-12 与 +10/+5/+6/+3。该口径与评分器相主判定
+        （2026-09-18 用户拍板三档：档1 年命×日支六冲 -30 硬否决／
+        档2 月支-15、时支-10／流年档 -15 不否决）完全分叉，且分值
+        量级不同（-35 vs -30）。同一日课同一事主会因传参键不同在
+        三套通道各认各账（实测 +3 / -12 / -15）。
+
+        按拍板「年命冲收口为唯一事实源」：本通道停用，统一由评分器
+        _check_xiangzhu 承担（含 birth_date 兜底与流年档）。保留空实现
+        以维持基类 _check_special_shensha 调用契约。
+        原实现见 git 历史 7073af9^:modules/shensha/修造神煞.py。
+        """
+        return
     
     def _shengxiao_to_zhi(self, shengxiao):
         """生肖转换为地支"""

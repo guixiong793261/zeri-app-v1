@@ -255,8 +255,24 @@ def _worker(task):
             # breakdown 已显式排除不计忌事 -15（评分器 L5296-5300），公式同步剔除。
             _xf_bd = [t for t in _bd_ji
                       if t == '向方月破' or '(向方)' in str(t)]
+            # §187 Q4（2026-10-27 修造深水区批）：三煞/山向专属通道已计分项
+            # （年/月/日三煞各柱、月日叠犯、时灾煞、剑锋煞、山家封禁）生产侧
+            # 已登记 _sansha_scored_ji 并在忌事通道跳过，不再 -15。测试侧按
+            # sansha_penalty_detail 归一化复算同构集合（去尾部「（-N分）」，
+            # 山家封禁去前缀），与生产口径逐字对齐。
+            _si_q4 = r.get('sansha_info') or {}
+            _ss_bd_set = set()
+            for _d in (_si_q4.get('sansha_penalty_detail') or []):
+                _t = re.sub(r'（-\d+分）$', '', str(_d))
+                if _t.startswith('山家封禁：'):
+                    _t = _t[len('山家封禁：'):]
+                _ss_bd_set.add(_t)
+            _ss_bd = [t for t in _bd_ji
+                      if t in _ss_bd_set
+                      and not (t == '向方月破' or '(向方)' in str(t))]
             exp_yi = 10 * (len(yi) - len(po_yi))
-            exp_ji = -15 * (len(_bd_ji) - len(_po_bd) - len(_fj_bd) - len(_xf_bd))
+            exp_ji = -15 * (len(_bd_ji) - len(_po_bd) - len(_fj_bd) - len(_xf_bd)
+                            - len(_ss_bd))
             if bd.get('宜事得分') != exp_yi:
                 fails.append(f"B: {d} {ev} 宜事分={bd.get('宜事得分')} 期望={exp_yi} yi={yi}")
             if bd.get('忌事得分') != exp_ji:
