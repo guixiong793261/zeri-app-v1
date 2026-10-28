@@ -774,19 +774,17 @@ def is_huangsha(date_obj, sizhu):
     return is_huangsha_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
 
 def is_sansang(date_obj):
-    """重丧日（农历月查日干）
+    """复日（旧称重丧日；历史函数名沿用，避免外部引用断裂）
 
-    001 §193 主轨 C2（2026-10-28）双口径对齐：原本函数自带一份农历月→日干
-    表（正月庚、二月辛、三月戊…），而神煞层（嫁娶神煞._is_zhongsang）另有
-    一份农历月→完整干支表，两层互不一致（2026 年 32 天 vs 5 天），同日可
-    出现"神煞扣分但算法不否决"。现与神煞层同委托基类单点出口
-    is_zhongsang_by_lunar，两处判定恒等；典据状态见该出口注释。
+    001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：起例改协纪正法单干·节气月建，
+    与神煞层同委托基类单点出口 is_furi_by_date，两处判定恒等；
+    典据见该出口注释与 docs/重丧日起例三库对勘报告_20261028.md。
     """
     try:
-        from .shensha.神煞基类 import is_zhongsang_by_lunar
+        from .shensha.神煞基类 import is_furi_by_date
     except ImportError:
-        from modules.shensha.神煞基类 import is_zhongsang_by_lunar
-    return is_zhongsang_by_lunar(date_obj)
+        from modules.shensha.神煞基类 import is_furi_by_date
+    return is_furi_by_date(date_obj)
 
 def is_sanniangsha(date_obj):
     """真三娘煞：农历日期与日干支同时满足特定条件（全年仅6天）

@@ -34,7 +34,7 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .修造神煞 import ConstructionShenShaChecker
-    from .神煞基类 import (is_yanggongji_by_lunar, is_zhongsang_by_lunar,
+    from .神煞基类 import (is_yanggongji_by_lunar, is_furi_by_date,
                            get_sun_moon_mountains, get_xiangshan_24)
     from .时辰系 import (
         WUSHU_DUN,
@@ -192,11 +192,11 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         # 基类条目不同名不去重，2026-09-20 红纱死链修复后会双重扣分，已删除
         # （与杨公忌日收敛同款机制）。
 
-        # 重丧日（001 §196，2026-10-28 拍板 D2）：修造属吉事，三库不忌重丧
+        # 复日（旧称重丧日；001 §196 D2 + §197 D3-Q1）：修造属吉事，三库不忌
         # （陈书 p54「惟喪塟忌之」、协纪 p279228 穷举破土/安葬/启攒、
         # 考原「忌为凶事，利为吉事」），撤 -10 扣分，改 0 分纯展示。
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', 0, '重丧日（惟丧葬忌，修造不计分）')
+            self._add_shensha('复日', 0, '复日（旧称重丧日，惟丧葬忌，修造不计分）')
         
         # 重复日 - 忌凶事，利吉事
         if self._is_chongfu(sizhu):
@@ -243,17 +243,10 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         return False
     
     def _is_zhongsang(self, sizhu):
-        """是否重丧日（农历月查日干）
+        """是否复日（旧称重丧日；《协纪》正法单干·节气月建，月支查日干）
 
-        001 §195 Commit2（2026-10-28 拍板）：废弃本类原有的**第三套实现**
-        （节令月支查日干，2026 年命中 68 天），统一委托神煞基类单点出口
-        is_zhongsang_by_lunar（农历月查日干，2026 年命中 32 天），与嫁娶神煞、
-        婚嫁评分算法同源。原实现与单点出口 2026 年分歧 58 天。
-
-        原实现另有一处死 Bug：zhongsang_map 中 '戌' 键重复（'四月丙壬' 与
-        '九月戊己' 共用 戌），Python 后值覆盖前值 → 戌月按戊己判，
-        「四十丙壬方」的十月支被吃掉。统一到单点出口后，该分支语义由
-        单点出口表的「四月丙／十月壬」承接，重复键随表一并废除。
+        001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：统一委托神煞基类单点出口
+        is_furi_by_date（原农历月表与 2026 年 32 天口径一并废除）。
         """
         d = sizhu.get('date')
         if not isinstance(d, date):
@@ -262,7 +255,7 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
                          int(sizhu.get('day')))
             except (TypeError, ValueError):
                 return False
-        return is_zhongsang_by_lunar(d)
+        return is_furi_by_date(d)
     
     def _is_chongfu(self, sizhu):
         """是否重复日

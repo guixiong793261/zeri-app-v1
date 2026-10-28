@@ -34,9 +34,11 @@ except ImportError:
 # 鸣吠日 13 干支、鸣吠对日 11 干支（《协纪》卷五／卷九）——2026-10 A1
 # 收口到神煞基类模块级唯一实现（本类旧表为 10 日／6 日错表）。
 try:
-    from ..shensha.神煞基类 import is_mingfei_by_pillar, is_mingfeidui_by_pillar
+    from ..shensha.神煞基类 import (is_mingfei_by_pillar, is_mingfeidui_by_pillar,
+                                   is_furi_by_month_zhi)
 except ImportError:
-    from shensha.神煞基类 import is_mingfei_by_pillar, is_mingfeidui_by_pillar
+    from shensha.神煞基类 import (is_mingfei_by_pillar, is_mingfeidui_by_pillar,
+                                 is_furi_by_month_zhi)
 
 from datetime import date
 
@@ -111,33 +113,24 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         ['亥', '卯', '未']   # 木局
     ]
     
-    # 重丧日口诀映射（按月查日干）
-    # 口诀：正七连庚甲，二八乙辛当，五十一丁癸，四十丙壬方，三六九十二，戊己是重丧
-    ZHONG_SANG_MAP = {
-        '寅': ['庚', '甲'],  # 正月
-        '卯': ['乙', '辛'],  # 二月
-        '辰': ['戊', '己'],  # 三月
-        '巳': ['丙', '壬'],  # 四月
-        '午': ['丁', '癸'],  # 五月
-        '未': ['戊', '己'],  # 六月
-        '申': ['庚', '甲'],  # 七月
-        '酉': ['乙', '辛'],  # 八月
-        '戌': ['戊', '己'],  # 九月
-        '亥': ['丙', '壬'],  # 十月
-        '子': ['丁', '癸'],  # 十一月
-        '丑': ['戊', '己']   # 十二月
-    }
+    # 复日（旧称重丧日）起例（001 §197 拍板 D3-Q1/Q2/Q3）：
+    # 《协纪》正法「建月同干」单干表，按节气月支：
+    #   正甲、二乙、三戊、四丙、五丁、六己、七庚、八辛、九戊、十壬、十一癸、十二己。
+    # 原「正七连庚甲…」双干表即协纪 p279217 点名之误（正月庚、七月甲），已废除；
+    # 判定统一走 神煞基类 单点出口 is_furi_by_month_zhi，本类不再自持表
+    # （原 ZHONG_SANG_MAP 冗余副本已删，避免与基类口径漂移）。
     
     # 年重丧映射（按年支查日干）
-    NIAN_ZHONG_SANG_MAP = ZHONG_SANG_MAP  # 规律相同
-    
-    # 复日映射（正月甲日、二月乙日...）
-    FURI_MAP = {
-        '寅': '甲', '卯': '乙', '辰': '丙',
-        '巳': '丁', '午': '戊', '未': '己',
-        '申': '庚', '酉': '辛', '戌': '壬',
-        '亥': '癸', '子': '甲', '丑': '乙'
+    # 001 §197 D3-Q6：三库全卷零词条，已另立专项；裁断前冻结原双干口径。
+    NIAN_ZHONG_SANG_MAP = {
+        '寅': ['庚', '甲'], '卯': ['乙', '辛'], '辰': ['戊', '己'],
+        '巳': ['丙', '壬'], '午': ['丁', '癸'], '未': ['戊', '己'],
+        '申': ['庚', '甲'], '酉': ['乙', '辛'], '戌': ['戊', '己'],
+        '亥': ['丙', '壬'], '子': ['丁', '癸'], '丑': ['戊', '己'],
     }
+    
+    # FURI_MAP 已删（001 §197 D3-Q5）：原「正月甲、二月乙、三月丙…顺序干」
+    # 三库无载，与月「复日」同一概念，合并后不再单列。
     
     # 往亡日映射
     WANGWANG_MAP = {
@@ -293,15 +286,17 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         # ===== 一票否决项（大凶）=====
         # §186（2026-10-26）：重丧/三丧/复日/年重丧升级为一票否决。
         # 古籍「重丧不葬，三丧绝嗣」——极凶日绝不能仅扣分，必须否决。
+        # §197（2026-10-28 D3-Q1/Q5）：注册名正名「复日」，原「重丧日」与
+        #   「复日」两条同概念双计合并为一条；起例改协纪正法单干·节气月建。
         # 制化豁免：三库确认有特定制化能解时另行豁免，当前绝对禁用。
         _daxiong_veto = []
 
-        # 1. 重丧日（按月查日干）
+        # 1. 复日（旧称重丧日；《协纪》正法单干·节气月建，月支查日干）
         if month_zhi and day_gan and self._is_zhongsang(month_zhi, day_gan):
-            ji_list.append('重丧日忌安葬')
-            _daxiong_veto.append('重丧日')
+            ji_list.append('复日忌安葬')
+            _daxiong_veto.append('复日')
         
-        # 2. 年重丧（按年支查日干）
+        # 2. 年重丧（按年支查日干；001 §197 D3-Q6 已另立专项，裁断前冻结）
         if year_zhi and day_gan and self._is_nian_zhongsang(year_zhi, day_gan):
             ji_list.append('年重丧忌安葬')
             _daxiong_veto.append('年重丧')
@@ -311,10 +306,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             ji_list.append('三丧日忌安葬')
             _daxiong_veto.append('三丧日')
         
-        # 4. 复日（重丧类）
-        if month_zhi and day_gan and self._is_furi(month_zhi, day_gan):
-            ji_list.append('复日忌安葬')
-            _daxiong_veto.append('复日')
+        # 4. 复日（重丧类）独立判定已删（001 §197 D3-Q5）：与第 1 项合并去重，
+        #    原 FURI_MAP「正月甲、二月乙…顺序干」三库无载。
         
         # 5. 十恶大败日——已删（2026-10-19 全删批·二档）：三库无「十恶大败
         # 忌安葬」明文，无典据不得一票否决（拍板逐项批准）；编号保留防错位。
@@ -425,15 +418,20 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
     
     def _is_zhongsang(self, month_zhi, day_gan):
         """
-        是否重丧日（按月查日干）
-        口诀：正七连庚甲，二八乙辛当，五十一丁癸，四十丙壬方，三六九十二，戊己是重丧
+        是否复日（旧称重丧日；《协纪》正法单干·节气月建，月支查日干）
+
+        001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：原「正七连庚甲」双干口诀即
+        协纪 p279217 点名之误，已废除；统一委托 神煞基类 单点出口
+        is_furi_by_month_zhi（正甲、二乙、三戊、四丙、五丁、六己、七庚、八辛、
+        九戊、十壬、十一癸、十二己）。
         """
-        return day_gan in self.ZHONG_SANG_MAP.get(month_zhi, [])
+        return is_furi_by_month_zhi(month_zhi, day_gan)
     
     def _is_nian_zhongsang(self, year_zhi, day_gan):
         """
         是否年重丧（按年支查日干）
-        口诀与月重丧相同规律
+
+        001 §197 D3-Q6：三库全卷零词条，已另立专项；裁断前冻结原双干口径。
         """
         return day_gan in self.NIAN_ZHONG_SANG_MAP.get(year_zhi, [])
     
@@ -455,12 +453,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             return day_zhi == '丑'
         return False
     
-    def _is_furi(self, month_zhi, day_gan):
-        """
-        是否复日（重丧类）
-        复日：正月甲日、二月乙日、三月丙日……依此类推
-        """
-        return day_gan == self.FURI_MAP.get(month_zhi)
+    # _is_furi 已删（001 §197 D3-Q5）：复日与重丧日合并后统一走 _is_zhongsang
+    # → is_furi_by_month_zhi；原 FURI_MAP「正月甲、二月乙…顺序干」三库无载。
     
     def _is_wangwang(self, month_zhi, day_zhi):
         """
@@ -712,17 +706,16 @@ if __name__ == '__main__':
     forbidden = checker.get_forbidden_directions(test_sizhu)
     print(f"\n禁止使用的方位: {forbidden}")
     
-    # 测试重丧日
-    print("\n=== 重丧日测试 ===")
-    # 申月（七月）庚日、甲日为重丧
+    # 测试复日（旧称重丧日；《协纪》正法单干·节气月建）
+    print("\n=== 复日测试（协纪正法单干） ===")
     test_sizhu2 = {
         'month_zhi': '申',
         'day_gan': '庚',
         'day_zhi': '午'
     }
-    print(f"申月庚日是否重丧: {checker._is_zhongsang('申', '庚')}")
-    print(f"申月甲日是否重丧: {checker._is_zhongsang('申', '甲')}")
-    print(f"申月乙日是否重丧: {checker._is_zhongsang('申', '乙')}")
+    print(f"申月（七月）庚日是否复日: {checker._is_zhongsang('申', '庚')}")
+    print(f"申月甲日是否复日: {checker._is_zhongsang('申', '甲')}")
+    print(f"申月辛日是否复日: {checker._is_zhongsang('申', '辛')}")
     
     # 测试三丧日（口诀：春辰夏未秋戌冬丑）
     print("\n=== 三丧日测试（口诀：春辰夏未秋戌冬丑） ===")

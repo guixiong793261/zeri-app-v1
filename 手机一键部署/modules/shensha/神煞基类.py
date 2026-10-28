@@ -893,45 +893,33 @@ def is_shousi_by_zhi(month_zhi, day_zhi):
     return _SHOUZI_ZHI_BY_MONTH.get(month_zhi) == day_zhi
 
 
-# ===== 重丧日（农历月查日干）=====
-# 001 §193 主轨 C2（2026-10-28 拍板）"双口径对齐"：
-#   原为两套互不一致的判定——神煞层（嫁娶神煞._is_zhongsang）按月查**完整干支**
-#   （2026 年命中 5 天），婚嫁评分算法（is_sansang）按月查**日干**（2026 年命中
-#   32 天）。同日可出现"神煞信息扣 -10、算法层不否决"的自相矛盾（2026-06-14
-#   己未日实测：神煞判重丧、算法判非重丧，最终 38 分）。现收口到本单点出口，
-#   神煞层与算法层全部委托，两处口径恒等。
-# 待证挂账（本批不改分值，仅归一）：
-#   ① 陈书 p54「一論重復喪凶星也惟喪塟忌之，如謂吉事俱忌者非」——重丧是否
-#      适用于嫁娶（吉事）尚待专项拍板；
-#   ② 陈书 p742 逐月"重喪/復喪"双栏 OCR 残损（如「二月 乙重喪辛復喪」），
-#      本表为现行运行口径的归一，非典据定稿；按《协纪》口径重丧亦不在其列。
-_ZHONGSANG_GAN_BY_LUNAR_MONTH = {
-    '正月': ('庚',), '二月': ('辛',), '三月': ('戊',), '四月': ('丙',),
-    '五月': ('丁',), '六月': ('己',), '七月': ('甲',), '八月': ('乙',),
-    '九月': ('戊',), '十月': ('壬',), '十一月': ('癸',), '十二月': ('己',),
-    '腊月': ('己',),
+# ===== 复日（《协纪辨方书》卷五·复日条：月建所同之干，单干·节气月建）=====
+# 001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：注册名正名为「复日」（协纪正式条目名），
+#   起例改取协纪正法「建月同干」单干表，按节气月建：
+#     正甲、二乙、三戊、四丙、五丁、六己、七庚、八辛、九戊、十壬、十一癸、十二己。
+#   废除原「正月庚／七月甲」单干混拼表——协纪 p279217 明斥「世俗作为歌诀云
+#   『正七连庚甲』，通书因误以正月之庚日、七月之甲日皆为复日，逐月皆误，俱宜改正」。
+#   典据：协纪 p279223（复日「忌为凶事，利为吉事」）、p279228（忌破土／安葬／启攒）、
+#   考原 p359079（地理新书单干历例）。详见 docs/重丧日起例三库对勘报告_20261028.md。
+# 单点出口：安葬神煞、高级安葬规则、嫁娶神煞、婚嫁评分算法、修造神煞扩展、
+#   择日贴全部委托本表，杜绝多实现口径漂移（§193 C2 收口，§197 换表）。
+_FURI_GAN_BY_MONTH_ZHI = {
+    '寅': '甲', '卯': '乙', '辰': '戊', '巳': '丙',
+    '午': '丁', '未': '己', '申': '庚', '酉': '辛',
+    '戌': '戊', '亥': '壬', '子': '癸', '丑': '己',
 }
 
 
-def is_zhongsang_by_lunar(date_obj):
-    """重丧日（农历月查日干）；闰月不计（闰月对不上月名表即 False）。"""
+def is_furi_by_month_zhi(month_zhi, day_gan):
+    """复日（协纪正法单干·节气月建）：月支查日干。单点出口，见上表注释。"""
+    if not month_zhi or not day_gan:
+        return False
+    return _FURI_GAN_BY_MONTH_ZHI.get(month_zhi) == day_gan
+
+
+def is_furi_by_date(date_obj):
+    """复日（节气月建单干）：走真实四柱入口取月支与日干。"""
     if date_obj is None:
-        return False
-    try:
-        from ..四柱计算器 import get_lunar_date
-    except ImportError:
-        from modules.四柱计算器 import get_lunar_date
-    try:
-        lunar_info = get_lunar_date(date_obj)
-    except Exception:
-        return False
-    if not lunar_info or 'month' not in lunar_info:
-        return False
-    month_name = str(lunar_info['month'])
-    if '闰' in month_name:
-        return False
-    gans = _ZHONGSANG_GAN_BY_LUNAR_MONTH.get(month_name)
-    if not gans:
         return False
     try:
         from ..四柱计算器 import calculate_sizhu as _calc
@@ -941,7 +929,8 @@ def is_zhongsang_by_lunar(date_obj):
         _sz = _calc(date_obj, 12, 0)
     except Exception:
         return False
-    return str(_sz.get('day_gan', '')) in gans
+    return is_furi_by_month_zhi(str(_sz.get('month_zhi', '')),
+                                str(_sz.get('day_gan', '')))
 
 
 

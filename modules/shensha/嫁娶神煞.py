@@ -32,7 +32,7 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .神煞基类 import (ShenShaChecker, is_yanggongji_by_lunar, is_wangwang_by_zhi,
-                           is_shousi_by_zhi, is_zhongsang_by_lunar)
+                           is_shousi_by_zhi, is_furi_by_date)
     try:
         from ..工具函数 import DI_ZHI, TIAN_GAN
     except ImportError:
@@ -192,12 +192,11 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日忌婚嫁')
         
-        # 重丧日（001 §196，2026-10-28 拍板 D1）：三库明言「重丧惟喪塟忌之，
+        # 复日（旧称重丧日；001 §196 D1 + §197 D3-Q1）：三库明言「重丧惟喪塟忌之，
         # 吉事不忌」（陈书 p54、协纪 p279228、考原 359079），嫁娶撤否决撤扣分，
-        # 改 0 分纯展示（仅提示，不计分）。否决与扣分已由嫁娶规则/婚嫁评分
-        # 算法同步撤除。
+        # 改 0 分纯展示（仅提示，不计分）。注册名按 §197 正名「复日」。
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', 0, '重丧日（惟丧葬忌，嫁娶不计分）')
+            self._add_shensha('复日', 0, '复日（旧称重丧日，惟丧葬忌，嫁娶不计分）')
         
         # 三娘煞（仅在有实际日期时检查）：按传统口径只有"真三娘煞"
         # （农历日与日干支同时满足，全年仅6天）才需回避；
@@ -798,19 +797,14 @@ class MarriageShenShaChecker(ShenShaChecker):
         return None
     
     def _is_zhongsang(self, sizhu):
-        """是否重丧日（农历月查日干）
+        """是否复日（旧称重丧日；《协纪》正法单干·节气月建）
 
-        001 §193 主轨 C2（2026-10-28）双口径对齐：原实现按农历月查**完整干支**
-        （正庚戌、二辛酉、三庚申…十二辛亥，2026 年命中 5 天），而婚嫁评分
-        算法 is_sansang 按农历月查**日干**（正月庚、二月辛、三月戊…，
-        2026 年命中 32 天），两套表互不一致，同日可出现"神煞扣分但算法不
-        否决"（2026-06-14 己未日实测）。现两层同委托基类单点出口
-        is_zhongsang_by_lunar（日干口径），原内联干支表已删。
-        典据状态见基类该出口处注释（p54「惟喪塟忌之」与 p742 双栏待证）。
+        001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：起例改协纪正法单干表，
+        按节气月建；与神煞基类单点出口 is_furi_by_date 同源，原农历月表已删。
         """
         date_obj = self._get_date_from_sizhu(sizhu)
         if date_obj:
-            return is_zhongsang_by_lunar(date_obj)
+            return is_furi_by_date(date_obj)
         return False
     
     def _parse_chinese_day(self, day_str):

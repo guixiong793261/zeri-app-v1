@@ -26,10 +26,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker, is_wangwang_by_zhi
+    from .神煞基类 import ShenShaChecker, is_wangwang_by_zhi, is_furi_by_month_zhi
     from ..工具函数 import DI_ZHI
 except ImportError:
-    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
+    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi, is_furi_by_month_zhi
     from 工具函数 import DI_ZHI
 
 # 制化引擎（2026-10-21 制化第一批，001 §155）：五墓豁免判定单点。
@@ -105,17 +105,18 @@ class BurialShenShaChecker(ShenShaChecker):
         day_gan = sizhu.get('day_gan', '')
         day_zhi = sizhu.get('day_zhi', '')
         
-        # 重丧（按月查日干）
+        # 复日（001 §197 拍板 D3-Q1/Q5：原「重丧」-30 与「复日」-25 双计，
+        # 合并为单一正名「复日」-30；起例改协纪正法单干·节气月建，
+        # 原 FURI_MAP（顺序干，三库无载）同步删除）
         if month_zhi and day_gan and self._is_zhongsang(sizhu):
-            self._add_shensha('重丧', -30, '重丧日大凶，绝对不宜安葬')
+            self._add_shensha('复日', -30, '复日（旧称重丧日）大凶，不宜安葬')
         
         # 三丧（按季节查日支）
         if day_zhi and self._is_sansang(sizhu):
             self._add_shensha('三丧', -25, '三丧日不宜安葬')
         
-        # 复日（重丧类）
-        if day_zhi and self._is_furi(sizhu):
-            self._add_shensha('复日', -25, '复日重丧，不宜安葬')
+        # 复日（重丧类）单列发射已删（001 §197 D3-Q5）：与上方「复日」同一概念，
+        # 原为 -25 双计；起例 FURI_MAP（正月甲、二月乙…顺序干）三库无载，随合并删除。
         
         # 往亡日
         if month_zhi and day_zhi and self._is_wangwang(sizhu):
@@ -321,35 +322,23 @@ class BurialShenShaChecker(ShenShaChecker):
     
     def _is_zhongsang(self, sizhu):
         """
-        是否重丧日（按月查日干）
-        口诀：正七连庚甲，二八乙辛当，五十一丁癸，四十丙壬方，三六九十二，戊己是重丧
-        即：正月、七月逢庚日、甲日；二月、八月逢乙日、辛日；以此类推
+        是否复日（旧称重丧日；《协纪》正法单干·节气月建，月支查日干）
+
+        001 §197（2026-10-28 拍板 D3-Q1/Q2/Q3）：原内联「正七连庚甲」双干表
+        （正月庚/甲、七月庚/甲）即协纪 p279217 点名之误，已废除；统一委托
+        神煞基类单点出口 is_furi_by_month_zhi（正甲、二乙、三戊、四丙、五丁、
+        六己、七庚、八辛、九戊、十壬、十一癸、十二己，按节气月支）。
         """
-        month_zhi = sizhu.get('month_zhi', '')
-        day_gan = sizhu.get('day_gan', '')
-        
-        # 月份对应的天干映射
-        zhongsang_map = {
-            '寅': ['庚', '甲'],  # 正月
-            '卯': ['乙', '辛'],  # 二月
-            '辰': ['戊', '己'],  # 三月
-            '巳': ['丙', '壬'],  # 四月
-            '午': ['丁', '癸'],  # 五月
-            '未': ['戊', '己'],  # 六月
-            '申': ['庚', '甲'],  # 七月
-            '酉': ['乙', '辛'],  # 八月
-            '戌': ['戊', '己'],  # 九月
-            '亥': ['丙', '壬'],  # 十月
-            '子': ['丁', '癸'],  # 十一月
-            '丑': ['戊', '己']   # 十二月
-        }
-        
-        return day_gan in zhongsang_map.get(month_zhi, [])
+        return is_furi_by_month_zhi(sizhu.get('month_zhi', ''),
+                                    sizhu.get('day_gan', ''))
     
     def _is_nian_zhongsang(self, sizhu):
         """
         是否年重丧（按年支查日干）
-        口诀与月重丧类似，但以年支为准
+
+        001 §197 D3-Q6（2026-10-28 拍板）：年重丧三库全卷零词条，影响面却是
+        安葬最大否决源（2026 年 73 天），已另立专项（docs 立项书）。本表在专项
+        裁断前**冻结原双干口径**，不随月「复日」换表单干。
         """
         year_zhi = sizhu.get('year_zhi', '')
         day_gan = sizhu.get('day_gan', '')
@@ -392,21 +381,9 @@ class BurialShenShaChecker(ShenShaChecker):
             return day_zhi == '丑'
         return False
     
-    def _is_furi(self, sizhu):
-        """
-        是否复日（重丧类）
-        复日：正月甲日、二月乙日、三月丙日……依此类推
-        """
-        month_zhi = sizhu['month_zhi']
-        day_gan = sizhu['day_gan']
-        
-        furi_map = {
-            '寅': '甲', '卯': '乙', '辰': '丙',
-            '巳': '丁', '午': '戊', '未': '己',
-            '申': '庚', '酉': '辛', '戌': '壬',
-            '亥': '癸', '子': '甲', '丑': '乙'
-        }
-        return day_gan == furi_map.get(month_zhi)
+    # _is_furi 已删（001 §197 D3-Q5）：原 FURI_MAP「正月甲、二月乙、三月丙…
+    # 顺序干」三库无载，与月「复日」同概念；合并后统一走单点出口
+    # is_furi_by_month_zhi（_is_zhongsang），不再单列。
     
     # ===== 其他凶煞 =====
     
