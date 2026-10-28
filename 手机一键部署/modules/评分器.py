@@ -5694,7 +5694,14 @@ class Scorer:
         else:
             # 其他事项使用原检查器
             shensha_checker = get_checker(event_type)
-            self.shensha_list = shensha_checker.check(sizhu, owners, zaozhu_mode=zaozhu_mode)
+            # 001 §193 支轨（2026-10-28 拍板 B 案）：安床红嘴朱雀按陈书 p788
+            # 「不可安床在乾方」做方位门控，仅安床透传床位朝向；其余事项保持原
+            # 签名与行为（未填朝向时神煞层按最严口径计 -30）。
+            if _canonical_event(event_type) == '安床' and chuangwei:
+                self.shensha_list = shensha_checker.check(
+                    sizhu, owners, zaozhu_mode=zaozhu_mode, chuangwei=chuangwei)
+            else:
+                self.shensha_list = shensha_checker.check(sizhu, owners, zaozhu_mode=zaozhu_mode)
         
         # 羊刃计分（冠带派）：日干查地支，单见-15/两见以上-25；所有事项统一，作为通用凶煞
         _yr = self._build_yangren_shensha(sizhu, event_type)
