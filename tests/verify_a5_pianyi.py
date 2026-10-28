@@ -304,8 +304,8 @@ def _assert_bingfu_removed():
         assert shensha_score(ev, '病符') is None, f'{ev} 病符分值应已删除'
     n_yi = len([k for k in SHENSHA_SCORES if k[0] == '移徙'])
     assert n_yi == 67, f'移徙块键数应=67（§165 福星×移徙删至 70；福星正统落地批 001 §169 +1 恢复 → 71；§172 P0 大清理删 移徙岁害/天耗/地耗/孤辰寡宿 4 键 → 67），实得 {n_yi}'
-    assert len(SHENSHA_SCORES) == 1154, \
-        f'SHENSHA_SCORES 总键应=1154（…→§183 出行双通道割裂修复批新增 (出行,日破时) → 1148；建除十二神×出行 D 专项 001 §184 新增 6 键（建/开+5、破-15、平/收/闭-5，卷十「宜建开；忌破平收闭」）→ 1154），实得 {len(SHENSHA_SCORES)}'
+    assert len(SHENSHA_SCORES) == 1155, \
+        f'SHENSHA_SCORES 总键应=1155（…→§184 建除十二神×出行 D 专项新增 6 键 → 1154；§196 D4 新增 (嫁娶,年命冲岁) -15 → 1155），实得 {len(SHENSHA_SCORES)}'
     return {'移徙块': n_yi, '总表': len(SHENSHA_SCORES)}
 
 

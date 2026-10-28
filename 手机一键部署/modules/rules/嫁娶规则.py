@@ -25,8 +25,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
-from ..shensha.神煞基类 import (is_yanggongji_by_lunar, is_shousi_by_zhi,
-                                is_zhongsang_by_lunar)
+from ..shensha.神煞基类 import (is_yanggongji_by_lunar, is_shousi_by_zhi)
 from ..建除 import get_event_yiji
 from datetime import date, datetime
 
@@ -526,7 +525,7 @@ class MarriageRuleChecker(EventRuleChecker):
         # 「岁破日」已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课典据
         veto_keywords = [
             '禁婚年', '月破日', '四离四绝日',
-            '红纱日', '杨公忌', '重丧日', '真三娘煞',
+            '红纱日', '杨公忌', '真三娘煞',
             '阴阳差错日', '女命忌嫁日', '受死日'
         ]
         
@@ -706,15 +705,10 @@ class MarriageRuleChecker(EventRuleChecker):
         if is_shousi_by_zhi(month_zhi, day_zhi):
             ji_list.append('受死日')
 
-        # 重丧日（001 §195 Commit2，2026-10-28 拍板「激活空转」）：
-        # 原 _check_veto_items 的 veto_keywords 含 '重丧日'，但规则层从不写入
-        # ji_list → 关键词永不命中（空转），嫁娶的重丧否决实际只由
-        # 婚嫁评分算法 check_reject_items 实施，两层判断脱节。现补齐发射，
-        # 判定走神煞基类单点出口 is_zhongsang_by_lunar（农历月查日干，与
-        # 神煞层/算法层同源），使两层一致且可触发。分值极性不变
-        # （('嫁娶','重丧日') 仍为 -10 普通扣分，否决极性由关键词集决定）。
-        if date_obj and is_zhongsang_by_lunar(date_obj):
-            ji_list.append('重丧日')
+        # 重丧日（001 §196，2026-10-28 拍板 D1）：三库明言重丧惟丧葬忌、吉事不忌，
+        # 嫁娶撤否决撤扣分，改 0 分纯展示。本层不再写入 ji_list 触发关键词否决，
+        # 仅由神煞层以 0 分神煞做展示提示。（§195 C2 曾为本层补齐发射以激活空转，
+        # 现按 D1 拍板一并撤除。）
         
         # 真三娘煞（特定干支；闰月不计——通用规则，与杨公忌/红纱口径一致）
         if not is_leap and lunar_day in self.ZHEN_SANNIANGSHA:
@@ -890,10 +884,13 @@ class MarriageRuleChecker(EventRuleChecker):
                     self._hard_veto_chong.append(_txt)
 
             # 检查年柱
+            # 001 §196（2026-10-28 拍板 D4）：年柱冲命撤整年一票否决，降为普通
+            # 扣分（神煞层「年命冲岁」-15）。协纪 p279217「选择亦无专取本命
+            # 年支一字之例」。此处仅写入 ji_list 做展示提示，不再进
+            # _hard_veto_chong，不触发 HARD_VETO。日柱/月柱冲命仍保留否决。
             if year_zhi == target_chong_zhi:
                 _txt = f'年柱{year_zhi}冲{name}{_otag}'
                 ji_list.append(_txt)
-                self._hard_veto_chong.append(_txt)
 
             # 检查月柱
             if month_zhi == target_chong_zhi:

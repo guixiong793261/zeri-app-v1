@@ -4,7 +4,8 @@
 
 核心功能：
 1. 大利月/小利月检查
-2. 一票否决项检查（月破、岁破、上朔日、四离四绝、重丧日、三娘煞）
+2. 一票否决项检查（岁破、真三娘煞；月破/上朔/四离四绝为重扣分项，
+   重丧日按 001 §196 撤否决并撤扣分）
 3. 日课年月日柱内部地支合局评分
 4. 夫妻命理互补分析
 
@@ -830,12 +831,12 @@ def check_reject_items(date_obj, sizhu):
     
     注意：月破、上朔日、四离四绝已改为高扣分项（非绝对否决），
     这些日子虽凶但有制化可用，不再一票否决。
-    保留的绝对否决项：岁破（日支冲年支）、重丧日、真三娘煞
+    保留的绝对否决项：岁破（日支冲年支）、真三娘煞
+    （001 §196，2026-10-28 拍板 D1：重丧日三库明言惟丧葬忌、吉事不忌，
+    嫁娶撤否决，移出神煞层 0 分纯展示，不再作为本层否决项。）
     """
     if is_year_break(date_obj, sizhu):
         return True, '岁破（日支冲年支）'
-    if is_sansang(date_obj):
-        return True, '重丧日'
     if is_sanniangsha(date_obj):
         return True, '真三娘煞'
     return False, None
@@ -1305,6 +1306,22 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
             score += _sc
             details.append((f'女命忌嫁日（{_bride_zx}相忌{_day_zhi_m}日）', _sc))
             result['warnings'].append(f'女命忌嫁日：{_bride_zx}相忌{_day_zhi_m}日，忌嫁娶')
+
+    # 年命冲岁（001 §196 D4，2026-10-28 拍板）：日课年支冲事主本命年支。
+    # 原为嫁娶规则层「年柱冲命」整年 HARD_VETO（2026 鼠命仅 13 天可评）；
+    # 协纪 p279217「选择亦无专取本命年支一字之例」→ 撤否决，降为普通扣分 -15
+    # （不否决，仅影响档位）。神煞层「年命冲岁」同分展示。
+    _yr_zhi_cm = sizhu.get('year_zhi', '')
+    if _yr_zhi_cm:
+        for _who, _bzi in (('新娘', (bride_bazi or {}).get('year_zhi')),
+                           ('新郎', (groom_bazi or {}).get('year_zhi'))):
+            if _bzi and is_chong(_yr_zhi_cm, _bzi):
+                _cm_score = _shensha_score('嫁娶', '年命冲岁', -15)
+                score += _cm_score
+                details.append((f'年命冲岁（年支{_yr_zhi_cm}冲{_who}本命{_bzi}）', _cm_score))
+                result['warnings'].append(
+                    f'年命冲岁：日课年支{_yr_zhi_cm}冲{_who}本命{_bzi}，仅扣分不否决')
+                break
 
     # 红纱日（节气月支版：四孟寅申巳亥月逢巳、四仲子午卯酉月逢酉、四季辰戌丑未月逢丑；
     # 2026-10-15 D3 阶段3 修复回归：原农历月查键因 HONGSHA 改节气月支键而永久失效）
