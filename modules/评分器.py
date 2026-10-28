@@ -2114,6 +2114,11 @@ class Scorer:
                     xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(sizhu, owners)
                 except Exception:
                     xiangzhu_score, xiangzhu_details = 0, []
+                # §192 任务B：五行门槛提前否决日同样申报「年命×向首六冲」硬门槛
+                # （与主路径同口径；未填山向容错返回空）
+                if _canonical_event(event_type) == '入宅':
+                    xiangzhu_details = list(xiangzhu_details) + \
+                        self._check_owner_xiangshou_chong(shan_xiang, owners)
                 
                 # 计算神煞得分
                 shensha_score = sum(s.get('score', 0) for s in self.shensha_list if isinstance(s, dict))
@@ -2250,6 +2255,12 @@ class Scorer:
                         ['受死日：受死日不宜入宅，大忌不用（一票否决）']
                         if _canonical_event(event_type) == '入宅' and any(
                             isinstance(_s, dict) and _s.get('name') == '受死日'
+                            for _s in self.shensha_list) else []) + (
+                        # §192 任务A 补：五行门槛提前否决日同样申报红嘴朱雀否决
+                        ['红嘴朱雀：陈书 p96「切不可犯紅嘴朱雀入中宮」，'
+                         '犯者不吉、屢見甚驗，入宅归火大忌（一票否决）']
+                        if _canonical_event(event_type) == '入宅' and any(
+                            isinstance(_s, dict) and _s.get('name') == '红嘴朱雀'
                             for _s in self.shensha_list) else []),  # _fc0915
                     'huangdao_info': self.huangdao_info,
                     'wu_xing_result': wu_xing_result,
@@ -2288,6 +2299,11 @@ class Scorer:
 
             # 相主硬性门槛：命主年支/日支与日课日支六冲或自刑 → 一票否决
             xiangzhu_veto_items = [str(d) for d in xiangzhu_details if str(d).startswith('[硬性门槛]')]
+            # §192 任务B（2026-10-28 用户拍板）：入宅/移徙「事主年命 × 向首支六冲」
+            # → 一票否决，与年命×日支硬门槛构成坐向双冲闭环。未填山向容错不触发。
+            if _canonical_event(event_type) == '入宅':
+                xiangzhu_veto_items += self._check_owner_xiangshou_chong(
+                    shan_xiang, owners)
 
             # 流年冲太岁提示加入忌列表
             for _d in xiangzhu_details:
@@ -2542,12 +2558,24 @@ class Scorer:
                 _shousi_veto = '受死日：受死日不宜入宅，大忌不用（一票否决）'
                 veto_reasons.append(_shousi_veto)
 
+            # §192 任务A（2026-10-28 用户拍板）：红嘴朱雀临中宮 × 入宅升级
+            # HARD_VETO 一票否决。典据：陈书 p96「切不可犯紅嘴朱雀入中宮，
+            # 犯者不吉、屢見甚驗」＋p890「七日在**中宮**，忌入宅歸火」。
+            # 仅入宅/移徙（移徙 canonical 归并），嫁娶/安床/作灶不升格（三宫仅「忌」）。
+            _hz_veto = ''
+            if _canonical_event(event_type) == '入宅' and any(
+                    isinstance(_s, dict) and _s.get('name') == '红嘴朱雀'
+                    for _s in self.shensha_list):
+                _hz_veto = ('红嘴朱雀：陈书 p96「切不可犯紅嘴朱雀入中宮」，'
+                            '犯者不吉、屢見甚驗，入宅归火大忌（一票否决）')
+                veto_reasons.append(_hz_veto)
+
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
                     or wangming_veto or shanzuo_veto or dual_veto
                     or wm_shan_chong_veto
                     or jianxiang_veto or jianxiang_dual_veto
-                    or _shousi_veto):
+                    or _shousi_veto or _hz_veto):
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
@@ -5194,6 +5222,90 @@ class Scorer:
                 '五行': NAYIN_WUXING.get(year_gz, '未知'),
             }
         return None
+
+    def _check_owner_xiangshou_chong(self, shan_xiang, owners):
+        """§192 任务B（2026-10-28 用户拍板）：事主年命 × 向首支六冲 → 一票否决。
+
+        典据：陈书 p96「其移徙亦要居屋坐向天利，并與宅主本命無尅犯者吉」、
+        p635「凡人火安神要坐向中宮利宅主年庚不相沖尅」、p166「本命尅山向主冷退」。
+        口径收窄（拍板）：仅入宅/移徙通道；仅「事主年命 × 向首支 六冲」，
+        与既有「年命 × 日支六冲」硬门槛并列，形成坐向双冲闭环；不涉修造/安葬。
+        容错：未填山向、无「向」字、向首非二十四山、事主无年支 → 返回空（不误伤）。
+        向首解析镜像 analyze_year 口径（「向」字前一山；四维宫借兼向消歧）。
+        """
+        if not shan_xiang or not owners:
+            return []
+        _sx_text = str(shan_xiang)
+        _pos = _sx_text.find('向')
+        if _pos <= 0:
+            return []
+        xiangshou = _sx_text[_pos - 1]
+        _shan_to_zhi = {
+            '壬': '子', '子': '子', '癸': '子',
+            '丑': '丑', '艮': '丑', '寅': '寅',
+            '甲': '卯', '卯': '卯', '乙': '卯',
+            '辰': '辰', '巽': '辰', '巳': '巳',
+            '丙': '午', '午': '午', '丁': '午',
+            '未': '未', '坤': '未', '申': '申',
+            '庚': '酉', '酉': '酉', '辛': '酉',
+            '戌': '戌', '乾': '戌', '亥': '亥',
+        }
+        if xiangshou not in _shan_to_zhi:
+            return []
+        if xiangshou in ('艮', '巽', '坤', '乾'):
+            _palace = {'艮': ['丑', '寅'], '巽': ['辰', '巳'],
+                       '坤': ['未', '申'], '乾': ['戌', '亥']}[xiangshou]
+            _xiang_zhis = list(_palace)
+            for _pz in _palace:
+                if f'兼{_pz}' in _sx_text:
+                    _xiang_zhis = [_pz]
+                    break
+        else:
+            _xiang_zhis = [_shan_to_zhi.get(xiangshou, '')]
+        _xiang_zhis = [z for z in _xiang_zhis if z]
+        if not _xiang_zhis:
+            return []
+
+        _VALID_ZHI = ('子', '丑', '寅', '卯', '辰', '巳',
+                      '午', '未', '申', '酉', '戌', '亥')
+        items = []
+        for idx, owner in enumerate(owners):
+            if not isinstance(owner, dict):
+                continue
+            # 仙命（安葬）不属入宅相主域，避免跨域误触发
+            if _is_wangming_role(owner.get('role', '')):
+                continue
+            owner_name = (owner.get('name') or owner.get('role')
+                          or f'事主{idx+1}')
+            owner_year_zhi = ''
+            if owner.get('sizhu'):
+                _parts = str(owner['sizhu']).split()
+                if _parts and len(_parts[0]) >= 2:
+                    owner_year_zhi = _parts[0][1]
+            if not owner_year_zhi and owner.get('生肖'):
+                owner_year_zhi = _SHENGXIAO_TO_ZHI.get(
+                    owner['生肖'], owner['生肖'])
+            if not owner_year_zhi and owner.get('birth_date'):
+                try:
+                    from .四柱计算器 import calculate_sizhu
+                    _osz = calculate_sizhu(
+                        owner['birth_date'],
+                        owner.get('birth_hour', 12),
+                        owner.get('birth_minute', 0),
+                        longitude=owner.get('birth_longitude'))
+                    owner_year_zhi = _osz.get('year_zhi', '')
+                except Exception as e:
+                    logger.error(f"计算事主{owner_name}年支失败: {str(e)}")
+            if owner_year_zhi not in _VALID_ZHI:
+                continue
+            for _xz in _xiang_zhis:
+                if self.check_liuchong(owner_year_zhi, _xz):
+                    items.append(
+                        f"[硬性门槛]{owner_name}年命{owner_year_zhi}"
+                        f"与向首{xiangshou}（{_xz}）六冲"
+                        f"（年命冲大门朝向），不可用")
+                    break
+        return items
 
     def _check_owner_day_zhichong(self, sizhu, owners):
         """
