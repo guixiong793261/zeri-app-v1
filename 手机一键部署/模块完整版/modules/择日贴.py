@@ -1061,30 +1061,20 @@ def compose_marriage_lines(e):
         a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('', ''))
-    # 发轿/回轿/拜堂：取吉时前3档或按十二时辰吉凶表自动分派
+    # 发轿/回轿/拜堂：按当日实际可用吉时逐条输出（001 §194 挂账4，2026-10-28
+    # 拍板）。原实现不足 3 条时用固定「辰/寅/酉」占位补齐，可能正好撞上新人
+    # 年命（把凶时印成大吉吉时）；现一律按实际条数输出，绝不拉凶时充数，
+    # 当日无可用吉时时提示谨慎择时。
     jishi = e.get('_jishi', []) or []
-    def _jishi_str(j, default='—'):
-        if not j:
-            return default
+    def _jishi_str(j):
         return f"{j['ganzhi']}时（{j['range']}）　{j['grade']}"
-    # 发轿 = 首选吉时 或 辰时；回轿 = 次选 或 寅时；拜堂合卺 = 备选 或 酉时（傍晚最常用）
-    faqiao = _jishi_str(jishi[0] if len(jishi) > 0 else None)
-    huijiao = _jishi_str(jishi[1] if len(jishi) > 1 else None)
-    baitang = _jishi_str(jishi[2] if len(jishi) > 2 else None)
-    # 兜底：若只有1-2个吉时，则按传统最常用时辰补齐占位
-    if baitang == '—' and len(jishi) == 2:
-        baitang = "酉时（17:00—18:59）　吉"
-    if huijiao == '—' and len(jishi) == 1:
-        huijiao = "寅时（03:00—04:59）　吉"
-        baitang = "酉时（17:00—18:59）　吉" if baitang == '—' else baitang
-    if faqiao == '—':
-        faqiao = "辰时（07:00—08:59）　吉"
-    a(('body', f"{_stage_label(e, 0)}：{faqiao}"))
-    a(('', ''))
-    a(('body', f"{_stage_label(e, 1)}：{huijiao}"))
-    a(('', ''))
-    a(('body', f"{_stage_label(e, 2)}：{baitang}"))
-    a(('', ''))
+    if jishi:
+        for _i, _j in enumerate(jishi[:3]):
+            a(('body', f"{_stage_label(e, _i)}：{_jishi_str(_j)}"))
+            a(('', ''))
+    else:
+        a(('body', '今日吉时有限，请谨慎选择。'))
+        a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}　（属{e['_chong_sx']}者当日宜避之）"))
     a(('', ''))
     # 关键吉神行（2026-09-06用户建议：不将日/天德/月德等单独一行说明）

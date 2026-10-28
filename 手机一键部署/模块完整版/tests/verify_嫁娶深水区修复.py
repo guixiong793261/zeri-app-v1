@@ -22,6 +22,8 @@
     「红砂日」残留。
   G 键表：('嫁娶','红纱日')=-20 在位；无 ('嫁娶','红砂日') 键。
   H 红纸帖：未命/鼠命新娘 抽样日 前三吉时不含冲命时辰；入宅模板不受过滤影响。
+  I §194 挂账3/4：受死日嫁娶剥离扣分（0 分纯展示、规则层否决仍在）；红纸帖按
+    实际吉时条数输出（无辰/寅/酉固定占位，0 条时提示谨慎择时）。
 
 退出码：0=全过，1=有失败（FAIL N 计数）
   python tests/verify_嫁娶深水区修复.py
@@ -237,6 +239,60 @@ def main():
                                     key=lambda x: -x['score'])[:4]]
     check(f'H 入宅模板吉时不受婚嫁过滤影响（{top} vs {[j["zhi"] for j in e.get("_jishi", [])]}）',
           top == [j['zhi'] for j in e.get('_jishi', [])])
+
+    # ============ I：§194 挂账3/4 ============
+    print('[I] §194：受死日纯展示 0 分 + 红纸帖按实际吉时条数输出')
+    from modules.shensha.嫁娶神煞 import MarriageShenShaChecker
+    from modules.事项标准 import shensha_score
+    src_m = _code_only(inspect.getsource(MarriageShenShaChecker))
+    check("I1 受死日发射已剥离扣分（0 分纯展示）",
+          "_add_shensha('受死日', 0" in src_m
+          and "_add_shensha('受死日', -" not in src_m)
+    check("I1 键表 ('嫁娶','受死日')=0 且 shensha_score=0",
+          SHENSHA_SCORES.get(('嫁娶', '受死日')) == 0
+          and shensha_score('嫁娶', '受死日') == 0)
+    bad_ss = []
+    for s in ss_days:
+        sz = calculate_sizhu(s, 10, 0)
+        rows = [x for x in ck_jq.check(sz, []) if x.get('name') == '受死日']
+        if len(rows) != 1 or rows[0].get('score') != 0:
+            bad_ss.append((str(s), [r.get('score') for r in rows]))
+    check(f'I1 31 天受死日发射恒 0 分且唯一（异常 {len(bad_ss)}）', not bad_ss,
+          f'{bad_ss[:4]}')
+    r = calculate_score(calculate_sizhu(dt.date(2026, 1, 5), 10, 0), '嫁娶', owners=[])
+    check(f'I1 受死日 0 分但结论仍否决（实得 {r.get("score")}/{r.get("level")}）',
+          r.get('score') == 0 and '凶' in str(r.get('level')))
+
+    # I2 红纸帖：按实际吉时条数输出，不得用固定辰/寅/酉 占位凑数
+    src_cm = _code_only(inspect.getsource(择日贴.compose_marriage_lines))
+    check('I2 红纸帖无固定占位时辰（辰/寅/酉 兜底已删）',
+          '辰时（07:00' not in src_cm and '寅时（03:00' not in src_cm
+          and '酉时（17:00' not in src_cm)
+    check('I2 无可用吉时时给「今日吉时有限，请谨慎选择」提示',
+          '今日吉时有限，请谨慎选择' in src_cm)
+    e0 = 择日贴.prepare_entry({
+        'date': '2026-01-01', 'event_type': '嫁娶',
+        'owners_list': [{'name': '新娘', 'role': '新娘', 'year_sx': '羊'}]})
+    e0['_jishi'] = []
+    zero_txt = '\n'.join(t for _, t in 择日贴.compose_marriage_lines(e0))
+    check('I2 无可用吉时：仅提示、不补任何时辰',
+          '今日吉时有限，请谨慎选择' in zero_txt
+          and not any(z in zero_txt for z in ('：辰时（', '：寅时（', '：酉时（')))
+    bad_n = []
+    for sx in ('羊', '鼠', '猪'):
+        dd = d0
+        while dd <= d1:
+            ee = 择日贴.prepare_entry({
+                'date': str(dd), 'event_type': '嫁娶',
+                'owners_list': [{'name': '新娘', 'role': '新娘', 'year_sx': sx}]})
+            _js = ee.get('_jishi') or []
+            if _js:
+                got = sum(1 for _, t in 择日贴.compose_marriage_lines(ee) if '时（' in t)
+                if got != min(len(_js), 3):
+                    bad_n.append((sx, str(dd), len(_js), got))
+            dd += dt.timedelta(days=1)
+    check(f'I2 全年×三生肖吉时行数恒等实际条数（异常 {len(bad_n)}）', not bad_n,
+          f'{bad_n[:4]}')
 
     print()
     if FAILS:

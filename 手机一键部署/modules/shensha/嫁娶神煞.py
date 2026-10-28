@@ -183,9 +183,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌日', -20, '杨公忌日百事不宜，婚嫁大忌')
         
-        # 受死日
+        # 受死日（001 §194 挂账3，2026-10-28 拍板）：§193 已升 HARD_VETO 一票否决，
+        # 扣分无意义；剥离扣分改为纯硬性否决展示（0 分不计分，禁用在规则层）。
         if self._is_shousi(sizhu):
-            self._add_shensha('受死日', -22, '受死日婚嫁大忌')
+            self._add_shensha('受死日', 0, '受死日婚嫁大忌（一票否决，不计分）')
         
         # 往亡日
         if self._is_wangwang(sizhu):
