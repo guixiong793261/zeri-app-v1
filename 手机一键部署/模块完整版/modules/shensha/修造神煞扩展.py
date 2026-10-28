@@ -192,9 +192,11 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         # 基类条目不同名不去重，2026-09-20 红纱死链修复后会双重扣分，已删除
         # （与杨公忌日收敛同款机制）。
 
-        # 重丧日 - 修造需参看，非首要禁忌
+        # 重丧日（001 §196，2026-10-28 拍板 D2）：修造属吉事，三库不忌重丧
+        # （陈书 p54「惟喪塟忌之」、协纪 p279228 穷举破土/安葬/启攒、
+        # 考原「忌为凶事，利为吉事」），撤 -10 扣分，改 0 分纯展示。
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', -10, '重丧日，修造需参看，非首要禁忌')
+            self._add_shensha('重丧日', 0, '重丧日（惟丧葬忌，修造不计分）')
         
         # 重复日 - 忌凶事，利吉事
         if self._is_chongfu(sizhu):

@@ -192,9 +192,12 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日忌婚嫁')
         
-        # 重丧日 - 嫁娶大忌
+        # 重丧日（001 §196，2026-10-28 拍板 D1）：三库明言「重丧惟喪塟忌之，
+        # 吉事不忌」（陈书 p54、协纪 p279228、考原 359079），嫁娶撤否决撤扣分，
+        # 改 0 分纯展示（仅提示，不计分）。否决与扣分已由嫁娶规则/婚嫁评分
+        # 算法同步撤除。
         if self._is_zhongsang(sizhu):
-            self._add_shensha('重丧日', -25, '重丧日婚嫁大忌')
+            self._add_shensha('重丧日', 0, '重丧日（惟丧葬忌，嫁娶不计分）')
         
         # 三娘煞（仅在有实际日期时检查）：按传统口径只有"真三娘煞"
         # （农历日与日干支同时满足，全年仅6天）才需回避；
@@ -415,6 +418,26 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         if self.groom_gan and self._is_gan_he_groom(sizhu):
             self._add_shensha('新郎干合', 8, f'日干与新郎年干({self.groom_gan})相合，吉')
+        
+        # 年命冲岁（001 §196，2026-10-28 拍板 D4）：年柱冲命撤整年否决，降为 -15
+        # 普通扣分（不否决）。协纪 p279217「选择亦无专取本命年支一字之例」。
+        # 日柱/月柱冲命仍保留 HARD_VETO（见嫁娶规则 _check_shengxiao_chong）。
+        _y_zhi = sizhu.get('year_zhi', '')
+        if _y_zhi:
+            _chong_map = {'子': '午', '午': '子', '丑': '未', '未': '丑',
+                          '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
+                          '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳'}
+            _zodiac_to_zhi = {'鼠': '子', '牛': '丑', '虎': '寅', '兔': '卯',
+                              '龙': '辰', '蛇': '巳', '马': '午', '羊': '未',
+                              '猴': '申', '鸡': '酉', '狗': '戌', '猪': '亥'}
+            for _owner in owners:
+                _oz = _owner.get('生肖', '')
+                if _oz in _zodiac_to_zhi:
+                    _oz = _zodiac_to_zhi[_oz]
+                if _oz in _chong_map and _chong_map[_oz] == _y_zhi:
+                    self._add_shensha('年命冲岁', -15,
+                                      f'年柱{_y_zhi}冲事主年命{_oz}（仅扣分，不否决）')
+                    break
     
     # ===== 大利月/小利月（按女命年支）=====
     # 大利月口诀：正七迎鸡兔，二八虎和猴，三九蛇共猪，四十龙和狗，牛羊五十一，鼠马六腊月
