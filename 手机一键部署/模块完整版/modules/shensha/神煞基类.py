@@ -873,6 +873,78 @@ def is_huangsha_by_zhi(month_zhi, day_zhi):
     return _HUANGSHA_ZHI_BY_MONTH.get(month_zhi) == day_zhi
 
 
+# ===== 受死日权威表（《陈子性藏书》p152 逐月表A）=====
+#   正戌、二辰、三亥、四巳、五子、六午、七丑、八未、九寅、十申、十一卯、十二酉
+#   （月支查日支）。2026-10-20 受死日收敛后，旧「春戌夏丑秋辰冬未」季节表（表B）
+#   已废弃。
+# 单点出口：基类 _is_shousi_day、嫁娶神煞 _is_shousi、嫁娶规则 HARD_VETO 判定
+#   统一委托本函数（001 §193 主轨 C2 收口，避免规则层再抄一份月支表）。
+_SHOUZI_ZHI_BY_MONTH = {
+    '寅': '戌', '卯': '辰', '辰': '亥', '巳': '巳',
+    '午': '子', '未': '午', '申': '丑', '酉': '未',
+    '戌': '寅', '亥': '申', '子': '卯', '丑': '酉',
+}
+
+
+def is_shousi_by_zhi(month_zhi, day_zhi):
+    """受死日（p152 逐月表A）：月支查日支。单点出口，见上表注释。"""
+    if not month_zhi or not day_zhi:
+        return False
+    return _SHOUZI_ZHI_BY_MONTH.get(month_zhi) == day_zhi
+
+
+# ===== 重丧日（农历月查日干）=====
+# 001 §193 主轨 C2（2026-10-28 拍板）"双口径对齐"：
+#   原为两套互不一致的判定——神煞层（嫁娶神煞._is_zhongsang）按月查**完整干支**
+#   （2026 年命中 5 天），婚嫁评分算法（is_sansang）按月查**日干**（2026 年命中
+#   32 天）。同日可出现"神煞信息扣 -10、算法层不否决"的自相矛盾（2026-06-14
+#   己未日实测：神煞判重丧、算法判非重丧，最终 38 分）。现收口到本单点出口，
+#   神煞层与算法层全部委托，两处口径恒等。
+# 待证挂账（本批不改分值，仅归一）：
+#   ① 陈书 p54「一論重復喪凶星也惟喪塟忌之，如謂吉事俱忌者非」——重丧是否
+#      适用于嫁娶（吉事）尚待专项拍板；
+#   ② 陈书 p742 逐月"重喪/復喪"双栏 OCR 残损（如「二月 乙重喪辛復喪」），
+#      本表为现行运行口径的归一，非典据定稿；按《协纪》口径重丧亦不在其列。
+_ZHONGSANG_GAN_BY_LUNAR_MONTH = {
+    '正月': ('庚',), '二月': ('辛',), '三月': ('戊',), '四月': ('丙',),
+    '五月': ('丁',), '六月': ('己',), '七月': ('甲',), '八月': ('乙',),
+    '九月': ('戊',), '十月': ('壬',), '十一月': ('癸',), '十二月': ('己',),
+    '腊月': ('己',),
+}
+
+
+def is_zhongsang_by_lunar(date_obj):
+    """重丧日（农历月查日干）；闰月不计（闰月对不上月名表即 False）。"""
+    if date_obj is None:
+        return False
+    try:
+        from ..四柱计算器 import get_lunar_date
+    except ImportError:
+        from modules.四柱计算器 import get_lunar_date
+    try:
+        lunar_info = get_lunar_date(date_obj)
+    except Exception:
+        return False
+    if not lunar_info or 'month' not in lunar_info:
+        return False
+    month_name = str(lunar_info['month'])
+    if '闰' in month_name:
+        return False
+    gans = _ZHONGSANG_GAN_BY_LUNAR_MONTH.get(month_name)
+    if not gans:
+        return False
+    try:
+        from ..四柱计算器 import calculate_sizhu as _calc
+    except ImportError:
+        from modules.四柱计算器 import calculate_sizhu as _calc
+    try:
+        _sz = _calc(date_obj, 12, 0)
+    except Exception:
+        return False
+    return str(_sz.get('day_gan', '')) in gans
+
+
+
 _YANGCUO_PILLARS_BY_MONTH = {
     '寅': ('甲寅',), '卯': ('乙卯',), '辰': ('甲辰',),
     '巳': ('丁巳', '己巳'), '未': ('丁未', '己未'),
@@ -1228,6 +1300,13 @@ _SHENSHA_ALIAS_KEY = {
     '四废日': '四废',
     '鬼哭日': '鬼哭',
     '黄沙日': '黄沙',
+    # 001 §193 主轨 C2（2026-10-28 拍板）：红砂日/红纱日口径统一。
+    # 判定本就单点（基类 _is_hongsha 节气月支版），但发射名分裂：基类与
+    # 修造/安床/通用发「红砂日」，分值表正名与嫁娶算法明细用「红纱日」，
+    # 同日双条目并存（2026-01-15 嫁娶：shensha_list 红纱日 -20 + 红砂日 -20）。
+    # 归一后单一正名「红纱日」；SHENSHA_SCORES 仅 ('嫁娶','红纱日')=-20，
+    # 其余通道无该键，落回调用处默认 -15，分值零漂移。
+    '红砂日': '红纱日',
     '神号日': '神号',
     '旺日': '王日',
     '母仓日': '母仓',

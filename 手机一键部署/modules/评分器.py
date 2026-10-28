@@ -207,7 +207,7 @@ H1_ANCHOR_MAP = {
         ('神号', '神号日'),
         ('天德', '天德日'),
         ('鬼哭', '鬼哭日'),
-        ('红砂日', '红纱日'),
+        ('红纱日', '红纱日'),
     ],
     '修造': [            # 7 族（建除6＋月破1）
         # 建除批 001 §162（2026-10-22）按《协纪》卷十对齐修造宜忌后，
@@ -823,11 +823,25 @@ class Scorer:
         """
         _LI = ('大利月', '小利月', '妨夫月', '妨妻月', '逐夫月', '逐妇月')
         out, seen = [], set()
+        # 001 §193 主轨 C2（2026-10-28 拍板）：重名去重——异名归一后再判重。
+        # 旧实现按字面前缀去重，'黄沙日'（婚嫁算法明细）与 '黄沙'（通用检查器
+        # 归一后）前缀不同，同日并存两条；'红砂日'/'红纱日'同理。现统一过
+        # 模块级 _SHENSHA_ALIAS_KEY（黄沙日→黄沙、红砂日→红纱日）后判重，
+        # 展示清单只留一条正名条目。本清单仅用于展示与审计（计分读
+        # shensha_list_scoring），故分值零漂移。
+        _alias = {}
+        try:
+            from .shensha.神煞基类 import _SHENSHA_ALIAS_KEY as _alias
+        except ImportError:
+            try:
+                from shensha.神煞基类 import _SHENSHA_ALIAS_KEY as _alias
+            except ImportError:
+                _alias = {}
         # 分支自有条目优先（保住 _std_event 戳与嫁娶专有描述），检查器条目补足
         for s in list(branch_list or []) + list(base_list or []):
             if not isinstance(s, dict):
                 continue
-            nm = str(s.get('name', ''))
+            nm = _alias.get(str(s.get('name', '')), str(s.get('name', '')))
             p = nm.split('（')[0].split('(')[0].strip()
             if nm in _LI:
                 if nm in seen:
@@ -842,11 +856,14 @@ class Scorer:
                 continue
             else:
                 seen.add(p)
+            if nm != str(s.get('name', '')):
+                s = dict(s)
+                s['name'] = nm
             out.append(s)
         for d in (marriage_details or []):
             if not (isinstance(d, (list, tuple)) and len(d) >= 2):
                 continue
-            nm = str(d[0])
+            nm = _alias.get(str(d[0]), str(d[0]))
             try:
                 sc = int(d[1])
             except (TypeError, ValueError):

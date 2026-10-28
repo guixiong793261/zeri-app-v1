@@ -31,7 +31,8 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import ShenShaChecker, is_yanggongji_by_lunar, is_wangwang_by_zhi
+    from .神煞基类 import (ShenShaChecker, is_yanggongji_by_lunar, is_wangwang_by_zhi,
+                           is_shousi_by_zhi, is_zhongsang_by_lunar)
     try:
         from ..工具函数 import DI_ZHI, TIAN_GAN
     except ImportError:
@@ -740,16 +741,10 @@ class MarriageShenShaChecker(ShenShaChecker):
         是否受死日
         口诀（《陈子性藏书》p152）：正戌、二辰、三亥、四巳、五子、六午、
         七丑、八未、九寅、十申、十一卯、十二酉（月支查日支）
+        001 §193 主轨 C2：委托基类单点出口 is_shousi_by_zhi，与入宅通道
+        及嫁娶规则 HARD_VETO 同表同集合（原内联表已删，防口径漂移）。
         """
-        month_zhi = situ['month_zhi']
-        day_zhi = situ['day_zhi']
-        
-        shousi_map = {
-            '寅': '戌', '卯': '辰', '辰': '亥', '巳': '巳',
-            '午': '子', '未': '午', '申': '丑', '酉': '未',
-            '戌': '寅', '亥': '申', '子': '卯', '丑': '酉'
-        }
-        return day_zhi == shousi_map.get(month_zhi)
+        return is_shousi_by_zhi(situ.get('month_zhi', ''), situ.get('day_zhi', ''))
     
     def _is_wangwang(self, sizhu):
         """是否往亡日（《协纪》口诀"正寅二巳三申四亥五卯六午七酉八子
@@ -779,43 +774,19 @@ class MarriageShenShaChecker(ShenShaChecker):
         return None
     
     def _is_zhongsang(self, sizhu):
-        """是否重丧日（按农历月份，使用完整干支）
+        """是否重丧日（农历月查日干）
 
-        按《协纪辨方书》规则：
-        - 正月：庚戌日
-        - 二月：辛酉日
-        - 三月：庚申日
-        - 四月：己未日
-        - 五月：戊午日
-        - 六月：丁巳日
-        - 七月：丙辰日
-        - 八月：乙卯日
-        - 九月：甲寅日
-        - 十月：癸丑日
-        - 十一月：壬子日
-        - 十二月：辛亥日
+        001 §193 主轨 C2（2026-10-28）双口径对齐：原实现按农历月查**完整干支**
+        （正庚戌、二辛酉、三庚申…十二辛亥，2026 年命中 5 天），而婚嫁评分
+        算法 is_sansang 按农历月查**日干**（正月庚、二月辛、三月戊…，
+        2026 年命中 32 天），两套表互不一致，同日可出现"神煞扣分但算法不
+        否决"（2026-06-14 己未日实测）。现两层同委托基类单点出口
+        is_zhongsang_by_lunar（日干口径），原内联干支表已删。
+        典据状态见基类该出口处注释（p54「惟喪塟忌之」与 p742 双栏待证）。
         """
-        day_gan = sizhu.get('day_gan', '')
-        day_zhi = sizhu.get('day_zhi', '')
-        day_gz = day_gan + day_zhi
-
-        try:
-            date_obj = self._get_date_from_sizhu(sizhu)
-            if date_obj:
-                from modules.四柱计算器 import get_lunar_date
-                lunar_info = get_lunar_date(date_obj)
-                if lunar_info and 'month' in lunar_info:
-                    lunar_month_name = lunar_info['month']
-                    zhongsang_map = {
-                        '正月': '庚戌', '二月': '辛酉', '三月': '庚申', '四月': '己未',
-                        '五月': '戊午', '六月': '丁巳', '七月': '丙辰', '八月': '乙卯',
-                        '九月': '甲寅', '十月': '癸丑', '十一月': '壬子', '十二月': '辛亥',
-                        '腊月': '辛亥'
-                    }
-                    return day_gz == zhongsang_map.get(lunar_month_name, '')
-        except:
-            pass
-
+        date_obj = self._get_date_from_sizhu(sizhu)
+        if date_obj:
+            return is_zhongsang_by_lunar(date_obj)
         return False
     
     def _parse_chinese_day(self, day_str):

@@ -26,9 +26,9 @@ D3 收敛背景（2026-10-15）：
 入口：
   ① 基类 _is_hongsha（节气月支唯一出口，修造扩展/安床/通用/嫁娶均继承）
   ② 嫁娶规则 _check_rules 忌项文案链端到端（'红纱日'，婚嫁 veto 源）
-  ③ pipeline shensha_list 端到端：修造/安床 '红砂日' 恰 1 条 -15；
-     嫁娶 '红砂日' 恰 1 条 -20
-  ④ 嫁娶内部一致性：shensha_list 红砂日 IFF ji_list 红纱日
+  ③ pipeline shensha_list 端到端：四事项统一正名 '红纱日'（001 §193 C2
+     异名归一：红砂日→红纱日），修造/安床 恰 1 条 -15，嫁娶 恰 1 条 -20
+  ④ 嫁娶内部一致性：shensha_list 红纱日 IFF ji_list 红纱日
 
 独立运行：python tests/verify_hongsha.py    退出码 0=通过 1=失败
 """
@@ -154,17 +154,17 @@ def _pipe_ad(cls, kw):
         sz['date'] = d
         c = cls(**kw)
         c.check(sz)
-        return any(isinstance(x, dict) and x.get('name') == '红砂日' for x in c.shensha_list)
+        return any(isinstance(x, dict) and x.get('name') == '红纱日' for x in c.shensha_list)
     return _ad
 
 
-# ===== 入口④：嫁娶内部一致性（shensha_list 红砂日 IFF ji_list 红纱日） =====
+# ===== 入口④：嫁娶内部一致性（shensha_list 红纱日 IFF ji_list 红纱日） =====
 def _ad_marriage_consistency(d):
     sz = calculate_sizhu(d, 12, 0)
     sz['date'] = d
     mc = MarriageShenShaChecker()
     mc.check(sz)
-    shensha_hit = any(isinstance(x, dict) and x.get('name') == '红砂日' for x in mc.shensha_list)
+    shensha_hit = any(isinstance(x, dict) and x.get('name') == '红纱日' for x in mc.shensha_list)
     ji = _rc._check_rules(sz, date_obj=d)[1]
     rules_hit = any('红纱日' in str(x) for x in ji)
     return shensha_hit == rules_hit
@@ -210,7 +210,7 @@ for tag, cls, kw, score in [
     c = cls(**kw)
     c.check(sz)
     hs = [x for x in c.shensha_list if isinstance(x, dict) and '红' in str(x.get('name', ''))]
-    assert [x.get('name') for x in hs] == ['红砂日'], f'{tag} 红砂条目异常: {hs}'
+    assert [x.get('name') for x in hs] == ['红纱日'], f'{tag} 红纱条目异常: {hs}'
     assert hs[0].get('score') == score, f'{tag} 红砂应 {score}，实际 {hs[0].get("score")}'
 _notes.append('pipeline 分值锁：修造/安床 -15，嫁娶 -20（极凶日加重）')
 
@@ -247,7 +247,7 @@ for _yr, _auth in [(2025, AUTH_2025), (2026, AUTH_2026)]:
         _sz['date'] = _d
         _mc2 = MarriageShenShaChecker()
         _mc2.check(_sz)
-        _s_hit = any(isinstance(x, dict) and x.get('name') == '红砂日' for x in _mc2.shensha_list)
+        _s_hit = any(isinstance(x, dict) and x.get('name') == '红纱日' for x in _mc2.shensha_list)
         _r2 = _smd2(_d, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
         _sc_hit = any('红纱' in x[0] for x in _r2['details'])
         assert _s_hit == _sc_hit, f'{_d} 两套路径不一致: shensha={_s_hit} score={_sc_hit}'
