@@ -773,40 +773,19 @@ def is_huangsha(date_obj, sizhu):
     return is_huangsha_by_zhi(sizhu.get('month_zhi', ''), sizhu.get('day_zhi', ''))
 
 def is_sansang(date_obj):
-    """重丧日（按规则判断）
+    """重丧日（农历月查日干）
 
-    规则（按农历月份）：
-    - 正月（寅月）：庚日
-    - 二月（卯月）：辛日
-    - 三月（辰月）：戊日
-    - 四月（巳月）：丙日
-    - 五月（午月）：丁日
-    - 六月（未月）：己日
-    - 七月（申月）：甲日
-    - 八月（酉月）：乙日
-    - 九月（戌月）：戊日
-    - 十月（亥月）：壬日
-    - 十一月（子月）：癸日
-    - 十二月（丑月）：己日
+    001 §193 主轨 C2（2026-10-28）双口径对齐：原本函数自带一份农历月→日干
+    表（正月庚、二月辛、三月戊…），而神煞层（嫁娶神煞._is_zhongsang）另有
+    一份农历月→完整干支表，两层互不一致（2026 年 32 天 vs 5 天），同日可
+    出现"神煞扣分但算法不否决"。现与神煞层同委托基类单点出口
+    is_zhongsang_by_lunar，两处判定恒等；典据状态见该出口注释。
     """
-    day_gan, _ = get_day_ganzhi(date_obj)
-
     try:
-        from modules.四柱计算器 import get_lunar_date
-        lunar_info = get_lunar_date(date_obj)
-        if lunar_info and 'month' in lunar_info:
-            lunar_month_name = lunar_info['month']
-            zhongsang_map = {
-                '正月': ['庚'], '二月': ['辛'], '三月': ['戊'], '四月': ['丙'],
-                '五月': ['丁'], '六月': ['己'], '七月': ['甲'], '八月': ['乙'],
-                '九月': ['戊'], '十月': ['壬'], '十一月': ['癸'], '十二月': ['己'],
-                '腊月': ['己']
-            }
-            return day_gan in zhongsang_map.get(lunar_month_name, [])
-    except Exception as e:
-        logger.error(f"获取农历月份失败: {e}")
-
-    return False
+        from .shensha.神煞基类 import is_zhongsang_by_lunar
+    except ImportError:
+        from modules.shensha.神煞基类 import is_zhongsang_by_lunar
+    return is_zhongsang_by_lunar(date_obj)
 
 def is_sanniangsha(date_obj):
     """真三娘煞：农历日期与日干支同时满足特定条件（全年仅6天）

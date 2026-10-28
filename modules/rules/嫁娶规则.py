@@ -25,7 +25,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
-from ..shensha.神煞基类 import is_yanggongji_by_lunar
+from ..shensha.神煞基类 import is_yanggongji_by_lunar, is_shousi_by_zhi
 from ..建除 import get_event_yiji
 from datetime import date, datetime
 
@@ -427,6 +427,12 @@ class MarriageRuleChecker(EventRuleChecker):
         """检查婚嫁规则"""
         yi_list = []
         ji_list = []
+        # 001 §193 主轨 C2（2026-10-28 拍板）：四柱冲事主的硬否决集合。
+        # 旧实现靠忌项文案子串「冲新娘」判否决——只有新娘能触发否决，新郎/
+        # 附加事主同日同冲也 0 否决（盘点实证 2026-01-08 壬午日：空事主 37、
+        # 新郎鼠 37、新娘鼠 0）。现由 _check_shengxiao_chong 以结构化形式登记，
+        # _check_veto_items 直接消费，文案不再承担规则语义。
+        self._hard_veto_chong = []
         
         # 如果是四柱输入模式，跳过日期相关的检查
         if sizhu.get('is_sizhu_input', False):
@@ -488,7 +494,7 @@ class MarriageRuleChecker(EventRuleChecker):
     def _check_veto_items(self, sizhu, owners, ji_list):
         """
         检查一票否决项
-        
+
         嫁娶一票否决项：
         1. 禁婚年 - 命中禁婚年
         2. 月破日 - 诸事不宜
@@ -499,7 +505,18 @@ class MarriageRuleChecker(EventRuleChecker):
         7. 真三娘煞 - 婚嫁大忌
         8. 女命忌嫁日（当梁勾绞） - 婚嫁大忌
         9. 阴阳差错日 - 婚嫁大忌
-        10. 冲新娘日柱 - 大忌
+        10. 受死日 - 陈书 p152「上官起造嫁娶等凶」
+        11. 四柱冲事主（日/月/年柱） - 男命、女命、附加事主平权
+
+        001 §193 主轨 C2（2026-10-28 拍板）：
+        - 删「冲新娘」子串口径。旧实现靠忌项文案是否含「冲新娘」判否决，
+          只有女方触发否决，男命与附加事主同日同冲只扣分（盘点实证：
+          2026-01-08 壬午日 空事主 37 / 新郎鼠 37 / 新娘鼠 0）。现改由
+          _check_shengxiao_chong 输出结构化硬否决列表 _hard_veto_chong，
+          全体事主按日/月/年柱六冲同等否决。
+        - 受死日升级 HARD_VETO（原仅经 ('嫁娶','受死日') 扣 15 分普通分，
+          盘点 2026 年 31 天中 13 天仍判 ≥60 分，最高 118 上吉，与大忌定性
+          严重不匹配；陈书 p152「受死 上官起造嫁娶等凶」）。
         （原「3. 岁破日 - 诸事不宜」已删：岁破批 2026-10-20，001 §140）
         """
         veto_reasons = []
@@ -509,7 +526,7 @@ class MarriageRuleChecker(EventRuleChecker):
         veto_keywords = [
             '禁婚年', '月破日', '四离四绝日',
             '红纱日', '杨公忌', '重丧日', '真三娘煞',
-            '阴阳差错日', '女命忌嫁日', '冲新娘'
+            '阴阳差错日', '女命忌嫁日', '受死日'
         ]
         
         for ji in ji_list:
@@ -517,6 +534,10 @@ class MarriageRuleChecker(EventRuleChecker):
                 if keyword in ji:
                     veto_reasons.append(ji)
                     break
+        # 四柱冲事主：结构化硬否决（文案已同步写入 ji_list，此处按序补入并去重）
+        for _c in getattr(self, '_hard_veto_chong', []):
+            if _c not in veto_reasons:
+                veto_reasons.append(_c)
         
         if veto_reasons:
             return True, "、".join(veto_reasons)
@@ -676,6 +697,13 @@ class MarriageRuleChecker(EventRuleChecker):
         if month_zhi in self.HUANGSHA:
             if day_zhi in self.HUANGSHA[month_zhi]:
                 ji_list.append(f'黄沙日')
+
+        # 受死日（001 §193 主轨 C2，2026-10-28 拍板升 HARD_VETO）：
+        # 陈书 p152「受死 上官起造嫁娶等凶，宜安塟」——嫁娶明载凶。
+        # 判定走神煞基类单点出口 is_shousi_by_zhi（p152 逐月表A，与入宅/嫁娶
+        # 神煞子类同表同集合），避免规则层再抄一份月支表造成口径漂移。
+        if is_shousi_by_zhi(month_zhi, day_zhi):
+            ji_list.append('受死日')
         
         # 真三娘煞（特定干支；闰月不计——通用规则，与杨公忌/红纱口径一致）
         if not is_leap and lunar_day in self.ZHEN_SANNIANGSHA:
@@ -774,11 +802,19 @@ class MarriageRuleChecker(EventRuleChecker):
     def _check_shengxiao_chong(self, sizhu, owners, ji_list):
         """
         检查四柱与事主生肖相冲（嫁娶专用）
-        传统择日：日 > 年 > 月 > 时；女方被日柱冲为大忌
-        
+        传统择日：日 > 月 > 年；日柱冲事主为大忌
+
+        001 §193 主轨 C2（2026-10-28 拍板）事主平权：
+        旧实现只把「日柱/年柱/月柱…冲新娘…」的文案写入 ji_list，再由
+        _check_veto_items 用子串「冲新娘」判否决——男方与附加事主同日同冲
+        只扣分、不否决（盘点实证 2026-01-08 壬午日：空事主 37、新郎鼠 37、
+        新娘鼠 0）。现改为结构化登记：凡女方/男方/附加事主命中日、月、年柱
+        六冲，一律进 _hard_veto_chong，由 _check_veto_items 消费，
+        三类事主获得同等 HARD_VETO 权重。
+
         参数:
             sizhu: 四柱字典
-            owners: 事主列表（男女双方）
+            owners: 事主列表（男女双方及附加事主）
             ji_list: 忌项列表，会被修改
         """
         if not owners:
@@ -788,7 +824,6 @@ class MarriageRuleChecker(EventRuleChecker):
         year_zhi = sizhu.get('year_zhi', '')
         month_zhi = sizhu.get('month_zhi', '')
         day_zhi = sizhu.get('day_zhi', '')
-        hour_zhi = sizhu.get('hour_zhi', '')
         
         if not day_zhi:
             return
@@ -824,30 +859,36 @@ class MarriageRuleChecker(EventRuleChecker):
             if not target_chong_zhi:
                 continue
             
-            # 检查日柱（对女方最重要）- 使用日柱地支而非生肖
+            # 检查日柱（对双方同等重要）- 使用日柱地支而非生肖
             owner_day_zhi = self._get_owner_day_zhi(owner)
             if owner_day_zhi:
                 day_chong_zhi = chong_map.get(owner_day_zhi, '')
                 if day_zhi == day_chong_zhi:
-                    if is_bride:
-                        ji_list.append(f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}{_otag}')
-                    else:
-                        ji_list.append(f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}{_otag}')
+                    _txt = (f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}{_otag}'
+                            if is_bride else
+                            f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}{_otag}')
+                    ji_list.append(_txt)
+                    self._hard_veto_chong.append(_txt)
             else:
                 # 无日柱信息时回退到生肖检查
                 if day_zhi == target_chong_zhi:
-                    if is_bride:
-                        ji_list.append(f'日柱{day_zhi}冲新娘{name}{_otag}')
-                    else:
-                        ji_list.append(f'日柱{day_zhi}冲{name}{_otag}')
+                    _txt = (f'日柱{day_zhi}冲新娘{name}{_otag}'
+                            if is_bride else
+                            f'日柱{day_zhi}冲{name}{_otag}')
+                    ji_list.append(_txt)
+                    self._hard_veto_chong.append(_txt)
 
             # 检查年柱
             if year_zhi == target_chong_zhi:
-                ji_list.append(f'年柱{year_zhi}冲{name}{_otag}')
+                _txt = f'年柱{year_zhi}冲{name}{_otag}'
+                ji_list.append(_txt)
+                self._hard_veto_chong.append(_txt)
 
             # 检查月柱
             if month_zhi == target_chong_zhi:
-                ji_list.append(f'月柱{month_zhi}冲{name}{_otag}')
+                _txt = f'月柱{month_zhi}冲{name}{_otag}'
+                ji_list.append(_txt)
+                self._hard_veto_chong.append(_txt)
 
             # 检查时柱
             # 001 §193 主轨 Commit1（2026-10-28 拍板）：时柱冲新人**不再写入日课忌项**。
