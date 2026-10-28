@@ -99,6 +99,16 @@ def _owner_year_sx(owner):
     return ''
 
 
+def _sx_to_zhi(sx):
+    """生肖 → 地支（SHENGXIAO_MAP 反查；用于吉时冲命校验）。"""
+    if not sx:
+        return ''
+    for _z, _s in SHENGXIAO_MAP.items():
+        if _s == sx:
+            return _z
+    return ''
+
+
 def _owner_life_line(owner, label_suffix='贵庚'):
     """按模板格式显示：父：辛卯年（辛卯干支）或 宅主：○○年（○○干支）贵庚"""
     if not isinstance(owner, dict):
@@ -216,7 +226,23 @@ def prepare_entry(entry):
 
     # 吉时三级：按十二时辰吉凶得分取前三
     hours = calc_shichen_jixiong(day_gan, day_zhi, nian[1], yue[1])
-    good = sorted([h for h in hours if h['score'] > 0], key=lambda x: -x['score'])[:4]
+    # 001 §193 主轨 Commit1（2026-10-28 拍板）：婚嫁类吉时须过新人年命冲克校验。
+    # 原实现只取通书时辰吉凶分（黄道/贵人/禄神等），冲新郎/新娘年支的时辰会被
+    # 印成「大吉」发轿时辰——2026 年冲新娘年支时辰进入前三吉时的天数：未命 171、
+    # 申 164、亥 146、午 122 天。冲命时辰一律不参与吉时分派（时辰层已将其列
+    # 禁用，见 嫁娶神煞扩展.get_lucky_hours）。
+    _avoid_zhi = set()
+    if str(e.get('event_type') or '') in ('嫁娶', '订婚', '订盟', '订盟纳采', '纳采'):
+        for _o in (_prepare_owners(e).get('list') or []):
+            _gz = _owner_year_gz(_o)
+            _z = _gz[1] if len(_gz) >= 2 else ''
+            if not _z:
+                _z = _sx_to_zhi(_owner_year_sx(_o))
+            if len(_z) == 1 and _z in DI_ZHI_ORDER:
+                _avoid_zhi.add(DI_ZHI_ORDER[(DI_ZHI_ORDER.index(_z) + 6) % 12])
+    good = sorted(
+        [h for h in hours if h['score'] > 0 and h['zhi'] not in _avoid_zhi],
+        key=lambda x: -x['score'])[:4]
     grades = ['大吉', '吉', '次吉', '吉']
     jishi = []
     for i, h in enumerate(good):

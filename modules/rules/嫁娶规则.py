@@ -850,8 +850,16 @@ class MarriageRuleChecker(EventRuleChecker):
                 ji_list.append(f'月柱{month_zhi}冲{name}{_otag}')
 
             # 检查时柱
-            if hour_zhi == target_chong_zhi:
-                ji_list.append(f'时柱{hour_zhi}冲{name}{_otag}')
+            # 001 §193 主轨 Commit1（2026-10-28 拍板）：时柱冲新人**不再写入日课忌项**。
+            # 理由：日课评分口径自述「不含时柱因素，时柱由十二时辰表独立评估」
+            # （婚嫁评分算法 L11-16）；且忌项会进 _check_veto_items 关键词集
+            # （'冲新娘'），导致「同一日期换个示例时辰即整日判死」——2026-03-02
+            # 亥命新娘实测：10:00 巳时总分 0（否决）、02:00/14:00/22:00 均 63~73
+            # 上吉。时辰冲命已由 get_lucky_hours 以「冲新娘/冲新郎（禁用）」逐时
+            # 处置（min(score,-20) 且永不推荐），故选时问题不再污染选日结论。
+            # 原实现留档：
+            #     if hour_zhi == target_chong_zhi:
+            #         ji_list.append(f'时柱{hour_zhi}冲{name}{_otag}')
 
 # 测试
 if __name__ == '__main__':
