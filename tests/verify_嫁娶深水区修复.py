@@ -167,12 +167,14 @@ def main():
             mism.append(str(dd))
         if a:
             zs_days += 1
-        if any(s.get('name') == '重丧日' for s in ck_jq.check(sz, [])):
+        if any(s.get('name') == '复日' for s in ck_jq.check(sz, [])):
             emit += 1
         dd += dt.timedelta(days=1)
     check(f'E 365 天两口径零分歧（不一致 {len(mism)}）', not mism, f'{mism[:5]}')
-    check(f'E 重丧天数=32（实得 {zs_days}）', zs_days == 32)
-    check(f'E 检查器发射重丧日=32 天次（实得 {emit}）', emit == 32)
+    # §197（2026-10-28 复日起例改正）重冻：农历双干混拼表 → 协纪正法单干·
+    # 节气月建，2026 命中 32→34 天；注册名正名「复日」，旧「重丧日」名下线。
+    check(f'E 复日天数=34（§197 起例改正；实得 {zs_days}）', zs_days == 34)
+    check(f'E 检查器发射复日=34 天次（实得 {emit}）', emit == 34)
 
     # ============ F：重名去重 ============
     print('[F] 黄沙/红纱 重名去重（评分链路展示清单）')

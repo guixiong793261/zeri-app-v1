@@ -107,6 +107,9 @@ print('== V4. 多否决源叠加（§59.3 验收后补）==')
 # 大凶日一票否决取代原五行门槛否决——否决源变 [大凶日, 相主硬门槛]，
 # "多否决源叠加下仙命信息仍完整"的断言语义不变（§186 探针实测确认：
 # veto_reasons=[重丧日、年重丧忌安葬（一票否决）, …（相主硬门槛，一票否决）]）。
+# §197（2026-10-28 复日起例改正）重冻：卯月按协纪单干表取「乙」，辛巳日
+# 已非复日（旧农历双干表误收庚辛），否决源收窄为 [年重丧, 相主硬门槛]。
+# "多否决源叠加"语义不破（仍为 2 源），reason 文案随复日项消失而更新。
 _owners4 = [dead(), {'name': '事主', 'role': '事主', '性别': '男',
                      'birth_date': '1947-06-15', '_zaozhu_weight': 1.0}]
 _r4v = run(dt.date(2023, 3, 24), _owners4)
@@ -117,10 +120,10 @@ check('V4 2023-03-24：双否决源（veto_reasons 含 大凶日一票否决+相
       and any('相主硬门槛' in str(v) for v in _vr4))
 check('V4：wangming_info/shanzuo_eval 在多否决源下仍携带',
       bool(_r4v.get('wangming_info')) and bool(_r4v.get('shanzuo_eval')))
-check('V4：reason 同时含两类否决与仙命段',
-      '重丧日、年重丧忌安葬（一票否决）' in _r4v.get('reason', '')
-      and '亡命（仙命）' in _r4v.get('reason', '')
-      and '仙命×坐山：' in _r4v.get('reason', ''))
+check('V4：reason 同时含大凶否决、相主六冲与仙命段',
+      '年重丧忌安葬（一票否决）' in _r4v.get('reason', '')
+      and '年命六冲' in _r4v.get('reason', '')
+      and '亡命（仙命）' in _r4v.get('reason', ''))
 check('V4：score_details 仙命坐山详情含"因否决未计入总分，仅披露"',
       '因否决未计入总分，仅披露'
       in (_r4v.get('score_details') or {}).get('仙命坐山详情', ''))
