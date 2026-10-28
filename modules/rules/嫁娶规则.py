@@ -25,7 +25,8 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
-from ..shensha.神煞基类 import is_yanggongji_by_lunar, is_shousi_by_zhi
+from ..shensha.神煞基类 import (is_yanggongji_by_lunar, is_shousi_by_zhi,
+                                is_zhongsang_by_lunar)
 from ..建除 import get_event_yiji
 from datetime import date, datetime
 
@@ -704,6 +705,16 @@ class MarriageRuleChecker(EventRuleChecker):
         # 神煞子类同表同集合），避免规则层再抄一份月支表造成口径漂移。
         if is_shousi_by_zhi(month_zhi, day_zhi):
             ji_list.append('受死日')
+
+        # 重丧日（001 §195 Commit2，2026-10-28 拍板「激活空转」）：
+        # 原 _check_veto_items 的 veto_keywords 含 '重丧日'，但规则层从不写入
+        # ji_list → 关键词永不命中（空转），嫁娶的重丧否决实际只由
+        # 婚嫁评分算法 check_reject_items 实施，两层判断脱节。现补齐发射，
+        # 判定走神煞基类单点出口 is_zhongsang_by_lunar（农历月查日干，与
+        # 神煞层/算法层同源），使两层一致且可触发。分值极性不变
+        # （('嫁娶','重丧日') 仍为 -10 普通扣分，否决极性由关键词集决定）。
+        if date_obj and is_zhongsang_by_lunar(date_obj):
+            ji_list.append('重丧日')
         
         # 真三娘煞（特定干支；闰月不计——通用规则，与杨公忌/红纱口径一致）
         if not is_leap and lunar_day in self.ZHEN_SANNIANGSHA:

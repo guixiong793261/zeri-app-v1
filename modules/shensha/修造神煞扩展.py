@@ -34,7 +34,8 @@ if __name__ == '__main__' and __package__ is None:
 
 try:
     from .修造神煞 import ConstructionShenShaChecker
-    from .神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
+    from .神煞基类 import (is_yanggongji_by_lunar, is_zhongsang_by_lunar,
+                           get_sun_moon_mountains, get_xiangshan_24)
     from .时辰系 import (
         WUSHU_DUN,
         get_gui_ren_shichen as _ss_gui_ren,
@@ -240,28 +241,26 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         return False
     
     def _is_zhongsang(self, sizhu):
-        """是否重丧日
-        重丧日口诀：正七连庚甲，二八乙辛当
-                  五冬丁癸是，四十丙壬方
-                  三六九腊月，戊己是重丧
-        正月(寅)、七月(申)忌庚甲日
-        二月(卯)、八月(酉)忌乙辛日
-        三月(辰)、六月(未)、九月(戌)、腊月(丑)忌戊己日
-        四月(巳)、十月(戌)忌丙壬日
-        五月(午)、十一月(亥)忌丁癸日
-        """
-        month_zhi = sizhu['month_zhi']
-        day_gan = sizhu['day_gan']
+        """是否重丧日（农历月查日干）
 
-        zhongsang_map = {
-            '寅': ['庚', '甲'], '申': ['庚', '甲'],  # 正月、七月忌庚甲
-            '卯': ['乙', '辛'], '酉': ['乙', '辛'],  # 二月、八月忌乙辛
-            '巳': ['丙', '壬'], '戌': ['丙', '壬'],  # 四月、十月忌丙壬
-            '午': ['丁', '癸'], '亥': ['丁', '癸'],  # 五月、十一月忌丁癸（修正：原为戊己）
-            '辰': ['戊', '己'], '未': ['戊', '己'],  # 三月、六月忌戊己
-            '丑': ['戊', '己'], '戌': ['戊', '己']   # 九月、腊月忌戊己
-        }
-        return day_gan in zhongsang_map.get(month_zhi, [])
+        001 §195 Commit2（2026-10-28 拍板）：废弃本类原有的**第三套实现**
+        （节令月支查日干，2026 年命中 68 天），统一委托神煞基类单点出口
+        is_zhongsang_by_lunar（农历月查日干，2026 年命中 32 天），与嫁娶神煞、
+        婚嫁评分算法同源。原实现与单点出口 2026 年分歧 58 天。
+
+        原实现另有一处死 Bug：zhongsang_map 中 '戌' 键重复（'四月丙壬' 与
+        '九月戊己' 共用 戌），Python 后值覆盖前值 → 戌月按戊己判，
+        「四十丙壬方」的十月支被吃掉。统一到单点出口后，该分支语义由
+        单点出口表的「四月丙／十月壬」承接，重复键随表一并废除。
+        """
+        d = sizhu.get('date')
+        if not isinstance(d, date):
+            try:
+                d = date(int(sizhu.get('year')), int(sizhu.get('month')),
+                         int(sizhu.get('day')))
+            except (TypeError, ValueError):
+                return False
+        return is_zhongsang_by_lunar(d)
     
     def _is_chongfu(self, sizhu):
         """是否重复日
