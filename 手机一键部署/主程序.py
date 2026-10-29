@@ -5818,6 +5818,9 @@ class ZeriApp:
             
             if shan_xiang:
                 text.insert(tk.END, f"\n   坐山：{shan_xiang}")
+                if event_type == '出行':
+                    # 001 §200：三库取证确认出行方位应为"出发方向"，坐山口径待拍板后升级
+                    text.insert(tk.END, "\n   *注：出行的方位判定即将升级为“出发方向”，当前填写的坐山仅作参考。")
             
             # 三煞信息
             year_sansha = sansha_info.get('year_sansha', [])
