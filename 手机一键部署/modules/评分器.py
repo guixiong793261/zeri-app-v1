@@ -111,6 +111,7 @@ try:
         get_shensha_checker as _std_get_shensha_checker,
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
         display_only_info as _display_only_info,
+        SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
     )
 except ImportError:
     from 事项标准 import (
@@ -121,7 +122,21 @@ except ImportError:
         get_shensha_checker as _std_get_shensha_checker,
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
         display_only_info as _display_only_info,
+        SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
     )
+
+# ============================================================================
+# 山家封禁 / 山向缺失警示的适用事项（2026-10-29 用户拍板，001 §199 P1/P2）
+# ============================================================================
+# 口径来源：SHAN_UI_EVENTS（UI 要求填山向的事项）剔除"出行"。
+# ① 山家封禁（日冲山/岁破/五黄等一票否决）：出行没有固定"坐山"，其"山向"
+#    实为出发方向，套用坐山否决不合古法，故移出；其余事项判定不变，恢复
+#    被误杀的出行吉日。
+# ② 未填山向顶层红字警示：凡将进入山家封禁/三煞/向方等方位通道的事项，
+#    缺山向即须显式警示（出行不进入该通道，故不警示）。
+_MOUNTAIN_SCORE_EVENTS = frozenset(
+    _canonical_event(x) for x in _SHAN_UI_EVENTS
+) - {_canonical_event('出行')}
 
 # ============================================================================
 # 亡命（仙命）角色判定：安葬路径的死者卡。GUI 默认卡名"死者"，兼容
@@ -932,6 +947,9 @@ class Scorer:
             # （修造等山向中心，四柱临方扣分不否决）。默认True走严口径，
             # 通用评分路径在 sansha_info 口径确定后立即覆写。
             self._pillar_veto_mode = True
+            # 当前事项（001 §199 P1）：山家封禁白名单门控读取此值，必须在
+            # 任何 _get_sansha_info 调用前同步，避免跨课残留上一次事项。
+            self._current_event_type = event_type
             # Q4：本轮已制化正阴府干集合（供 _check_wu_xing 规则合并后清理
             # 年运/日月干静态忌项），随评分重置防跨日残留
             self._mitigated_yinfu_gans = set()
@@ -1061,6 +1079,16 @@ class Scorer:
                         _marriage_hour = _ZHI2HOUR.get(_hour_gz[1], 12) if len(_hour_gz) >= 2 else 12
                         marriage_result = score_marriage_day(date_obj, bride_bazi, groom_bazi,
                                                              hour=_marriage_hour)
+                        # §199 P3（2026-10-29 用户拍板）：嫁娶缺事主不得静默——
+                        # 无事主时婚嫁算法只算基础分与历注吉凶，结论不完整，
+                        # 必须在结果顶层显式提示（三条 return 共用此清单）。
+                        if not owners:
+                            _wm = marriage_result.get('warnings')
+                            if not isinstance(_wm, list):
+                                _wm = []
+                            if '未提供事主信息' not in _wm:
+                                _wm.insert(0, '未提供事主信息')
+                            marriage_result['warnings'] = _wm
                         
                         # 预先计算黄道信息（避免后续多个提前返回分支重复计算或遗漏）
                         self.huangdao_info = calculate_huangdao(sizhu)
@@ -1450,6 +1478,8 @@ class Scorer:
                                     # 嫁娶评分分项明细（基础分/大利月/月德/黄道/夫星受克等），
                                     # 否则五行评分只显示"73分"无法追溯来源。
                                     'marriage_details': marriage_result.get('details', []),
+                                    # §199 P3：补齐 warnings，与另两条嫁娶 return 同 schema
+                                    'warnings': marriage_result.get('warnings', []),
                                     'sansha_info': {},
                                     'shan_xiang': shan_xiang,
                                     'pipeline': 'marriage',  # 阶段1增量字段
@@ -1644,6 +1674,10 @@ class Scorer:
                             'shensha_list_scoring': _scoring_shensha,  # 001 §178
                             'yi_list': self.yi_list,
                             'ji_list': self.ji_list,
+                            # §199 P3（2026-10-29 用户拍板）：非否决路径同样声明
+                            # veto_reasons（空表），保证嫁娶三条 return 的 schema
+                            # 绝对一致，下游无需按"是否否决"分支取键。
+                            'veto_reasons': [],
                             'huangdao_info': self.huangdao_info,
                             'marriage_details': marriage_result.get('details', []),
                             'warnings': marriage_result.get('warnings', []),
@@ -2299,10 +2333,12 @@ class Scorer:
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
                     'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
-                    # §190 C2：否决日同样携带山向缺失警示（无山向时五行门槛
-                    # 亦可能否决，此时警示不可缺）
+                    # §190 C2 / §199 P2：否决日同样携带山向缺失警示（无山向时
+                    # 五行门槛亦可能否决，此时警示不可缺）。2026-10-29 用户拍板
+                    # 扩面：由"仅入宅"扩展到全部山向类事项（出行除外，见
+                    # _MOUNTAIN_SCORE_EVENTS）。
                     'warnings': (['⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用']
-                                 if _canonical_event(event_type) == '入宅'
+                                 if _canonical_event(event_type) in _MOUNTAIN_SCORE_EVENTS
                                  and not shan_xiang else []),
                     'pipeline': 'general',  # 阶段1增量字段
                     'shensha_audit': self._build_shensha_audit_general(),
@@ -2775,13 +2811,14 @@ class Scorer:
                     'score': 0,
                 })
 
-            # §190 C2（2026-10-27 用户拍板）：入宅未填山向顶层警示。
-            # 入宅 need_shan=True，山向缺失时山家三煞/向方/年运等方位通道全部
-            # 静默跳过，分数虚高（2026-01-05 实测 102 大吉即在此口径下产生），
-            # 必须在结果顶层强制显式警示，防止用户盲目采用。仅入宅 canonical
-            # （含移徙归并）启用，其余事项本批不动。
+            # §190 C2 / §199 P2（2026-10-29 用户拍板扩面）：未填山向顶层警示
+            # 由"仅入宅"扩展到全部山向类事项（修造/动土/拆舍/安葬/作灶/安床/
+            # 开业等，出行除外）。这些事项 need_shan，山向缺失时山家三煞/向方/
+            # 年运等方位通道全部静默跳过，分数虚高（2026-01-05 入宅实测 102
+            # 大吉即在此口径下产生），必须在结果顶层强制显式警示，防止用户
+            # 盲目采用。
             _shan_warnings = []
-            if _canonical_event(event_type) == '入宅' and not shan_xiang:
+            if _canonical_event(event_type) in _MOUNTAIN_SCORE_EVENTS and not shan_xiang:
                 _shan_warnings.append(
                     '⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用')
 
@@ -4582,7 +4619,12 @@ class Scorer:
             # 3. 不需要检查相邻地支，因为择日学中三煞检查以坐山为核心
         
         # 使用二十四山择吉天机模块进行专业山家检查
-        if shan_xiang:
+        # 门控事项白名单（001 §199 P1）：出行无固定坐山，日冲山/岁破一票否决
+        # 不适用（其方位口径待《出行方位轻权重口径》立项后重做）。
+        _mountain_event = (
+            _canonical_event(getattr(self, '_current_event_type', '') or '')
+            or '修造')
+        if shan_xiang and _mountain_event in _MOUNTAIN_SCORE_EVENTS:
             try:
                 from .二十四山择吉天机 import check_mountain_day
                 
@@ -4598,11 +4640,7 @@ class Scorer:
                     'year': sizhu.get('year', ''),  # 公历年份（用于年家五黄紫白飞星）
                 }
                 
-                event_type = ''
-                if hasattr(self, '_current_event_type'):
-                    event_type = self._current_event_type
-                
-                mountain_result = check_mountain_day(date_info, shan_xiang, event_type or '修造')
+                mountain_result = check_mountain_day(date_info, shan_xiang, _mountain_event)
                 info['mountain_day_check'] = mountain_result
                 
                 # 从专业检查结果中提取额外信息
