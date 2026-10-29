@@ -4619,12 +4619,16 @@ class Scorer:
             # 3. 不需要检查相邻地支，因为择日学中三煞检查以坐山为核心
         
         # 使用二十四山择吉天机模块进行专业山家检查
-        # 门控事项白名单（001 §199 P1）：出行无固定坐山，日冲山/岁破一票否决
-        # 不适用（其方位口径待《出行方位轻权重口径》立项后重做）。
+        # 门控事项白名单（001 §199 P1）：出行无固定坐山（其"山向"实为出发
+        # 方向），"日冲山/岁破"一票否决不适用。检查结果保留（mountain_day_check
+        # /吉神/警示仍供展示），仅**不进入封禁否决通道**，避免因去掉山家吉神
+        # 加分而反向压穿五行门槛、新增误否决。出行方位口径待
+        # 《出行方位轻权重口径与方道吉凶三库取证》立项后重做。
         _mountain_event = (
             _canonical_event(getattr(self, '_current_event_type', '') or '')
             or '修造')
-        if shan_xiang and _mountain_event in _MOUNTAIN_SCORE_EVENTS:
+        _mountain_veto_ok = _mountain_event in _MOUNTAIN_SCORE_EVENTS
+        if shan_xiang:
             try:
                 from .二十四山择吉天机 import check_mountain_day
                 
@@ -4650,7 +4654,11 @@ class Scorer:
                         # _zm0915：纯正五行（协纪辨方书）剔除三元紫白飞星体系的五黄/二黑封禁；
                         # 日冲山/岁煞/阴府等传统年神照常封禁
                         _mb_reasons = [_r for _r in _mb_reasons
-                                       if not any(_k in str(_r) for _k in ('五黄', '二黑', '紫白'))]
+                                       if not any(_k in str(_r) for _k in ('五黄', '二黄', '紫白'))]
+                    if not _mountain_veto_ok:
+                        # 出行（001 §199 P1）：凶煞仅留存于 mountain_day_check
+                        # 供展示，不置封禁、不注入否决、不逐项 -15。
+                        _mb_reasons = []
                     info['mountain_blocked'] = bool(_mb_reasons)
                     info['mountain_block_reasons'] = _mb_reasons
                 else:
