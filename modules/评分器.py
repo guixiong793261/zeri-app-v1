@@ -1731,6 +1731,18 @@ class Scorer:
                     sansha_info.pop(_tk, None)
                 sansha_info['sansha_applicable'] = False
 
+            # §201 Commit2（2026-10-30 用户拍板）：出行方位吉凶轻权重通道。
+            # 仅出行事项、仅以"出发方向"判定：天德方(天道方)/月德方 +8、
+            # 喜神方 +5（合计封顶 +8）；鹤神方/日游方 -5（同方不重复扣）。
+            # 未填出发方向 → 恒 0，不加不扣。岁破/太岁方不纳入（C4）。
+            travel_dir_info = {}
+            if _is_travel:
+                try:
+                    from .出行方位 import evaluate as _eval_travel_direction
+                except ImportError:
+                    from 出行方位 import evaluate as _eval_travel_direction
+                travel_dir_info = _eval_travel_direction(travel_direction, sizhu)
+
             # 三煞判定口径（2026-09-07 用户确认；2026-10-09 §64 B3 按柱分级）：
             #  山向中心事项（修造/动土/入宅/安葬等，以坐山修方为核心）用"仅坐山修方论"——
             #    坐山/修方犯三煞一票否决；四柱临三煞方仅扣分不否决
@@ -2228,6 +2240,12 @@ class Scorer:
                     score_details['三煞扣分明细'] = sansha_info.get('sansha_penalty_detail', [])
                     score_details['向方扣分'] = sansha_info.get('xiangfang_penalty', 0)
                     score_details['向方扣分明细'] = sansha_info.get('xiangfang_penalty_detail', [])
+                    if _is_travel:
+                        score_details['出行方位得分'] = travel_dir_info.get('score', 0)
+                        score_details['出行方位详情'] = (
+                            list(travel_dir_info.get('ji_items', []))
+                            + list(travel_dir_info.get('xiong_items', [])))
+                        score_details['出行方向'] = travel_dir_info.get('direction') or ''
                     score_details['月令详细'] = {
                         '旺衰得分': self._calculate_wangxiang(sizhu),
                         '支支关系得分': self._calculate_zhizhi_relation(sizhu),
@@ -2408,8 +2426,8 @@ class Scorer:
 
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
             # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
-            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + shanzuo_score + _wsc_score
+            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）+ 出行方位（001 §201）
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + travel_dir_info.get('score', 0) + shanzuo_score + _wsc_score
 
             # 不设置分数上限，显示实际计算的总分
 
@@ -2710,6 +2728,13 @@ class Scorer:
                 '向方扣分明细': sansha_info.get('xiangfang_penalty_detail', []),
                 '总分': self.final_score
             }
+            # §201 出行方位通道（仅出行事项追加，避免污染其他事项的明细键集）
+            if _is_travel:
+                score_details['出行方位得分'] = travel_dir_info.get('score', 0)
+                score_details['出行方位详情'] = (
+                    list(travel_dir_info.get('ji_items', []))
+                    + list(travel_dir_info.get('xiong_items', [])))
+                score_details['出行方向'] = travel_dir_info.get('direction') or ''
 
             # 添加每个事主的详细匹配信息
             if owner_matches:
@@ -2871,6 +2896,7 @@ class Scorer:
                 'xiangzhu_notes': list(getattr(self, 'xiangzhu_notes', []) or []),
                 'shan_xiang': shan_xiang,  # 添加山向信息
                 'travel_direction': travel_direction,  # 001 §201：出行"出发方向"
+                'travel_dir_info': travel_dir_info,    # 001 §201：出行方位吉凶明细
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
                 'pipeline': 'general',  # 阶段1增量字段
                 'shensha_audit': self._build_shensha_audit_general(),
