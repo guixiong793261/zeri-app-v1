@@ -8424,11 +8424,22 @@ class ZeriApp:
             return
 
         # 嫁娶吉帖补数据（2026-09-06用户建议）：按日期取完整结果 reason（含不将日/天德/月德等关键吉神）
+        # 001 §198 P1-1（2026-10-29 拍板）：同时透传 veto_reasons，供择日贴
+        # 「否决日不印大利/大吉」硬分支使用（原来 entry 不带否决原因，展示层
+        # 无法分辨吉凶，否决日照印吉语）。
         try:
             _d0 = entry.get('date', '')
             for _r in getattr(self, 'results', []) or []:
                 if _r.get('date', '') == _d0:
                     entry.setdefault('reason', str(_r.get('reason', '') or ''))
+                    _det = _r.get('detail')
+                    _vrs = None
+                    if isinstance(_det, dict):
+                        _vrs = _det.get('veto_reasons')
+                    if not _vrs:
+                        _vrs = _r.get('veto_reasons')
+                    if _vrs:
+                        entry['veto_reasons'] = [str(x) for x in _vrs]
                     break
         except Exception:
             pass

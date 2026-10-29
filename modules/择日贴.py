@@ -326,6 +326,22 @@ def prepare_entry(entry):
         e['_template'] = 'common'
     e['_is_marriage'] = (e['_template'] == 'marriage')  # 兼容旧变量
 
+    # ── 001 §198 P1-1（2026-10-29 拍板）：否决日硬判 ──
+    # 大考实测：被一票否决的凶日仍按吉帖模板印「大利/大吉/日吉时良」，属
+    # 严重误导。否决原因优先取 entry['veto_reasons']（主程序从评分结果
+    # detail 透传）；兜底：评分 0 分且等级含「凶」同样视为否决（无原因时
+    # 由 compose_veto_lines 打印评分与等级）。
+    _vrs = e.get('veto_reasons')
+    if not isinstance(_vrs, (list, tuple)):
+        _vrs = []
+    e['_veto_reasons'] = [str(x).strip() for x in _vrs if str(x).strip()]
+    try:
+        _score_num = float(str(e.get('score') or 0).strip() or 0)
+    except (TypeError, ValueError):
+        _score_num = 0.0
+    e['_is_vetoed'] = bool(e['_veto_reasons']) or (
+        _score_num == 0.0 and '凶' in str(e.get('level') or ''))
+
     # owners_list 解析 → 仙命/主事/父母/宅主/福主
     e['_owners_map'] = _prepare_owners(e)
 
@@ -817,11 +833,19 @@ def compose_anzhang_lines(e):
     a(('body', f"{_stage_label(e, 3)}：{_jishi_stage(e, 3)}"))
     a(('', ''))
     a(('h2', '【重要避忌】'))
+    # 001 §198 P1-2（2026-10-29 拍板）：原写死「复日（旧称重丧日）、年重丧、
+    # 三丧日：本日均已避开」属造假——真实否决源（月破/杨公忌/灾煞/厌对等）
+    # 全部漏印。改为动态渲染：先列本课真实 veto_reasons（有什么写什么），
+    # 无致命大凶时明示「无明显致命大凶」，另补复日类实测命中。
+    _vr = e.get('_veto_reasons') or []
+    if _vr:
+        for _r in _vr:
+            a(('body', f"⚠ {_r}"))
+    else:
+        a(('body', '无明显致命大凶'))
     hits = _zhongsang_hits(e)
     if hits:
         a(('body', f"⚠ 是日犯 {'、'.join(hits)}，慎用（宜另择）"))
-    else:
-        a(('body', '复日（旧称重丧日）、年重丧、三丧日：本日均已避开'))
     ss = _year_sansha_text(e)
     if ss:
         a(('body', f"⚠ 岁煞在 {ss} 方，忌其方动锄"))
@@ -837,8 +861,48 @@ def compose_anzhang_lines(e):
     return lines
 
 
+def compose_veto_lines(e):
+    """否决日专用帖（001 §198 P1-1）：绝不印「大利/大吉/日吉时良」，
+    只印「该日不吉，不可使用」+ 本课真实否决原因（有什么列什么）。"""
+    lines = []
+    a = lines.append
+    a(('', ''))
+    a(('title', '本　日　不　吉'))
+    a(('', ''))
+    a(('h2', '该日不吉，不可使用'))
+    a(('', ''))
+    a(('body', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
+    a(('body', f"农　　历：{e['_lunar_str']}"))
+    a(('body', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
+    _ev = str(e.get('event_type') or '').strip() or '—'
+    _ow = str(e.get('owners') or '').strip()
+    if _ow in ('-', '无', ''):
+        _ow = '—'
+    a(('body', f"用　　事：{_ev}　　事主：{_ow}"))
+    sl = _score_line(e)
+    if sl:
+        a(('body', sl))
+    a(('', ''))
+    a(('h2', '【否决原因】'))
+    _vr = e.get('_veto_reasons') or []
+    if _vr:
+        for _r in _vr:
+            a(('body', f"⚠ {_r}"))
+    else:
+        a(('body', '⚠ 该日评分为 0 分，已一票否决'))
+    a(('', ''))
+    a(('body', '此日一票否决，诸事不宜，请另择吉日良辰。'))
+    a(('', ''))
+    lines.extend(_signature_lines(e))
+    return lines
+
+
 def compose_detail_lines(e):
-    """单课详解帖：按 e['_template'] 分派到 6 类专版 + 通用红纸。"""
+    """单课详解帖：按 e['_template'] 分派到 6 类专版 + 通用红纸。
+    001 §198 P1-1：否决日一律走 compose_veto_lines 硬分支——任何模板都不得
+    再印「大利/大吉/日吉时良」。（在入口处拦一次，避免逐个模板漏改。）"""
+    if e.get('_is_vetoed'):
+        return compose_veto_lines(e)
     t = e.get('_template') or 'common'
     if t == 'marriage':
         return compose_marriage_lines(e)
@@ -1452,6 +1516,9 @@ class ZeriTieWindow:
             'common':     f"择吉选日 {e['date']}",
         }
         title = title_map.get(tpl, title_map['common'])
+        # 001 §198 P1-1：否决日的打印标题同样不得称「吉日/吉课」
+        if e.get('_is_vetoed'):
+            title = f"日课否决警示（不可使用） {e['date']}"
         _open_print_html(compose_detail_lines(e), title, paper=paper)
 
     def print_summary(self):
