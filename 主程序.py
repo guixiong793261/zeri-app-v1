@@ -1347,7 +1347,23 @@ class ZeriApp:
                         width=10, state="readonly")
             chuang_combo.grid(row=0, column=1, sticky=tk.W, padx=5)
             special_entries.append(chuang_combo)
-        
+
+        elif event_type == "出行":
+            # §201（2026-10-30 用户拍板）：出行无坐山，方位吉凶改按"出发方向"判定
+            # （三库取证见 docs/出行方位三库取证报告_20261030.md）；不填则不计方位吉凶。
+            ttk.Label(self.special_frame, text="出发方向：").grid(row=0, column=0, sticky=tk.W, padx=5)
+            self.shan_xiang = tk.StringVar(value="")
+            dir_combo = ttk.Combobox(
+                self.special_frame, textvariable=self.shan_xiang,
+                values=["正东", "东南", "正南", "西南", "正西", "西北", "正北", "东北"],
+                width=10, state="readonly")
+            dir_combo.grid(row=0, column=1, sticky=tk.W, padx=5)
+            special_entries.append(dir_combo)
+            # 出行不设兼向：重置兼向变量，防止此前其他事项残留的"兼X"被拼进方向串
+            self.jian_xiang = tk.StringVar(value="正中")
+            ttk.Label(self.special_frame, text="（不填则不计方位吉凶）").grid(
+                row=0, column=2, sticky=tk.W, padx=5)
+
         # 为特殊选项的输入框绑定键盘导航
         if special_entries:
             self._bind_entry_navigation(special_entries)
@@ -5805,22 +5821,23 @@ class ZeriApp:
         # 添加二十四山方位吉凶信息（修造/安葬等"山家类事项"专用；嫁娶/订婚/纳采不显示，避免山向无关信息）
         sansha_info = detail.get('sansha_info', {})
         shan_xiang = detail.get('shan_xiang', '')
+        # §201（2026-10-30 用户拍板）：出行无坐山，[二十四山方位吉凶]段（三煞/山家封禁/
+        # 年家五黄）对出行整段不适用，改由下方[出发方向吉凶]段承接。
+        _is_travel_event = (event_type == '出行')
         _show_shan_section = False
-        if shan_xiang:
-            # 明确选了山向 → 一定显示
-            _show_shan_section = True
-        elif sansha_info and event_type not in MARRIAGE_EVENTS:
-            # 未选山向但属于修造类事件（非婚嫁）→ 也显示纯三煞段/山家警告
-            _show_shan_section = True
+        if not _is_travel_event:
+            if shan_xiang:
+                # 明确选了山向 → 一定显示
+                _show_shan_section = True
+            elif sansha_info and event_type not in MARRIAGE_EVENTS:
+                # 未选山向但属于修造类事件（非婚嫁）→ 也显示纯三煞段/山家警告
+                _show_shan_section = True
         if _show_shan_section:
             text.insert(tk.END, "\n\n[二十四山方位吉凶]")
             text.insert(tk.END, "\n ----------------------------------------")
             
             if shan_xiang:
                 text.insert(tk.END, f"\n   坐山：{shan_xiang}")
-                if event_type == '出行':
-                    # 001 §200：三库取证确认出行方位应为"出发方向"，坐山口径待拍板后升级
-                    text.insert(tk.END, "\n   *注：出行的方位判定即将升级为“出发方向”，当前填写的坐山仅作参考。")
             
             # 三煞信息
             year_sansha = sansha_info.get('year_sansha', [])
@@ -5949,6 +5966,33 @@ class ZeriApp:
                     text.insert(tk.END, f"\n   ✓ {js}")
             if mountain_day_type and mountain_day_type not in ('', '普通日'):
                 text.insert(tk.END, f"\n\n   【日期类别】：{mountain_day_type}")
+
+        # §201：出行[出发方向吉凶]段（出行无坐山，按用户填写的出发方向判定；
+        # 天德/月德/喜神方吉、鹤神/日游方凶，轻权重，不否决）
+        if _is_travel_event:
+            _tdi = detail.get('travel_dir_info') or {}
+            text.insert(tk.END, "\n\n[出发方向吉凶]")
+            text.insert(tk.END, "\n ----------------------------------------")
+            _tdir = _tdi.get('direction') or ''
+            if _tdir:
+                text.insert(tk.END, f"\n   出发方向：{_tdir}")
+                for _it in (_tdi.get('ji_items') or []):
+                    text.insert(tk.END, f"\n   ✅ {_it}")
+                for _it in (_tdi.get('xiong_items') or []):
+                    text.insert(tk.END, f"\n   ⚠ {_it}")
+                if not (_tdi.get('ji_items') or _tdi.get('xiong_items')):
+                    text.insert(tk.END, "\n   本日诸吉凶方位均不在所行方向，方位不计分")
+                _tdi_score = _tdi.get('score', 0) or 0
+                text.insert(tk.END, f"\n   出行方位得分：{_tdi_score:+d} 分")
+                _tdi_map = _tdi.get('details') or {}
+                if isinstance(_tdi_map, dict) and _tdi_map:
+                    text.insert(tk.END, "\n   【本日吉凶方参照】")
+                    for _k, _v in _tdi_map.items():
+                        # 鹤神"上天"16 日无固定方位（None），显示为无方位而非"None"
+                        _vtxt = _v if _v not in (None, '') else '—（本日无固定方位）'
+                        text.insert(tk.END, f"\n   · {_k}：{_vtxt}")
+            else:
+                text.insert(tk.END, "\n   未填出发方向，方位吉凶不参与计分")
         
         content = f"""
 
@@ -6100,6 +6144,8 @@ class ZeriApp:
                 for rl in hour_rel_details:
                     content += f"    • {rl}\n"
             sansha_penalty = score_details.get('三煞扣分', 0) or 0
+            # §201：出行方位轻权重分项（仅出行通道有该键，其余事项恒 0）
+            travel_dir_score = score_details.get('出行方位得分', 0) or 0
             # 各分项统一 `or 0`，杜绝 None 进入算术累加
             wuxing_score = wuxing_score or 0
             yueling_score = yueling_score or 0
@@ -6109,20 +6155,21 @@ class ZeriApp:
             sun_moon_score = sun_moon_score or 0
             # 2026-09-09：时柱关系分已含于五行评分·地支关系得分，公式行不得再加，
             # 否则公式合计≠总分（如 93-5+22-15=95 与总分110不符）。
-            raw_total = wuxing_score + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score
+            raw_total = wuxing_score + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + travel_dir_score
+            _tds_term = f" {travel_dir_score:+d}(出行方位)" if travel_dir_score else ''
             content += f"  ─────────────────────────────────\n"
             if not has_hd_key:
                 # 公式行不含黄道项（已并入五行评分），避免与"+0"重复列出的误读
                 if sansha_penalty:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
                 else:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d} = {raw_total} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d}{_tds_term} = {raw_total} 分\n"
             else:
                 if sansha_penalty:
                     # 总分含三煞扣分，公式行如实列出，避免误读为"满分上限"
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
                 else:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d} = {raw_total} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d}{_tds_term} = {raw_total} 分\n"
             # _fc0915：一票否决日公式分项合计仅供追溯、总分强制归零，明示口径
             # 2026-10-16 U2：S2 公式层注统一为叙述式主句式（机制以括注保留）
             if detail.get('veto_reasons'):
@@ -6162,8 +6209,9 @@ class ZeriApp:
             # 直接从 detail 取三煞信息（不依赖外层 sansha_info 绑定，
             # 保证沙箱函数化执行与真实 GUI 内联执行同行为）
             _ssi2 = detail.get('sansha_info') if isinstance(detail.get('sansha_info'), dict) else {}
-            _msf = _ssi2.get('month_sansha') or []
-            _dsf = _ssi2.get('day_sansha') or []
+            # §201：出行无坐山，三煞反向检查口径对出行不适用，不再列出该提示
+            _msf = [] if event_type == '出行' else (_ssi2.get('month_sansha') or [])
+            _dsf = [] if event_type == '出行' else (_ssi2.get('day_sansha') or [])
             _rev = []
             if _yz and _yz in _msf:
                 _rev.append(f'年柱{_yz}临月柱三煞方（{"".join(_msf)}）')
@@ -7339,9 +7387,9 @@ class ZeriApp:
             except Exception as e:
                 content += f"\n【十二时辰吉凶】\n  分析出错：{str(e)}\n"
 
-        # 添加二十四山分析（如果有山向信息）
+        # 添加二十四山分析（如果有山向信息；§201 出行按出发方向判定，无坐山，不进入本段）
         shan_xiang_val = getattr(self, 'shan_xiang', None)
-        if shan_xiang_val and shan_xiang_val.get():
+        if shan_xiang_val and shan_xiang_val.get() and event_type != '出行':
             try:
                 # 使用二十四山选择器分析
                 selector = ZhengTiWuXingSelectorDB()
