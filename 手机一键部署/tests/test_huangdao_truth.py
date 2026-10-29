@@ -1275,26 +1275,29 @@ class TestJiaQu20260222(unittest.TestCase):
             "MARRIAGE_EVENTS 与 SHAN_EVENTS 必须无交集（互斥分类）")
 
     # ------------------------------------------------------------------
-    # J-07 F3 渲染条件逻辑模拟（完全同构主程序 F3 修复版 L3911-L3921）
+    # J-07 F3 渲染条件逻辑模拟（完全同构主程序 F3 修复版 + §201 出行旁路）
     # ------------------------------------------------------------------
     def test_07_F3_shan_section_render_logic_simulation(self):
-        """J-07 F3 与主程序 L3911-L3921 **完全同构** 的二十四山大段渲染条件：
+        """J-07 F3 与主程序 **完全同构** 的二十四山大段渲染条件（含 §201 出行旁路）：
         Case A. 嫁娶 + shan_xiang='' + sansha_info={}      → 必须 False（不显示，用户问题三）
         Case B. 修造 + shan_xiang='' + sansha_info 非空（年三煞） → 必须 True（修造类即使无山向也显示三煞）
         Case C. 嫁娶 + shan_xiang='乾山巽向兼亥'（用户硬选） → 必须 True（选了山向就显示）
-        Case D. 修造 + shan_xiang='乾山巽向兼亥'           → 必须 True"""
+        Case D. 修造 + shan_xiang='乾山巽向兼亥'           → 必须 True
+        Case E. 出行（无论有无方向串／三煞）              → 必须 False（出行无坐山，§201 改按出发方向）"""
         # 先拿主程序常量，若拿不到则跳过（CI无TK环境）
         try:
             from 主程序 import MARRIAGE_EVENTS
         except Exception as e:
             self.skipTest("主程序无法import：%s" % (e,))
-        # ---- 同构复制主程序 L3911-L3921 逻辑（改一处立即fail）----
+        # ---- 同构复制主程序 二十四山大段渲染条件（改一处立即fail）----
         def _should_show_shan(shan_xiang, sansha_info, event_type):
             _show = False
-            if shan_xiang:
-                _show = True
-            elif sansha_info and event_type not in MARRIAGE_EVENTS:
-                _show = True
+            # §201（2026-10-30 拍板）：出行无坐山，二十四山段整段不适用
+            if event_type != '出行':
+                if shan_xiang:
+                    _show = True
+                elif sansha_info and event_type not in MARRIAGE_EVENTS:
+                    _show = True
             return _show
         # Case A（用户问题三根因）
         caseA = _should_show_shan('', {}, '嫁娶')
@@ -1317,6 +1320,11 @@ class TestJiaQu20260222(unittest.TestCase):
         self.assertTrue(_should_show_shan('', {'年三煞': ['寅']}, '动土'), "动土有三煞 → 显示")
         self.assertTrue(_should_show_shan('', {'年三煞': ['寅']}, '入宅'), "入宅有三煞 → 显示")
         self.assertTrue(_should_show_shan('', {'年三煞': ['寅']}, '安葬'), "安葬有三煞 → 显示")
+        # Case E（§201 出行无坐山：填了方向串或有三煞，也不得显示二十四山大段）
+        self.assertFalse(_should_show_shan('东南', {}, '出行'),
+                         "F3 E. 出行无坐山，填方向串也不应显示二十四山大段，实际=True")
+        self.assertFalse(_should_show_shan('', {'年三煞': ['寅']}, '出行'),
+                         "F3 E2. 出行无坐山，有三煞信息也不应显示二十四山大段，实际=True")
 
 
 if __name__ == '__main__':

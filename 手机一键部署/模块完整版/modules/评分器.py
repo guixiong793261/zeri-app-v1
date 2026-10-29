@@ -112,6 +112,7 @@ try:
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
         display_only_info as _display_only_info,
         SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
+        TRAVEL_EVENTS as _TRAVEL_EVENTS,
     )
 except ImportError:
     from 事项标准 import (
@@ -123,6 +124,7 @@ except ImportError:
         CONSTRUCTION_SHENSHA_EXT_CLASS as _CONSTRUCTION_EXT_SPEC,
         display_only_info as _display_only_info,
         SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
+        TRAVEL_EVENTS as _TRAVEL_EVENTS,
     )
 
 # ============================================================================
@@ -137,6 +139,22 @@ except ImportError:
 _MOUNTAIN_SCORE_EVENTS = frozenset(
     _canonical_event(x) for x in _SHAN_UI_EVENTS
 ) - {_canonical_event('出行')}
+
+# ============================================================================
+# 出行：三煞/向方月破通道旁路键表（2026-10-30 用户拍板，001 §201 Commit1）
+# ============================================================================
+# 口径来源：docs/出行方位三库取证报告_20261030.md §四——协纪/考原/陈书全卷
+# 「出行三煞 / 坐山三煞」命中 0 处；三煞本为"可向不可坐"的修方禁忌，出行
+# 没有固定坐山，无"坐煞"可言。故出行通道内下列判键一律不产（保留空表，
+# 展示层据 sansha_applicable=False 不渲染三煞/向方段）。
+_TRAVEL_SANSHA_KEYS = (
+    'year_sansha_month_fan', 'year_sansha_day_fan', 'year_sansha_hour_fan',
+    'year_sansha_fan',
+    'month_sansha_day_fan', 'month_sansha_hour_fan', 'month_sansha_fan',
+    'day_sansha_hour_fan', 'day_sansha_fan',
+    'xiangfang_yuepo',
+    'year_sansha_xiang_fan', 'month_sansha_xiang_fan', 'day_sansha_xiang_fan',
+)
 
 # ============================================================================
 # 亡命（仙命）角色判定：安葬路径的死者卡。GUI 默认卡名"死者"，兼容
@@ -1702,7 +1720,29 @@ class Scorer:
             # ========== 通用评分逻辑 ==========
             # 预先计算三煞信息（用于日课详情显示）
             self._current_event_type = event_type
+            # §201 Commit1（2026-10-30 用户拍板）：出行通道的 shan_xiang 参数位
+            # 承载"出发方向"，语义上不再视为坐山/山向；山家类通道（三煞/向方
+            # 月破/山家封禁警告与吉神）均以坐山为纲，对出行整体不参与。
+            _is_travel = _canonical_event(event_type) in _TRAVEL_EVENTS
+            travel_direction = full_shan_xiang if _is_travel else None
             sansha_info = self._get_sansha_info(sizhu, full_shan_xiang)
+            if _is_travel:
+                for _tk in _TRAVEL_SANSHA_KEYS:
+                    sansha_info.pop(_tk, None)
+                sansha_info['sansha_applicable'] = False
+
+            # §201 Commit2（2026-10-30 用户拍板）：出行方位吉凶轻权重通道。
+            # 仅出行事项、仅以"出发方向"判定：天德方(天道方)/月德方 +8、
+            # 喜神方 +5（合计封顶 +8）；鹤神方/日游方 -5（同方不重复扣）。
+            # 未填出发方向 → 恒 0，不加不扣。岁破/太岁方不纳入（C4）。
+            travel_dir_info = {}
+            if _is_travel:
+                try:
+                    from .出行方位 import evaluate as _eval_travel_direction
+                except ImportError:
+                    from 出行方位 import evaluate as _eval_travel_direction
+                travel_dir_info = _eval_travel_direction(travel_direction, sizhu)
+
             # 三煞判定口径（2026-09-07 用户确认；2026-10-09 §64 B3 按柱分级）：
             #  山向中心事项（修造/动土/入宅/安葬等，以坐山修方为核心）用"仅坐山修方论"——
             #    坐山/修方犯三煞一票否决；四柱临三煞方仅扣分不否决
@@ -2200,6 +2240,12 @@ class Scorer:
                     score_details['三煞扣分明细'] = sansha_info.get('sansha_penalty_detail', [])
                     score_details['向方扣分'] = sansha_info.get('xiangfang_penalty', 0)
                     score_details['向方扣分明细'] = sansha_info.get('xiangfang_penalty_detail', [])
+                    if _is_travel:
+                        score_details['出行方位得分'] = travel_dir_info.get('score', 0)
+                        score_details['出行方位详情'] = (
+                            list(travel_dir_info.get('ji_items', []))
+                            + list(travel_dir_info.get('xiong_items', [])))
+                        score_details['出行方向'] = travel_dir_info.get('direction') or ''
                     score_details['月令详细'] = {
                         '旺衰得分': self._calculate_wangxiang(sizhu),
                         '支支关系得分': self._calculate_zhizhi_relation(sizhu),
@@ -2380,8 +2426,8 @@ class Scorer:
 
             # 计算最终得分：五行评分已经包含了神煞得分，不需要再重复加
             # 五行评分 = 基础分 + 神煞得分 + 宜事得分 + 忌事得分 + 十二长生得分 + 地支关系得分 + 纳音匹配得分
-            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）
-            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + shanzuo_score + _wsc_score
+            # 所以最终得分 = 五行评分 + 月令得分 + 喜用神得分 + 相主得分 + 黄道得分 + 太阳太阴得分 + 三煞扣分 + 向方扣分（001 §185）+ 出行方位（001 §201）
+            self.final_score = wu_xing_result['score'] + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + sansha_info.get('sansha_penalty', 0) + sansha_info.get('xiangfang_penalty', 0) + travel_dir_info.get('score', 0) + shanzuo_score + _wsc_score
 
             # 不设置分数上限，显示实际计算的总分
 
@@ -2682,6 +2728,13 @@ class Scorer:
                 '向方扣分明细': sansha_info.get('xiangfang_penalty_detail', []),
                 '总分': self.final_score
             }
+            # §201 出行方位通道（仅出行事项追加，避免污染其他事项的明细键集）
+            if _is_travel:
+                score_details['出行方位得分'] = travel_dir_info.get('score', 0)
+                score_details['出行方位详情'] = (
+                    list(travel_dir_info.get('ji_items', []))
+                    + list(travel_dir_info.get('xiong_items', [])))
+                score_details['出行方向'] = travel_dir_info.get('direction') or ''
 
             # 添加每个事主的详细匹配信息
             if owner_matches:
@@ -2842,6 +2895,8 @@ class Scorer:
                 'mountain_year_ref': list(getattr(self, 'mountain_year_ref', []) or []),
                 'xiangzhu_notes': list(getattr(self, 'xiangzhu_notes', []) or []),
                 'shan_xiang': shan_xiang,  # 添加山向信息
+                'travel_direction': travel_direction,  # 001 §201：出行"出发方向"
+                'travel_dir_info': travel_dir_info,    # 001 §201：出行方位吉凶明细
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
                 'pipeline': 'general',  # 阶段1增量字段
                 'shensha_audit': self._build_shensha_audit_general(),
@@ -4619,16 +4674,16 @@ class Scorer:
             # 3. 不需要检查相邻地支，因为择日学中三煞检查以坐山为核心
         
         # 使用二十四山择吉天机模块进行专业山家检查
-        # 门控事项白名单（001 §199 P1）：出行无固定坐山（其"山向"实为出发
-        # 方向），"日冲山/岁破"一票否决不适用。检查结果保留（mountain_day_check
-        # /吉神/警示仍供展示），仅**不进入封禁否决通道**，避免因去掉山家吉神
-        # 加分而反向压穿五行门槛、新增误否决。出行方位口径待
-        # 《出行方位轻权重口径与方道吉凶三库取证》立项后重做。
+        # 门控事项白名单（001 §199 P1 / §201 Commit1）：出行无固定坐山（其
+        # "山向"实为出发方向），"日冲山/岁破"一票否决与山家吉神加分均以坐山
+        # 为纲，对出行不适用；§201 起出行方位改由 modules/出行方位.py 按
+        # "出发方向"轻权重判定，故此处整段山家检查对出行不执行（不再保留
+        # 吉神加分——三煞通道已旁路，"防反向误否决"的旧理由随之消失）。
         _mountain_event = (
             _canonical_event(getattr(self, '_current_event_type', '') or '')
             or '修造')
         _mountain_veto_ok = _mountain_event in _MOUNTAIN_SCORE_EVENTS
-        if shan_xiang:
+        if shan_xiang and _mountain_veto_ok:
             try:
                 from .二十四山择吉天机 import check_mountain_day
                 
