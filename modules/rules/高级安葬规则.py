@@ -6,8 +6,8 @@
 实现高级安葬择日的宜忌规则
 
 核心规则：
-1. 一票否决：重丧日、三丧日、年重丧、冲山日、月破、四离四绝（「岁破」已删：
-   岁破批 2026-10-20，001 §140）
+1. 一票否决：复日（旧称重丧日）、三丧日、四离四绝（「岁破」已删：岁破批
+   2026-10-20，001 §140；年重丧 §198 撤否决降为 -30 扣分；冲山/月破为扣分项）
 2. 吉神：天德、月德、不将日、黄道吉日、鸣吠日、鸣吠对日
 3. 扶山：日课五行生扶坐山
 4. 三合六合：日课与坐山相合
@@ -41,6 +41,9 @@ except ImportError:
                                  is_furi_by_month_zhi)
 
 from datetime import date
+import logging
+
+logger = logging.getLogger(__name__)
 
 # 建除十二神—— 批次 2（001 §162）从 建除.py 卷十唯一事实源动态生成
 # 高级安葬同安葬（卷十 L317：宜无；忌建/破/平/收）
@@ -296,10 +299,12 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
             ji_list.append('复日忌安葬')
             _daxiong_veto.append('复日')
         
-        # 2. 年重丧（按年支查日干；001 §197 D3-Q6 已另立专项，裁断前冻结）
+        # 2. 年重丧（按年支查日干）
+        # §198（2026-10-29 拍板）：三库全卷零词条且起例为协纪 p279217 明斥之
+        # 通书伪表年家翻版，撤销一票否决；分值 -30 由神煞层承载，本处仅保留
+        # 忌项文本作「存疑警示」，不再进 _daxiong_veto。
         if year_zhi and day_gan and self._is_nian_zhongsang(year_zhi, day_gan):
             ji_list.append('年重丧忌安葬')
-            _daxiong_veto.append('年重丧')
         
         # 3. 三丧日（按季节查日支）
         if month_zhi and day_zhi and self._is_sansang(month_zhi, day_zhi):
@@ -331,18 +336,23 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         #         ji_list.append('岁破日忌安葬')
         # 注：第 12 项「岁破检查（方位）」为山向（坐山犯岁破）语境，保留并标注。
         
-        # 8. 四离四绝
+        # 8. 四离四绝（§198：补齐 HARD_VETO）
         # 2026-09-20 死表清理：原 else 备用检查引用 _is_sili/_is_sijue 月支→日支
         # 固定映射表，原理不成立（四离四绝是节气前一日，随节气日期逐年漂移，
         # 与月支日支无固定对应），且 has_marriage_shensha 恒为 True 时该分支
         # 不可达。已连同两个死表方法一并删除，四离四绝仅保留 marriage_shensha
         # 单一实现路径（sxtwl 精确判定）。
+        # §198（2026-10-29 拍板）：原仅 append 忌项文本、未进 _daxiong_veto，
+        # 且安葬分值键 ('安葬','四离日'/'四绝日') 因无同名发射而休眠，致
+        # 「一票否决」名存实亡。现补齐否决门槛；异常改为 logger.warning 留痕，
+        # 不再静默 pass。
         if self.has_marriage_shensha:
             try:
                 if self.is_sili_sijue(date_obj):
                     ji_list.append('四离四绝日忌安葬')
-            except:
-                pass
+                    _daxiong_veto.append('四离四绝日')
+            except Exception as e:
+                logger.warning(f"四离四绝判定失败（漏否决，请核查）: {e}")
         
         # 9. 往亡日
         if month_zhi and day_zhi and self._is_wangwang(month_zhi, day_zhi):
@@ -367,7 +377,8 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         if year_zhi and zuoshan and self._is_sui_po_direction(year_zhi, zuoshan):
             ji_list.append(f'{zuoshan}山犯岁破')
         
-        # §186：大凶日（重丧/三丧/复日/年重丧）一票否决，返回 4-tuple
+        # §186：大凶日（复日/三丧/四离四绝）一票否决，返回 4-tuple
+        # （年重丧 §198 已撤否决，降为 -30 扣分，在此走下方 ji_list 提前返回）
         if _daxiong_veto:
             ji_list.append('安葬')
             _veto_reason = '、'.join(_daxiong_veto) + '忌安葬（一票否决）'
@@ -431,7 +442,9 @@ class AdvancedBurialRuleChecker(EventRuleChecker):
         """
         是否年重丧（按年支查日干）
 
-        001 §197 D3-Q6：三库全卷零词条，已另立专项；裁断前冻结原双干口径。
+        001 §197 D3-Q6 专项取证：三库全卷零词条，起例为协纪 p279217 明斥之
+        通书双干伪表年家翻版。§198（2026-10-29 拍板）撤销一票否决，仅作 -30
+        存疑警示；本表在通书层补扫（Y1）出结论前冻结原双干口径。
         """
         return day_gan in self.NIAN_ZHONG_SANG_MAP.get(year_zhi, [])
     

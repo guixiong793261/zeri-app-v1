@@ -56,7 +56,7 @@ class BurialShenShaChecker(ShenShaChecker):
         
         # 年重丧（按年支和日干查）
         if year_zhi and day_gan and self._is_nian_zhongsang(sizhu):
-            self._add_shensha('年重丧', -30, '年重丧大凶，绝对不可用')
+            self._add_shensha('年重丧', -30, '年重丧（三库无载，存疑警示），慎用')
 
         # 2026-10 A1：'岁德'/'岁德合' 同名重加删除（基类年作用域统一注册，
         # 年干比日干典载口径）。
@@ -337,8 +337,9 @@ class BurialShenShaChecker(ShenShaChecker):
         是否年重丧（按年支查日干）
 
         001 §197 D3-Q6（2026-10-28 拍板）：年重丧三库全卷零词条，影响面却是
-        安葬最大否决源（2026 年 73 天），已另立专项（docs 立项书）。本表在专项
-        裁断前**冻结原双干口径**，不随月「复日」换表单干。
+        安葬最大否决源（2026 年 73 天），已另立专项（docs 立项书）。
+        §198（2026-10-29 拍板）：撤销 HARD_VETO，保留 -30「存疑警示」；本表在
+        通书层补扫（Y1）出结论前冻结原双干口径，不随月「复日」换表单干。
         """
         year_zhi = sizhu.get('year_zhi', '')
         day_gan = sizhu.get('day_gan', '')
