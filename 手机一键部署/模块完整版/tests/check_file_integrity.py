@@ -12,6 +12,12 @@
    （控制字符/零宽格式/代理/私用/未分配），仅放行 \t \n \r。
 3. 可编译性（仅 .py）：py_compile 编译通过（外部粘贴大段裸文本会致
    SyntaxError，§207 事故的强拦截）。
+4. 代码位标点/符号白名单（仅 .py，001 §198 孤字符事件）：用 tokenize 分词后，
+   注释（COMMENT）与字符串（STRING）以外的一切代码位，只允许 ASCII 与 CJK
+   汉字（U+3400-4DBF / U+4E00-9FFF，中文标识符合法）；中文标点/全角符号
+   （、【】「」、，；：（）！？、…、—、弯引号等）出现在代码位即拦截。
+   背景：2026-10-29 核心文件被发现孤字符「】」注入，几乎导致软件无法启动；
+   py_compile 报的是晦涩 SyntaxError，本规则给出"行号+字符"的精确定位。
 
 用法：
   python tests/check_file_integrity.py                # 默认扫 主程序.py
@@ -27,6 +33,7 @@ import sys
 import subprocess
 import py_compile
 import tempfile
+import tokenize
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
@@ -36,6 +43,15 @@ DEFAULT_TARGETS = ['主程序.py']
 # 放行的控制字符（字节级）
 _ALLOWED_CTRL = {'\t', '\n', '\r'}
 _FAIL_CATEGORIES = {'Cc', 'Cf', 'Cs', 'Co', 'Cn'}
+
+# 代码位允许的非 ASCII 码段：CJK 扩展A + CJK 基本区（中文标识符合法）
+_CJK_RANGES = ((0x3400, 0x4DBF), (0x4E00, 0x9FFF))
+
+# tokenize 中属于"注释或字符串"的令牌（这些位置允许任意中文标点）
+_PUNCT_SKIP_TOKENS = {
+    tokenize.COMMENT, tokenize.STRING, tokenize.NL, tokenize.NEWLINE,
+    tokenize.INDENT, tokenize.DEDENT, tokenize.ENCODING,
+}
 
 FAILS = []
 
@@ -111,6 +127,42 @@ def check_compile(path):
         return False
 
 
+def check_code_punct(path):
+    """代码位标点/符号白名单（仅 .py，001 §198 孤字符事件）。
+
+    注释与字符串以内允许任意中文标点（文案需要）；代码位只允许 ASCII 与
+    CJK 汉字（中文标识符合法）。命中即报"行:列 字符(U+XXXX)"，给出比
+    py_compile 的 SyntaxError 更精确的定位。
+    """
+    if not path.endswith('.py'):
+        return 0
+    name = _rel(path)
+    bad = []
+    try:
+        with open(path, 'rb') as f:
+            toks = list(tokenize.tokenize(f.readline))
+    except (tokenize.TokenError, SyntaxError, IndentationError) as e:
+        FAILS.append('%s: tokenize 失败（外部注入特征）：%s'
+                     % (name, str(e).splitlines()[0]))
+        return -1
+    for tk in toks:
+        if tk.type in _PUNCT_SKIP_TOKENS:
+            continue
+        for ch in tk.string:
+            cp = ord(ch)
+            if cp < 128:
+                continue
+            if any(lo <= cp <= hi for lo, hi in _CJK_RANGES):
+                continue      # 中文标识符合法
+            bad.append((tk.start[0], tk.start[1], ch, cp))
+    if bad:
+        detail = '; '.join('行%d:%d %r(U+%04X)' % (ln, col, c, cp)
+                           for ln, col, c, cp in bad[:8])
+        FAILS.append('%s: 代码位非法标点/符号 %d 处（仅注释与字符串可含中文标点）：%s'
+                     % (name, len(bad), detail))
+    return len(bad)
+
+
 def main(argv):
     mode = 'default'
     files = []
@@ -143,6 +195,7 @@ def main(argv):
         check_line_endings(f)
         check_nonprint(f)
         check_compile(f)
+        check_code_punct(f)
 
     print('检查文件 %d 个（模式=%s）' % (len(abs_files), mode))
     if FAILS:
@@ -150,7 +203,7 @@ def main(argv):
         for x in FAILS:
             print(' -', x)
         return 1
-    print('ALL PASS：行尾一致 + 无非预期字符 + py_compile OK')
+    print('ALL PASS：行尾一致 + 无非预期字符 + 代码位标点合法 + py_compile OK')
     return 0
 
 

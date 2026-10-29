@@ -873,21 +873,25 @@ class MarriageRuleChecker(EventRuleChecker):
                 continue
             
             # 检查日柱（对双方同等重要）- 使用日柱地支而非生肖
+            # P3-1（§198）：女方姓名与角色「新娘」重名时去掉名字、抑制重复的
+            # 「（新娘）」后缀，避免「冲新娘新娘」叠字。
+            _day_name = '' if (is_bride and name == '新娘') else name
+            _day_tag = '' if (is_bride and _olabel == '新娘') else _otag
             owner_day_zhi = self._get_owner_day_zhi(owner)
             if owner_day_zhi:
                 day_chong_zhi = chong_map.get(owner_day_zhi, '')
                 if day_zhi == day_chong_zhi:
-                    _txt = (f'日柱{day_zhi}冲新娘{name}的日柱{owner_day_zhi}{_otag}'
+                    _txt = (f'日柱{day_zhi}冲新娘{_day_name}的日柱{owner_day_zhi}{_day_tag}'
                             if is_bride else
-                            f'日柱{day_zhi}冲{name}的日柱{owner_day_zhi}{_otag}')
+                            f'日柱{day_zhi}冲{_day_name}的日柱{owner_day_zhi}{_day_tag}')
                     ji_list.append(_txt)
                     self._hard_veto_chong.append(_txt)
             else:
                 # 无日柱信息时回退到生肖检查
                 if day_zhi == target_chong_zhi:
-                    _txt = (f'日柱{day_zhi}冲新娘{name}{_otag}'
+                    _txt = (f'日柱{day_zhi}冲新娘{_day_name}{_day_tag}'
                             if is_bride else
-                            f'日柱{day_zhi}冲{name}{_otag}')
+                            f'日柱{day_zhi}冲{_day_name}{_day_tag}')
                     ji_list.append(_txt)
                     self._hard_veto_chong.append(_txt)
 

@@ -692,7 +692,9 @@ class Scorer:
                         bride_bazi['ri_gan'] = birth_sizhu['日柱'][0]
                         bride_bazi['ri_zhi'] = birth_sizhu['日柱'][1]
                     except Exception as e:
-                        logger.error(f"提取新娘八字失败: {e}")
+                        logger.error(
+                            f"提取新娘八字失败（birth_date={owner['birth_date']!r}, "
+                            f"type={type(owner['birth_date']).__name__}）: {e}")
             
             # 提取新郎信息
             if role == '新郎' or gender == '男':
@@ -727,7 +729,9 @@ class Scorer:
                         groom_bazi['ri_gan'] = birth_sizhu['日柱'][0]
                         groom_bazi['ri_zhi'] = birth_sizhu['日柱'][1]
                     except Exception as e:
-                        logger.error(f"提取新郎八字失败: {e}")
+                        logger.error(
+                            f"提取新郎八字失败（birth_date={owner['birth_date']!r}, "
+                            f"type={type(owner['birth_date']).__name__}）: {e}")
         
         return bride_bazi, groom_bazi
 

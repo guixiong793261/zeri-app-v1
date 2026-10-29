@@ -596,7 +596,7 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0, longitude=None):
     这是计算四柱的唯一入口函数，使用精确的农历计算方法
 
     Args:
-        target_date: datetime.date对象、datetime对象，或(year, month, day)元组，
+        target_date: datetime.date对象、datetime对象，或(year, month, day)元组/列表，
                      或常见日期字符串（支持 "YYYY年MM月DD日 HH时MM分" / "YYYY-MM-DD HH:MM:SS" 等）
         hour: 小时(0-23)
         minute: 分钟(0-59)
@@ -630,7 +630,10 @@ def calculate_sizhu(target_date, hour=12, minute=0, second=0, longitude=None):
             raise ValueError(f"无法解析日期字符串: {repr(target_date)}")
     
     # 处理不同类型的target_date
-    if isinstance(target_date, tuple) and len(target_date) == 3:
+    # P3-2（§198）：事主 birth_date 经 JSON 序列化后会变成 list，原实现只认
+    # tuple 会在 date() 构造前静默跳过、后续属性访问抛异常并被上层吞掉（丢分）。
+    # 现同时接受 tuple/list 三元组。
+    if isinstance(target_date, (tuple, list)) and len(target_date) == 3:
         # 处理(year, month, day)元组
         year, month, day = target_date
         try:
@@ -701,8 +704,8 @@ def get_lunar_date(target_date, hour=12, minute=0, second=0):
                 hour, minute = h_parsed, m_parsed
         else:
             raise ValueError(f"无法解析日期字符串: {repr(target_date)}")
-    # 兼容元组
-    if isinstance(target_date, tuple) and len(target_date) == 3:
+    # 兼容元组/列表（P3-2 §198：JSON 反序列化后的 birth_date 为 list）
+    if isinstance(target_date, (tuple, list)) and len(target_date) == 3:
         try:
             target_date = date(*target_date)
         except (TypeError, ValueError) as e:
