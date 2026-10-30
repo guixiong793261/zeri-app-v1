@@ -238,9 +238,10 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_yanggongji(sizhu):
             self._add_shensha('杨公忌日', -10, '杨公忌日不宜安床')
 
-        # 红砂日已由基类 _check_day_shensha 统一添加（'红砂日' -15，判定经
-        # self._is_hongsha 分派到本类农历月版 override）。此处原自有分支与
-        # 基类同名，_add_shensha 同名保留首次，本就为死代码，2026-09-20 删除。
+        # 红砂日已由基类 _check_day_shensha 统一添加（'红砂日' -15）。判定走基类
+        # 单点 _is_hongsha（节气月建口径，孟月巳/仲月酉/季月丑）；本类原农历月版
+        # override 已于 2026-10-15 D3 删除（001 §204 三库对勘确认节气月建合协纪奏疏）。
+        # 此处原自有分支与基类同名，_add_shensha 同名保留首次，本就为死代码，2026-09-20 删除。
 
     def _check_special_shensha(self, sizhu, owners, **kwargs):
         """检查特殊神煞，主要处理事主（安床者）生肖与日课的冲合"""

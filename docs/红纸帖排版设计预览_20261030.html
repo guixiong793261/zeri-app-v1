@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>红纸帖与红单排版升级 · 设计预览（设计稿，非产品代码）</title>
+<style>
+  :root{
+    --paper-ji:#C11B17;
+    --paper-veto:#8B0000;
+    --ink:#1A1A1A;
+    --gold:#C9A227;
+    --warn-bg:#FFF3B0;
+    --warn-bar:#8B0000;
+    --stamp-bg:#FFD400;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;padding:27px 16px 60px;
+    background:#2a2a2a;
+    font-family:"楷体","KaiTi","STKaiti",serif;
+    color:#eee;
+  }
+  .hd{max-width:820px;margin:0 auto 26px;text-align:center;}
+  .hd h1{font-size:22px;font-weight:700;letter-spacing:2px;margin:0 0 8px;color:#f5d98a;}
+  .hd p{margin:0;font-size:13px;color:#aaa;line-height:1.8;}
+  .stage{max-width:820px;margin:0 auto 40px;}
+  .cap{font-size:13px;color:#c9c9c9;margin:0 0 10px;letter-spacing:1px;}
+  .cap b{color:#f5d98a;font-weight:400;}
+
+  /* ============ 红纸通用 ============ */
+  .paper{
+    position:relative;
+    padding:12mm 11mm;
+    color:var(--ink);
+    box-shadow:0 10px 34px rgba(0,0,0,.55);
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.10), transparent 42%),
+      radial-gradient(circle at 82% 88%, rgba(255,255,255,.07), transparent 46%),
+      var(--paper-ji);
+  }
+  .paper::before{
+    content:"";position:absolute;inset:4mm;
+    border:2pt solid var(--gold);
+    box-shadow:inset 0 0 0 1.2mm var(--paper-ji), inset 0 0 0 1.55mm rgba(201,162,39,.55);
+    pointer-events:none;
+  }
+  .ji{--paper-ji:#C11B17;}
+  .veto{--paper-ji:#8B0000;}
+
+  /* 页眉 */
+  .head{text-align:center;margin-bottom:7mm;}
+  .head .seal-mini{
+    display:inline-block;width:13mm;height:13mm;line-height:13mm;
+    border:1.2pt solid var(--gold);border-radius:2px;
+    font-size:9mm;color:var(--gold);opacity:.92;margin:0 5mm;vertical-align:middle;
+  }
+  .head h2{
+    display:inline-block;vertical-align:middle;margin:0;
+    font-size:8.2mm;font-weight:700;letter-spacing:2.6mm;color:#241000;
+    text-shadow:0 0 1px rgba(255,255,255,.25);
+  }
+  .head .sub{margin-top:3mm;font-size:3.4mm;letter-spacing:1.2mm;color:#3a1200;opacity:.85;}
+  .cloud{
+    margin:5mm auto 0;height:1px;width:86%;
+    background:linear-gradient(90deg,transparent,var(--gold) 12%,var(--gold) 88%,transparent);
+    position:relative;
+  }
+  .cloud::after{
+    content:"❖";position:absolute;left:50%;top:-2.6mm;transform:translateX(-50%);
+    font-size:4mm;color:var(--gold);
+  }
+
+  /* 结论区 */
+  .verdict{text-align:center;margin:7mm 0 6mm;}
+  .verdict .stars{font-size:6mm;color:#241000;letter-spacing:2mm;}
+  .verdict .big{
+    font-size:11.5mm;font-weight:700;letter-spacing:3mm;color:#1c0d00;
+    margin:2mm 0 1mm;
+  }
+  .verdict .meta{font-size:3.8mm;color:#3a1200;}
+  .verdict .slogan{
+    margin-top:3mm;font-size:3.6mm;color:#4a1c05;font-style:italic;letter-spacing:.6mm;
+  }
+
+  /* 信息表 */
+  table{width:100%;border-collapse:collapse;margin:2mm 0;}
+  td{border-bottom:.35mm solid rgba(201,162,39,.55);padding:2.1mm 2mm;font-size:3.7mm;text-align:left;}
+  td.k{width:22%;color:#5a2408;letter-spacing:.5mm;white-space:nowrap;}
+  td.v{border-left:.35mm solid rgba(201,162,39,.35);color:#1a1a1a;}
+
+  /* 分区标题 */
+  .sec{
+    text-align:center;font-size:4.6mm;font-weight:700;letter-spacing:1.6mm;
+    color:#241000;margin:6mm 0 3mm;
+  }
+  .sec::before,.sec::after{content:"—";color:var(--gold);margin:0 2.4mm;}
+
+  /* 吉时时间轴 */
+  .timeline{position:relative;padding-left:8mm;}
+  .timeline::before{
+    content:"";position:absolute;left:2.6mm;top:1mm;bottom:1mm;width:.5mm;
+    background:linear-gradient(180deg,var(--gold),rgba(201,162,39,.25));
+  }
+  .node{position:relative;margin-bottom:3.4mm;}
+  .node::before{
+    content:"";position:absolute;left:-6.1mm;top:1.4mm;width:2.6mm;height:2.6mm;
+    border:.5mm solid var(--gold);border-radius:50%;background:rgba(0,0,0,.06);
+  }
+  .node.key::before{background:var(--gold);box-shadow:0 0 0 .8mm rgba(201,162,39,.25);}
+  .node .t{font-size:4mm;font-weight:700;letter-spacing:.8mm;color:#1c0d00;}
+  .node .d{font-size:3.5mm;color:#4a1c05;margin-top:.6mm;}
+  .node.key .t{color:#7a0d05;}
+
+  /* 警示块 */
+  .warn{
+    background:var(--warn-bg);
+    border-left:1.6mm solid var(--warn-bar);
+    padding:2.6mm 3mm;
+    margin:1.8mm 0;
+    font-size:3.6mm;color:#4a1200;line-height:1.55;
+    box-shadow:0 1px 0 rgba(0,0,0,.12);
+  }
+  .warn .lb{font-weight:700;color:#8B0000;}
+
+  /* 落款 */
+  .sign{
+    margin-top:7mm;padding-top:3mm;border-top:.35mm dashed rgba(201,162,39,.5);
+    display:flex;justify-content:space-between;align-items:flex-end;
+    font-size:3.1mm;color:#5a2408;line-height:1.9;
+  }
+  .sign .seal{
+    width:15mm;height:15mm;border:1pt solid #8B0000;color:#8B0000;
+    display:flex;align-items:center;justify-content:center;
+    font-size:4mm;letter-spacing:.6mm;line-height:1.15;text-align:center;
+    transform:rotate(-3deg);opacity:.9;
+  }
+
+  /* ============ 否决帖 ============ */
+  .veto .head h2{color:#FFE9A8;text-shadow:none;letter-spacing:3.2mm;}
+  .veto .head .sub{color:#f0c98a;opacity:.9;}
+  .veto .head .seal-mini{color:#FFD400;border-color:#FFD400;}
+  .veto-panel{text-align:center;margin:10mm 0 8mm;}
+  .stamp{
+    display:inline-block;background:var(--stamp-bg);color:#140a00;
+    padding:7mm 12mm;border:.5mm solid #7a5a00;
+    box-shadow:0 3mm 8mm rgba(0,0,0,.35), inset 0 0 0 .8mm rgba(255,255,255,.35);
+    transform:rotate(-1.2deg);
+  }
+  .stamp .l1{font-size:12.5mm;font-weight:700;letter-spacing:5mm;}
+  .stamp .l2{font-size:6mm;letter-spacing:3mm;margin-top:2mm;opacity:.85;}
+  .veto table td{border-bottom-color:rgba(255,214,0,.35);color:#FFE9A8;}
+  .veto td.k{color:#f0c98a;}
+  .veto td.v{color:#FFE9A8;border-left-color:rgba(255,214,0,.28);}
+  .veto .sec{color:#FFE9A8;}
+  .veto .sec::before,.veto .sec::after{color:#FFD400;}
+  .reason{
+    background:rgba(255,212,0,.14);
+    border-left:1.6mm solid #FFD400;
+    padding:3mm;margin:2.4mm 0;
+    font-size:3.9mm;color:#FFF1BF;line-height:1.6;
+  }
+  .reason .no{
+    display:inline-block;width:6mm;height:6mm;line-height:6mm;text-align:center;
+    border:.4mm solid #FFD400;border-radius:50%;color:#FFD400;
+    font-size:3.4mm;margin-right:2mm;
+  }
+  .veto .closing{
+    text-align:center;margin:8mm 0 2mm;font-size:4mm;color:#FFE9A8;letter-spacing:1mm;
+  }
+  .veto .sign{color:#f0c98a;border-top-color:rgba(255,214,0,.35);}
+
+  /* 规格条 */
+  .spec{
+    max-width:820px;margin:0 auto;background:#1d1d1d;border:1px solid #3a3a3a;
+    padding:16px 18px;font-size:12.5px;color:#bbb;line-height:1.9;
+  }
+  .spec b{color:#f5d98a;font-weight:400;}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .sw{display:flex;align-items:center;gap:6px;font-size:12px;color:#aaa;}
+  .sw i{width:26px;height:16px;display:inline-block;border-radius:2px;}
+  @media print{body{background:#fff;} .hd,.spec,.cap{display:none;} .paper{box-shadow:none;}}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>红纸帖与红单排版升级 · 设计预览</h1>
+  <p>001 §204 辅轨设计稿（非产品代码，仅供拍板）<br>
+     三层四区版式：页眉 · 结论 · 信息表 · 吉时 · 警示 · 落款</p>
+</div>
+
+<!-- ================= 一、嫁娶吉帖 ================= -->
+<div class="stage">
+  <p class="cap">样式 <b>A</b>／嫁娶吉帖 · 吉日版</p>
+  <div class="paper ji">
+
+    <div class="head">
+      <span class="seal-mini">囍</span>
+      <h2>天作之合</h2>
+      <span class="seal-mini">囍</span>
+      <div class="sub">嫁 娶 结 婚 吉 帖</div>
+      <div class="cloud"></div>
+    </div>
+
+    <div class="verdict">
+      <div class="stars">★ ★ ★ ★ ★</div>
+      <div class="big">上　吉</div>
+      <div class="meta">综合评价 256 分 · 宜嫁娶</div>
+      <div class="slogan">「不将日 · 天德照临 · 六合相主」</div>
+    </div>
+
+    <table>
+      <tr><td class="k">公　　历</td><td class="v">2026 年 03 月 20 日</td></tr>
+      <tr><td class="k">农　　历</td><td class="v">丙午年 二月初二</td></tr>
+      <tr><td class="k">干　　支</td><td class="v">丙午年　辛卯月　戊戌日　庚申时</td></tr>
+      <tr><td class="k">用　　事</td><td class="v">嫁娶　（乾造／坤造 已录四柱）</td></tr>
+      <tr><td class="k">主事人</td><td class="v">乾造 戊辰 乙卯 丁巳 庚子　坤造 辛未 戊戌 癸亥 乙卯</td></tr>
+      <tr><td class="k">坐　　向</td><td class="v">子山午向兼癸丁三分</td></tr>
+    </table>
+
+    <div class="sec">迎 娶 时 辰</div>
+    <div class="timeline">
+      <div class="node key">
+        <div class="t">① 发　轿　壬辰时　07:00 — 09:00　大吉</div>
+        <div class="d">起轿出阁，宜向东南（喜神方）</div>
+      </div>
+      <div class="node">
+        <div class="t">② 迎　娶　癸巳时　09:00 — 11:00　吉</div>
+        <div class="d">入门、交拜前序</div>
+      </div>
+      <div class="node">
+        <div class="t">③ 拜　堂　甲午时　15:00 — 17:00　吉</div>
+        <div class="d">合卺、入洞房</div>
+      </div>
+    </div>
+
+    <div class="sec">注 意 事 项</div>
+    <div class="warn"><span class="lb">冲煞：</span>冲辰（龙）　煞南　属龙者与孕妇当日宜避</div>
+    <div class="warn"><span class="lb">软忌：</span>本日无受死日／红纱日等降级项</div>
+
+    <div class="sign">
+      <div>
+        择日师：廖贵雄<br>
+        择日依据：协纪辨方书 · 星历考原 · 陈子性藏书<br>
+        岁次丙午　二〇二六年三月　谨识
+      </div>
+      <div class="seal">廖贵雄<br>印</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 二、修造吉帖（警示区重点） ================= -->
+<div class="stage">
+  <p class="cap">样式 <b>B</b>／修造吉帖 · 避煞与降级双警示</p>
+  <div class="paper ji">
+
+    <div class="head">
+      <span class="seal-mini">造</span>
+      <h2>紫微高照</h2>
+      <span class="seal-mini">造</span>
+      <div class="sub">开 工 修 造 吉 帖</div>
+      <div class="cloud"></div>
+    </div>
+
+    <div class="verdict">
+      <div class="stars">★ ★ ★ ★ ☆</div>
+      <div class="big">吉</div>
+      <div class="meta">综合评价 221 分 · 宜修造动土</div>
+      <div class="slogan">「月德照方 · 三奇到山 · 主事人六合」</div>
+    </div>
+
+    <table>
+      <tr><td class="k">公　　历</td><td class="v">2026 年 12 月 24 日</td></tr>
+      <tr><td class="k">农　　历</td><td class="v">丙午年 十一月十六</td></tr>
+      <tr><td class="k">干　　支</td><td class="v">丙午年　庚子月　丁丑日　丙午时</td></tr>
+      <tr><td class="k">坐　　山</td><td class="v">申山寅向兼庚甲三分</td></tr>
+      <tr><td class="k">主事人</td><td class="v">乾造 壬申 丙午 戊午 壬子　福主 甲子 丙寅 戊辰 庚申</td></tr>
+    </table>
+
+    <div class="sec">兴 工 时 辰</div>
+    <div class="timeline">
+      <div class="node key"><div class="t">① 动　土　丙午时　11:00 — 13:00　大吉</div><div class="d">破土开基，先祭后动</div></div>
+      <div class="node"><div class="t">② 竖　柱　丁未时　13:00 — 15:00　吉</div><div class="d">立柱上梁，忌向西叩击</div></div>
+      <div class="node"><div class="t">③ 上　梁　戊申时　15:00 — 17:00　吉</div><div class="d">梁木就位，鸣炮</div></div>
+    </div>
+
+    <div class="sec">避 煞 与 注 意</div>
+    <div class="warn"><span class="lb">避煞方位：</span>忌在 亥·子·丑 方（年三煞）动土开挖</div>
+    <div class="warn"><span class="lb">避煞方位：</span>忌在 正南 方（年五黄）破土</div>
+    <div class="warn"><span class="lb">降级提醒：</span>申山正体五行受日课四柱克泄（已扣 34 分）——可用不宜大修</div>
+    <div class="warn"><span class="lb">冲煞：</span>冲未（羊）　煞西　属羊者与孕妇宜远离现场</div>
+
+    <div class="sign">
+      <div>
+        择日师：廖贵雄<br>
+        择日依据：协纪辨方书 · 星历考原 · 陈子性藏书<br>
+        岁次丙午　二〇二六年十二月　谨识
+      </div>
+      <div class="seal">廖贵雄<br>印</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 三、否决帖 ================= -->
+<div class="stage">
+  <p class="cap">样式 <b>C</b>／否决帖 · 结构分家（禁止出现任何吉语）</p>
+  <div class="paper veto">
+
+    <div class="head">
+      <span class="seal-mini">止</span>
+      <h2>本 日 不 吉</h2>
+      <span class="seal-mini">止</span>
+      <div class="sub">此 日 不 可 使 用</div>
+      <div class="cloud"></div>
+    </div>
+
+    <div class="veto-panel">
+      <div class="stamp">
+        <div class="l1">不　吉</div>
+        <div class="l2">一 票 否 决</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><td class="k">公　　历</td><td class="v">2026 年 11 月 13 日</td></tr>
+      <tr><td class="k">农　　历</td><td class="v">丙午年 十月初三</td></tr>
+      <tr><td class="k">干　　支</td><td class="v">丙午年　丁亥月　丁丑日　丁未时</td></tr>
+      <tr><td class="k">用　　事</td><td class="v">嫁娶　事主：乾造／坤造</td></tr>
+      <tr><td class="k">评　　分</td><td class="v">0 分　已否决</td></tr>
+    </table>
+
+    <div class="sec">否 决 原 因</div>
+    <div class="reason"><span class="no">1</span>三煞大忌：年三煞犯亥方（一票否决）</div>
+    <div class="reason"><span class="no">2</span>冲新娘：日柱冲坤造年命</div>
+    <div class="reason"><span class="no">3</span>红纱日：婚嫁大忌（已降级，仍叠加本日否决）</div>
+
+    <div class="closing">此日一票否决，诸事不宜，请另择吉日良辰。</div>
+
+    <div class="sign">
+      <div>
+        择日师：廖贵雄<br>
+        岁次丙午　二〇二六年十一月　谨识
+      </div>
+      <div class="seal">廖贵雄<br>印</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 规格条 ================= -->
+<div class="spec">
+  <b>色彩规格</b>　吉帖纸底 #C11B17（打印建议 #D32F2F）／否决帖纸底 #8B0000／墨色 #1A1A1A／金线 #C9A227／警示块 #FFF3B0 + 左竖条 #8B0000／否决牌 #FFD400<br>
+  <div class="swatches">
+    <span class="sw"><i style="background:#C11B17"></i>吉帖底</span>
+    <span class="sw"><i style="background:#8B0000"></i>否决底</span>
+    <span class="sw"><i style="background:#C9A227"></i>金线</span>
+    <span class="sw"><i style="background:#FFF3B0"></i>警示块</span>
+    <span class="sw"><i style="background:#FFD400"></i>否决牌</span>
+    <span class="sw"><i style="background:#1A1A1A"></i>正文</span>
+  </div>
+  <br>
+  <b>字号阶梯</b>　verdict 36pt bold｜title 26pt bold｜stamp 20pt bold｜h2 18pt bold｜body 16pt｜tbl 15pt 左对齐｜small 13pt<br>
+  <b>间距</b>　A4 四边 10mm；分区之间 8mm + 云纹分隔；表格行高 9mm、列宽 22%／78%；吉时节点间距 10mm<br>
+  <b>打印底线</b>　黑白打印机下：警示块靠底色灰度 + 1.6mm 左边框区分；否决牌靠反白粗框；不以纯色彩为唯一区分手段
+</div>
+
+</body>
+</html>
