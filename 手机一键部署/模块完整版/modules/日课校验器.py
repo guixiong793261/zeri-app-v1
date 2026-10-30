@@ -368,7 +368,14 @@ def rule_e001(ctx):
 
 @register_rule('E002', SEVERITY_ERROR, '等级与总分区间匹配')
 def rule_e002(ctx):
-    """分数区间→等级映射；嫁娶忌嫁娶日基础等级封顶★平并须带慎用后缀。"""
+    """分数区间→等级映射；嫁娶按生产链复算（分位归一化→阈值→两级降格/封顶）。
+
+    非嫁娶：等级=总分纯函数（阈值 105/100/85/75/60，五行<60 兜底凶）。
+    嫁娶：与评分器/主程序同源——归一化输入过 _get_level 后，
+    再走 _apply_marriage_level_caps（一级"忌嫁娶"封顶★平带慎用后缀；
+    二级"闭日/夫星/warnings忌嫁娶"降一格带"（小忌，降一格）"后缀），
+    比对完整等级串（含后缀）。
+    """
     score = ctx.detail.get('score')
     if not isinstance(score, (int, float)):
         return 'detail 无 score'
@@ -386,19 +393,49 @@ def rule_e002(ctx):
         return None
 
     wuxing = ctx.sd.get('五行评分')
-    expected_base = _expected_level_base(score, wuxing)
 
-    # 嫁娶硬禁忌封顶：明细含"忌嫁娶" → 基础等级 ≤ ★ 平
-    capped = False
+    # 嫁娶路径：生产链 = 分位归一化输入（§179 方案A，ENABLE_LEVEL_NORMALIZATION）
+    #   → _get_level 阈值 → _apply_marriage_level_caps 两级调整（2026-10-08 拍板
+    #   特许：一级"忌嫁娶"封顶★平带慎用后缀；二级"闭日/夫星/warnings忌嫁娶"
+    #   降一格带"（小忌，降一格）"后缀）。E002 复算必须与生产链完全同源——
+    #   旧实现只认"原始总分纯函数+一级封顶"，归一化或二级降格生效的日课必误报
+    #   （2026-02-22 夫星受克案例：原始126分→归一化后上吉→二级降大吉，
+    #   旧口径报"应为上吉"假阳性）。
     if ctx.is_marriage:
-        capped = any(
-            '忌嫁娶' in str(d[0])
-            for d in ctx.marriage_details
-            if isinstance(d, (list, tuple)) and len(d) >= 1)
-        if capped:
-            exp_stars = expected_base.count('★')
-            if exp_stars > 1:
-                expected_base = '★ 平'
+        try:
+            from .评分器 import (Scorer as _Scorer,
+                                 map_marriage_level_score as _mmap_total,
+                                 map_marriage_level_wx as _mmap_wx,
+                                 ENABLE_LEVEL_NORMALIZATION as _NORM_ON)
+        except ImportError:
+            from 评分器 import (Scorer as _Scorer,
+                                map_marriage_level_score as _mmap_total,
+                                map_marriage_level_wx as _mmap_wx,
+                                ENABLE_LEVEL_NORMALIZATION as _NORM_ON)
+        if _NORM_ON:
+            _score_in = _mmap_total(score)
+            _wx_in = (_mmap_wx(wuxing)
+                      if isinstance(wuxing, (int, float)) else None)
+        else:
+            _score_in = score
+            _wx_in = wuxing
+        _exp_base = _expected_level_base(_score_in, _wx_in)
+        # 两级调整复算（与评分器/主程序重判同一方法、同一触发源）
+        _exp_full, _cap_l1, _cap_l2 = _Scorer()._apply_marriage_level_caps(
+            _exp_base,
+            {'details': ctx.marriage_details,
+             'warnings': ctx.detail.get('warnings') or []})
+        if actual != _exp_full:
+            ctx.issue(
+                'E002',
+                f'等级与总分不匹配：{score:g} 分按嫁娶生产链复算应为'
+                f'「{_exp_full}」，实际为「{actual}」',
+                source='detail[level]',
+                suggestion='嫁娶等级=分位归一化总分纯函数+两级婚嫁调整，'
+                           '后缀（小忌，降一格）/（犯忌嫁娶，慎用）必须与触发源一致')
+        return None
+
+    expected_base = _expected_level_base(score, wuxing)
 
     if actual_base != expected_base:
         ctx.issue(
@@ -407,14 +444,6 @@ def rule_e002(ctx):
             f'实际为「{actual_base}」',
             source='detail[level]',
             suggestion='等级必须是总分的纯函数（阈值 105/100/85/75/60）')
-
-    # 封顶时必须带「（犯忌嫁娶，慎用）」后缀
-    if capped and '犯忌嫁娶' not in actual:
-        ctx.issue(
-            'E002',
-            f'因忌嫁娶降为平的等级须带「犯忌嫁娶，慎用」后缀，实际：{actual}',
-            source='detail[level]',
-            suggestion='等级追加（犯忌嫁娶，慎用）标注')
     return None
 
 
