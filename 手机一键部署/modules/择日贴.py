@@ -612,6 +612,19 @@ def _owner_sizhu_text(o):
     return f"{gz}年命" if gz else '○○'
 
 
+def _clean_extra(v):
+    """阳气/阴胎值清洗：兼容上游传入带标签前缀的数据（如 '阳气: 癸丑'），
+    只保留干支；空/未知返回 ''（2026-10-31：修复红帖"阳气:阳气: 癸丑"重复）。"""
+    s = str(v or '').strip()
+    if '：' in s:
+        s = s.split('：', 1)[1].strip()
+    elif ':' in s:
+        s = s.split(':', 1)[1].strip()
+    if s in ('未知', '未计算'):
+        return ''
+    return s
+
+
 def _owner_xiyong_text(o):
     """主事人喜用神文本（喜用神计算器现算；失败返回''）"""
     try:
@@ -654,8 +667,8 @@ def compose_engagement_lines(e):
     a(('h2', '【男方】（乾造）'))
     if groom:
         a(('body', f"四柱：{_owner_sizhu_text(groom)}"))
-        yq = groom.get('yangqi')
-        if yq and yq not in ('未知', ''):
+        yq = _clean_extra(groom.get('yangqi'))
+        if yq:
             a(('body', f"阳气：{yq}"))
     else:
         a(('body', '四柱：○○'))
@@ -663,8 +676,8 @@ def compose_engagement_lines(e):
     a(('h2', '【女方】（坤造）'))
     if bride:
         a(('body', f"四柱：{_owner_sizhu_text(bride)}"))
-        yt = bride.get('yintai')
-        if yt and yt not in ('未知', ''):
+        yt = _clean_extra(bride.get('yintai'))
+        if yt:
             a(('body', f"阴胎：{yt}"))
     else:
         a(('body', '四柱：○○'))
@@ -1120,7 +1133,7 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
 .stamp { display: inline-block; background: #FFD400; color: #140a00;
          font-size: 30px; font-weight: bold; letter-spacing: 8px;
          padding: 6mm 10mm; border: 1px solid #7a5a00; }
-.tbl { font-size: 23px; line-height: 1.95; text-align: left;
+.tbl { font-size: 23px; line-height: 1.95; text-align: center;
        letter-spacing: 1px; padding: 2mm 0; border-bottom: 1px solid #cfcfcf; }
 .warn { font-size: 24px; line-height: 1.85; text-align: left;
         background: #FFF3B0; color: #4a1200;
@@ -1218,7 +1231,8 @@ def _fmt_owner(owner, role_label_cn):
             pass
     sizhu = owner.get('sizhu') or ''    # "辛卯 甲寅 丙子 戊午"
     # 阳气/阴胎
-    extra = owner.get('yangqi') if role_label_cn == '乾造' else owner.get('yintai')
+    extra = _clean_extra(owner.get('yangqi') if role_label_cn == '乾造'
+                         else owner.get('yintai'))
     extra_label = '阳气' if role_label_cn == '乾造' else '阴胎'
     # 组合：乾造 辛卯年 历月 日 时 辛卯 甲寅 丙子 戊午 阳气:乙巳
     parts = [role_label_cn]
@@ -1236,7 +1250,7 @@ def _fmt_owner(owner, role_label_cn):
         pass
     if sizhu:
         parts.append(sizhu)
-    if extra and extra not in ('未知', ''):
+    if extra:
         parts.append(f'{extra_label}:{extra}')
     # 去掉空串
     parts = [p for p in parts if p]
@@ -1533,7 +1547,7 @@ html, body { margin: 0; padding: 0; background: #C11B17; }
 .stamp { display: inline-block; background: #FFD400; color: #140a00;
          font-size: 32px; font-weight: bold; letter-spacing: 8px;
          padding: 6mm 10mm; border: 1px solid #7a5a00; }
-.tbl { font-size: 24px; line-height: 1.9; text-align: left;
+.tbl { font-size: 24px; line-height: 1.9; text-align: center;
        letter-spacing: 1px; padding: 2mm 0;
        border-bottom: 1px solid rgba(201,162,39,.55); }
 .warn { font-size: 25px; line-height: 1.8; text-align: left;
@@ -1616,7 +1630,7 @@ class ZeriTieWindow:
                          ('verdict', {'justify': tk.CENTER, 'font': ("楷体", 36, 'bold')}),
                          ('stamp', {'justify': tk.CENTER, 'font': ("楷体", 20, 'bold'),
                                     'background': '#FFD400', 'foreground': '#140a00'}),
-                         ('tbl', {'justify': tk.LEFT, 'font': ("楷体", 15)}),
+                         ('tbl', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
                                    'background': '#FFF3B0', 'foreground': '#4a1200'}),
                          ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
@@ -1645,7 +1659,7 @@ class ZeriTieWindow:
                          ('verdict', {'justify': tk.CENTER, 'font': ("楷体", 36, 'bold')}),
                          ('stamp', {'justify': tk.CENTER, 'font': ("楷体", 20, 'bold'),
                                     'background': '#FFD400', 'foreground': '#140a00'}),
-                         ('tbl', {'justify': tk.LEFT, 'font': ("楷体", 15)}),
+                         ('tbl', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
                                    'background': '#FFF3B0', 'foreground': '#4a1200'}),
                          ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
