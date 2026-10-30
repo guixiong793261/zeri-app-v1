@@ -330,9 +330,12 @@ def _fmt_feixing(feixing_info):
 
 
 def _star_row_tag(level):
-    """等级文本（含★数）→ 结果表行标签 '5star'..'1star'/''。
-    2026-09-16 口径统一：正常择日与条件择日结果表共用同一判定。"""
+    """等级文本（含★数）→ 结果表行标签 '5star'..'1star'/'veto'/''。
+    2026-09-16 口径统一：正常择日与条件择日结果表共用同一判定。
+    §203 Commit2：否决日（❌/凶）返回 'veto'，配红色行标识。"""
     s = str(level or '')
+    if '❌' in s or '凶' in s:
+        return 'veto'
     for _n in (5, 4, 3, 2, 1):
         if '★' * _n in s:
             return f'{_n}star'
@@ -804,6 +807,8 @@ class ZeriApp:
         self.result_tree.tag_configure('3star', background='#F0FFF0')  # 淡绿色背景
         self.result_tree.tag_configure('2star', background='#FFF5EE')  # 淡橙色背景
         self.result_tree.tag_configure('1star', background='#F5F5F5')  # 淡灰色背景
+        # §203 Commit2：否决日（❌ 凶）浅红背景+深红字体，强警示
+        self.result_tree.tag_configure('veto', background='#FFE4E1', foreground='#B22222')
 
         # 列显示初始化：事主信息栏一律不显示，利月栏仅嫁娶类事项显示
         self._update_result_columns()
@@ -1675,10 +1680,17 @@ class ZeriApp:
                                    self.show_owner_bazi_detail(y, m, d, h, mi, g, o, lo))
             detail_btn.pack(side=tk.LEFT, padx=5, pady=2)
 
+            # §203 Commit2：事主未填出生日期或未点「计算四柱」时的强提示（黄底红字）
+            warn_label = tk.Label(owner_frame,
+                                  text="⚠ 未填出生日期或未点「计算四柱」，此事主将不参与相主计分",
+                                  fg="#B22222", bg="#FFFACD", font=("微软雅黑", 9, "bold"))
+            warn_label.pack(side=tk.LEFT, padx=5, pady=2)
+
             # 保存事主信息
             owner_info = {
                 'name': name_var,
                 'role': owner,
+                'warn_label': warn_label,
                 'year': year_var,
                 'month': month_var,
                 'day': day_var,
@@ -2634,6 +2646,16 @@ class ZeriApp:
             # 不改 sizhu_var 文本本体——下游 _parse_owner 按 split()==4 解析）
             sizhu_text = f"{sizhu_info['年柱']} {sizhu_info['月柱']} {sizhu_info['日柱']} {sizhu_info['时柱']}"
             sizhu_var.set(sizhu_text)
+            # §203 Commit2：四柱计算成功，清除此事主的未计算警示标签
+            try:
+                for _oi in getattr(self, 'owners_info', []):
+                    if _oi.get('role') == owner:
+                        _wl = _oi.get('warn_label')
+                        if _wl is not None:
+                            _wl.config(text="")
+                        break
+            except Exception:
+                pass
             if true_solar_flag_var is not None and hasattr(true_solar_flag_var, 'set'):
                 true_solar_flag_var.set("(真太阳时)" if longitude != 120.0 else "")
             
@@ -5481,8 +5503,13 @@ class ZeriApp:
         # ⚠ 警告图标金色前景（仅图标着色，不充填底色）
         text.tag_configure("warn_icon", foreground="#FFD700")
         # §190 C2：顶层警示整行红字（如山向缺失）
-        text.tag_configure("red_warn", foreground="#FF0000",
+        # §203 Commit2：加浅红背景块，强化震撼度
+        text.tag_configure("red_warn", foreground="#B22222",
+                           background="#FFE4E1",
                            font=("微软雅黑", 13, "bold"))
+        # §203 Commit2：详情【一票否决】段高亮（浅红背景+红字）
+        text.tag_configure("veto_highlight", foreground="#B22222",
+                           background="#FFE4E1")
         
         detail = result['detail']
         # 2026-09-06 修正：权威四柱覆盖块重建 detail['sizhu'] 时会丢 'date' 键，
@@ -7505,6 +7532,15 @@ class ZeriApp:
             _warns = []
 
         text.insert(tk.END, content)
+        # §203 Commit2：【一票否决】段红色高亮（定位段首到下一段标题）
+        try:
+            _veto_start = text.search("【⚠️ 一票否决】", "1.0")
+            if _veto_start:
+                _next_sec = text.search("\n【", _veto_start + "+1c")
+                _veto_end = _next_sec if _next_sec else tk.END
+                text.tag_add("veto_highlight", _veto_start, _veto_end)
+        except Exception:
+            pass
         # 顶层警示块整行红字打标（真置顶：1.0 前插）
         if _warns:
             _wblock = ('【⚠ 重要警示】\n'
