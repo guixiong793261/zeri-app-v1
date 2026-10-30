@@ -158,8 +158,11 @@ class BedRuleChecker(EventRuleChecker):
             ji_list.append('安床')
         elif yi_list and not ji_list:
             yi_list.append('安床')
-        
-        return yi_list, ji_list
+
+        # §203 Commit1（2026-10-30 用户拍板）：安床底线门槛与作灶统一——
+        # 月破/四离四绝/冲事主由强扣分升为一票否决（通书"诸事不宜"口径）。
+        veto, veto_reason = self._check_veto_items(sizhu, owners, ji_list)
+        return yi_list, ji_list, veto, veto_reason
     
     def _check_jianchu(self, date_obj, yi_list, ji_list):
         """检查建除十二神"""
@@ -222,7 +225,28 @@ class BedRuleChecker(EventRuleChecker):
             #             ji_list.append('岁破日忌安床')
         except Exception:
             pass
-    
+
+    def _check_veto_items(self, sizhu, owners, ji_list):
+        """
+        §203 Commit1：安床硬否决判定（与作灶口径统一）。
+        - 月破日：诸事不宜，一票否决
+        - 四离四绝日：诸事不宜，一票否决
+        - 冲事主（日/年/月/时柱冲安床人生肖）：一票否决
+        """
+        veto_reasons = []
+        veto_keywords = [
+            '月破日', '四离四绝日',  # 通书诸事不宜
+            '冲',  # 日/年/月/时柱冲事主（安床 ji 文本"日柱X冲Y"）
+        ]
+        for ji in ji_list:
+            for keyword in veto_keywords:
+                if keyword in ji:
+                    veto_reasons.append(ji)
+                    break
+        if veto_reasons:
+            return True, "、".join(veto_reasons)
+        return False, ""
+
     def _check_shengxiao_chong(self, sizhu, owners, ji_list):
         """
         检查四柱与事主生肖相冲（安床专用）

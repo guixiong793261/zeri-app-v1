@@ -223,6 +223,10 @@ EVENT_PROFILES = {
                  zaozhu_half=False, construction_ext=False, year_month_shan=True,  need_shan=True),
     '入宅': dict(marriage=False, mountain_center=True,  feixing=True,  liyue=False,
                  zaozhu_half=False, construction_ext=False, year_month_shan=True,  need_shan=True),
+    # §203 Commit1（2026-10-30）：作灶/安床 mountain_center=True 且 need_shan=False
+    # 非矛盾——作灶有灶位(灶座)、安床有床向，传统择日均看方位，故归山向中心
+    # 组（三煞仅坐山修方论，四柱临方扣分不否决）；但灶座/床向非强制输入项，
+    # 用户可不填（此时无坐山可犯，三煞山向判定自动不触发，仅存四柱扣分通道）。
     '作灶': dict(marriage=False, mountain_center=True,  feixing=False, liyue=False,
                  zaozhu_half=True,  construction_ext=False, year_month_shan=False, need_shan=False),
     '安床': dict(marriage=False, mountain_center=True,  feixing=False, liyue=False,

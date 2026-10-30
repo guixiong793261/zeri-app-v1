@@ -88,9 +88,9 @@ def ss_map(r):
             for s in (r.get('shensha_list') or []) if isinstance(s, dict)}
 
 
-# ══════════════════ B3 按柱分级（事主类：开业）══════════════════
+# ══════════════════ B3 按柱分级（事主类：签约）══════════════════
 # B3-1 年三煞犯日柱：2024-01-09（癸卯年，三煞方申酉戌，日支? 日柱临方）
-r = run(dt.date(2024, 1, 9), '开业', OWNER1)
+r = run(dt.date(2024, 1, 9), '签约', OWNER1)
 _v, _jl = vetos(r), ji_of(r)
 check('B3-1a 年三煞(日柱)不再否决', not _v, '; '.join(_v))
 check('B3-1b 保留年三煞(日柱)忌项', '年三煞(日柱)' in _jl, str(_jl))
@@ -100,7 +100,7 @@ check('B3-1c 日柱通道-30分保留（可用但带扣分）',
 check('B3-1d he_ge=True（五行门槛放行）', wx(r).get('he_ge') is True)
 
 # B3-2 年三煞犯时柱：2024-03-01（甲辰年三煞方巳午未，午时临方）
-r = run(dt.date(2024, 3, 1), '开业', OWNER1)
+r = run(dt.date(2024, 3, 1), '签约', OWNER1)
 _v, _jl = vetos(r), ji_of(r)
 check('B3-2a 年三煞(时柱)不再否决', not _v, '; '.join(_v))
 check('B3-2b 保留年三煞(时柱)/日三煞(时柱)忌项',
@@ -110,7 +110,7 @@ check('B3-2c 时柱通道-20分保留',
       any('年三煞(时柱)' in x and '-20' in x for x in _sp), str(_sp))
 
 # B3-3 反向：年三煞犯月柱事主类维持否决（2024-05-06 巳月，巳∈三煞方巳午未）
-r = run(dt.date(2024, 5, 6), '开业', OWNER1)
+r = run(dt.date(2024, 5, 6), '签约', OWNER1)
 _v = vetos(r)
 check('B3-3 年三煞(月柱)事主类维持一票否决',
       any('三煞大忌' in v and '年三煞(月柱)' in v for v in _v), '; '.join(_v))
@@ -125,7 +125,7 @@ check('B3-4 坐山犯年三煞维持否决（年份不宜/三煞大忌任一通�
 # ══════════════════ 必修2 山向类/事主类日时柱口径对齐 ══════════════════
 # 同一日 2024-03-01（年三煞时柱+月三煞日柱+日三煞时柱）：两类事项均不得
 # 以日/时柱三煞否决；差异只允许出现在月柱/山向。
-r_s = run(dt.date(2024, 3, 1), '开业', OWNER1)             # 事主中心
+r_s = run(dt.date(2024, 3, 1), '签约', OWNER1)             # 事主中心
 r_m = run(dt.date(2024, 3, 1), '修造', OWNER1, shan=KUN)   # 山向中心
 vs, vm = vetos(r_s), vetos(r_m)
 check('必修2-1a 事主类日/时柱三煞不否决',
@@ -326,11 +326,11 @@ _s = sum(v for k, v in _bd.items()
 check('F1 天火日 breakdown 加总==五行分（神煞/忌事各一笔不重）',
       _s == wx(r).get('score'), f'加总={_s} 五行分={wx(r).get("score")}')
 
-# F2 B3 通道分与忌事分两笔独立：2024-01-09 开业（通道-40、忌事-30）
+# F2 B3 通道分与忌事分两笔独立：2024-01-09 签约（通道-40、忌事-30）
 # §187 Q4（2026-10-27）：三煞双扣根除后忌事得分 -30→0——年三煞(日柱)/日三煞(时柱)
 # 两项已由 sansha_penalty 通道扣 -40（-30/-10），忌事不再重复；两笔独立语义
 # 由「通道-40 + 忌事0 + 明细仍保留 2 条三煞项（仅展示）」共同证明。
-r = run(dt.date(2024, 1, 9), '开业', OWNER1)
+r = run(dt.date(2024, 1, 9), '签约', OWNER1)
 _si = (r.get('sansha_info') or {}).get('sansha_info') or (r.get('sansha_info') or {})
 check('F2-1 三煞通道合计-40（日柱-30+时柱-10，保留入总分）',
       (r.get('sansha_info') or {}).get('sansha_penalty') == -40,

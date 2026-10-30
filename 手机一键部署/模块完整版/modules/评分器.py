@@ -113,6 +113,7 @@ try:
         display_only_info as _display_only_info,
         SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
         TRAVEL_EVENTS as _TRAVEL_EVENTS,
+        OPENING_EVENTS as _OPENING_EVENTS,
     )
 except ImportError:
     from 事项标准 import (
@@ -125,6 +126,7 @@ except ImportError:
         display_only_info as _display_only_info,
         SHAN_UI_EVENTS as _SHAN_UI_EVENTS,
         TRAVEL_EVENTS as _TRAVEL_EVENTS,
+        OPENING_EVENTS as _OPENING_EVENTS,
     )
 
 # ============================================================================
@@ -1724,9 +1726,14 @@ class Scorer:
             # 承载"出发方向"，语义上不再视为坐山/山向；山家类通道（三煞/向方
             # 月破/山家封禁警告与吉神）均以坐山为纲，对出行整体不参与。
             _is_travel = _canonical_event(event_type) in _TRAVEL_EVENTS
+            # §203 Commit1（2026-10-30 用户拍板）：开业同出行无固定坐山，
+            # 三煞为"坐山/修方"禁忌，对开业不适用，旁路年/月/日三煞与向方月破。
+            # 口径复用出行取证（docs/出行方位三库取证报告_20261030.md）。
+            _is_opening = _canonical_event(event_type) in _OPENING_EVENTS
+            _no_sansha = _is_travel or _is_opening
             travel_direction = full_shan_xiang if _is_travel else None
             sansha_info = self._get_sansha_info(sizhu, full_shan_xiang)
-            if _is_travel:
+            if _no_sansha:
                 for _tk in _TRAVEL_SANSHA_KEYS:
                     sansha_info.pop(_tk, None)
                 sansha_info['sansha_applicable'] = False
