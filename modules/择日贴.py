@@ -539,6 +539,55 @@ def _zhongsang_hits(e):
     return hits
 
 
+def _degrade_warn_lines(e):
+    """§204 S3：软忌/降级提示块（纯展示层，不参与评分、不改判定）。
+
+    数据源只三处，均不作推断：
+      ① entry['reason']（主程序从评分结果透传的理由串）中「凶神：」段的煞名清单；
+      ② 理由串中「忌：」段的忌项清单（评分器实算；非否决日即软忌集）；
+      ③ 理由串中「正体大凶／克泄」类降级说明。
+    无数据即返回空列表 —— 绝不虚构软忌，也不重复否决原因（否决日走
+    compose_veto_lines 另一分支）。"""
+    reason = str(e.get('reason') or '').replace('\n', '；')
+    segs = [s.strip() for s in reason.split('；') if s.strip()]
+    out = []
+
+    names = []
+    for seg in segs:
+        for pref in ('凶神：', '凶煞：'):
+            if seg.startswith(pref):
+                for n in seg[len(pref):].split('、'):
+                    n = n.strip()
+                    if n and n not in names:
+                        names.append(n)
+    label = '犯'
+    if not names:
+        # 2026-10-30 实样核对：评分器 reason 的软忌主载体是「忌：」段
+        # （如「忌：红纱日、鬼哭日、大黄道朱雀黑道日…」），非「凶神：」段。
+        label = '忌项'
+        for seg in segs:
+            if seg.startswith(('忌：', '所忌：')):
+                for n in seg.split('：', 1)[1].split('、'):
+                    n = n.strip()
+                    if n and n not in names:
+                        names.append(n)
+                break
+    if names:
+        shown = '、'.join(names[:8]) + ('等' if len(names) > 8 else '')
+        if label == '犯':
+            out.append(('warn', f"注意事项：本日犯 {shown}，已按轻扣／降级计入评分（非一票否决）"))
+        else:
+            # 忌项段含事类忌（如「忌：词讼」），不得谎称计入评分，只作避用提示
+            out.append(('warn', f"注意事项：本日忌项 {shown}（未达一票否决，宜酌情避用）"))
+
+    for seg in segs:
+        if seg.startswith(('吉神：', '宜：', '忌：', '凶神：', '凶煞：')):
+            continue
+        if any(k in seg for k in ('正体大凶', '克泄分金', '克泄')):
+            out.append(('warn', f"注意事项：{seg}"))
+    return out
+
+
 def _owner_sizhu_text(o):
     """事主四柱文本：有四柱用四柱，否则年命；'○○'占位"""
     if not isinstance(o, dict):
@@ -608,11 +657,15 @@ def compose_engagement_lines(e):
     a(('', ''))
     a(('h2', '● 订盟纳采吉日'))
     a(('body', f"谨择 {e['_nian']}年 {e['_lunar_month']}{e['_lunar_day']} 订盟纳采大利。"))
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
     a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
@@ -650,17 +703,21 @@ def compose_xiuzao_lines(e):
         a(('body', f"福主：{_owner_sizhu_text(o)}"))
     a(('', ''))
     a(('h2', '【坐山朝向】'))
-    a(('body', f"坐　{e.get('_shan_line') or '○○山○○向兼○○分金'}"))
+    a(('tbl', f"坐　{e.get('_shan_line') or '○○山○○向兼○○分金'}"))
     a(('', ''))
     j0 = e['_jishi'][0] if e['_jishi'] else None
     shi0 = j0['ganzhi'] if j0 and isinstance(j0, dict) else '○'
     a(('h2', '● 动土修造吉日'))
     a(('body', f"谨择 {e['_nian']}年 {e['_lunar_month']}{e['_lunar_day']} 动土修造大利。"))
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
     a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
@@ -669,10 +726,10 @@ def compose_xiuzao_lines(e):
     a(('h2', '【避煞方位】'))
     ss = _year_sansha_text(e)
     if ss:
-        a(('body', f"⚠ 忌在 {ss} 方（年三煞）动土"))
+        a(('warn', f"忌在 {ss} 方（年三煞）动土"))
     wh = _year_wuhuang_text(e)
     if wh:
-        a(('body', f"⚠ 忌在 {wh} 方（年五黄）开挖"))
+        a(('warn', f"忌在 {wh} 方（年五黄）开挖"))
     a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
     a(('small', f"（属{e['_chong_sx']}者及孕妇当日宜远离施工现场）"))
@@ -706,15 +763,19 @@ def compose_dongtu_lines(e):
         a(('body', f"福主：{_owner_sizhu_text(o)}"))
     a(('', ''))
     a(('h2', '【坐山朝向】'))
-    a(('body', f"坐　{e.get('_shan_line') or '○○山○○向兼○○分金'}"))
+    a(('tbl', f"坐　{e.get('_shan_line') or '○○山○○向兼○○分金'}"))
     a(('', ''))
     a(('h2', '● 兴工动土吉日'))
     a(('body', f"谨择 {e['_nian']}年 {e['_lunar_month']}{e['_lunar_day']} 兴工动土大利。"))
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
     a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
@@ -723,10 +784,10 @@ def compose_dongtu_lines(e):
     a(('h2', '【避煞方位】'))
     ss = _year_sansha_text(e)
     if ss:
-        a(('body', f"⚠ 忌在 {ss} 方（年三煞）动土"))
+        a(('warn', f"忌在 {ss} 方（年三煞）动土"))
     wh = _year_wuhuang_text(e)
     if wh:
-        a(('body', f"⚠ 忌在 {wh} 方（年五黄）开挖"))
+        a(('warn', f"忌在 {wh} 方（年五黄）开挖"))
     a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
     a(('small', f"（属{e['_chong_sx']}者及孕妇当日宜远离施工现场）"))
@@ -768,11 +829,15 @@ def compose_ruzhai_lines(e):
     a(('', ''))
     a(('h2', '● 移居入宅吉日'))
     a(('body', f"谨择 {e['_nian']}年 {e['_lunar_month']}{e['_lunar_day']} 移居入宅大利。"))
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
     a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
@@ -816,15 +881,19 @@ def compose_anzhang_lines(e):
         a(('body', f"主事人：{_zhushi_line(owners['zhushi'])}"))
     a(('', ''))
     a(('h2', '【墓穴坐向】'))
-    a(('body', f"福地坐　{e.get('_shan_line') or '○○山○○向兼○○吉度分金'}"))
+    a(('tbl', f"福地坐　{e.get('_shan_line') or '○○山○○向兼○○吉度分金'}"))
     a(('', ''))
     a(('h2', '● 破土安葬吉日'))
     a(('body', f"谨择 {e['_nian']}年 {e['_lunar_month']}{e['_lunar_day']} 破土安葬大利。"))
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
     a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
@@ -840,15 +909,15 @@ def compose_anzhang_lines(e):
     _vr = e.get('_veto_reasons') or []
     if _vr:
         for _r in _vr:
-            a(('body', f"⚠ {_r}"))
+            a(('warn', f"{_r}"))
     else:
         a(('body', '无明显致命大凶'))
     hits = _zhongsang_hits(e)
     if hits:
-        a(('body', f"⚠ 是日犯 {'、'.join(hits)}，慎用（宜另择）"))
+        a(('warn', f"是日犯 {'、'.join(hits)}，慎用（宜另择）"))
     ss = _year_sansha_text(e)
     if ss:
-        a(('body', f"⚠ 岁煞在 {ss} 方，忌其方动锄"))
+        a(('warn', f"岁煞在 {ss} 方，忌其方动锄"))
     a(('small', '（另需复核：入地空亡、冲仙命纳音）'))
     a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
@@ -1148,18 +1217,24 @@ def compose_marriage_lines(e):
     a(('body', f"谨择{ln_year}年{e['_lunar_month']}{e['_lunar_day']}嫁娶结婚大利。"))
     a(('', ''))
     # 干支：
-    a(('body', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
+    # 干支（§204 S3：信息表化 → tbl 行）
+    a(('tbl', f"干　支：{e['_nian']}年　{e['_yue']}月　{e['_ri']}日　{e['_shi']}时"))
     a(('', ''))
     # 评分行（2026-09-06用户建议：结论更有数据支撑）
     _sc = str(e.get('score') or '').strip()
     _lv = str(e.get('level') or '').strip()
     if _sc or _lv:
         if _sc and _lv:
-            a(('body', f"评　分：{_sc}分　{_lv}"))
+            a(('tbl', f"评　分：{_sc}分　{_lv}"))
         elif _sc:
-            a(('body', f"评　分：{_sc}分"))
+            a(('tbl', f"评　分：{_sc}分"))
         else:
-            a(('body', f"评　分：{_lv}"))
+            a(('tbl', f"评　分：{_lv}"))
+        a(('', ''))
+    # §204 S3：软忌／降级警示块（受死日、红砂日、冲命等，有则必显）
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
     a(('', ''))
@@ -1214,12 +1289,17 @@ def _compose_common_detail_lines(e):
     a(('', ''))
     a(('h2', '谨　择'))
     a(('', ''))
-    a(('body', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
-    a(('body', f"岁　　次：{e['_nian']}　肖{e['_shengxiao']}"))
-    a(('body', f"农　　历：{e['_lunar_str']}"))
-    a(('body', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
-    a(('body', f"星　　期：{e['_week']}"))
+    a(('tbl', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
+    a(('tbl', f"岁　　次：{e['_nian']}　肖{e['_shengxiao']}"))
+    a(('tbl', f"农　　历：{e['_lunar_str']}"))
+    a(('tbl', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
+    a(('tbl', f"星　　期：{e['_week']}"))
     a(('sep', '─' * 30))
+    # §204 S3：软忌／降级警示块（通用通道同样必须显）
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        lines.extend(_dw)
+        a(('sep', '─' * 30))
     a(('h2', '【 吉　时 】'))
     if e['_jishi']:
         labels = ['首选', '次选', '备选', '又备']
@@ -1246,11 +1326,11 @@ def _compose_common_detail_lines(e):
     owners = e.get('owners') or '—'
     if owners in ('-', '无', ''):
         owners = '—'
-    a(('body', f"用事：{event}　　　事主：{owners}"))
+    a(('tbl', f"用事：{event}　　　事主：{owners}"))
     level = e.get('level') or '—'
     score = str(e.get('score') or '')
     score_part = f"　{score}分" if score else ''
-    a(('body', f"评级：{level}{score_part}"))
+    a(('tbl', f"评级：{level}{score_part}"))
     a(('sep', '─' * 30))
     now = datetime.now()
     a(('small', '择日师：廖贵雄'))
