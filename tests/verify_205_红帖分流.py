@@ -191,6 +191,58 @@ def main():
     check('H 慎用帖渲染含 stamp 慎用',
           'class="stamp"' in doc and '慎' in doc)
 
+    # ============ I：S4 收尾（时间轴 + 落款弱化 + 双线框） ============
+    print('[I] S4 发轿时间轴 / 落款下沉 / 双线框')
+    # I-1 古风行程节点（保留「发轿」字样，verify_205-C 依赖）
+    check('I 嫁娶节点改古风行程（起轿/进门/交拜）',
+          Z._STAGE_LABELS['marriage'] == ['起轿·发轿', '迎娶·进门', '交拜·合卺'],
+          f"{Z._STAGE_LABELS['marriage']}")
+    # I-2 七类吉帖吉时行一律 ①②③ 编号
+    for ev in EVENTS:
+        ge = _mk('2026-10-20', ev, score=88, level='吉')
+        rows = [t for _, t in Z.compose_detail_lines(ge) if '时（' in t]
+        check(f'I {ev} 吉时行 ①②③ 编号（{len(rows)} 行）',
+              bool(rows) and all(r[0] in Z._CIRCLED for r in rows), f'{rows[:2]}')
+    # I-3 嫁娶吉帖时间轴节点文案
+    ge = _mk('2026-10-20', '嫁娶', score=88, level='吉',
+             owners_list=[{'name': '新娘', 'role': '新娘', 'year_sx': '猪'}])
+    mtxt = _text(Z.compose_detail_lines(ge))
+    check('I 嫁娶吉帖含「① 起轿·发轿」', '① 起轿·发轿' in mtxt)
+    # I-4 慎用帖时辰行同步编号（33 分凶嫁娶）
+    ge = _mk('2026-10-20', '嫁娶', score=33, level='❌ 凶')
+    rows = [t for _, t in Z.compose_detail_lines(ge) if '时（' in t]
+    check('I 慎用帖时辰行 ① 编号 + 古风节点',
+          bool(rows) and rows[0].startswith('①') and '起轿·发轿' in rows[0], f'{rows[:1]}')
+    # I-5 落款下沉弱化：〔廖贵雄印〕+ 前置 rule；七类 + 否决 + 慎用全覆盖
+    for ev in EVENTS:
+        for kw, tag in ((dict(score=88, level='吉'), '吉'),
+                        (dict(score=33, level='❌ 凶'), '慎用'),
+                        (dict(score=0, level='大凶', veto_reasons=['月破（一票否决）']), '否决')):
+            lines = Z.compose_detail_lines(_mk('2026-10-20', ev, **kw))
+            txt = _text(lines)
+            seal = '〔廖贵雄印〕' in txt and '择日依据：' in txt
+            sig_i = next((i for i, (_, t) in enumerate(lines) if '择日师' in t), -1)
+            rule_before = sig_i > 0 and any(s == 'rule' for s, _ in lines[:sig_i])
+            check(f'I {ev}-{tag}帖 落款印章+前置金线', seal and rule_before)
+    # I-6 嫁娶/通用/总录落款统一（原自带结尾已收编）
+    ge = _mk('2026-10-20', '嫁娶', score=88, level='吉')
+    check('I 嫁娶帖落款含印章', '〔廖贵雄印〕' in _text(Z.compose_detail_lines(ge)))
+    sm = _text(Z.compose_summary_lines([_mk('2026-10-20', '开业', score=88, level='吉')]))
+    check('I 择日总录落款含印章+依据', '〔廖贵雄印〕' in sm and '择日依据：' in sm)
+    # I-7 双击定位剥圈码（源码级）
+    src_win = inspect.getsource(Z.ZeriTieWindow)
+    check('I 双击定位剥离圈码', 'line[0] in _CIRCLED' in src_win)
+    # I-8 双线框：三纸型均含金色双线边框（veto 经替换继承）
+    ge = _mk('2026-10-20', '嫁娶', score=88, level='吉')
+    for pp in ('red', 'white', 'veto'):
+        doc = Z.render_print_html(Z.compose_detail_lines(ge), 't', paper=pp)
+        check(f'I {pp} 纸型金色双线框', 'border: 5px double #C9A227' in doc)
+    # I-9 rule 行真实渲染（HTML 不再落 blank；源码级 + 实例）
+    doc = Z.render_print_html(Z.compose_detail_lines(ge), 't', paper='red')
+    check('I HTML rule 行渲染 <div class="rule">', '<div class="rule">' in doc)
+    check('I GUI rule 行渲染金色细线（源码）',
+          "elif style == 'rule':" in src_win and "'─' * 30" in src_win)
+
     print()
     if FAILS:
         print(f'FAIL {len(FAILS)} 项：{FAILS}')

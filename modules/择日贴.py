@@ -471,8 +471,9 @@ def _jishi_stage(e, idx):
 
 
 # 各模板吉时分段标签（与 compose_* 吉时行行首一致，供手动修改对话框与双击定位）
+# 001 §205 S4：嫁娶改古风行程节点（起轿→进门→交拜，保留「发轿」字样）
 _STAGE_LABELS = {
-    'marriage': ['发轿时辰', '回轿时辰', '拜堂合卺'],
+    'marriage': ['起轿·发轿', '迎娶·进门', '交拜·合卺'],
     'engagement': ['起担（男方出发）', '纳聘（送达聘礼）', '交换庚帖·定盟'],
     'xiuzao': ['祭拜山神·土地', '动土开挖·奠基', '定基下石'],
     'dongtu': ['祭拜山神·土地', '动土开挖·奠基', '定基下石'],
@@ -505,6 +506,12 @@ def _stage_labels_effective(e):
     """本课各段吉时的有效标签列表（含用户覆盖），供双击定位等使用"""
     labs = _jishi_stage_labels(e.get('_template') or '')
     return [_stage_label(e, i) for i in range(len(labs))]
+
+
+def _stage_jishi_line(e, idx):
+    """吉时行文本（001 §205 S4 时间轴编号）：① 阶段名：干支时（时段）　等级。
+    双击定位依赖——_on_detail_dclick 先剥离圈码再按阶段名 startswith 匹配。"""
+    return f"{_circled_num(idx)} {_stage_label(e, idx)}：{_jishi_stage(e, idx)}"
 
 def _year_sansha_text(e):
     """年三煞方位说明：'北（亥子丑）'；无年柱返回''"""
@@ -620,10 +627,15 @@ def _owner_xiyong_text(o):
 
 
 def _signature_lines(e):
-    """统一落款：择日师 → 择日依据 → 岁次谨识"""
+    """统一落款（001 §205 S4 下沉弱化）：前置留白 + 细金线分隔，小字收尾，
+    择日师旁缀〔廖贵雄印〕——排版下沉、增加留白，更显端庄。"""
     lines = []
     a = lines.append
-    a(('small', '择日师：廖贵雄'))
+    a(('', ''))
+    a(('', ''))
+    a(('rule', ''))
+    a(('', ''))
+    a(('small', '择日师：廖贵雄　〔廖贵雄印〕'))
     a(('small', f"择日依据：{DIANJI_BANBEN}"))
     now = datetime.now()
     a(('small', f"岁次{e['_nian']}　{_cn_year_num(now.year)}年{_cn_month_num(now.month)}月　谨识"))
@@ -673,9 +685,9 @@ def compose_engagement_lines(e):
         lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
-    a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
-    a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
-    a(('body', f"{_stage_label(e, 2)}：{_jishi_stage(e, 2)}"))
+    a(('body', _stage_jishi_line(e, 0)))
+    a(('body', _stage_jishi_line(e, 1)))
+    a(('body', _stage_jishi_line(e, 2)))
     a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
     a(('small', f"（属{e['_chong_sx']}者及新娘兄弟当日宜避之）"))
@@ -725,9 +737,9 @@ def compose_xiuzao_lines(e):
         lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
-    a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
-    a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
-    a(('body', f"{_stage_label(e, 2)}：{_jishi_stage(e, 2)}"))
+    a(('body', _stage_jishi_line(e, 0)))
+    a(('body', _stage_jishi_line(e, 1)))
+    a(('body', _stage_jishi_line(e, 2)))
     a(('', ''))
     a(('h2', '【避煞方位】'))
     ss = _year_sansha_text(e)
@@ -783,9 +795,9 @@ def compose_dongtu_lines(e):
         lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
-    a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
-    a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
-    a(('body', f"{_stage_label(e, 2)}：{_jishi_stage(e, 2)}"))
+    a(('body', _stage_jishi_line(e, 0)))
+    a(('body', _stage_jishi_line(e, 1)))
+    a(('body', _stage_jishi_line(e, 2)))
     a(('', ''))
     a(('h2', '【避煞方位】'))
     ss = _year_sansha_text(e)
@@ -845,10 +857,10 @@ def compose_ruzhai_lines(e):
         lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
-    a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
-    a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
-    a(('body', f"{_stage_label(e, 2)}：{_jishi_stage(e, 2)}"))
-    a(('body', f"{_stage_label(e, 3)}：{_jishi_stage(e, 3)}"))
+    a(('body', _stage_jishi_line(e, 0)))
+    a(('body', _stage_jishi_line(e, 1)))
+    a(('body', _stage_jishi_line(e, 2)))
+    a(('body', _stage_jishi_line(e, 3)))
     a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
     a(('small', f"（属{e['_chong_sx']}者入宅当日宜先行回避，待吉时过后再入）"))
@@ -901,11 +913,11 @@ def compose_anzhang_lines(e):
         lines.extend(_dw)
         a(('', ''))
     a(('h2', '【　吉　时　】'))
-    a(('body', f"{_stage_label(e, 0)}：{_jishi_stage(e, 0)}"))
-    a(('body', f"{_stage_label(e, 1)}：{_jishi_stage(e, 1)}"))
+    a(('body', _stage_jishi_line(e, 0)))
+    a(('body', _stage_jishi_line(e, 1)))
     a(('small', '（注：破土与兴工动土不同，宜静默肃穆）'))
-    a(('body', f"{_stage_label(e, 2)}：{_jishi_stage(e, 2)}"))
-    a(('body', f"{_stage_label(e, 3)}：{_jishi_stage(e, 3)}"))
+    a(('body', _stage_jishi_line(e, 2)))
+    a(('body', _stage_jishi_line(e, 3)))
     a(('', ''))
     a(('h2', '【重要避忌】'))
     # 001 §198 P1-2（2026-10-29 拍板）：原写死「复日（旧称重丧日）、年重丧、
@@ -1031,7 +1043,8 @@ def compose_caution_lines(e):
     _js = e.get('_jishi') or []
     if _js:
         for _i, _j in enumerate(_js[:3]):
-            a(('body', f"{_stage_label(e, _i)}：{_j['ganzhi']}时（{_j['range']}）"))
+            # 001 §205 S4：时间轴 ①②③ 编号（不印等级——多煞之日时辰不得称吉）
+            a(('body', f"{_circled_num(_i)} {_stage_label(e, _i)}：{_j['ganzhi']}时（{_j['range']}）"))
             a(('', ''))
     else:
         a(('body', '当日无可用时辰，强烈建议另择。'))
@@ -1089,6 +1102,7 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
   margin: 0 auto;
   padding: 12mm 14mm;
   text-align: center;
+  border: 5px double #C9A227;  /* §205 S4：金色双线框 */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -1111,7 +1125,7 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
 .warn { font-size: 24px; line-height: 1.85; text-align: left;
         background: #FFF3B0; color: #4a1200;
         border-left: 6px solid #8B0000; padding: 2mm 3mm; margin: 1.5mm 0; }
-.rule { border-top: 3px double #9a9a9a; margin: 4mm auto; width: 96%; font-size: 1px; }
+.rule { border-top: 3px double #C9A227; margin: 4mm auto; width: 96%; font-size: 1px; }  /* §205 S4：金线 */
 </style>
 </head>
 <body onload="window.print()">
@@ -1132,7 +1146,9 @@ def render_print_html(lines, title, paper='red'):
     rows = []
     for style, text in lines:
         if not text:
-            rows.append('<div class="blank">&nbsp;</div>')
+            # 001 §205 S4：rule 行渲染为可见金色双线（原落入 blank 丢失，S2 起未真实显示）
+            rows.append('<div class="rule"></div>' if style == 'rule'
+                        else '<div class="blank">&nbsp;</div>')
             continue
         cls = _TAG_CLASS.get(style, 'body')
         if '⚠' in text and cls.split(' ')[0] != 'warn':
@@ -1312,7 +1328,8 @@ def compose_marriage_lines(e):
         return f"{j['ganzhi']}时（{j['range']}）　{j['grade']}"
     if jishi:
         for _i, _j in enumerate(jishi[:3]):
-            a(('body', f"{_stage_label(e, _i)}：{_jishi_str(_j)}"))
+            # 001 §205 S4：时间轴 ①②③ 编号（双击定位端已同步剥圈码）
+            a(('body', f"{_circled_num(_i)} {_stage_label(e, _i)}：{_jishi_str(_j)}"))
             a(('', ''))
     else:
         a(('body', '今日吉时有限，请谨慎选择。'))
@@ -1324,15 +1341,8 @@ def compose_marriage_lines(e):
     if _god_line:
         a(('body', _god_line))
         a(('', ''))
-    a(('body', "择日师：廖贵雄"))
-    a(('', ''))
-    # 择日依据（2026-09-06用户建议：标注所用典籍版本）
-    a(('small', f"择日依据：{DIANJI_BANBEN}"))
-    a(('', ''))
-    now = datetime.now()
-    # 岁次辛丑  年 月 谨识（年月日干支采用当年+择日当日年柱）
-    nian = e.get('_nian') or ''
-    a(('small', f"岁次{nian}　{_cn_year_num(now.year)}年{_cn_month_num(now.month)}月　谨识"))
+    # 001 §205 S4：落款统一走 _signature_lines（下沉弱化 + 印章）
+    lines.extend(_signature_lines(e))
     return lines
 
 
@@ -1370,7 +1380,8 @@ def _compose_common_detail_lines(e):
         labels = ['首选', '次选', '备选', '又备']
         for i, h in enumerate(e['_jishi']):
             tags = f"（{h['tags']}）" if h['tags'] else ''
-            a(('body', f"{labels[i]}：{h['ganzhi']}时（{h['range']}）　{h['grade']}{tags}"))
+            # 001 §205 S4：时间轴 ①②③ 编号
+            a(('body', f"{_circled_num(i)} {labels[i]}：{h['ganzhi']}时（{h['range']}）　{h['grade']}{tags}"))
     else:
         a(('body', '本日无特吉时辰，酌情取用'))
     a(('sep', '─' * 30))
@@ -1396,10 +1407,8 @@ def _compose_common_detail_lines(e):
     score = str(e.get('score') or '')
     score_part = f"　{score}分" if score else ''
     a(('tbl', f"评级：{level}{score_part}"))
-    a(('sep', '─' * 30))
-    now = datetime.now()
-    a(('small', '择日师：廖贵雄'))
-    a(('small', f"岁次{e['_nian']}　{_cn_year_num(now.year)}年{_cn_month_num(now.month)}月　谨识"))
+    # 001 §205 S4：落款统一走 _signature_lines（下沉弱化 + 印章）
+    lines.extend(_signature_lines(e))
     return lines
 
 
@@ -1459,11 +1468,8 @@ def compose_summary_lines(entries):
         a(('body', f"兹选得吉课一则：{first_desc}。"))
     a(('body', '诸课四柱纯清、用事相宜，吉时已列，依时行事，百事亨通。'))
     a(('small', '（本评语由软件自动生成，仅供参考）'))
-    a(('', ''))
-    now = datetime.now()
-    nian = first['_nian']
-    a(('small', '择日师：廖贵雄'))
-    a(('small', f"岁次{nian}　{_cn_year_num(now.year)}年{_cn_month_num(now.month)}月　谨识"))
+    # 001 §205 S4：落款统一走 _signature_lines（下沉弱化 + 印章）
+    lines.extend(_signature_lines(first))
     return lines
 
 
@@ -1509,6 +1515,7 @@ html, body { margin: 0; padding: 0; background: #C11B17; }
   margin: 0 auto;
   padding: 10mm 6mm;
   text-align: center;
+  border: 5px double #C9A227;  /* §205 S4：金色双线框（veto 深红纸型经替换继承） */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -1695,6 +1702,9 @@ class ZeriTieWindow:
                     widget.insert(tk.END, text + '\n', ('ctr', style, 'warnhl'))
                 else:
                     widget.insert(tk.END, text + '\n', ('ctr', style))
+            elif style == 'rule':
+                # 001 §205 S4：GUI 端 rule 行渲染为金色细线（原为空白行）
+                widget.insert(tk.END, '─' * 30 + '\n', ('ctr', 'rule'))
             else:
                 widget.insert(tk.END, '\n', ('ctr',))
         widget.configure(state=tk.DISABLED)
@@ -1794,6 +1804,9 @@ class ZeriTieWindow:
             line = self.detail_text.get(f"{idx} linestart", f"{idx} lineend").strip()
         except Exception:
             return
+        # 001 §205 S4：吉时行带 ①②③ 圈码前缀，先剥离再按阶段名定位
+        if line and line[0] in _CIRCLED:
+            line = line[1:].lstrip()
         if any(line.startswith(lab) for lab in _stage_labels_effective(e)):
             self.edit_jishi()
 
