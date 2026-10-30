@@ -10908,3 +10908,36 @@ I tkinter 双端 tag 注册 + GUI 否决配色 + print_detail veto 分支 + 嫁�
 - **206.7 commit**：三笔独立 commit——Commit1 `66b065b` fix(主程序 E207 键同步
   ×3 层)／Commit2 `4b2dbeb` fix(校验器 E002 生产链复算 ×3 层)／本节随
   Commit3（test verify_e002_e207×3 层 + docs）提交。
+
+## §207 择日贴阳气/阴胎标签重复 + 干支评分行不居中（2026-10-31）
+- **207.1 背景定位**（用户实报「择日贴的阳气阴胎重复显示，干支和评分行不居中」）：
+  - **重复**：`主程序.py _parse_owner` 把 UI 变量原样写入事主字典——UI 变量值
+    为带标签串「阳气: 癸丑」「阴胎: 戊午」（本文件 L2761/L2764 的 set 口径），
+    而 `择日贴.py _fmt_owner` 输出时再拼一次「阳气:/阴胎:」标签，红帖印成
+    「乾造 … 阳气:阳气: 癸丑」；订婚模板（`compose_engagement_lines`）同源。
+  - **不居中**：`tbl`（干支/评分信息行）在 HTML 红/白两套模板均为
+    `text-align: left`，GUI 预览 tag 亦为 `justify: LEFT`（`ZeriTieWindow`
+    两处 tag_configure），与红帖其余居中行不一致。
+- **207.2 改动清单**（B 形态，展示层单点×4）：
+  - `主程序.py _parse_owner`（L8439 起）：读 `yintai_var`/`yangqi_var` 后剥离
+    「：/：」前的标签，只存干支值；剥离后再做「未计算/空/未知」过滤。
+  - `modules/择日贴.py`：新增模块级 `_clean_extra()`（兼容历史/外部传入带
+    前缀数据，只保留干支、未知→''）；`_fmt_owner` 与
+    `compose_engagement_lines` 阳气/阴胎两处改走该清洗函数。
+  - 居中：红模板 `.tbl`、白（嫁娶/安葬）模板 `.tbl` 均改 `text-align: center`；
+    `ZeriTieWindow` 两处 `('tbl', {'justify': tk.LEFT})` 改 `tk.CENTER`。
+    `warn`（警示块）保持左对齐——多行忌项左对齐更易读。
+- **207.3 影响面**：仅展示层与打包字段值格式；评分、等级、时辰、否决链路零变化
+  （run_all 127/127 PASS 佐证）。所有七类模板的 tbl 信息行（公元/农历/干支/
+  用事/坐山/评分）统一居中。
+- **207.4 验证**：探针实证 4 组——①新数据（无前缀）乾造行仅一处
+  「阳气:癸丑」、坤造行仅一处「阴胎:戊午」；②旧/外部带前缀数据经 `_clean_extra`
+  清洗后「阳气:阳气/阴胎:阴胎」零命中；③订婚模板阳气/阴胎各一行；④HTML 红/
+  白两模板 `.tbl` 均 `text-align: center`。实样
+  `docs/红纸帖_嫁娶帖居中实样_20261031.html`（2026-02-22 嫁娶真实评分）
+  供验收。
+- **207.5 SHA/回归**：主程序.py 三副本 `06FC9BB687C06D7A` SAME×3；择日贴.py
+  三副本 `C01D18AC3053900F` SAME×3；py_compile exit=0；run_all **127/127
+  PASS**（FAIL=0 TIMEOUT=0）。
+- **207.6 commit**：本批主仓两笔独立 commit（fix 主程序打包字段剥离 ×3 层／
+  fix 择日贴去重+居中 ×3 层 + 本节 + 实样）。统一版仓是否同步待拍板。
