@@ -225,13 +225,19 @@ class BedShenShaChecker(ShenShaChecker):
         if self._is_chuanggong_chuangmu(sizhu):
             self._add_shensha('床公床母日', 12, '床公床母日利于安床')
 
-        # 胎神日
-        if self._is_taishen(sizhu):
-            self._add_shensha('胎神日', -15, '胎神日不宜安床')
+        # 胎神日×安床已废（2026-10-31 错表作废批，001 §208）：起例表与作灶
+        # 「天火日」12 行逐字全等，系历史上复制贴错名；典据胎神为陈书「六甲
+        # 胎神占」月/日占方位体系（占床/占房/占灶，主修整犯之损孕），并非
+        # "月支查日支"凶日表。用户拍板：判定逻辑作废不再扣分，胎神占床方位
+        # 体系重建单独立项。原发射为：
+        #     if self._is_taishen(sizhu):
+        #         self._add_shensha('胎神日', -15, '胎神日不宜安床')
 
-        # 冲床日
-        if self._is_chongchuang(sizhu):
-            self._add_shensha('冲床日', -12, '冲床日不宜安床')
+        # 冲床日×安床已删（2026-10-31 错表作废批，001 §208）：表=月支日支六冲，
+        # 即月破别名（三库「冲床」零命中）；§203 后月破日安床已被规则层一票
+        # 否决，本煞以别名再扣 -12 属同日双罚、无独立典据。原发射为：
+        #     if self._is_chongchuang(sizhu):
+        #         self._add_shensha('冲床日', -12, '冲床日不宜安床')
 
         # 杨公忌日
         # 注：安床对杨公忌敏感度较低，扣分降为-10（修造为-20、安葬为-20）
@@ -294,29 +300,9 @@ class BedShenShaChecker(ShenShaChecker):
         chuanggong_chuangmu = ['子', '寅', '卯', '巳', '午', '酉']
         return day_zhi in chuanggong_chuangmu
 
-    def _is_taishen(self, sizhu):
-        """是否胎神日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 胎神日
-        taishen_days = {
-            '寅': '子', '卯': '丑', '辰': '寅', '巳': '卯',
-            '午': '辰', '未': '巳', '申': '午', '酉': '未',
-            '戌': '申', '亥': '酉', '子': '戌', '丑': '亥'
-        }
-        return day_zhi == taishen_days.get(month_zhi)
-
-    def _is_chongchuang(self, sizhu):
-        """是否冲床日"""
-        month_zhi = sizhu['month_zhi']
-        day_zhi = sizhu['day_zhi']
-        # 冲床日
-        chongchuang = {
-            '寅': '申', '卯': '酉', '辰': '戌', '巳': '亥',
-            '午': '子', '未': '丑', '申': '寅', '酉': '卯',
-            '戌': '辰', '亥': '巳', '子': '午', '丑': '未'
-        }
-        return day_zhi == chongchuang.get(month_zhi)
+    # _is_taishen / _is_chongchuang 谓词已随发射一并删除（2026-10-31 错表
+    # 作废批，001 §208）：胎神日起例表系复制作灶天火日贴错名，冲床日即月破
+    # 别名三库零载，墓碑详见 _check_day_shensha 安床专用段。
 
     def _is_yanggongji(self, sizhu):
         """是否杨公忌日（2026-09-20 收敛：改委托 is_yanggongji_by_lunar）
