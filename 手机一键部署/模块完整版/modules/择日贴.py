@@ -341,6 +341,12 @@ def prepare_entry(entry):
         _score_num = 0.0
     e['_is_vetoed'] = bool(e['_veto_reasons']) or (
         _score_num == 0.0 and '凶' in str(e.get('level') or ''))
+    # 001 §205（2026-10-30 拍板）：非零分但等级含「凶」→ 软忌/慎用帖。
+    # 实测 2026-01-15 嫁娶 33 分「❌ 凶」仍按吉帖印「结婚大利」，属严重误导。
+    # 此类日课不否决、可用，但纸上必须明示「多煞慎用」，绝不印吉语；
+    # 硬否决（一票否决／0 分凶）优先，仍走 compose_veto_lines。
+    e['_is_soft_caution'] = (not e['_is_vetoed']) and (
+        '凶' in str(e.get('level') or ''))
 
     # owners_list 解析 → 仙命/主事/父母/宅主/福主
     e['_owners_map'] = _prepare_owners(e)
@@ -981,12 +987,71 @@ def compose_veto_lines(e):
     return lines
 
 
+def compose_caution_lines(e):
+    """软忌/慎用帖（001 §205，2026-10-30 拍板）：非零分但等级含「凶」的日课。
+    与硬否决帖同用深红纸型（打印端 paper='veto'），但允许列出吉时——
+    标题改「慎用」、加缓冲语、时辰不印等级（多煞之日任何时辰不得称「大吉」）。
+    此模板下绝不印「大吉/大利/日吉时良」等吉语（tests/verify_205 反向断言）。"""
+    lines = []
+    a = lines.append
+    a(('', ''))
+    a(('small', '日　课　慎　用　提　示'))
+    a(('', ''))
+    a(('verdict', '本日多煞　建议慎用'))
+    a(('', ''))
+    a(('stamp', '慎　　用'))
+    a(('', ''))
+    a(('rule', ''))
+    a(('', ''))
+    a(('tbl', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
+    a(('tbl', f"农　　历：{e['_lunar_str']}"))
+    a(('tbl', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
+    _ev = str(e.get('event_type') or '').strip() or '—'
+    _ow = str(e.get('owners') or '').strip()
+    if _ow in ('-', '无', ''):
+        _ow = '—'
+    a(('tbl', f"用　　事：{_ev}　　事主：{_ow}"))
+    sl = _score_line(e)
+    if sl:
+        a(('tbl', sl))
+    a(('', ''))
+    a(('rule', ''))
+    a(('', ''))
+    a(('h2', '【 注　意　事　项 】'))
+    _dw = _degrade_warn_lines(e)
+    if _dw:
+        for _i, (_s, _t) in enumerate(_dw):
+            a(('warn', f"{_circled_num(_i)} {_t}"))
+    else:
+        a(('warn', f"{_circled_num(0)} 本日等级为凶（未达一票否决线），凶煞偏重，诸事从简为宜"))
+    a(('', ''))
+    a(('h2', '【　时　辰　】'))
+    a(('body', '若必用此日，请选以下时辰，并从严避忌：'))
+    a(('', ''))
+    _js = e.get('_jishi') or []
+    if _js:
+        for _i, _j in enumerate(_js[:3]):
+            a(('body', f"{_stage_label(e, _i)}：{_j['ganzhi']}时（{_j['range']}）"))
+            a(('', ''))
+    else:
+        a(('body', '当日无可用时辰，强烈建议另择。'))
+        a(('', ''))
+    a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}"))
+    a(('', ''))
+    lines.extend(_signature_lines(e))
+    return lines
+
+
 def compose_detail_lines(e):
     """单课详解帖：按 e['_template'] 分派到 6 类专版 + 通用红纸。
     001 §198 P1-1：否决日一律走 compose_veto_lines 硬分支——任何模板都不得
-    再印「大利/大吉/日吉时良」。（在入口处拦一次，避免逐个模板漏改。）"""
+    再印「大利/大吉/日吉时良」。（在入口处拦一次，避免逐个模板漏改。）
+    001 §205：非零分凶日一律走 compose_caution_lines 慎用帖——不否决、可用，
+    但不得印「结婚大利/大吉」等吉语。"""
     if e.get('_is_vetoed'):
         return compose_veto_lines(e)
+    if e.get('_is_soft_caution'):
+        return compose_caution_lines(e)
     t = e.get('_template') or 'common'
     if t == 'marriage':
         return compose_marriage_lines(e)
@@ -1639,8 +1704,9 @@ class ZeriTieWindow:
         lines = compose_detail_lines(e) if e else []
         # 只有安葬用白纸（黑字）；其他（嫁娶/订婚/修造/动土/入宅/通用）全部红纸
         # §204 S2：否决日走深红底浅金字（与打印版 veto 纸型一致，远看即知不吉）
+        # §205：软忌/慎用帖同走深红（用户拍板：复用否决帖底色，标题改「慎用」）
         tpl = (e.get('_template') or '') if e else ''
-        if e and e.get('_is_vetoed'):
+        if e and (e.get('_is_vetoed') or e.get('_is_soft_caution')):
             bg, fg = '#8B0000', '#FFE9A8'
         elif tpl == 'anzhang':
             bg, fg = '#ffffff', '#111111'
@@ -1662,7 +1728,8 @@ class ZeriTieWindow:
         tpl = e.get('_template') or ''
         paper = 'white' if tpl == 'anzhang' else 'red'
         # §204 S2：否决日一律走深红否决帖纸型（压过白底/朱红底）
-        if e.get('_is_vetoed'):
+        # §205：软忌/慎用帖复用深红纸型（与吉帖一望即分）
+        if e.get('_is_vetoed') or e.get('_is_soft_caution'):
             paper = 'veto'
         title_map = {
             'marriage':   f"嫁娶结婚吉日 {e['date']}",
@@ -1677,6 +1744,9 @@ class ZeriTieWindow:
         # 001 §198 P1-1：否决日的打印标题同样不得称「吉日/吉课」
         if e.get('_is_vetoed'):
             title = f"日课否决警示（不可使用） {e['date']}"
+        # 001 §205：软忌/慎用帖标题不得称「吉日/吉课」
+        elif e.get('_is_soft_caution'):
+            title = f"日课慎用提示（多煞） {e['date']}"
         _open_print_html(compose_detail_lines(e), title, paper=paper)
 
     def print_summary(self):
