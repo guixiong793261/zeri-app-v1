@@ -1998,7 +1998,9 @@ class Scorer:
             #   主山判定分计入总分；兼向独立判定仅入 score_details/reason 展示，
             #   不重复计入 final_score；兼向坐山克仙命独立触发否决（见下方通道）。
             shanzuo_eval = None
-            if wangming_info and shan_xiang:
+            # §201（2026-10-30 拍板）：出行无坐山，坐山评分（shanzuo）整段不执行；
+            # 出行通道的 shan_xiang 仅作"出发方向"使用，不得触发任何坐山相关计分。
+            if wangming_info and shan_xiang and not _is_travel:
                 try:
                     from .二十四山 import get_mountain_info, parse_shan_xiang_jianxiang
                 except ImportError:
@@ -5911,7 +5913,9 @@ class Scorer:
         # 否决权冗余；保留忌项标记，扣分计入五行评分。风险提示：本结论绑定
         # 坤山艮向兼未×4组事主样本，换山向/仙命组合后需复核（issues_pending 挂账）。
         _fj_penalty = 0
-        if shan_xiang:
+        # §201（2026-10-30 拍板）：出行无坐山，正体五行/分金大凶强扣分对出行不适用；
+        # 出行通道 shan_xiang 仅作"出发方向"，不得进入坐山五行克泄判定。
+        if shan_xiang and _canonical_event(event_type) not in _TRAVEL_EVENTS:
             try:
                 from .二十四山 import ZhengTiWuXingSelectorDB
                 _selector = ZhengTiWuXingSelectorDB()
