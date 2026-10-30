@@ -10698,3 +10698,27 @@ Commit 1-补 数字误抄按"不 amend，快照留痕"处理。
 - 拍板：批准 S1→S4 分步实施，每步 run_all 基线护航。
 
 **204.4 产出**：`docs/红砂日取月起例三库对勘报告_20261030.md`。
+
+**204.5 红帖 S1：Tag 套壳（纯加法，零输出变更）**
+
+改码（仅 `modules/择日贴.py`，46 增 2 改，均为追加/行尾补逗号）：
+- `_TAG_CLASS` 追加 5 键：`verdict`／`stamp`／`tbl`／`warn`／`rule`（原 7 键逐一保留不改）。
+- `_PRINT_TEMPLATE`（红纸版）与 `_PRINT_MARRIAGE_TEMPLATE`（白底版）各追加 5 条
+  CSS：`.verdict`（结论大字 57px/52px）／`.stamp`（朱印牌 `#FFD400` 底）／
+  `.tbl`（信息表行，左边线底部细线）／`.warn`（警示块 `#FFF3B0` 底 + 左竖条
+  `#8B0000`）／`.rule`（双线分隔）。
+- tkinter 双端 `detail_text`／`summary_text` 各追加 5 个 `tag_configure`（字号 36/20/15/16/12）。
+- **S1 阶段 5 个新 tag 不被任何模板发射**，既有 tag 语义与 `⚠→warnhl` 逻辑零改动
+  → 现有红纸帖正文逐字不变（仅 HTML 多一段未被引用的 CSS）。
+
+验证：
+- 等价性只读探针：A 既有 7 键映射逐键不变 PASS；B 六类模板（入宅/嫁娶/修造/安葬/
+  出行/开业）实际发射 style 集合 = `{'', body, dia, h2, sep, small, sub, title}`，
+  零新 tag PASS；C 否决帖（构造 veto_reasons 样本）发射集合
+  `{'', body, h2, small, title}`，零新 tag PASS；D 旧 tag 渲染 class 序列全落在既有 class PASS。
+- `py_compile modules/择日贴.py` exit=0。
+- 六副本 SHA 一致 `e8c4fe1ac883`，FAIL 0（主仓 3 内层 + 统一版仓 3 层）。
+- run_all 复跑 **124/124 PASS，FAIL=0，TIMEOUT=0（229.9s）**，输出 `C:\Temp\_runall_204c2.json`。
+
+后续（待拍板）：S2 否决帖独立渲染（stamp 牌 + 编号 warn 块）→ S3 吉日帖信息表化
+（`_degrade_warn_lines` 接入五模板）→ S4 发轿时间轴强化 + 落款弱化 + 双线框。

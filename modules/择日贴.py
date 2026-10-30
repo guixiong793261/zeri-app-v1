@@ -952,6 +952,17 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
 .sep   { font-size: 16px; color: #555; }
 .warnhl { background: #FFFF00; color: #000000; }
 .blank { font-size: 10px; }
+/* §204 S1：排版升级 tag 样式（白底版） */
+.verdict { font-size: 52px; font-weight: bold; letter-spacing: 10px; line-height: 1.35; }
+.stamp { display: inline-block; background: #FFD400; color: #140a00;
+         font-size: 30px; font-weight: bold; letter-spacing: 8px;
+         padding: 6mm 10mm; border: 1px solid #7a5a00; }
+.tbl { font-size: 23px; line-height: 1.95; text-align: left;
+       letter-spacing: 1px; padding: 2mm 0; border-bottom: 1px solid #cfcfcf; }
+.warn { font-size: 24px; line-height: 1.85; text-align: left;
+        background: #FFF3B0; color: #4a1200;
+        border-left: 6px solid #8B0000; padding: 2mm 3mm; margin: 1.5mm 0; }
+.rule { border-top: 3px double #9a9a9a; margin: 4mm auto; width: 96%; font-size: 1px; }
 </style>
 </head>
 <body onload="window.print()">
@@ -1302,6 +1313,11 @@ RED_PAPER = '#C11B17'
 
 _TAG_CLASS = {'title': 'title', 'sub': 'sub', 'h2': 'h2', 'body': 'body',
               'small': 'small', 'dia': 'diamond', 'sep': 'sep'}
+# §204 S1（2026-10-30）：红帖排版升级 tag 骨架（纯加法，不改既有 tag 语义）。
+# 新 tag 在 S1 阶段仅注册样式、不被任何模板使用 → 现有红纸帖输出逐字不变。
+# verdict=结论大字 / stamp=否决牌·朱印 / tbl=信息表行 / warn=警示块 / rule=双线分隔。
+_TAG_CLASS.update({'verdict': 'verdict', 'stamp': 'stamp',
+                   'tbl': 'tbl', 'warn': 'warn', 'rule': 'rule'})
 
 _PRINT_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -1333,6 +1349,18 @@ html, body { margin: 0; padding: 0; background: #C11B17; }
 .sep { font-size: 16px; }
 .warnhl { background: #FFFF00; color: #000000; }
 .blank { font-size: 10px; }
+/* §204 S1：排版升级 tag 样式（红纸版） */
+.verdict { font-size: 57px; font-weight: bold; letter-spacing: 10px; line-height: 1.35; }
+.stamp { display: inline-block; background: #FFD400; color: #140a00;
+         font-size: 32px; font-weight: bold; letter-spacing: 8px;
+         padding: 6mm 10mm; border: 1px solid #7a5a00; }
+.tbl { font-size: 24px; line-height: 1.9; text-align: left;
+       letter-spacing: 1px; padding: 2mm 0;
+       border-bottom: 1px solid rgba(201,162,39,.55); }
+.warn { font-size: 25px; line-height: 1.8; text-align: left;
+        background: #FFF3B0; color: #4a1200;
+        border-left: 6px solid #8B0000; padding: 2mm 3mm; margin: 1.5mm 0; }
+.rule { border-top: 3px double #C9A227; margin: 4mm auto; width: 96%; font-size: 1px; }
 </style>
 </head>
 <body onload="window.print()">
@@ -1404,7 +1432,15 @@ class ZeriTieWindow:
                          ('small', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('dia', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warnhl', {'justify': tk.CENTER, 'background': '#FFFF00', 'foreground': '#000000'}),
-                         ('sep', {'justify': tk.CENTER, 'font': ("楷体", 14), 'foreground': '#7a1010'})):
+                         ('sep', {'justify': tk.CENTER, 'font': ("楷体", 14), 'foreground': '#7a1010'}),
+                         # §204 S1：排版升级 tag（注册样式，S1 阶段不被模板使用）
+                         ('verdict', {'justify': tk.CENTER, 'font': ("楷体", 36, 'bold')}),
+                         ('stamp', {'justify': tk.CENTER, 'font': ("楷体", 20, 'bold'),
+                                    'background': '#FFD400', 'foreground': '#140a00'}),
+                         ('tbl', {'justify': tk.LEFT, 'font': ("楷体", 15)}),
+                         ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
+                                   'background': '#FFF3B0', 'foreground': '#4a1200'}),
+                         ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
             self.detail_text.tag_configure(name, **kw)
 
         # 择日总录（红纸样式）
@@ -1425,7 +1461,15 @@ class ZeriTieWindow:
                          ('small', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('dia', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warnhl', {'justify': tk.CENTER, 'background': '#FFFF00', 'foreground': '#000000'}),
-                         ('sep', {'justify': tk.CENTER, 'font': ("楷体", 14), 'foreground': '#7a1010'})):
+                         ('sep', {'justify': tk.CENTER, 'font': ("楷体", 14), 'foreground': '#7a1010'}),
+                         # §204 S1：排版升级 tag（注册样式，S1 阶段不被模板使用）
+                         ('verdict', {'justify': tk.CENTER, 'font': ("楷体", 36, 'bold')}),
+                         ('stamp', {'justify': tk.CENTER, 'font': ("楷体", 20, 'bold'),
+                                    'background': '#FFD400', 'foreground': '#140a00'}),
+                         ('tbl', {'justify': tk.LEFT, 'font': ("楷体", 15)}),
+                         ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
+                                   'background': '#FFF3B0', 'foreground': '#4a1200'}),
+                         ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
             self.summary_text.tag_configure(name, **kw)
 
     # ---------- 数据 ----------
