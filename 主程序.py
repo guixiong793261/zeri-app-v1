@@ -8440,6 +8440,16 @@ class ZeriApp:
                     v_var = info.get(k)
                     if v_var and hasattr(v_var, 'get'):
                         t = v_var.get()
+                        # UI 变量值形如 "阳气: 癸丑"/"阴胎: 戊午"（见本文件
+                        # L2761/L2764 的 set 口径）；择日贴侧会再拼一次
+                        # "阳气:/阴胎:" 标签（择日贴.py _fmt_owner），
+                        # 原样赋值会印成"阳气:阳气: 癸丑"重复。此处只存干支。
+                        if t:
+                            if '：' in t:
+                                t = t.split('：', 1)[1]
+                            elif ':' in t:
+                                t = t.split(':', 1)[1]
+                            t = t.strip()
                         if t and t not in ('未计算', '', '未知'):
                             out[ik] = t
                 return out
