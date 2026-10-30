@@ -3484,6 +3484,11 @@ class ZeriApp:
                                     if isinstance(_sd, dict):
                                         _sd['嫁娶明细(分项)'] = _md_real
                                         _sd['五行评分'] = (_sd.get('五行评分') or 0) + _delta
+                                        # '嫁娶评分' 与 '五行评分' 同源同值（评分器 L1361/1365），
+                                        # 必须同步加 delta——漏同步会使两键漂移（旧值滞留），
+                                        # E207 轻量总分恒等式（读'嫁娶评分'键）随之误报
+                                        # （2026-02-22 嫁娶案例：嫁娶评分 103 vs 五行评分 110）。
+                                        _sd['嫁娶评分'] = (_sd.get('嫁娶评分') or 0) + _delta
                                         if '总分' in _sd:
                                             _sd['总分'] = (_sd.get('总分') or 0) + _delta
                                     score_result['score'] = (score_result.get('score') or 0) + _delta
