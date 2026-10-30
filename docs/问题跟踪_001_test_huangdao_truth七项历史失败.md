@@ -10722,3 +10722,21 @@ Commit 1-补 数字误抄按"不 amend，快照留痕"处理。
 
 后续（待拍板）：S2 否决帖独立渲染（stamp 牌 + 编号 warn 块）→ S3 吉日帖信息表化
 （`_degrade_warn_lines` 接入五模板）→ S4 发轿时间轴强化 + 落款弱化 + 双线框。
+
+**204.6 红帖 S2：否决帖独立渲染（Commit1）**
+
+改码（仅 `modules/择日贴.py`，58 增 24 删）：
+- 新增 `_CIRCLED` / `_circled_num(i)`：否决原因编号 ①…⑳（超界回退 `(n)`）。
+- `compose_veto_lines` 版式重做：`small`「日课否决警示」→ `verdict`「本　日　不　吉」→
+  `stamp`「不　可　使　用」→ `rule` 双线 → 5 行 `tbl` 信息（公元/农历/干支/用事·事主/评分）
+  → `rule` → `h2`【否决原因】→ 每条 `warn` 编号块（无原因时 ① 兜底）→ 结语落款。
+  末句「请另择吉日良辰」→「请另行择日择时」：否决页彻底零「吉日」字样（消灭歧义）。
+- `_open_print_html` 拆为纯函数 `render_print_html(lines, title, paper)`（不落盘、不弹窗，
+  供打印/自检复用）+ 薄壳 `_open_print_html`；`paper='veto'` 以模板串替换
+  `#C11B17→#8B0000`、`#1a1a1a→#FFF0C2`，吉帖/白帖输出零影响。
+- `show_detail` 否决日配色 `#8B0000` 底 / `#FFE9A8` 字；`print_detail` 否决日强制 `paper='veto'`
+  （压过白底/朱红底）。
+- 渲染器 `⚠→warnhl` 增加 `cls.split(' ')[0] != 'warn'` 条件：`warn` 块自带底色，不叠黄底。
+
+验证：S2 冒烟探针 7/7 PASS（结构齐备 / 编号顺序 / 七类事项零吉语 / veto 纸底墨色 /
+verdict·stamp class 渲染 / 吉帖纸型不变 / 白底纸型不变）；`py_compile` exit=0。

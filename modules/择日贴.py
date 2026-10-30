@@ -861,37 +861,52 @@ def compose_anzhang_lines(e):
     return lines
 
 
+_CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳'
+
+
+def _circled_num(i):
+    """序号 ①…⑳；超出范围回退 (n)。否决原因编号（001 §204 S2）"""
+    return _CIRCLED[i] if 0 <= i < len(_CIRCLED) else f'({i + 1})'
+
+
 def compose_veto_lines(e):
-    """否决日专用帖（001 §198 P1-1）：绝不印「大利/大吉/日吉时良」，
-    只印「该日不吉，不可使用」+ 本课真实否决原因（有什么列什么）。"""
+    """否决日专用帖（001 §198 P1-1 结构分家；001 §204 S2 视觉升级）：
+    深红底 + 明黄「不可使用」牌 + 编号原因块，绝不印「大利／大吉／日吉时良／发轿」。
+    防呆：tests/verify_204_红帖S2S3.py 对全样本作吉语反向断言。"""
     lines = []
     a = lines.append
     a(('', ''))
-    a(('title', '本　日　不　吉'))
+    a(('small', '日　课　否　决　警　示'))
     a(('', ''))
-    a(('h2', '该日不吉，不可使用'))
+    a(('verdict', '本　日　不　吉'))
     a(('', ''))
-    a(('body', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
-    a(('body', f"农　　历：{e['_lunar_str']}"))
-    a(('body', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
+    a(('stamp', '不　可　使　用'))
+    a(('', ''))
+    a(('rule', ''))
+    a(('', ''))
+    a(('tbl', f"公　　元：{e['_dt'].year}年{e['_dt'].month:02d}月{e['_dt'].day:02d}日"))
+    a(('tbl', f"农　　历：{e['_lunar_str']}"))
+    a(('tbl', f"干　　支：{e['_nian']}年 {e['_yue']}月 {e['_ri']}日 {e['_shi']}时"))
     _ev = str(e.get('event_type') or '').strip() or '—'
     _ow = str(e.get('owners') or '').strip()
     if _ow in ('-', '无', ''):
         _ow = '—'
-    a(('body', f"用　　事：{_ev}　　事主：{_ow}"))
+    a(('tbl', f"用　　事：{_ev}　　事主：{_ow}"))
     sl = _score_line(e)
     if sl:
-        a(('body', sl))
+        a(('tbl', sl))
     a(('', ''))
-    a(('h2', '【否决原因】'))
+    a(('rule', ''))
+    a(('', ''))
+    a(('h2', '【 否　决　原　因 】'))
     _vr = e.get('_veto_reasons') or []
     if _vr:
-        for _r in _vr:
-            a(('body', f"⚠ {_r}"))
+        for _i, _r in enumerate(_vr):
+            a(('warn', f"{_circled_num(_i)} {_r}"))
     else:
-        a(('body', '⚠ 该日评分为 0 分，已一票否决'))
+        a(('warn', f"{_circled_num(0)} 该日评分为 0 分，已一票否决"))
     a(('', ''))
-    a(('body', '此日一票否决，诸事不宜，请另择吉日良辰。'))
+    a(('body', '此日一票否决，诸事不宜，请另行择日择时。'))
     a(('', ''))
     lines.extend(_signature_lines(e))
     return lines
@@ -976,20 +991,32 @@ __BODY__
 _PRINT_WHITE_TEMPLATE = _PRINT_MARRIAGE_TEMPLATE  # 安葬同用白底
 
 
-def _open_print_html(lines, title, paper='red'):
-    """把行序列生成为 HTML 并用默认浏览器打开（自动弹出打印）。
-    paper: 'red' → 红纸通用修造模板；'white' → 白底（嫁娶/安葬）模板。"""
+def render_print_html(lines, title, paper='red'):
+    """把行序列渲染为打印用 HTML 文本（不落盘、不弹浏览器，供打印与自检复用）。
+    paper: 'red' 朱红吉帖版；'white' 白底（嫁娶/安葬）；'veto' 深红否定版。
+    §204 S2：veto 与吉帖一望即分——纸底 #8B0000、墨色浅金 #FFF0C2。"""
     rows = []
     for style, text in lines:
         if not text:
             rows.append('<div class="blank">&nbsp;</div>')
             continue
         cls = _TAG_CLASS.get(style, 'body')
-        if '⚠' in text:
-            cls += ' warnhl'  # ⚠ 警告行黄底黑字（2026-09-10 用户要求）
+        if '⚠' in text and cls.split(' ')[0] != 'warn':
+            cls += ' warnhl'  # ⚠ 警告行黄底黑字（2026-09-10 用户要求；warn 块自带底色不叠）
         rows.append(f'<div class="{cls}">{html.escape(text).replace(" ", "&nbsp;")}</div>')
-    tpl = _PRINT_WHITE_TEMPLATE if paper == 'white' else _PRINT_TEMPLATE
-    doc = tpl.replace('__TITLE__', html.escape(title)).replace('__BODY__', '\n'.join(rows))
+    if paper == 'white':
+        tpl = _PRINT_WHITE_TEMPLATE
+    else:
+        tpl = _PRINT_TEMPLATE
+        if paper == 'veto':
+            tpl = tpl.replace('#C11B17', '#8B0000').replace('color: #1a1a1a;',
+                                                            'color: #FFF0C2;')
+    return tpl.replace('__TITLE__', html.escape(title)).replace('__BODY__', '\n'.join(rows))
+
+
+def _open_print_html(lines, title, paper='red'):
+    """把行序列生成为 HTML 并用默认浏览器打开（自动弹出打印）。"""
+    doc = render_print_html(lines, title, paper)
     path = os.path.join(tempfile.gettempdir(), '择日贴_打印.html')
     with open(path, 'w', encoding='utf-8') as f:
         f.write(doc)
@@ -1531,10 +1558,14 @@ class ZeriTieWindow:
         e = self._current()
         lines = compose_detail_lines(e) if e else []
         # 只有安葬用白纸（黑字）；其他（嫁娶/订婚/修造/动土/入宅/通用）全部红纸
+        # §204 S2：否决日走深红底浅金字（与打印版 veto 纸型一致，远看即知不吉）
         tpl = (e.get('_template') or '') if e else ''
-        is_white = (tpl == 'anzhang')
-        bg = '#ffffff' if is_white else RED_PAPER
-        fg = '#111111' if is_white else '#1a1a1a'
+        if e and e.get('_is_vetoed'):
+            bg, fg = '#8B0000', '#FFE9A8'
+        elif tpl == 'anzhang':
+            bg, fg = '#ffffff', '#111111'
+        else:
+            bg, fg = RED_PAPER, '#1a1a1a'
         self.detail_text.configure(bg=bg, fg=fg)
         self._fill_text(self.detail_text, lines)
 
@@ -1550,6 +1581,9 @@ class ZeriTieWindow:
             return
         tpl = e.get('_template') or ''
         paper = 'white' if tpl == 'anzhang' else 'red'
+        # §204 S2：否决日一律走深红否决帖纸型（压过白底/朱红底）
+        if e.get('_is_vetoed'):
+            paper = 'veto'
         title_map = {
             'marriage':   f"嫁娶结婚吉日 {e['date']}",
             'engagement': f"订婚纳彩请期吉课 {e['date']}",
