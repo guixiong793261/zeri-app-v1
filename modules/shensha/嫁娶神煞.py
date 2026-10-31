@@ -31,7 +31,8 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, shensha_dir)
 
 try:
-    from .神煞基类 import (ShenShaChecker, is_yanggongji_by_lunar, is_wangwang_by_zhi,
+    from .神煞基类 import (ShenShaChecker, _SHENSHA_ALIAS_KEY,
+                           is_yanggongji_by_lunar, is_wangwang_by_zhi,
                            is_shousi_by_zhi, is_furi_by_date)
     try:
         from ..工具函数 import DI_ZHI, TIAN_GAN
@@ -59,13 +60,33 @@ except ImportError:
     shensha_dir = os.path.dirname(os.path.abspath(__file__))
     if shensha_dir not in sys.path:
         sys.path.insert(0, shensha_dir)
-    from 神煞基类 import ShenShaChecker, is_wangwang_by_zhi
+    from 神煞基类 import ShenShaChecker, _SHENSHA_ALIAS_KEY, is_wangwang_by_zhi
     from 工具函数 import DI_ZHI, TIAN_GAN
 
 
 class MarriageShenShaChecker(ShenShaChecker):
     """婚嫁神煞检查器"""
-    
+
+    # §212 嫁娶去伪存真批（2026-10-31 拍板 1/4）：通用神煞基类
+    # （通用神煞._check_day_shensha）仍会向 shensha_list 发射下列日级条目，
+    # 但对嫁娶通道而言均属「表外煞／辨讹／零载／起例错／已下沉」，一律
+    # 从展示层删除（HARD_VETO 与计分侧已在嫁娶规则/婚嫁评分算法剥离）。
+    # 归一化键（_SHENSHA_ALIAS_KEY）后匹配：红砂日→红纱日、神号日→神号…
+    # · 伪神煞/零载：杨公忌日、丧门、吊客、神号（神号日）、天狗（天狗日）、
+    #   红纱日（协纪 p279217 明斥「甚属无当」）、黄沙（黄沙日）；
+    # · 起例错：天罡日/河魁日（已不发射，此处兜底）；
+    # · 下沉时辰级：白虎（白虎日）、朱雀（朱雀日）——日级撤销，改由
+    #   嫁娶神煞扩展.get_lucky_hours 大黄道判定。
+    _MARRIAGE_DROP_DAY_SHENSHA = frozenset({
+        '杨公忌日', '丧门', '吊客', '红纱日', '黄沙', '神号', '天狗',
+        '白虎', '朱雀', '天罡日', '河魁日',
+    })
+
+    def _add_shensha(self, name, score, description, force_desc=False):
+        if _SHENSHA_ALIAS_KEY.get(name, name) in self._MARRIAGE_DROP_DAY_SHENSHA:
+            return
+        super()._add_shensha(name, score, description, force_desc)
+
     def __init__(self):
         super().__init__()
         self.bride_gan = None
@@ -166,29 +187,34 @@ class MarriageShenShaChecker(ShenShaChecker):
         month_zhi = sizhu['month_zhi']
         
         # ===== 极凶日（婚嫁绝对禁忌）=====
+        # §212 嫁娶去伪存真批（2026-10-31 用户拍板）：官方嫁娶忌表（协纪卷十一
+        # 「忌月破、平日、收日、闭日…往亡、八专、亥日」20 项；考原卷六「忌亥日、
+        # 月厌、厌对、无翘、归忌、往亡、气往亡、八龙、七鸟、九虎、六蛇…」13 项）
+        # 之外的 17 枚表外煞，一律从 HARD_VETO 与重扣分剥离：
+        # · 直接删除（无载/辨讹/起例错/事项错配/方位神）：红砂日、杨公忌日、
+        #   真三娘煞、黄沙日、神号日、天狗日、丧门、吊客、白虎日、朱雀日、
+        #   天罡日、河魁日；
+        # · 降 0 分提示（单一或相邻典据）：红嘴朱雀、鬼哭日、五离、孤辰寡宿；
+        # · 保留硬门槛：月破、往亡、受死日。
+        # 白虎/朱雀黑道已收敛到时辰级（嫁娶神煞扩展.get_lucky_hours 大黄道
+        # 天刑/白虎/朱雀 -10），日级不再发射。
 
-        # 红嘴朱雀（红嘴朱雀按典修批 B，2026-10-20）：陈书 p890「壬申、辛巳、
-        # 庚寅、己亥、戊申、丁巳六日在**坤宮**，忌嫁娶」（朱雀歌「坤宮嫁娶損
-        # 宅長」）。起例按日干支×九宫（基类 _is_hongzui_zhuque），与月支无关。
+        # 红嘴朱雀（陈书 p890「壬申、辛巳、庚寅、己亥、戊申、丁巳六日在坤宮」
+        # 属九宫方位神、非日神；§212 拍板 1 降为 0 分提示，原 -30 撤销）
         if self._is_hongzui_zhuque(sizhu, '坤'):
-            # 轻重层批次1（001 §158）：L4 标注（典据单一，仅陈书九宫起例、无力度
-            # 原文，分值系按典落地定档），分值维持 -30 不动
-            self._add_shensha('红嘴朱雀', -30, '红嘴朱雀临坤宮，忌嫁娶（L4标注：典据单一，仅陈书九宫起例，无力度原文，分值按典落地定档）')
-        
-        # 红砂日（按孟仲季月）
-        if self._is_hongsha(sizhu):
-            self._add_shensha('红砂日', -20, '红砂日婚嫁大忌')
-        
-        # 杨公忌日（固定日期）
-        if self._is_yanggongji(sizhu):
-            self._add_shensha('杨公忌日', -20, '杨公忌日百事不宜，婚嫁大忌')
+            self._add_shensha('红嘴朱雀', 0,
+                              '红嘴朱雀临坤宮（九宫方位神，仅提示不计分；L4标注：典据单一）')
         
         # 受死日（001 §194 挂账3，2026-10-28 拍板）：§193 已升 HARD_VETO 一票否决，
         # 扣分无意义；剥离扣分改为纯硬性否决展示（0 分不计分，禁用在规则层）。
+        # §212 拍板 2：维持 HARD_VETO（协纪卷六作「从删」，但陈书 p152「受死，
+        # 上官起造嫁娶等凶」有明文，民间忌讳极重，宁可信其有）。
         if self._is_shousi(sizhu):
             self._add_shensha('受死日', 0, '受死日婚嫁大忌（一票否决，不计分）')
         
-        # 往亡日
+        # 往亡日（协纪卷十一・考原卷六 官方嫁娶忌表内，保留硬门槛）：注册 -20，
+        # 经 _SHENSHA_ALIAS_KEY「往亡日→往亡」归一后按 ('嫁娶','往亡')=-15 计分；
+        # 2026 实测 30 天/年正常发射（§212 Commit 1 证伪"死链"说）。
         if self._is_wangwang(sizhu):
             self._add_shensha('往亡日', -20, '往亡日忌婚嫁')
         
@@ -198,43 +224,25 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_zhongsang(sizhu):
             self._add_shensha('复日', 0, '复日（旧称重丧日，惟丧葬忌，嫁娶不计分）')
         
-        # 三娘煞（仅在有实际日期时检查）：按传统口径只有"真三娘煞"
-        # （农历日与日干支同时满足，全年仅6天）才需回避；
-        # 仅农历日相符的"假三娘煞"不再列为婚嫁禁忌
-        if not sizhu.get('is_sizhu_input', False):
-            if self._is_zhen_sanniang(sizhu):
-                self._add_shensha('真三娘煞', -20, '真三娘煞日婚嫁大忌')
-        
-        # 黄沙日
-        if self._is_huangsha(sizhu):
-            self._add_shensha('黄沙日', -12, '黄沙日忌婚嫁')
-        
-        # 神号鬼哭日
-        if self._is_shenhao(sizhu):
-            self._add_shensha('神号日', -15, '神号日婚嫁不吉')
+        # 真三娘煞／黄沙日／神号日：§212 拍板 1 删除（三库零载／协纪辨讹），
+        # 原 真三娘煞 -20、黄沙日 -12、神号日 -15 日级发射一并撤销。
+
+        # 鬼哭日（仅陈书 p622 单典据、无嫁娶专条；§212 拍板 1 降为 0 分提示，原 -15 撤销）
         if self._is_guiru(sizhu):
-            self._add_shensha('鬼哭日', -15, '鬼哭日婚嫁不吉')
+            self._add_shensha('鬼哭日', 0, '鬼哭日（单典据、无嫁娶专条，仅提示不计分）')
         
         # ===== 凶煞 =====
-        
-        # 白虎日
-        if self._is_baihu(sizhu):
-            self._add_shensha('白虎日', -12, '白虎日婚嫁不吉')
-        
-        # 朱雀日
-        if self._is_zhuque(sizhu):
-            self._add_shensha('朱雀日', -12, '朱雀日婚嫁不吉')
-        
-        # 天狗日
-        if self._is_tiangou(sizhu):
-            self._add_shensha('天狗日', -12, '天狗日不宜婚嫁')
+        # 白虎日／朱雀日：§212 拍板 4 下沉时辰级——日级 -12 撤销，黑道改由
+        # 时辰吉凶表（嫁娶神煞扩展.get_lucky_hours 大黄道）判定。
+        # 天狗日：协纪卷四「其日忌祷祀鬼神、祈求福愿」为事项错配（非嫁娶），
+        # §212 拍板 1 删除（原 -12）。
         
         # 孤辰寡宿（月令法，2026-10-24 P0 大清理批 A，001 §172 保留并正名）
         # 正法：令前一辰为孤辰，令后一辰为寡宿（春寅卯辰→孤巳/寡丑，见 _is_guchen）。
-        # 年支法系合婚命理法，协纪辨方书辨讹明斥、考原零载，已全面删停用；
-        # 本通道为 15 事项唯一保留项（拍板 D-P0-2）。
+        # §212 拍板 3：协纪卷三十六辨讹明斥「荒诞无义」，2026 命中 61 天/年为
+        # 最大命中面，撤销 -15 硬扣分，降 0 分提示。
         if self._is_guchen(sizhu):
-            self._add_shensha('孤辰寡宿', -15, '孤辰寡宿主孤独，忌婚嫁')
+            self._add_shensha('孤辰寡宿', 0, '孤辰寡宿（协纪辨讹，仅提示不计分）')
         
         # ===== 吉日 =====
 
@@ -246,13 +254,9 @@ class MarriageShenShaChecker(ShenShaChecker):
         if self._is_zhoutang(sizhu):
             self._add_shensha('周堂吉日', 12, '周堂吉日婚嫁可用')
 
-        # 天罡日/河魁日（妨翁姑日）
-        # 天罡妨翁、河魁妨姑为嫁娶大忌；2026-10 α 与 D（婚嫁评分算法 -40）
-        # 及 SHENSHA_SCORES('嫁娶') 对齐，原 -25 为漂移值
-        if self._is_tiangang(sizhu):
-            self._add_shensha('天罡日', -40, '天罡日妨翁，不利新郎父亲')
-        if self._is_hekui(sizhu):
-            self._add_shensha('河魁日', -40, '河魁日妨姑，不利新郎母亲')
+        # 天罡日/河魁日：协纪卷四起例为「阳月/阴月 × 平/收日」，与软件
+        # 「日支临月建／日支临月破」不等价（起例错）；§212 拍板 1 删除日级
+        # -40 发射（谓词 _is_tiangang/_is_hekui 留档备核，见取证表 §七 遗留 2）。
 
         # 天德合
         if self._is_tiande_he(sizhu):
@@ -331,17 +335,14 @@ class MarriageShenShaChecker(ShenShaChecker):
         
         # ===== 补充缺失的凶煞检查 =====
         
-        # 五离（典籍口径：申酉日，忌嫁娶）——2026-09-16 由"天干相离"改为与五合配对的"申酉日"
+        # 五离（协纪卷十一「结婚姻」忌、考原卷六「结婚姻」忌；嫁娶条未列，
+        # 属事项名差）：§212 拍板 1 从重扣分剥离，降 0 分提示（原 -20 撤销）
         if self._is_wuli(sizhu):
-            self._add_shensha('五离', -20, '五离日主离别，婚嫁大忌')
-        
-        # 丧门（主丧亡，忌婚嫁）
-        if self._is_sangmen(sizhu):
-            self._add_shensha('丧门', -15, '丧门日忌婚嫁')
-        
-        # 吊客（主吊唁，忌婚嫁）
-        if self._is_diaoke(sizhu):
-            self._add_shensha('吊客', -12, '吊客日忌婚嫁')
+            self._add_shensha('五离', 0,
+                              '五离日（协纪「结婚姻」条所忌，嫁娶条未列，仅提示不计分）')
+
+        # 丧门／吊客：协纪卷三・卷三十四均作「所理之地/方」的岁方位神，嫁娶无载；
+        # §212 拍板 1 删除（原 丧门 -15、吊客 -12 日级发射撤销）。
         
         # 病符×嫁娶已删（病符批，2026-10-20，001 §141）：三库病符无日课普适忌
         # 明文（皆方位/年神语境），拍板「删日课通道病符注册」。发射原为：

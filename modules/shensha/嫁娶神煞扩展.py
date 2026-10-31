@@ -216,7 +216,9 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                 reasons.append(f'大黄道{da_huangdao}')
                 if da_huangdao in ['青龙', '明堂', '金匮', '天德', '玉堂']:
                     hour_score += 20
-                elif da_huangdao in ['天刑', '白虎']:
+                elif da_huangdao in ['天刑', '白虎', '朱雀']:
+                    # 白虎/朱雀：§212 拍板 4 下沉——嫁娶日级 -12 已撤，黑道凶性
+                    # 改由本时辰表按大黄道判定（协纪「择时则加日建」明文）。
                     hour_score -= 10
 
             xiao_huangdao = self._get_xiao_huangdao(zhi)
