@@ -110,6 +110,11 @@ from modules.评分器 import calculate_score, Scorer
 from modules.评分器 import (ENABLE_LEVEL_NORMALIZATION,
                             map_marriage_level_score,
                             map_marriage_level_wx)  # 阶段3·方案A（001 §179）
+# 001 §210 Commit 1：排序键单点化（扫日推荐/详情注入/反推引擎共用，禁止各自拼元组）
+from modules.排序键 import (fenjin_preview_penalty as _fenjin_preview_penalty,
+                            scoring_shensha as _scoring_shensha,
+                            shashi_hour as _shashi_hour,
+                            hour_rank_key)
 from modules.工具函数 import DI_ZHI_WUXING, TIAN_GAN_WUXING
 from modules.黄道 import 黄道计算器
 from modules.喜用神计算器 import calculate_xishen_yongshen
@@ -247,68 +252,9 @@ def _extract_tree_dizhi_jishen(score_result):
 
 
 
-def _fenjin_preview_penalty(sx_full, nian, yue, ri, shi, yi_list, ssl):
-    """2026-09-11: preview of inject block (6) fenjin recheck.
-    Returns (level, deduct): 0=clean, 1=medium hit (deduct applied),
-    2=severe without mitigation (veto). Same criteria as block (6), so
-    hour ranking never prefers an hour that (6) will penalize later."""
-    try:
-        if not sx_full or '\u5c71' not in sx_full:
-            return 0, 0
-        import importlib as _il
-        _m24 = _il.import_module('modules.\u4e8c\u5341\u56db\u5c71')
-        _FJ = _m24.ZhengTiWuXingSelectorDB
-        _fjs = _FJ()
-        _sn = sx_full.split('\u5c71')[0].strip()
-        if '\u517c' in sx_full:
-            _jx = '\u517c' + sx_full.rsplit('\u517c', 1)[1][:1]
-            _fjr = _fjs.evaluate_with_fengjin(_sn, _jx, nian, yue, ri, shi,
-                                              use_fengjin_wuxing=True)
-        else:
-            _fjr = _fjs.evaluate_by_name(_sn, nian, yue, ri, shi)
-        if not (isinstance(_fjr, dict) and _fjr.get('success', True)):
-            return 0, 0
-        _fs = _fjr.get('score', 0)
-        _lvl = _fjr.get('level', '')
-        _hit = _lvl in ('\u5927\u51f6', '\u51f6(\u72af\u5927\u715e)') or (
-            isinstance(_fs, (int, float)) and _fs <= -30)
-        if not _hit:
-            return 0, 0
-        _severe = isinstance(_fs, (int, float)) and _fs <= -50
-        _good_qual = isinstance(ssl, list) and any(
-            isinstance(_s, dict) and int(_s.get('score', 0) or 0) >= 10 for _s in ssl)
-        _has_zhi = False
-        if isinstance(yi_list, list):
-            for _j in yi_list:
-                _t = str(_j)
-                if any(_kw in _t for _kw in
-                       ['\uff08\u6709\u5236\u5316\uff1a', '\u5929\u5fb7', '\u6708\u5fb7', '\u5c81\u5fb7',
-                        '\u5929\u4e59', '\u592a\u9633', '\u592a\u9634', '\u7389\u5802', '\u9752\u9f99']):
-                    _has_zhi = True
-                    break
-        if not _has_zhi and _good_qual:
-            _has_zhi = True
-        if _severe and not _has_zhi:
-            return 2, 100
-        _deduct = 30 if _severe else (20 if _fs <= -40 else (15 if _fs <= -30 else 10))
-        return 1, _deduct
-    except Exception:
-        return 0, 0
-
-
-def _scoring_shensha(r):
-    """计分侧神煞清单（001 §178，2026-10-25 拍板）。
-
-    嫁娶两分支的展示清单已统一接入通用神煞检查器；计分侧（时辰择优的
-    杀师/分金制化判据、block(6) 吉神制化）必须继续读改动前的清单
-    'shensha_list_scoring'，保证计分零漂移。非嫁娶路径无该键，回退原键。
-    """
-    if isinstance(r, dict):
-        _s = r.get('shensha_list_scoring')
-        if isinstance(_s, list):
-            return _s
-        return r.get('shensha_list') or []
-    return []
+# 001 §210 Commit 1：_fenjin_preview_penalty / _scoring_shensha 已迁入
+# modules/排序键.py（顶部 import 以同名别名接入），本文件不再保留副本，
+# 防止"扫日推荐 / 详情注入 / 反推引擎"三处排序依据漂移。
 
 
 def _fmt_feixing(feixing_info):
@@ -645,6 +591,9 @@ class ZeriApp:
         ttk.Button(button_frame, text="开始择日", command=self.start_calculation, 
                   width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="条件择日", command=self.conditional_calculation, 
+                  width=12).pack(side=tk.LEFT, padx=6)
+        # 001 §210 Commit 2：精准择时反推面板（热力日历/Top-N/时间轴三层）
+        ttk.Button(button_frame, text="精准择时", command=self.open_reverse_panel,
                   width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="日课评分", command=self.open_score_system, 
                   width=12).pack(side=tk.LEFT, padx=6)
@@ -3254,16 +3203,8 @@ class ZeriApp:
                                               zeli_mode=self._get_zeli_mode())  # _zm0915
                         return _hs, _rr
 
-                    def _shashi_hour(_rr):
-                        # sha-shi hour is a craft-hour-only heavy evil (-30):
-                        # not a veto, but never the preferred pick on a tie.
-                        try:
-                            for _s in _scoring_shensha(_rr):
-                                if isinstance(_s, dict) and '\u6740\u5e08' in str(_s.get('name', '')):
-                                    return 1
-                        except Exception:
-                            pass
-                        return 0
+                    # 001 §210 Commit 1：_shashi_hour 已提为 modules/排序键.shashi_hour，
+                    # 顶部 import 以同名别名接入（判据不变：名含"杀师"即 1）。
 
                     # _ck0915：时辰表分数查找表（地支→分值）
                     _ck_scores = {}
@@ -3298,12 +3239,14 @@ class ZeriApp:
                             str(_gs.get('日柱', '')), str(_gs.get('时柱', '')),
                             _rr.get('yi_list') or [], _scoring_shensha(_rr))
                         _zw = int((_rr.get('score_details') or {}).get('五行评分') or 0)
-                        _ck = _ck_scores.get(_z, 0) * _ck_w
-                        return (1 if _z in _disabled_zhi else 0,
-                                len(_rr.get('veto_reasons') or []) + (1 if _fl == 2 else 0),
-                                -_ck,
-                                -(int(_rr.get('score') or 0) - (_fd if _fl >= 1 else 0)),
-                                _shashi_hour(_rr), _fl, -_zw)
+                        # 001 §210 Commit 1：7 元组统一由 modules/排序键.hour_rank_key 构造
+                        return hour_rank_key(
+                            disabled=(_z in _disabled_zhi),
+                            veto_count=len(_rr.get('veto_reasons') or []),
+                            fenjin_level=_fl, fenjin_deduct=_fd,
+                            ck_score=_ck_scores.get(_z, 0), ck_weight=_ck_w,
+                            score=int(_rr.get('score') or 0),
+                            shashi=_shashi_hour(_rr), wuxing=_zw)
 
                     _best_hs, _best_rr, _best_z = wushu_sizhu, score_result, _rep_zhi
                     for _z in _cand_z:
@@ -3840,12 +3783,6 @@ class ZeriApp:
                 _hour_scores[_hz] = (_hs, _hr)
                 _hs_sc = int(_hr.get('score') or 0)
                 _hs_veto = len(_hr.get('veto_reasons') or [])
-                _cur_ss = int(any(isinstance(_s, dict)
-                                  and '\u6740\u5e08' in str(_s.get('name', ''))
-                for _s in _scoring_shensha(_best_r)))
-                _hs_ss = int(any(isinstance(_s, dict)
-                                 and '\u6740\u5e08' in str(_s.get('name', ''))
-                for _s in _scoring_shensha(_hr)))
                 _cur_wx = int((_best_r.get('score_details') or {}).get('五行评分') or 0)
                 _hs_wx = int((_hr.get('score_details') or {}).get('五行评分') or 0)
                 # fenjin (6) preview for incumbent and candidate
@@ -3870,16 +3807,18 @@ class ZeriApp:
                 _rv = _best_sz.get('时柱', '') if isinstance(_best_sz, dict) else ''
                 if isinstance(_rv, str) and len(_rv) >= 2:
                     _cur_sz_hz = _rv[1]
-                _bet = (((1 if _hz in _disabled_zhi else 0),
-                         _hs_veto + (1 if _hfl == 2 else 0),
-                         -(_ck_scores.get(_hz, 0) * _ck_w),
-                         -(_hs_sc - (_hfd if _hfl >= 1 else 0)),
-                         _hs_ss, _hfl, -_hs_wx) <
-                        ((1 if _cur_sz_hz in _disabled_zhi else 0),
-                         _cur_veto + (1 if _cfl == 2 else 0),
-                         -(_ck_scores.get(_cur_sz_hz, 0) * _ck_w),
-                         -(_cur_sc - (_cfd if _cfl >= 1 else 0)),
-                         _cur_ss, _cfl, -_cur_wx))
+                # 001 §210 Commit 1：7 元组统一由 modules/排序键.hour_rank_key 构造
+                # （与 _inject_best_hour_to_result 的 _skey 同源，禁止再手写元组）
+                _bet = (hour_rank_key(
+                    disabled=(_hz in _disabled_zhi),
+                    veto_count=_hs_veto, fenjin_level=_hfl, fenjin_deduct=_hfd,
+                    ck_score=_ck_scores.get(_hz, 0), ck_weight=_ck_w,
+                    score=_hs_sc, shashi=_shashi_hour(_hr), wuxing=_hs_wx) <
+                    hour_rank_key(
+                    disabled=(_cur_sz_hz in _disabled_zhi),
+                    veto_count=_cur_veto, fenjin_level=_cfl, fenjin_deduct=_cfd,
+                    ck_score=_ck_scores.get(_cur_sz_hz, 0), ck_weight=_ck_w,
+                    score=_cur_sc, shashi=_shashi_hour(_best_r), wuxing=_cur_wx))
                 if _bet:
                     _best_sz = _hs
                     _best_r = _hr
@@ -3935,6 +3874,122 @@ class ZeriApp:
                 result.get('feixing', '-')
             ), tags=(row_tag,))
 
+    def _collect_owners_data(self):
+        """收集事主信息为标准 owners_data（扫日/精准择时反推共用）。
+
+        001 §210 Commit 2：自 start_calculation 原样迁出，逻辑逐字未改
+        （空生日跳过、无效生日回退当月末日、经度透传、喜用神可选），
+        避免反推面板另建第二份事主口径造成评分漂移。
+        """
+        owners_data = []
+        for owner in self.owners_info:
+            try:
+                # 添加防御性检查
+                year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
+                month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
+                day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
+
+                # 检查是否填写了日期
+                if not (year_str and month_str and day_str):
+                    continue
+
+                hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
+                minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
+
+                year = int(year_str)
+                month = int(month_str)
+                day = int(day_str)
+                hour = int(hour_str)
+                minute = int(minute_str)
+                gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
+
+                # 计算年干支
+                try:
+                    birth_date = date(year, month, day)
+                except ValueError as e:
+                    # 处理无效日期，使用当月最后一天
+                    import calendar
+                    last_day = calendar.monthrange(year, month)[1]
+                    birth_date = date(year, month, last_day)
+                    messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
+
+                # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
+                birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
+                owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
+                year_gan = owner_sizhu.get('year_gan', '')
+                year_zhi = owner_sizhu.get('year_zhi', '')
+
+                # 获取日柱信息（用于婚嫁评分算法）
+                day_gan = owner_sizhu.get('day_gan', '')
+                day_zhi = owner_sizhu.get('day_zhi', '')
+
+                # 构建完整的事主信息
+                name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
+                owner_data = {
+                    'name': name,
+                    'role': owner.get('role', ''),
+                    'birth_date': birth_date,
+                    'birth_hour': hour,
+                    'birth_minute': minute,
+                    'birth_longitude': birth_longitude,
+                    '性别': gender,
+                    '年干': year_gan,
+                    '年支': year_zhi,
+                    '日干': day_gan,
+                    '日支': day_zhi,
+                    '生肖': year_zhi
+                }
+
+                # 如果有喜用神信息，也添加进去
+                if 'xishen_var' in owner:
+                    xishen_val = owner['xishen_var'].get() if hasattr(owner['xishen_var'], 'get') else owner.get('xishen_var', '')
+                    if xishen_val:
+                        owner_data['xishen'] = xishen_val
+                if 'yongshen_var' in owner:
+                    yongshen_val = owner['yongshen_var'].get() if hasattr(owner['yongshen_var'], 'get') else owner.get('yongshen_var', '')
+                    if yongshen_val:
+                        owner_data['yongshen'] = yongshen_val
+
+                owners_data.append(owner_data)
+            except (ValueError, TypeError):
+                pass
+        return owners_data
+
+    def open_reverse_panel(self):
+        """精准择时 · 反推 Top-N 面板（001 §210 Commit 2）。
+
+        读取主窗口当前事项/事主/山向/灶床上下文，交由 modules.反推UI 在独立
+        后台线程内反推；不写入 self.results，不改变主窗口评分口径。
+        """
+        try:
+            from modules.反推UI import open_reverse_window
+            _shan = getattr(self, 'shan_xiang', None)
+            _shan = _shan.get() if hasattr(_shan, 'get') else (_shan or '')
+            _jx = getattr(self, 'jian_xiang', None)
+            _jx = _jx.get() if hasattr(_jx, 'get') else (_jx or '')
+            if _shan and _jx and _jx != '正中':
+                if not str(_jx).startswith('兼'):
+                    _jx = '兼' + str(_jx)
+                _shan = f"{_shan}{_jx}"
+            _ht = getattr(self, 'house_type', None)
+            _cx = getattr(self, 'zao_xiang', None)
+            _cw = getattr(self, 'zao_wei', None)
+            _ch = getattr(self, 'chuang_wei', None)
+            _zm = getattr(self, 'zaozhu_mode', None)
+            _ctx = {
+                'house_type': _ht.get() if hasattr(_ht, 'get') else _ht,
+                'shan_xiang': _shan or None,
+                'zao_xiang': _cx.get() if hasattr(_cx, 'get') else _cx,
+                'zao_wei': _cw.get() if hasattr(_cw, 'get') else _cw,
+                'chuang_wei': _ch.get() if hasattr(_ch, 'get') else _ch,
+                'zaozhu_mode': _zm.get() if hasattr(_zm, 'get') else _zm,
+                'zeli_mode': self._get_zeli_mode(),
+            }
+            open_reverse_window(self.root, self.event_var.get(),
+                                self._collect_owners_data(), _ctx)
+        except Exception as _e:
+            messagebox.showerror("错误", f"打开精准择时面板失败：{_e}")
+
     def start_calculation(self):
         """开始择日计算"""
         try:
@@ -3958,80 +4013,9 @@ class ZeriApp:
             self.progress_label.config(text=f"⏳ 开始计算：共 {total_days} 天")
             self.root.update_idletasks()
 
-            # 获取事主信息
-            owners_data = []
-            for owner in self.owners_info:
-                try:
-                    # 添加防御性检查
-                    year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
-                    month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
-                    day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
-                    
-                    # 检查是否填写了日期
-                    if not (year_str and month_str and day_str):
-                        continue
-                    
-                    hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
-                    minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
-                    
-                    year = int(year_str)
-                    month = int(month_str)
-                    day = int(day_str)
-                    hour = int(hour_str)
-                    minute = int(minute_str)
-                    gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
-                    
-                    # 计算年干支
-                    try:
-                        birth_date = date(year, month, day)
-                    except ValueError as e:
-                        # 处理无效日期，使用当月最后一天
-                        import calendar
-                        last_day = calendar.monthrange(year, month)[1]
-                        birth_date = date(year, month, last_day)
-                        messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
-                    
-                    # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
-                    birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
-                    owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
-                    year_gan = owner_sizhu.get('year_gan', '')
-                    year_zhi = owner_sizhu.get('year_zhi', '')
-                    
-                    # 获取日柱信息（用于婚嫁评分算法）
-                    day_gan = owner_sizhu.get('day_gan', '')
-                    day_zhi = owner_sizhu.get('day_zhi', '')
-                    
-                    # 构建完整的事主信息
-                    name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
-                    owner_data = {
-                        'name': name,
-                        'role': owner.get('role', ''),
-                        'birth_date': birth_date,
-                        'birth_hour': hour,
-                        'birth_minute': minute,
-                        'birth_longitude': birth_longitude,
-                        '性别': gender,
-                        '年干': year_gan,
-                        '年支': year_zhi,
-                        '日干': day_gan,
-                        '日支': day_zhi,
-                        '生肖': year_zhi
-                    }
-                    
-                    # 如果有喜用神信息，也添加进去
-                    if 'xishen_var' in owner:
-                        xishen_val = owner['xishen_var'].get() if hasattr(owner['xishen_var'], 'get') else owner.get('xishen_var', '')
-                        if xishen_val:
-                            owner_data['xishen'] = xishen_val
-                    if 'yongshen_var' in owner:
-                        yongshen_val = owner['yongshen_var'].get() if hasattr(owner['yongshen_var'], 'get') else owner.get('yongshen_var', '')
-                        if yongshen_val:
-                            owner_data['yongshen'] = yongshen_val
-                    
-                    owners_data.append(owner_data)
-                except (ValueError, TypeError):
-                    pass
-            
+            # 获取事主信息（001 §210 Commit 2：抽取为 _collect_owners_data，反推面板共用）
+            owners_data = self._collect_owners_data()
+                
             # 获取特殊选项
             event_type = self.event_var.get()
             # 安葬无墓穴坐山不予计算（_azss0914）
