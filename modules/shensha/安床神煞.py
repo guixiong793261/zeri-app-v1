@@ -239,6 +239,20 @@ class BedShenShaChecker(ShenShaChecker):
         #     if self._is_chongchuang(sizhu):
         #         self._add_shensha('冲床日', -12, '冲床日不宜安床')
 
+        # 胎神占位（2026-10-31，001 §209 胎神 C 步：0 分纯展示）
+        # 依陈书「六甲胎神占」日占口径（p803 胎产杂忌）：日支 巳亥占床、日干
+        # 戊癸占房床；論胎神明文「月日所値之處，切忌修整，犯者損身孕」，前提为
+        # 「家有孕妇＋修整动作」，非普适日课凶日。故本项恒 0 分、不否决，仅在
+        # 详情/黄历作展示与前置提示（文案带「家有孕妇者」限定，防误读为普适忌）。
+        # 月占 12 月轮转表 OCR 分组存疑，待原书影印复核后于 B 阶段接入
+        # （docs/胎神占床方位体系重建专项立项书_20261031.md）。
+        _ts_pos = self._taishen_zhanwei(sizhu)
+        if _ts_pos:
+            self._add_shensha(
+                '胎神占' + _ts_pos, 0,
+                f'今日胎神占{_ts_pos}（通书层·陈书六甲胎神占；家有孕妇者忌修整'
+                f'该处，无孕妇则不忌）')
+
         # 杨公忌日
         # 注：安床对杨公忌敏感度较低，扣分降为-10（修造为-20、安葬为-20）
         if self._is_yanggongji(sizhu):
@@ -303,6 +317,23 @@ class BedShenShaChecker(ShenShaChecker):
     # _is_taishen / _is_chongchuang 谓词已随发射一并删除（2026-10-31 错表
     # 作废批，001 §208）：胎神日起例表系复制作灶天火日贴错名，冲床日即月破
     # 别名三库零载，墓碑详见 _check_day_shensha 安床专用段。
+
+    def _taishen_zhanwei(self, sizhu):
+        """今日胎神所占部位（陈书六甲胎神占·日占口径，0 分展示用）
+
+        典据：陈子性藏书 p803「胎産雜忌·六甲胎神占」日占二表——
+          支表：子午占碓／丑未占厕／寅申占灶／卯酉占门／辰戌占鸡栖／巳亥占床
+          干表：甲己占门／乙庚碓磨／丙辛厕灶井／丁壬仓库／戊癸占房床
+        安床通道仅取与床相关部位（占床/占房床）作展示；月占 12 月轮转表
+        OCR 分组存疑，待影印复核后于 B 阶段接入。命中返回部位名，否则 None。
+        注：本项恒 0 分（不扣分不否决），仅为「家有孕妇者忌修整」前置提示。
+        """
+        _pos = []
+        if sizhu.get('day_zhi', '') in ('巳', '亥'):   # 支表「巳亥占床」
+            _pos.append('床')
+        if sizhu.get('day_gan', '') in ('戊', '癸'):   # 干表「戊癸占房床」
+            _pos.append('房床')
+        return '、'.join(_pos) if _pos else None
 
     def _is_yanggongji(self, sizhu):
         """是否杨公忌日（2026-09-20 收敛：改委托 is_yanggongji_by_lunar）
