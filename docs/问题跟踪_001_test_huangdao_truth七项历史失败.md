@@ -11062,3 +11062,5 @@ I tkinter 双端 tag 注册 + GUI 否决配色 + print_detail veto 分支 + 嫁�
   同步范围：3 模块＋8 测试（含新增 verify_kaiye_juan10_buqi.py），共 11 文件
   ×5 目标树 = 55 份；验证：`check_six_copies.py` **FAIL 0**（逐路径 6 份 SHA
   全等）、五树 py_compile 全 OK、部署端 `手机一键部署` 实跑新测试 ALL PASS。
+  hash：立项书 `20ae767`／主仓部署镜像 `45670d0`（22 files）／统一版仓
+  `a2a0577`（33 files）；两仓工作树已清，仅余与本批无关的未跟踪产物。
