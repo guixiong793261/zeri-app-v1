@@ -70,9 +70,14 @@ class CommonShenShaChecker(ShenShaChecker):
         #         self._add_shensha('岁破', -30, '与太岁相冲，百事不宜')
         # 注：_get_suipo 保留——日破时(:506)/月破(:519) 仍消费，本批不动。
 
-        # 年支三煞（劫煞、灾煞、岁煞）
-        if self._is_nian_sansha(sizhu):
-            self._add_shensha('年三煞', -18, '年支三煞，诸事不宜')
+        # 年支三煞发射已删（001 §211 拍板二·案 B，2026-10-31）：原以
+        # 日支∈年三煞方发射「年三煞」-18，属四柱柱级判定；三库三煞皆方道神
+        # （占山/修方/坐向），无「日支临煞则凶」明文，与评分器四柱级通道同源，
+        # 一并旁路（墓碑）。事项标准 ('入学'/'求医'/'签约','年三煞')=-18 三键
+        # 随之成死键，本批不删，记账待清。谓词 _is_nian_sansha 保留备查。
+        # 原发射为：
+        #     if self._is_nian_sansha(sizhu):
+        #         self._add_shensha('年三煞', -18, '年支三煞，诸事不宜')
 
         # ===== 吉神 =====
         if self._is_suide(sizhu):

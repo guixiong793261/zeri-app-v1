@@ -5867,18 +5867,20 @@ class ZeriApp:
             if day_sansha:
                 text.insert(tk.END, f"\n   日三煞：{'、'.join(day_sansha)}")
             
-            # 三煞避忌原则说明
+            # 三煞避忌原则说明（001 §211 案 B，2026-10-31：三煞为方道神，
+            # 年三煞四柱级判定已整体旁路，仅保留坐山/修方与向首判定）
             text.insert(tk.END, "\n\n   【三煞避忌原则】")
             text.insert(tk.END, "\n   ──")
-            text.insert(tk.END, "\n   年三煞最重：月、日、时柱皆不可犯")
-            text.insert(tk.END, "\n   月三煞次之：日、时柱不可犯")
-            text.insert(tk.END, "\n   日三煞又次之：时柱不可犯")
+            text.insert(tk.END, "\n   三煞为方道神：占山/修方/坐向方忌（「三煞可向不可坐」）")
+            text.insert(tk.END, "\n   年三煞：论坐山/修方与向首（四柱月日时柱不作判定）")
+            text.insert(tk.END, "\n   月三煞：论坐山/修方与日、时柱临方（扣分不否决）")
+            text.insert(tk.END, "\n   日三煞：论坐山/修方与时柱临方（扣分不否决）")
             
             # 四柱犯三煞详情
-            text.insert(tk.END, "\n\n   【四柱三煞检查】")
+            text.insert(tk.END, "\n\n   【三煞检查】")
             text.insert(tk.END, "\n   ──")
-            # 判定口径（2026-09-07 用户确认）：山向类仅坐山修方否决、四柱临方扣分不否决；
-            # 嫁娶类四柱不犯。山向犯三煞一律❌否决；四柱月/日/时支临方在山向类降为⚠提示。
+            # 判定口径：山向类仅坐山修方否决、月/日三煞日时柱临方扣分不否决；
+            # 年三煞四柱级已于 001 §211 案 B 旁路（判定层不再置 flag）。
             _pv = sansha_info.get('sansha_pillar_veto', True)
             _kj = sansha_info.get('sansha_koujing', '')
             if _kj:
@@ -5892,18 +5894,12 @@ class ZeriApp:
                 else:
                     text.insert(tk.END, f"\n   ⚠ {label}（临三煞方，扣分不否决）")
 
-            # 年三煞检查
-            year_fan_month = sansha_info.get('year_sansha_month_fan', False)
-            year_fan_day = sansha_info.get('year_sansha_day_fan', False)
-            year_fan_hour = sansha_info.get('year_sansha_hour_fan', False)
+            # 年三煞检查（仅山向；柱级三条已删，见 001 §211 案 B）
             year_fan_shan = sansha_info.get('year_sansha_fan', False)
 
-            _fan_mark(year_fan_month, '年三煞犯月柱')
-            _fan_mark(year_fan_day, '年三煞犯日柱')
-            _fan_mark(year_fan_hour, '年三煞犯时柱')
             _fan_mark(year_fan_shan, '年三煞犯山向', is_shan=True)
 
-            if not year_fan_month and not year_fan_day and not year_fan_hour and not year_fan_shan:
+            if not year_fan_shan:
                 text.insert(tk.END, "\n   ✅ 年三煞不犯")
 
             # 月三煞检查

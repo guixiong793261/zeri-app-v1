@@ -114,27 +114,30 @@ def main():
         check(f'岁破 {dstr} {ev} 不应存在（残留观测）', False,
               f'score={sc} desc={desc}')
 
-    print('[5] 反向⑥：4 名覆盖保证（扫描窗内逐一观测，防空洞断言）')
-    for nm in TRIO_NAMES:
+    print('[5] 反向⑥：3 名覆盖保证（扫描窗内逐一观测，防空洞断言）；'
+          '年三煞改为零观测（001 §211 墓碑化）')
+    for nm in ('劫煞', '灾煞', '岁煞'):
         check(f'{nm} 被观测到（{observed[nm]} 次）', observed[nm] > 0)
+    # 001 §211（2026-10-31 拍板二·案 B）：通用神煞「年三煞」以日支∈年三煞方发射，
+    # 属四柱柱级判定（三库皆方道神，无柱级明文），与评分器四柱级通道同源一并旁路。
+    check('年三煞 §211 墓碑化后零观测（原 279 次 → 0）', observed['年三煞'] == 0,
+          f'观测数 {observed["年三煞"]}')
 
     # ---------- 断言④⑤ 探针实证日：通道甲/忌事通道不动 ----------
-    print('[6] 探针实证日 2026-02-07 求医：三笔并存中神煞笔归零，另两笔保留')
+    print('[6] 探针实证日 2026-02-07 求医：神煞笔已墓碑、通道甲/忌事通道保留')
     sz = calculate_sizhu(dt.date(2026, 2, 7), 12, 0)
     sz.update({'date': dt.date(2026, 2, 7), 'year': 2026, 'month': 2, 'day': 7})
     r = scorer.score(sz, '求医', owners=OWNER)
     sh = {s.get('name'): s for s in r.get('shensha_list', []) if isinstance(s, dict)}
-    check('年三煞条目在列（识别保留）', '年三煞' in sh)
-    if '年三煞' in sh:
-        check('年三煞 score==0 且带标注',
-              sh['年三煞'].get('score') == 0 and MARK in sh['年三煞'].get('description', ''),
-              f"{sh['年三煞']}")
+    check('年三煞条目已不在列（001 §211 墓碑化）', '年三煞' not in sh)
     si = r.get('sansha_info') or {}
     check('通道甲 sansha_penalty 仍 < 0（不动）',
           isinstance(si.get('sansha_penalty'), (int, float)) and si['sansha_penalty'] < 0,
           f"sansha_penalty={si.get('sansha_penalty')}")
     ji_join = ' | '.join(str(j) for j in (r.get('ji_list') or []))
-    check('忌事通道 ji 仍含年三煞条目（不动）', '年三煞' in ji_join, f'ji_list={ji_join[:120]}')
+    # 001 §211：年三煞柱级忌项（含 年三煞(月柱)/(日柱)/(时柱)）已随判定层旁路删除
+    check('忌事通道 ji 不再含年三煞（柱级通道已删）',
+          '年三煞' not in ji_join, f'ji_list={ji_join[:120]}')
 
     print('[7] 上吉升级实证日 2026-01-16 开业：trio 归零、吉神层不受影响')
     sz2 = calculate_sizhu(dt.date(2026, 1, 16), 12, 0)

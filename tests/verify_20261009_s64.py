@@ -89,31 +89,44 @@ def ss_map(r):
 
 
 # ══════════════════ B3 按柱分级（事主类：签约）══════════════════
-# B3-1 年三煞犯日柱：2024-01-09（癸卯年，三煞方申酉戌，日支? 日柱临方）
+# 001 §211（2026-10-31 三煞四柱级全面旁路·案B）：年三煞柱级通道（月柱-30/
+# 日柱-30/时柱-20）已删除，判定层不再置 flag；本组改锚为「反向留痕」——
+# 断言年三煞柱级条目不再出现、且保留的月三煞/日三煞柱级通道不受影响。
+# B3-1 原「年三煞犯日柱」样例：2024-01-09（癸卯年，三煞方申酉戌）
 r = run(dt.date(2024, 1, 9), '签约', OWNER1)
 _v, _jl = vetos(r), ji_of(r)
 check('B3-1a 年三煞(日柱)不再否决', not _v, '; '.join(_v))
-check('B3-1b 保留年三煞(日柱)忌项', '年三煞(日柱)' in _jl, str(_jl))
+check('B3-1b §211 年三煞(日柱)忌项已随柱级通道删除、无任何年三煞柱级条目',
+      '年三煞(日柱)' not in _jl and '年三煞(时柱)' not in _jl
+      and '年三煞(月柱)' not in _jl, str(_jl))
 _sp = (r.get('sansha_info') or {}).get('sansha_penalty_detail') or []
-check('B3-1c 日柱通道-30分保留（可用但带扣分）',
-      any('年三煞(日柱)' in x and '-30' in x for x in _sp), str(_sp))
+check('B3-1c §211 保留日三煞(时柱)通道-10分（非年三煞）',
+      any('日三煞(时柱)' in x and '-10' in x for x in _sp)
+      and not any('年三煞(' in x for x in _sp), str(_sp))
 check('B3-1d he_ge=True（五行门槛放行）', wx(r).get('he_ge') is True)
 
-# B3-2 年三煞犯时柱：2024-03-01（甲辰年三煞方巳午未，午时临方）
+# B3-2 年三煞犯时柱样例：2024-03-01（甲辰年三煞方巳午未，午时临方）
 r = run(dt.date(2024, 3, 1), '签约', OWNER1)
 _v, _jl = vetos(r), ji_of(r)
 check('B3-2a 年三煞(时柱)不再否决', not _v, '; '.join(_v))
-check('B3-2b 保留年三煞(时柱)/日三煞(时柱)忌项',
-      '年三煞(时柱)' in _jl and '日三煞(时柱)' in _jl, str(_jl))
+check('B3-2b §211 年三煞(时柱)已删、月三煞(日柱)/日三煞(时柱)保留',
+      '年三煞(时柱)' not in _jl and '月三煞(日柱)' in _jl
+      and '日三煞(时柱)' in _jl, str(_jl))
 _sp = (r.get('sansha_info') or {}).get('sansha_penalty_detail') or []
-check('B3-2c 时柱通道-20分保留',
-      any('年三煞(时柱)' in x and '-20' in x for x in _sp), str(_sp))
+check('B3-2c §211 保留柱级通道合计-30（月三煞日柱-20+日三煞时柱-10）',
+      any('月三煞(日柱)' in x and '-20' in x for x in _sp)
+      and any('日三煞(时柱)' in x and '-10' in x for x in _sp)
+      and not any('年三煞(' in x for x in _sp), str(_sp))
 
-# B3-3 反向：年三煞犯月柱事主类维持否决（2024-05-06 巳月，巳∈三煞方巳午未）
+# B3-3 原「反向：年三煞犯月柱事主类维持否决」→ §211 案B 整体旁路，改反向留痕
+# 2024-05-06（巳月，巳∈三煞方巳午未）
 r = run(dt.date(2024, 5, 6), '签约', OWNER1)
-_v = vetos(r)
-check('B3-3 年三煞(月柱)事主类维持一票否决',
-      any('三煞大忌' in v and '年三煞(月柱)' in v for v in _v), '; '.join(_v))
+_v, _jl = vetos(r), ji_of(r)
+check('B3-3 §211 年三煞(月柱)已旁路：无否决、无年三煞忌项、通道0',
+      not _v and '年三煞(月柱)' not in _jl
+      and (r.get('sansha_info') or {}).get('sansha_penalty') == 0,
+      f"veto={'; '.join(_v)} ji={_jl} "
+      f"penalty={(r.get('sansha_info') or {}).get('sansha_penalty')}")
 
 # B3-4 反向：坐山犯年三煞维持否决（2024 甲辰年三煞方巳午未，坐山未∈；
 # 该样本经"年份不宜"通道提前否决，文案含"犯年三煞"）
@@ -132,8 +145,10 @@ check('必修2-1a 事主类日/时柱三煞不否决',
       not any('三煞大忌' in v and ('日柱' in v or '时柱' in v) for v in vs), '; '.join(vs))
 check('必修2-1b 山向类日/时柱三煞不否决',
       not any('三煞大忌' in v and ('日柱' in v or '时柱' in v) for v in vm), '; '.join(vm))
-check('必修2-2 两类事项该日均检出年三煞(时柱)（同一判定事实）',
-      '年三煞(时柱)' in ji_of(r_s) and '年三煞(时柱)' in ji_of(r_m),
+check('必修2-2 §211 两类事项均不再检出年三煞柱级条目（同一判定事实：柱级已旁路）',
+      all(not any(x in j for x in ('年三煞(月柱)', '年三煞(日柱)', '年三煞(时柱)'))
+          for j in (ji_of(r_s), ji_of(r_m)))
+      and '年三煞(山向)' in ji_of(r_m),
       f"{ji_of(r_s)} | {ji_of(r_m)}")
 check('必修2-3 事主类口径开关 sansha_pillar_veto=True',
       (r_s.get('sansha_info') or {}).get('sansha_pillar_veto') is True)
@@ -155,8 +170,9 @@ _n_ji = len(_bd.get('忌事明细', []))
 # 日三煞(向方)/月灾煞/正阴府 5 项均已由 sansha_penalty 通道计分（合计-90），
 # 忌事循环排除后仅「天火日忌作灶」计一笔 -15（年柱巳冲属 H1 锚点仅展示）。
 # 明细条数仍 7，双扣杜绝语义由「通道-90 + 忌事-15」两笔独立证明。
-check('D2-1d 防双扣：三煞/正阴府归通道不重复忌事（7条明细，忌事仅天火一笔-15）',
-      _n_ji == 7 and _bd.get('忌事得分') == -15,
+# §211（2026-10-31 三煞柱级旁路）：原 7 条明细含 年三煞(月柱)（已删）→ 6 条。
+check('D2-1d 防双扣：三煞/正阴府归通道不重复忌事（6条明细，忌事仅天火一笔-15）',
+      _n_ji == 6 and _bd.get('忌事得分') == -15,
       f"明细{_n_ji}条 忌事得分={_bd.get('忌事得分')}")
 # D2-1e §172（2026-10-24）重锚：本批抬分后 score <30→59 跨 30 分线，
 # 假低分回退分支切换为 60 分线制化放宽（同 D2-4c §68 先例，行为殊途同归：
@@ -326,18 +342,21 @@ _s = sum(v for k, v in _bd.items()
 check('F1 天火日 breakdown 加总==五行分（神煞/忌事各一笔不重）',
       _s == wx(r).get('score'), f'加总={_s} 五行分={wx(r).get("score")}')
 
-# F2 B3 通道分与忌事分两笔独立：2024-01-09 签约（通道-40、忌事-30）
+# F2 B3 通道分与忌事分两笔独立：2024-01-09 签约（通道、忌事各自独立）
 # §187 Q4（2026-10-27）：三煞双扣根除后忌事得分 -30→0——年三煞(日柱)/日三煞(时柱)
 # 两项已由 sansha_penalty 通道扣 -40（-30/-10），忌事不再重复；两笔独立语义
 # 由「通道-40 + 忌事0 + 明细仍保留 2 条三煞项（仅展示）」共同证明。
+# §211（2026-10-31 三煞柱级旁路·案B）：年三煞(日柱) -30 已删，通道仅余
+# 日三煞(时柱) -10；明细同步 2→1 条。两笔独立语义由「通道-10 + 忌事0 +
+# 明细 1 条（仅展示）」继续证明。
 r = run(dt.date(2024, 1, 9), '签约', OWNER1)
 _si = (r.get('sansha_info') or {}).get('sansha_info') or (r.get('sansha_info') or {})
-check('F2-1 三煞通道合计-40（日柱-30+时柱-10，保留入总分）',
-      (r.get('sansha_info') or {}).get('sansha_penalty') == -40,
+check('F2-1 §211 三煞通道合计-10（仅日三煞时柱，年三煞日柱-30已删）',
+      (r.get('sansha_info') or {}).get('sansha_penalty') == -10,
       str((r.get('sansha_info') or {}).get('sansha_penalty')))
-check('F2-2 §187 Q4 忌事通道零重复（2条三煞项归通道，忌事得分=0）',
+check('F2-2 §211 忌事通道零重复（1条三煞项归通道，忌事得分=0）',
       bd_of(r).get('忌事得分') == 0
-      and len(bd_of(r).get('忌事明细') or []) == 2,
+      and len(bd_of(r).get('忌事明细') or []) == 1,
       f"忌事={bd_of(r).get('忌事得分')} 明细={bd_of(r).get('忌事明细')}")
 
 print()

@@ -438,7 +438,7 @@ class Scorer:
         - 山向类（spv_mode=False）：全部四柱临方项 + 月三煞(山向)/日三煞(山向)，
           前者 §62/§63 已降级，后者本为既有"较轻不否决"扣分项；
         - 灶君忌日：D2 降级，忌事通道 -15。
-        不在此列：年三煞(山向)（维持否决）、年三煞(月柱)（事主类维持否决）；
+        不在此列：年三煞(山向)（维持否决）、年三煞柱级项（001 §211 案 B 已删）；
         天火/地火/土府规则 ji 的回退按当日神煞实际命中由
         _s64_zao_ruleji_refund 精确判定（防虚退）。"""
         t = str(txt)
@@ -1750,24 +1750,23 @@ class Scorer:
                     from 出行方位 import evaluate as _eval_travel_direction
                 travel_dir_info = _eval_travel_direction(travel_direction, sizhu)
 
-            # 三煞判定口径（2026-09-07 用户确认；2026-10-09 §64 B3 按柱分级）：
-            #  山向中心事项（修造/动土/入宅/安葬等，以坐山修方为核心）用"仅坐山修方论"——
-            #    坐山/修方犯三煞一票否决；四柱临三煞方仅扣分不否决
-            #    （年三煞(月柱)按 §63 三煞占月降级）。
-            #  事主中心事项（嫁娶/订婚/纳采等）按柱分级——
-            #    年三煞犯月柱维持否决（月建临煞主一月）；日/时柱临三煞方
-            #    §64 B3 降级强扣分（与山向类对齐）。
+            # 三煞判定口径（2026-09-07 用户确认；2026-10-09 §64 B3 按柱分级；
+            # 2026-10-31 001 §211 拍板二·案 B：四柱级全面旁路，仅留山向/向方）：
+            #  三库（协纪/考原/陈书）均以三煞为方道神（占山/修方/坐向），无
+            #  「月柱/日柱/时柱临煞则凶」明文，故年月日三煞的柱级判定一律停用，
+            #  判定层不再置 flag（见 get_sansha_info 判定段墓碑）。
+            #  保留：坐山/修方犯年三煞一票否决；向首犯三煞重扣分不否决。
             _mountain_centered = _prof['mountain_center']
             if _mountain_centered:
                 sansha_info['sansha_pillar_veto'] = False
                 self._pillar_veto_mode = False
                 sansha_info['sansha_koujing'] = (
-                    '仅坐山修方论：坐山/修方犯三煞否决；四柱月日时支临三煞方扣分不否决')
+                    '仅坐山修方论：坐山/修方犯三煞否决；月/日三煞日时柱临方扣分不否决')
             else:
                 sansha_info['sansha_pillar_veto'] = True
                 self._pillar_veto_mode = True
                 sansha_info['sansha_koujing'] = (
-                    '按柱分级：年三煞犯月柱否决；日/时柱临三煞方强扣分不否决')
+                    '按柱分级：年三煞四柱级已旁路（001 §211 案 B）；月/日三煞日时柱临方强扣分不否决')
             
             # 三煞评分逻辑（根据避忌原则：年三煞最重，月三煞次之，日三煞又次之）
             total_sansha_penalty = 0
@@ -1779,28 +1778,14 @@ class Scorer:
             total_xiangfang_penalty = 0
             total_xiangfang_detail = []
             
-            # 年三煞检查（最重，月、日、时柱不可犯）
-            if sansha_info.get('year_sansha_month_fan'):
-                penalty = -30
-                total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞(月柱)（-30分）')
-                self.final_score += penalty
-                if '年三煞(月柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(月柱)')
-            if sansha_info.get('year_sansha_day_fan'):
-                penalty = -30
-                total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞(日柱)（-30分）')
-                self.final_score += penalty
-                if '年三煞(日柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(日柱)')
-            if sansha_info.get('year_sansha_hour_fan'):
-                penalty = -20
-                total_sansha_penalty += penalty
-                total_sansha_detail.append('年三煞(时柱)（-20分）')
-                self.final_score += penalty
-                if '年三煞(时柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(时柱)')
+            # 年三煞检查（001 §211 拍板二·案 B：四柱级全面旁路，仅保留山向方位判定）
+            # 墓碑（2026-10-31 删除）：年三煞(月柱) -30 / 年三煞(日柱) -30 /
+            # 年三煞(时柱) -20 三条日课通道。判据：三库均以三煞为方道神
+            # （占山/修方/坐向），协纪/考原/陈书无「月柱临煞则凶」明文；
+            # 唯一涉月日时句属通天窍压煞语境（反证）。原判定为整月级，
+            # 2026 全年 54/365 天命中年三煞(月柱)，13/15 通道被支配，
+            # 属方位神串用。详见 docs/入宅通道年三煞月柱扣分逻辑三库复核立项书_20261031.md。
+            # 保留：年三煞(山向)（协纪卷八「三煞可向不可坐」有载）。
             if sansha_info.get('year_sansha_fan'):
                 penalty = -25
                 total_sansha_penalty += penalty
@@ -2166,7 +2151,7 @@ class Scorer:
                         if self._is_downgraded_ji_item(_jt, _spv_mode):
                             _refund += 15
                             _refund_items.append(_jt)
-                    # (b) 三煞通道分（年三煞日柱-30/时柱-20 等）只计入 final_score
+                    # (b) 三煞通道分（月三煞日/时柱、日三煞时柱等）只计入 final_score
                     #     总分，不进 wu_xing 五行分（wu_xing=breakdown 合计-相主），
                     #     本就不压 30 分线，故不在此回退（回退即虚退）。通道扣分在
                     #     总分与等级中保留——B3"可用但带扣分"语义。
@@ -2448,10 +2433,10 @@ class Scorer:
             _spv = sansha_info.get('sansha_pillar_veto', True)
 
             # §64（2026-10-09 拍板：B3 按柱分级 + 必修2 口径对齐）：
-            # 日/时柱临年三煞降级为强扣分（日犯三煞较轻，管一日/一时），
-            # 山向类与事主类统一不否决；扣分由 sansha_penalty 通道承担
-            # （年三煞(日柱)-30、年三煞(时柱)-20），此处不再置 veto。
-            # 月柱维持（事主类）：见下 year_sansha_month_fan 段。
+            # 日/时柱临三煞降级为强扣分（日犯三煞较轻，管一日/一时），
+            # 山向类与事主类统一不否决。
+            # 001 §211 案 B（2026-10-31）：年三煞日/时柱扣分通道已删（见 score()
+            # 三煞扣分段墓碑），此处本无 veto；月/日三煞柱级通道保留。
 
             # 年三煞犯山向（大忌）
             if sansha_info.get('year_sansha_fan'):
@@ -2468,17 +2453,10 @@ class Scorer:
             # 日三煞犯山向（较轻，不列为大忌）
             # 根据三煞避忌原则：日三煞管时柱，山向犯日三煞相对较轻，不一票否决
 
-            # 年三煞犯月柱：事主中心（_spv=True，四柱论命）维持大忌否决
-            # ——月建临年三煞方主一月不利；山向中心（_spv=False）按 §63
-            # 拍板"三煞占月"降级强扣分（仅坐山修方论，由 -30 扣分通道承担）。
-            # 两类差异依据：修方论坐山（《协纪辨方书》三煞占月条 §63 拍板降级）
-            # vs 事主论命四柱不犯（2026-09-07 用户确认口径），台账 §64 留据。
-            if sansha_info.get('year_sansha_month_fan') and _spv:
-                sansha_fan_da_ji = True
-                if sansha_fan_reason:
-                    sansha_fan_reason += '、年三煞(月柱)'
-                else:
-                    sansha_fan_reason = '年三煞(月柱)'
+            # 年三煞犯月柱：001 §211 拍板二·案 B 已全面旁路（墓碑保留说明）——
+            # 原事主中心（_spv=True）一票否决，导致 6 个通道整月被否；三库无
+            # 「月柱临煞则凶」明文，属方位神串用，判定层已不再置 True
+            # （见 get_sansha_info 判定段墓碑）。此处不再消费，保留山向否决。
 
             # §64 B3：年三煞犯时柱两类事项统一降级强扣分（-20），不再置 veto。
 
@@ -2692,12 +2670,8 @@ class Scorer:
                 self.level = '❌ 凶'
                 self.final_score = 0
                 # 将三煞犯忌添加到ji_list
-                if sansha_info.get('year_sansha_month_fan') and '年三煞(月柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(月柱)')
-                if sansha_info.get('year_sansha_day_fan') and '年三煞(日柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(日柱)')
-                if sansha_info.get('year_sansha_hour_fan') and '年三煞(时柱)' not in self.ji_list:
-                    self.ji_list.append('年三煞(时柱)')
+                # 001 §211 案 B：年三煞(月柱)/(日柱)/(时柱) 三行已删——四柱级
+                # 通道整体旁路，判定层不再置 True，此处无可消费项。
                 if sansha_info.get('year_sansha_fan') and '年三煞(山向)' not in self.ji_list:
                     self.ji_list.append('年三煞(山向)')
                 if sansha_info.get('month_sansha_day_fan') and '月三煞(日柱)' not in self.ji_list:
@@ -3504,8 +3478,9 @@ class Scorer:
             '_chong_penalty': 0,  # 2026-09-18：年命×月支六冲扣分（扣分不否决档），
                                  # 不计入末尾 suitable 兜底阈值
             # §63（2026-10-09 拍板：月份不宜E）：月份不宜降级项强扣分，传导日课
-            # 五行评分（正阴府无制化-30/月破犯坐山-25；三煞占月-30不传导，日课层
-            # year_sansha_month_fan -30 同一判定，防双扣）
+            # 五行评分（正阴府无制化-30/月破犯坐山-25；三煞占月-30 仅入月分不传导）。
+            # 001 §211 案 B（2026-10-31）：日课层 year_sansha_month_fan -30 通道已删，
+            # 月层「三煞占月」-30 是否同批旁路待用户另行裁决，本批保留不动。
             'month_penalty': 0,
             'month_penalty_detail': [],
             '_mp_penalty': 0,     # 扣分不否决档隔离键：不计入末尾 suitable 兜底阈值
@@ -3735,16 +3710,16 @@ class Scorer:
             _year_sha_fang = year_sansha_map.get(year_zhi, [])
             if month_zhi and month_zhi in _year_sha_fang:
                 # §63（2026-10-09 拍板：三煞D）：三煞占月从整月否决降级为强扣分，
-                # 年三煞犯山向（年层/日课层）维持否决。月建∈年三煞方与日课层
-                # year_sansha_month_fan（年三煞犯月柱-30）为同一判定，日课总分
-                # 扣分由该既有通道承担，此处扣分仅入月分不传导（防双扣）；
-                # 隔离末尾 suitable 兜底阈值，不再提前 return
+                # 年三煞犯山向（年层/日课层）维持否决。本项仅入月分，不传导日课。
+                # 001 §211 案 B（2026-10-31）：日课层 year_sansha_month_fan -30 通道
+                # 已整体删除（三库无「月建临煞则凶」明文），月层本项是否同批旁路
+                # 待用户另行裁决，本批保留不动；隔离末尾 suitable 兜底阈值，不提前 return
                 analysis['reasons'].append(
                     f"月建{month_zhi}正当年三煞（{''.join(_year_sha_fang)}）方，三煞占月，强扣分不否决")
                 analysis['details']['年三煞占月'] = True
                 analysis['details']['年三煞方'] = _year_sha_fang
                 analysis['score'] -= 30
-                analysis['month_penalty_detail'].append('三煞占月（月层-30分；日课层由年三煞犯月柱-30通道承担，不重复传导）')
+                analysis['month_penalty_detail'].append('三煞占月（月层-30分；仅入月分，不传导日课）')
                 analysis['_mp_penalty'] -= 30
 
             # 月三煞分析
@@ -4541,17 +4516,27 @@ class Scorer:
         }
         
         # 四柱三煞检查（上管下原则）
-        # 年三煞：月、日、时柱不可犯
-        if year_sansha:
-            if month_zhi in year_sansha:
-                info['year_sansha_month_fan'] = True
-                info['year_sansha_severity'] += 3
-            if day_zhi in year_sansha:
-                info['year_sansha_day_fan'] = True
-                info['year_sansha_severity'] += 3
-            if hour_zhi in year_sansha:
-                info['year_sansha_hour_fan'] = True
-                info['year_sansha_severity'] += 2
+        # 001 §211 拍板二·案 B：年三煞柱级判定整体旁路（仅保留山向/向方判定）。
+        # 墓碑（2026-10-31 删除）：原对 year_sansha_month_fan / day_fan / hour_fan
+        # 置 True 并累加 severity +3/+3/+2。判据：三库三煞皆方道神（占山/修方/
+        # 坐向），无「月日时柱临煞则凶」明文；唯一涉月日时句属通天窍压煞语境
+        # （反证）。原判定为整月级并列（月内日与日零区分度），2026 全年
+        # 54/365 天命中年三煞(月柱)、13/15 通道被支配，属方位神串用。
+        # 详见 docs/入宅通道年三煞月柱扣分逻辑三库复核立项书_20261031.md。
+        # 键保留（恒 False）以免下游取键 KeyError；severity 亦不再累加。
+        # 原判定为：
+        #     if year_sansha:
+        #         if month_zhi in year_sansha:
+        #             info['year_sansha_month_fan'] = True
+        #             info['year_sansha_severity'] += 3
+        #         if day_zhi in year_sansha:
+        #             info['year_sansha_day_fan'] = True
+        #             info['year_sansha_severity'] += 3
+        #         if hour_zhi in year_sansha:
+        #             info['year_sansha_hour_fan'] = True
+        #             info['year_sansha_severity'] += 2
+        # 月三煞柱级（month_sansha_day_fan/hour_fan）与日三煞柱级
+        # （day_sansha_hour_fan）同源，是否同批旁路待用户另行裁决，本批不动。
         
         # 月三煞：日、时柱不可犯
         if month_sansha:
@@ -5304,11 +5289,11 @@ class Scorer:
             if k in _ji_blob:
                 hits.append(k)
         if isinstance(sansha_info, dict):
+            # 001 §211 案 B：year_sansha_day_fan / year_sansha_month_fan /
+            # year_sansha_hour_fan 三个柱级 flag 已旁路（恒 False），移出本表。
             _ss_flags = (
                 'year_sansha_fan', 'month_sansha_fan',
-                'year_sansha_day_fan', 'year_sansha_month_fan',
-                'year_sansha_hour_fan', 'month_sansha_day_fan',
-                'month_sansha_hour_fan',
+                'month_sansha_day_fan', 'month_sansha_hour_fan',
             )
             if any(sansha_info.get(f) for f in _ss_flags) and '三煞' not in hits:
                 hits.append('三煞')
@@ -6154,8 +6139,9 @@ class Scorer:
             score_breakdown['分金扣分'] = _fj_penalty
 
         # §63（2026-10-09 拍板：月份不宜E）：月份不宜降级项（正阴府无制化/月破
-        # 犯坐山）强扣分入账，与 §62 分金扣分同构；三煞占月不传导（日课层
-        # year_sansha_month_fan -30 同一判定，防双扣）
+        # 犯坐山）强扣分入账，与 §62 分金扣分同构；三煞占月不传导。
+        # 001 §211 案 B（2026-10-31）：日课层 year_sansha_month_fan -30 通道已删，
+        # 不存在双扣对象。
         if _month_penalty:
             wu_xing_score += _month_penalty
             score_breakdown['月份不宜扣分'] = _month_penalty
