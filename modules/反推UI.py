@@ -4,9 +4,12 @@
 精准择时 · 反推面板（001 §210 Commit 2）
 ================================================================================
 三层视图（用户 2026-10-31 拍板）：
-    1. 热力日历：吉日标红、慎用标黄、否决不标红（深灰底），Top-N 日加蓝框；
-    2. Top-N 吉日列表：排名/日期/农历/评分/吉神契合/最优时辰，慎用行黄底；
-    3. 最优时间轴：选中日后展开 12 时辰评分与吉时行动建议。
+    1. 热力日历：吉日标红、慎用标黄、否决深灰（格内显示 ×，不显示 0 分），
+       Top-N 日加蓝框，右上角 ★ 为吉神星级（契合度分档），悬停看归类/分值；
+    2. Top-N 吉日列表：排名/日期/农历/评分/吉神契合(★)/扣分主因/最优时辰，
+       慎用行黄底，原因列写明负分项与忌项（不解释清楚会被误读成软件发疯）；
+    3. 最优时间轴：12 时辰逐条给"时辰级"建议（最优/吉神/犯煞/平/忌用），
+       禁止复用日级 yi_list 充数。
 
 约束：
     - 本模块只做展示与调度，不计算任何分值（一律来自 modules.反推引擎.search_top_n）；
@@ -24,6 +27,7 @@ from datetime import date, datetime
 from tkinter import messagebox, ttk
 
 from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_TOP_N
+from modules.排序键 import jishen_stars
 from modules.事项标准 import UI_EVENTS
 
 COLOR_JI = '#C62828'        # 吉日：红
@@ -32,9 +36,45 @@ COLOR_VETO = '#263238'      # 否决：黑
 COLOR_NA = '#F5F5F5'        # 范围外
 TXT_ON_DARK = '#FFFFFF'
 TXT_ON_YELLOW = '#212121'
+STAR_ON_JI = '#FFD54F'      # 红格上的金色星
+STAR_ON_CAUTION = '#6D4C00' # 黄格上的深棕星（保证对比度）
 
-CELL_W, CELL_H = 58, 46
+CELL_W, CELL_H = 66, 50
 PAD = 10
+
+
+def _reason_text(day, compact=True):
+    """扣分主因/类型说明（Top-N 原因列 + 热力格状态栏共用）。
+
+    慎用：神煞负分总和 <= -20 的负分项（如杨公忌日 -20、羊刃 -15）；
+    吉日但仍有轻扣/忌项：写"轻扣/忌项"，解释为何"分数高却不是唯一指标"；
+    否决：写 veto_reasons（无则写总分）。
+
+    compact=True 时只显示前 2 条负分 + 前 1 条忌项并加省略号，
+    避免 Treeview 单元格横向截断（完整文本见点击/悬停状态栏）。
+    """
+    _kind = day.get('kind') or ''
+    if _kind == '否决':
+        _rs = day.get('veto_reasons') or []
+        if not _rs:
+            return '否决：%s 分' % day.get('score')
+        _shown = _rs[:(2 if compact else 9)]
+        return '否决：' + '、'.join(_shown) + (
+            '…' if len(_rs) > len(_shown) else '')
+    _parts = []
+    _di = (day.get('deduct_items') or [])
+    if _di:
+        _shown = _di[:(2 if compact else 9)]
+        _txt = '、'.join('%s %d' % (_s.get('name', ''), int(_s.get('score') or 0))
+                        for _s in _shown)
+        _parts.append('%s：%s%s' % ('慎用' if _kind == '慎用' else '轻扣',
+                                   _txt, '…' if len(_di) > len(_shown) else ''))
+    _ji = (day.get('ji_items') or [])
+    if _ji:
+        _shown_ji = _ji[:(1 if compact else 9)]
+        _parts.append('忌项：' + '、'.join(_shown_ji)
+                      + ('…' if len(_ji) > len(_shown_ji) else ''))
+    return '；'.join(_parts) or '—'
 
 
 class ReverseWindow:
@@ -54,8 +94,8 @@ class ReverseWindow:
 
         self.win = tk.Toplevel(master)
         self.win.title('精准择时 · 反推 Top-N（001 §210）')
-        self.win.geometry('1180x800')
-        self.win.minsize(980, 640)
+        self.win.geometry('1240x820')
+        self.win.minsize(1000, 640)
         self.win.protocol('WM_DELETE_WINDOW', self._on_close)
         self.win.bind('<Escape>', lambda _e: self._on_close())
 
@@ -115,7 +155,7 @@ class ReverseWindow:
                            width=2)
             _sw.pack(side=tk.LEFT, padx=(6, 2))
             ttk.Label(legend, text=_txt).pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Label(legend, text='（蓝框=入榜 Top-N，点击格子可跳时间轴）'
+        ttk.Label(legend, text='（蓝框=入榜 Top-N，★=吉神星级，悬停看归类与分值，点击可跳时间轴）'
                   ).pack(side=tk.LEFT, padx=8)
 
         body = ttk.Frame(tab1)
@@ -134,14 +174,15 @@ class ReverseWindow:
         self.summary_var = tk.StringVar(value='尚未反推')
         ttk.Label(tab2, textvariable=self.summary_var).pack(fill=tk.X, padx=4, pady=4)
         _cols = ('排名', '日期', '星期', '农历', '评分', '等级',
-                 '吉神契合', '最优时辰', '状态')
+                 '吉神契合', '扣分主因', '最优时辰', '状态')
         self.top_tree = ttk.Treeview(tab2, columns=_cols, show='headings',
                                      selectmode='browse', height=12)
-        for _c, _w in (('排名', 52), ('日期', 110), ('星期', 60), ('农历', 100),
-                       ('评分', 70), ('等级', 130), ('吉神契合', 80),
-                       ('最优时辰', 130), ('状态', 70)):
+        for _c, _w in (('排名', 48), ('日期', 100), ('星期', 56), ('农历', 96),
+                       ('评分', 64), ('等级', 96), ('吉神契合', 90),
+                       ('扣分主因', 400), ('最优时辰', 122), ('状态', 56)):
             self.top_tree.heading(_c, text=_c)
             self.top_tree.column(_c, width=_w, anchor=tk.CENTER)
+        self.top_tree.column('扣分主因', anchor=tk.W)
         _tsb = ttk.Scrollbar(tab2, orient=tk.VERTICAL,
                              command=self.top_tree.yview)
         self.top_tree.configure(yscrollcommand=_tsb.set)
@@ -282,9 +323,12 @@ class ReverseWindow:
         self._top_dates = {_d['date'] for _d in res['days']}
         for _idx, _d in enumerate(res['days'], 1):
             _tag = 'cautious' if _d['kind'] == '慎用' else 'auspicious'
+            _fit = int(_d.get('jishen_fit') or 0)
+            _stars = jishen_stars(_fit)
             self.top_tree.insert('', tk.END, iid=_d['date'], values=(
                 _idx, _d['date'], _d['weekday'], _d['lunar'], _d['score'],
-                _d['level'], _d['jishen_fit'],
+                _d['level'], ('%s %d' % ('★' * _stars, _fit)) if _stars else '—',
+                _reason_text(_d),
                 '%s（%s）' % (_d['best_hour']['时辰'],
                             _d['best_hour']['时段']), _d['kind']),
                 tags=(_tag,))
@@ -338,14 +382,24 @@ class ReverseWindow:
                     _x + 1, _cy + 1, _x + CELL_W - 2, _cy + CELL_H - 2,
                     fill=_fill, outline='#1565C0' if _top else '#CFD8DC',
                     width=3 if _top else 1, tags=(_tag,))
-                cv.create_text(_x + CELL_W / 2, _cy + 13, text=str(_d.day),
-                               fill=_fg, font=('Microsoft YaHei UI', 10, 'bold'))
+                cv.create_text(_x + 6, _cy + 12, text=str(_d.day), anchor='w',
+                               fill=_fg, font=('Microsoft YaHei UI', 9, 'bold'))
                 if _info:
-                    cv.create_text(_x + CELL_W / 2, _cy + 32,
-                                   text='%s' % _info['score'], fill=_fg,
-                                   font=('Microsoft YaHei UI', 8))
+                    # 吉神星级角标（右上角）：39 分 → ★★★；否决格不标（避免误导）
+                    _stars = jishen_stars(_info.get('jishen_fit') or 0)
+                    if _stars and _kind != '否决':
+                        _sc = STAR_ON_JI if _kind == '吉日' else STAR_ON_CAUTION
+                        cv.create_text(_x + CELL_W - 4, _cy + 12,
+                                       text='★' * _stars, anchor='e',
+                                       fill=_sc, font=('Microsoft YaHei UI', 7))
+                    # 否决格绝不显示 0 分（001 §210：用户会误读为零分上榜）
+                    _body = '×' if _kind == '否决' else '%s' % _info['score']
+                    cv.create_text(_x + CELL_W / 2, _cy + 34, text=_body,
+                                   fill=_fg, font=('Microsoft YaHei UI', 8))
                 cv.tag_bind(_tag, '<Button-1>',
                             lambda _e, _s=_ds: self._on_day_click(_s))
+                cv.tag_bind(_tag, '<Enter>',
+                            lambda _e, _s=_ds: self._on_day_hover(_s))
         return _y + 6 * CELL_H + 4
 
     # ---------------------------------------------------------------- 交互
@@ -364,8 +418,33 @@ class ReverseWindow:
         _info = self._day_map.get(ds)
         if not _info:
             return
-        self.status_var.set('%s：%s（评分 %s，%s）' % (
-            ds, _info['kind'], _info['score'], _info['level']))
+        self.status_var.set('%s：%s ｜ %s（评分 %s，%s）' % (
+            ds, _reason_text(_info, compact=False), _info['kind'],
+            _info['score'], _info['level']))
+
+    def _on_day_hover(self, ds):
+        """热力格悬浮提示：把"为什么黄/为什么红"直接写进状态栏。"""
+        _info = self._day_map.get(ds)
+        if not _info:
+            self.status_var.set('%s：不在扫描范围内' % ds)
+            return
+        self.status_var.set('%s ｜ %s ｜ %s 分 ｜ %s ｜ 吉神契合 %s ｜ %s' % (
+            ds, _info['kind'], _info['score'], _info['level'],
+            _info.get('jishen_fit') or 0, _reason_text(_info, compact=False)))
+
+    def _hour_advice(self, h, best_zhi, event_type, day_score):
+        """时辰级行动建议（001 §210 微调：禁止复用日级 yi_list 充数）。"""
+        if h['地支'] == best_zhi:
+            return '宜在此刻%s（当日最高分 %s 分）' % (event_type or '用事',
+                                                   day_score)
+        if h['disabled'] or h['veto'] or int(h['score']) <= 0:
+            _why = h['凶'] or (['否决 %d 项' % h['veto']] if h['veto'] else [])
+            return '忌用：' + ('、'.join(_why) if _why else '五不遇时')
+        if h['凶']:
+            return '犯：' + '、'.join(h['凶']) + '（可用但避忌）'
+        if h['吉神']:
+            return '吉神：' + '、'.join(h['吉神'])
+        return '平：无吉神亦无凶煞'
 
     def _show_timeline(self, ds):
         _entry = None
@@ -379,6 +458,7 @@ class ReverseWindow:
                 self.tl_tree.delete(_i)
             return
         _bh = _entry['best_hour']
+        _ev = (self._res or {}).get('meta', {}).get('event_type', '')
         self.tl_head.set('%s %s 农历%s ｜ %s ｜ 最优 %s（%s）｜ %s分 %s ｜ 吉神契合 %s' % (
             _entry['date'], _entry['weekday'], _entry['lunar'], _entry['sizhu'],
             _bh['时辰'], _bh['时段'], _entry['score'], _entry['level'],
@@ -395,8 +475,7 @@ class ReverseWindow:
                 _tags.append('ok')
             if _h['disabled']:
                 _tags.append('disabled')
-            _advice = ('宜：' + '、'.join(_h['吉'])) if (
-                int(_h['score']) > 0 and not _h['veto'] and _h['吉']) else '—'
+            _advice = self._hour_advice(_h, _bh['地支'], _ev, _entry['score'])
             _note = []
             if _h['disabled']:
                 _note.append('禁用（五不遇时）')
@@ -404,7 +483,8 @@ class ReverseWindow:
                 _note.append('有否决 %d 项' % _h['veto'])
             if _h['shashi']:
                 _note.append('杀师时')
-            if _h['凶']:
+            # 凶煞已进建议列（"犯：..."），仅最优行在此重复一次便于对照
+            if _h['凶'] and _h['地支'] == _bh['地支']:
                 _note.append('凶煞：' + '、'.join(_h['凶']))
             self.tl_tree.insert('', tk.END, values=(
                 _h['时辰'], _h['时段'], _h['时柱'], _h['score'], _h['level'],

@@ -31,7 +31,8 @@ from modules.评分器 import calculate_score
 from modules.事项标准 import UI_EVENTS, MARRIAGE_EVENTS
 from modules.排序键 import (fenjin_preview_penalty, scoring_shensha,
                            shashi_hour, hour_rank_key,
-                           classify_day, rank_day, jishen_fit)
+                           classify_day, rank_day, jishen_fit,
+                           deduct_items, deduct_sum)
 
 # 十二时辰（起始小时 → 地支），与主程序扫日候选一致
 HOURS = [(0, '子'), (2, '丑'), (4, '寅'), (6, '卯'), (8, '辰'), (10, '巳'),
@@ -76,7 +77,6 @@ def _compact_hour(sizhu, result, zhi, disabled):
         'veto': len(result.get('veto_reasons') or []),
         'disabled': bool(disabled),
         'shashi': bool(shashi_hour(result)),
-        '吉': [str(_y) for _y in (result.get('yi_list') or [])][:3],
         '凶': _negative[:3],
         '吉神': _positive[:3],
     }
@@ -227,6 +227,11 @@ def _day_record(d, best_sz, best_r, hours, kind):
         'kind': kind,
         'veto_reasons': [str(_v) for _v in (best_r.get('veto_reasons') or [])],
         'jishen_fit': jishen_fit(best_r),
+        # 001 §210 微调：慎用原因列数据源（负分神煞 + 忌项），只做展示
+        'deduct_sum': deduct_sum(best_r),
+        'deduct_items': [{'name': _n, 'score': _v}
+                         for _n, _v in deduct_items(best_r)],
+        'ji_items': [str(_j) for _j in (best_r.get('ji_list') or [])],
         'best_hour': {
             '时柱': _gz,
             '时辰': (_gz[1:2] + '时') if len(_gz) >= 2 else '',
@@ -284,7 +289,13 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
         _kind = classify_day(_best_r, event_type)
         _rec = _day_record(_d, _best_sz, _best_r, _hours, _kind)
         _all.append({'date': _rec['date'], 'kind': _kind,
-                     'score': _rec['score'], 'level': _rec['level']})
+                     'score': _rec['score'], 'level': _rec['level'],
+                     'jishen_fit': _rec['jishen_fit'],
+                     'deduct_sum': _rec['deduct_sum'],
+                     # 热力格悬浮提示用（与 Top-N 原因列同一数据源）
+                     'deduct_items': _rec['deduct_items'],
+                     'ji_items': _rec['ji_items'],
+                     'veto_reasons': _rec['veto_reasons']})
         if _kind == '否决':
             _vetoed.append({'date': _rec['date'], 'weekday': _rec['weekday'],
                             'score': _rec['score'], 'level': _rec['level'],

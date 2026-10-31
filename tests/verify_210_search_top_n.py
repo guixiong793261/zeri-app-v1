@@ -4,7 +4,8 @@
 ================================================================================
 验证面：
 A. 排序键单点化：hour_rank_key 7 位字段顺序/取值锁定；day_rank_key / classify_day /
-   rank_day 的收录层与"吉神契合度优先于总分"口径。
+   rank_day 的收录层与"吉神契合度优先于总分"口径；慎用判据（方案 B：神煞负分总和
+   <= -20 才染黄，单一轻扣与忌项不染黄）与吉神星级分档。
 B. 交节防雷：2026-01-05（小寒 16:23）酉/戌/亥时月柱为己丑、午时仍戊子；
    12 时辰日柱一致、时柱各异（逐时四柱按权威值，不套午时柱）。
 C. 对拍零漂移：反推榜每日最优时辰的分数/时柱，与"直调 calculate_sizhu +
@@ -38,7 +39,8 @@ if ROOT not in sys.path:
 from modules.四柱计算器 import calculate_sizhu       # noqa: E402
 from modules.评分器 import calculate_score           # noqa: E402
 from modules.排序键 import (hour_rank_key, day_rank_key, classify_day,   # noqa: E402
-                           rank_day, jishen_fit)
+                           rank_day, jishen_fit, jishen_stars,
+                           deduct_items, deduct_sum)
 from modules.反推引擎 import (search_top_n, scan_day, HOURS, MAX_DAYS)  # noqa: E402
 
 FAILS = []
@@ -80,26 +82,45 @@ def test_rank_keys():
     check(day_rank_key(_r_jishen) < day_rank_key(_r_high_score),
           '吉神契合度（天德）优先于更高总分')
 
-    # 慎用降权：分数更高的慎用日仍排在吉日之后
-    _r_cautious = {'veto_reasons': [], 'score': 200, 'level': '上吉',
-                   'shensha_list': [{'name': '月德', 'score': 18}],
-                   'ji_list': ['忌动土']}
-    check(classify_day(_r_cautious, '入宅') == '慎用',
-          '有扣分项且不禁本事项 → 慎用', classify_day(_r_cautious, '入宅'))
-    check(rank_day(_r_cautious, '入宅') > rank_day(_r_jishen, '入宅'),
+    # 慎用判据（001 §210 微调·方案 B）：只看神煞负分总和 <= -20
+    _r_heavy = {'veto_reasons': [], 'score': 200, 'level': '上吉',
+                'shensha_list': [{'name': '红纱日', 'score': -15},
+                                 {'name': '月虚', 'score': -10}],
+                'ji_list': []}
+    check(classify_day(_r_heavy, '入宅') == '慎用',
+          '负分总和 -25（<= -20）→ 慎用', str(deduct_sum(_r_heavy)))
+    _r_light = {'veto_reasons': [], 'score': 200, 'level': '上吉',
+                'shensha_list': [{'name': '月虚', 'score': -10}],
+                'ji_list': ['年三煞(月柱)']}
+    check(classify_day(_r_light, '入宅') == '吉日',
+          '单一轻扣 -10 + 忌项 → 仍为吉日（不染黄）',
+          classify_day(_r_light, '入宅'))
+    _r_ji_only = {'veto_reasons': [], 'score': 180, 'level': '上吉',
+                  'shensha_list': [], 'ji_list': ['年三煞(月柱)']}
+    check(classify_day(_r_ji_only, '入宅') == '吉日',
+          '纯忌项（无负分神煞）→ 仍为吉日（忌项入原因列）')
+    check(rank_day(_r_heavy, '入宅') > rank_day(_r_light, '入宅'),
           '慎用（收录层 1）恒排吉日（收录层 0）之后')
+    check(deduct_items(_r_heavy) == [('红纱日', -15), ('月虚', -10)],
+          'deduct_items 按负分项顺序返回', str(deduct_items(_r_heavy)))
 
     # 否决判据与扫日过滤链同源：否决不因"不宜X"文案翻转为慎用
     _r_buyi = {'veto_reasons': [], 'score': 60, 'level': '上吉', 'ji_list': [],
                'shensha_list': [{'name': '某煞', 'score': -5,
                                  'description': '不宜入宅'}]}
-    check(classify_day(_r_buyi, '入宅') == '慎用',
-          '"不宜X"不构成否决（仅黄标慎用）')
+    check(classify_day(_r_buyi, '入宅') == '吉日',
+          '"不宜X"不构成否决（轻扣 -5 也不染黄）')
     _r_ji = {'veto_reasons': [], 'score': 60, 'level': '上吉',
              'ji_list': ['忌入宅'], 'shensha_list': []}
     check(classify_day(_r_ji, '入宅') == '否决', '忌本事项 → 否决')
+    _r_bad = {'veto_reasons': [], 'score': 120, 'level': '❌ 凶',
+              'shensha_list': [], 'ji_list': []}
+    check(classify_day(_r_bad, '入宅') == '否决', '等级含"凶" → 否决（等级兜底）')
 
     check(jishen_fit(_r_jishen) == 20, 'jishen_fit 主锚吉神加权', str(jishen_fit(_r_jishen)))
+    for _fit, _n in ((0, 0), (9, 0), (10, 1), (22, 2), (39, 3), (45, 4), (60, 5)):
+        check(jishen_stars(_fit) == _n, 'jishen_stars(%d)=%d' % (_fit, _n),
+              str(jishen_stars(_fit)))
 
 
 # ==================== B. 交节逐时四柱 ====================
@@ -136,10 +157,24 @@ def test_ranking():
     check(not (_veto_dates & _top_dates), '否决日不入榜')
     check(all(_d['kind'] in ('吉日', '慎用') for _d in _res['days']),
           '入榜日仅吉日/慎用')
-    check(any(_d['kind'] == '慎用' for _d in _res['days']),
-          '慎用日入榜（本窗口应有）')
-    check(all(_d['kind'] != '慎用' for _d in _res['days'][:5]),
-          '前 5 名均为吉日（慎用已降权）')
+    _first_cautious = next((_i for _i, _d in enumerate(_res['days'])
+                            if _d['kind'] == '慎用'), len(_res['days']))
+    check(all(_d['kind'] == '吉日' for _d in _res['days'][:_first_cautious]),
+          '慎用日恒排在全部吉日之后（收录层降权生效）',
+          '首个慎用位次 %d' % (_first_cautious + 1))
+
+    # 慎用判据落地核验：入榜慎用日的负分总和必须 <= -20；吉日不得越界染黄
+    _bad_caution = [_d['date'] for _d in _res['days']
+                    if _d['kind'] == '慎用' and int(_d['deduct_sum']) > -20]
+    check(not _bad_caution, '入榜慎用日负分总和均 <= -20', str(_bad_caution))
+    _bad_ji = [_d['date'] for _d in _res['days']
+               if _d['kind'] == '吉日' and int(_d['deduct_sum']) <= -20]
+    check(not _bad_ji, '吉日负分总和均 > -20（红格不越界）', str(_bad_ji))
+
+    # 原因列数据源：慎用日必须能给出至少一条负分主因
+    _no_reason = [_d['date'] for _d in _res['days']
+                  if _d['kind'] == '慎用' and not _d['deduct_items']]
+    check(not _no_reason, '慎用日均带扣分主因（原因列非空）', str(_no_reason))
 
     # 排序单调：收录层 → 否决数 → 吉神契合度 → 总分
     _keys = [(0 if _d['kind'] == '吉日' else 1, len(_d['veto_reasons']),
@@ -179,6 +214,18 @@ def test_ranking():
             _bad_tl.append('%s best_hour 未命中' % _d['date'])
     check(not _bad_tl, '入榜日时间轴 12 时辰齐备且最优时辰命中',
           '; '.join(_bad_tl[:3]))
+
+    # 热力日历数据源：all_days 每日必须带 jishen_fit / deduct_sum，
+    # 时辰记录必须带吉神/凶（供时辰级建议，禁止复用日级 yi_list）
+    _bad_all = [_d['date'] for _d in _res['all_days']
+                if 'jishen_fit' not in _d or 'deduct_sum' not in _d]
+    check(not _bad_all, 'all_days 每日带 jishen_fit/deduct_sum（星级角标数据源）',
+          str(_bad_all[:3]))
+    _bad_hour = [_d['date'] for _d in _res['days'] if any(
+        '吉神' not in _h or '凶' not in _h or '吉' in _h
+        for _h in _d['hours'])]
+    check(not _bad_hour, '时辰记录字段为 吉神/凶（已移除日级 yi_list 的"吉"）',
+          str(_bad_hour[:3]))
     return _res
 
 

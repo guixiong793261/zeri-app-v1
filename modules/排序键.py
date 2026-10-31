@@ -128,6 +128,13 @@ MAIN_AUSPICIOUS = {
     '天医': 12, '三奇日': 15, '三奇月': 12, '三奇星': 10,
 }
 
+# 慎用黄标阈值（001 §210 微调，2026-10-31 用户拍板方案 B）：
+# 神煞负分总和 <= 该值 才染黄；单一轻扣（月虚 -10 之类）保持吉日红格。
+CAUTION_DEDUCT_THRESHOLD = -20
+
+# 吉神星级角标分档（展示用）：契合度 → 星数，39 分显示 3 颗星。
+JISHEN_STAR_TIERS = ((60, 5), (45, 4), (30, 3), (20, 2), (10, 1))
+
 
 def jishen_fit(result):
     """吉神契合度 = 命中主锚吉神加权和（展示侧清单，不做任何扣分/加分）。"""
@@ -138,6 +145,35 @@ def jishen_fit(result):
             if _n in MAIN_AUSPICIOUS and int(_s.get('score', 0) or 0) > 0:
                 total += MAIN_AUSPICIOUS[_n]
     return total
+
+
+def jishen_stars(fit):
+    """吉神契合度 → 星数（0~5，展示角标用；39 → 3 星）。"""
+    _fit = int(fit or 0)
+    for _th, _n in JISHEN_STAR_TIERS:
+        if _fit >= _th:
+            return _n
+    return 0
+
+
+def deduct_items(result):
+    """日级扣分主因清单：[(神煞名, 负分值)]，仅负分项，按原始顺序。
+
+    用于"慎用原因列"展示（001 §210 微调 2026-10-31 拍板），
+    不做任何分值计算，数据源与 classify_day 的扣分判据同源。
+    """
+    _out = []
+    for _s in (result.get('shensha_list') or []):
+        if isinstance(_s, dict):
+            _v = int(_s.get('score', 0) or 0)
+            if _v < 0:
+                _out.append((str(_s.get('name', '')), _v))
+    return _out
+
+
+def deduct_sum(result):
+    """神煞负分总和（正分不计），慎用判据的唯一分值来源。"""
+    return sum(_v for _, _v in deduct_items(result))
 
 
 def day_rank_key(result, event_type=''):
@@ -159,10 +195,14 @@ def classify_day(result, event_type=''):
       - 等级含"凶"；
       - 忌列表含精确的"忌{事项}"。
     说明：扫描链路中的"不宜{事项}"与"大凶/绝对不可用"仅作诊断打印，
-    不参与正常模式的收录过滤；故此处也不据此否决，统一降级为"慎用"黄标，
-    避免反推榜比手动扫日多排掉整日（2026-10-31 §210 口径对齐）。
+    不参与正常模式的收录过滤；故此处也不据此否决（既不否决，也不必然染黄，
+    黄标只由下方"负分总和"判据决定），避免反推榜比手动扫日多排掉整日
+    （2026-10-31 §210 口径对齐）。
 
-    慎用：通过上述门槛，但存在扣分（忌列表非空或有负分神煞）。
+    慎用（001 §210 微调，2026-10-31 用户拍板方案 B）：
+      - 判据只看"神煞负分总和 <= -20"，且已被上面四条排除；
+      - 单一轻扣（如月虚 -10）与"忌项"（如年三煞(月柱)）不再染黄，
+        仅进原因列文字展示；忌项本身是否应扣分属规则面，另行立项。
     """
     import re
     _veto = list(result.get('veto_reasons') or [])
@@ -174,10 +214,7 @@ def classify_day(result, event_type=''):
     for _ji in (result.get('ji_list') or []):
         if _re_ji and _re_ji.search(str(_ji)):
             return '否决'
-    _has_deduct = bool(result.get('ji_list')) or any(
-        isinstance(_s, dict) and int(_s.get('score', 0) or 0) < 0
-        for _s in (result.get('shensha_list') or []))
-    return '慎用' if _has_deduct else '吉日'
+    return '慎用' if deduct_sum(result) <= CAUTION_DEDUCT_THRESHOLD else '吉日'
 
 
 def rank_day(result, event_type=''):
