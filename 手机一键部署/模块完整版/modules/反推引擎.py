@@ -217,6 +217,10 @@ def _day_record(d, best_sz, best_r, hours, kind):
         _lunar_str = f"{_lunar.get('month', '')}{_lunar.get('day', '')}"
     except Exception:
         _lunar_str = '-'
+    # 001 §210 Commit 4：吉神名清单 + 评分器理由串（详情窗与择日贴消费，
+    # 只做展示/透传，不参与任何分值计算）
+    _pos = [str(_s.get('name', '')) for _s in (best_r.get('shensha_list') or [])
+            if isinstance(_s, dict) and int(_s.get('score', 0) or 0) > 0]
     return {
         'date': d.strftime('%Y-%m-%d'),
         'weekday': WEEKDAY_CN[d.weekday()],
@@ -232,6 +236,8 @@ def _day_record(d, best_sz, best_r, hours, kind):
         'deduct_items': [{'name': _n, 'score': _v}
                          for _n, _v in deduct_items(best_r)],
         'ji_items': [str(_j) for _j in (best_r.get('ji_list') or [])],
+        'jishen': '、'.join(_pos),
+        'reason': str(best_r.get('reason') or ''),
         'best_hour': {
             '时柱': _gz,
             '时辰': (_gz[1:2] + '时') if len(_gz) >= 2 else '',

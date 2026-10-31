@@ -347,6 +347,11 @@ def prepare_entry(entry):
     # 硬否决（一票否决／0 分凶）优先，仍走 compose_veto_lines。
     e['_is_soft_caution'] = (not e['_is_vetoed']) and (
         '凶' in str(e.get('level') or ''))
+    # 001 §210 Commit 5（2026-11-01 拍板）：反推榜单「慎用」（负分总和 <= -20 的
+    # 预警，等级可仍为「上吉」）与红帖「慎用帖」（等级含「凶」）是两套判据，
+    # 用户拍板保留不统一——此类日仍出吉帖，但须在警示区顶部强制加盖
+    # 「榜单慎用」微瑕提示，消除「红帖印大利、榜单却标慎用」的认知矛盾。
+    e['_reverse_caution'] = bool(e.get('reverse_caution'))
 
     # owners_list 解析 → 仙命/主事/父母/宅主/福主
     e['_owners_map'] = _prepare_owners(e)
@@ -564,6 +569,13 @@ def _degrade_warn_lines(e):
     reason = str(e.get('reason') or '').replace('\n', '；')
     segs = [s.strip() for s in reason.split('；') if s.strip()]
     out = []
+
+    # 001 §210 Commit 5：从反推榜单带过来的「慎用日」（等级未必含凶，按吉帖
+    # 排版）→ 警示区第一条加粗黄底提示。否决/软忌帖已有更强判定，不叠加。
+    if (e.get('_reverse_caution') and not e.get('_is_soft_caution')
+            and not e.get('_is_vetoed')):
+        out.append(('hardwarn',
+                    '⚠ 本日有微瑕（榜单慎用），请结合具体扣分项酌情使用'))
 
     names = []
     for seg in segs:
@@ -1138,6 +1150,10 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
 .warn { font-size: 24px; line-height: 1.85; text-align: left;
         background: #FFF3B0; color: #4a1200;
         border-left: 6px solid #8B0000; padding: 2mm 3mm; margin: 1.5mm 0; }
+/* §210 Commit 5：反推榜单慎用日强提示（加粗黄底黑框，置顶警示区） */
+.hardwarn { font-size: 24px; font-weight: bold; line-height: 1.8; text-align: left;
+            background: #FFFF00; color: #8B0000;
+            border: 2px solid #8B0000; padding: 2.5mm 3mm; margin: 2mm 0; }
 .rule { border-top: 3px double #C9A227; margin: 4mm auto; width: 96%; font-size: 1px; }  /* §205 S4：金线 */
 </style>
 </head>
@@ -1164,7 +1180,7 @@ def render_print_html(lines, title, paper='red'):
                         else '<div class="blank">&nbsp;</div>')
             continue
         cls = _TAG_CLASS.get(style, 'body')
-        if '⚠' in text and cls.split(' ')[0] != 'warn':
+        if '⚠' in text and cls.split(' ')[0] not in ('warn', 'hardwarn'):
             cls += ' warnhl'  # ⚠ 警告行黄底黑字（2026-09-10 用户要求；warn 块自带底色不叠）
         rows.append(f'<div class="{cls}">{html.escape(text).replace(" ", "&nbsp;")}</div>')
     if paper == 'white':
@@ -1510,6 +1526,8 @@ _TAG_CLASS = {'title': 'title', 'sub': 'sub', 'h2': 'h2', 'body': 'body',
 # verdict=结论大字 / stamp=否决牌·朱印 / tbl=信息表行 / warn=警示块 / rule=双线分隔。
 _TAG_CLASS.update({'verdict': 'verdict', 'stamp': 'stamp',
                    'tbl': 'tbl', 'warn': 'warn', 'rule': 'rule'})
+# §210 Commit 5：hardwarn=反推榜单慎用日强提示（加粗黄底，置顶警示区）
+_TAG_CLASS.update({'hardwarn': 'hardwarn'})
 
 _PRINT_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -1553,6 +1571,10 @@ html, body { margin: 0; padding: 0; background: #C11B17; }
 .warn { font-size: 25px; line-height: 1.8; text-align: left;
         background: #FFF3B0; color: #4a1200;
         border-left: 6px solid #8B0000; padding: 2mm 3mm; margin: 1.5mm 0; }
+/* §210 Commit 5：反推榜单慎用日强提示（加粗黄底黑框，置顶警示区） */
+.hardwarn { font-size: 25px; font-weight: bold; line-height: 1.8; text-align: left;
+            background: #FFFF00; color: #8B0000;
+            border: 2px solid #8B0000; padding: 2.5mm 3mm; margin: 2mm 0; }
 .rule { border-top: 3px double #C9A227; margin: 4mm auto; width: 96%; font-size: 1px; }
 </style>
 </head>

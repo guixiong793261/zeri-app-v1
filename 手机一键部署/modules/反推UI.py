@@ -28,7 +28,7 @@ from tkinter import messagebox, ttk
 
 from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_TOP_N
 from modules.排序键 import jishen_stars
-from modules.事项标准 import UI_EVENTS
+from modules.事项标准 import UI_EVENTS, MOUNTAIN_CENTERED_EVENTS
 
 COLOR_JI = '#C62828'        # 吉日：红
 COLOR_CAUTION = '#F9A825'   # 慎用：黄
@@ -80,10 +80,13 @@ def _reason_text(day, compact=True):
 class ReverseWindow:
     """精准择时反推面板（Toplevel，三层视图）。"""
 
-    def __init__(self, master, event_type, owners=None, context=None):
+    def __init__(self, master, event_type, owners=None, context=None,
+                 modify_callback=None, add_tie_callback=None):
         self.master = master
         self.owners = owners if isinstance(owners, list) else []
         self.context = context if isinstance(context, dict) else {}
+        self.modify_callback = modify_callback
+        self.add_tie_callback = add_tie_callback
         self._alive = True
         self._cancel = False
         self._thread = None
@@ -100,6 +103,7 @@ class ReverseWindow:
         self.win.bind('<Escape>', lambda _e: self._on_close())
 
         self._build_top_bar(event_type)
+        self._build_context_bar()
         self._build_tabs()
         self._poll()
 
@@ -137,8 +141,75 @@ class ReverseWindow:
 
         self.progress = ttk.Progressbar(bar, mode='determinate', length=180)
         self.progress.pack(side=tk.LEFT, padx=(12, 6))
-        self.status_var = tk.StringVar(value='就绪：选择范围后点“开始反推”（默认 30 天，最大 90 天）')
+        self.status_var = tk.StringVar(value='就绪：选择范围后点"开始反推"（默认 30 天，最大 90 天）')
         ttk.Label(bar, textvariable=self.status_var).pack(side=tk.LEFT, padx=4)
+
+    def _build_context_bar(self):
+        """当前排盘上下文回显栏（001 §210 Commit 3）。
+
+        显示事主姓名、坐山朝向、当前年份；事主为空时红色警示。
+        右侧提供"修改事主与山向"按钮，关闭本窗口并把焦点交回主程序对应输入框。
+        """
+        bar = ttk.Frame(self.win, padding=(10, 2, 10, 6))
+        bar.pack(fill=tk.X)
+
+        # 分隔线
+        ttk.Separator(bar, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(0, 4))
+
+        inner = ttk.Frame(bar)
+        inner.pack(fill=tk.X)
+
+        ttk.Label(inner, text='当前排盘上下文：',
+                  font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
+
+        # 事主回显
+        _names = [str(_o.get('name') or '').strip() for _o in self.owners]
+        _names = [_n for _n in _names if _n]
+        if _names:
+            ttk.Label(inner, text='事主：', foreground='#1565C0').pack(side=tk.LEFT, padx=(8, 0))
+            ttk.Label(inner, text='[%s]' % '、'.join(_names),
+                      foreground='#1565C0',
+                      font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
+        else:
+            ttk.Label(inner, text='⚠ 当前未输入事主（仅按空事主计算）',
+                      foreground='#C62828',
+                      font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT, padx=(8, 0))
+
+        # 坐向回显
+        _shan = str(self.context.get('shan_xiang') or '').strip()
+        ttk.Label(inner, text='  ｜  坐向：', foreground='#1565C0').pack(side=tk.LEFT)
+        if _shan:
+            ttk.Label(inner, text='[%s]' % _shan,
+                      foreground='#1565C0',
+                      font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
+        else:
+            ttk.Label(inner, text='[未填]',
+                      foreground='#E65100',
+                      font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
+
+        # 当前年份
+        ttk.Label(inner, text='  ｜  当前年份：', foreground='#1565C0').pack(side=tk.LEFT)
+        ttk.Label(inner, text=str(date.today().year),
+                  foreground='#1565C0',
+                  font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
+
+        # 修改按钮（方案 A：轻量，回主程序改）
+        ttk.Button(inner, text='修改事主与山向',
+                   command=self._on_modify_context).pack(side=tk.RIGHT, padx=(8, 0))
+
+    def _on_modify_context(self):
+        """点击"修改事主与山向"：关闭反推窗口，把焦点交回主程序输入框。"""
+        self._cancel = True
+        self._alive = False
+        try:
+            self.win.destroy()
+        except tk.TclError:
+            pass
+        if callable(self.modify_callback):
+            try:
+                self.modify_callback()
+            except Exception:
+                pass
 
     def _build_tabs(self):
         self.nb = ttk.Notebook(self.win)
@@ -192,6 +263,8 @@ class ReverseWindow:
                                     foreground='#6D4C00')
         self.top_tree.tag_configure('auspicious', foreground='#8E0000')
         self.top_tree.bind('<<TreeviewSelect>>', lambda _e: self._on_tree_select())
+        self.top_tree.bind('<Double-Button-1>', self._on_top_double_click)
+        self.top_tree.bind('<Button-3>', self._on_top_right_click)
 
         # ---- 层3：时间轴
         tab3 = ttk.Frame(self.nb)
@@ -238,6 +311,18 @@ class ReverseWindow:
             messagebox.showerror('范围超限', f'范围须在 1~{MAX_DAYS} 天之间',
                                  parent=self.win)
             return
+
+        # 山向中心事项（入宅/修造/安葬等）无坐山时提示确认（001 §210 Commit 3）
+        _ev = self.event_var.get()
+        _shan = str(self.context.get('shan_xiang') or '').strip()
+        if _ev in MOUNTAIN_CENTERED_EVENTS and not _shan:
+            if not messagebox.askyesno(
+                    '坐山未填',
+                    '⚠ 当前未提供坐山朝向，反推结果将缺乏方位吉凶判定\n'
+                    '（三煞坐山、山家封禁、玄空飞星等均无法计算）。\n\n'
+                    '是否仍要继续？',
+                    parent=self.win):
+                return
 
         self._cancel = False
         self.run_btn.config(state=tk.DISABLED)
@@ -310,7 +395,8 @@ class ReverseWindow:
                 _m['scanned'], _m['days'], _m['candidates'], _m['vetoed'],
                 _m['elapsed'], '（已停止，为部分结果）' if _m['cancelled'] else ''))
         self.summary_var.set(
-            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）｜ 排序=吉神契合度优先' % (
+            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）｜ '
+            '排序=吉日优先→总分降序（同分看吉神契合）｜ 双击看详情，右键可加入择日贴' % (
                 _m['event_type'], _m['start'], _m['end'], len(res['days']),
                 sum(1 for _d in res['days'] if _d['kind'] == '吉日'),
                 sum(1 for _d in res['days'] if _d['kind'] == '慎用')))
@@ -321,7 +407,15 @@ class ReverseWindow:
         for _i in self.top_tree.get_children():
             self.top_tree.delete(_i)
         self._top_dates = {_d['date'] for _d in res['days']}
-        for _idx, _d in enumerate(res['days'], 1):
+        # 001 §210 Commit 4（用户 2026-11-01 拍板）：列表按"最优在前"排列——
+        # 吉日层内总分降序（同分比吉神契合），慎用层整体排后。
+        # 仅调整展示顺序，不改 rank_day / Top-N 选取口径（引擎与测试基线零漂移）。
+        _rows = sorted(res['days'], key=lambda _d: (
+            0 if _d['kind'] == '吉日' else 1,
+            -int(_d.get('score') or 0),
+            -int(_d.get('jishen_fit') or 0),
+            _d['date']))
+        for _idx, _d in enumerate(_rows, 1):
             _tag = 'cautious' if _d['kind'] == '慎用' else 'auspicious'
             _fit = int(_d.get('jishen_fit') or 0)
             _stars = jishen_stars(_fit)
@@ -408,6 +502,153 @@ class ReverseWindow:
         if _sel:
             self._show_timeline(_sel[0])
 
+    def _find_top(self, ds):
+        """按日期取 Top-N 记录（不在榜返回 None）。"""
+        for _d in (self._res or {}).get('days', []):
+            if _d.get('date') == ds:
+                return _d
+        return None
+
+    def _on_top_double_click(self, event):
+        """双击榜内行 → 日课详情窗口（001 §210 Commit 4）。"""
+        _row = self.top_tree.identify_row(event.y)
+        if _row:
+            self.top_tree.selection_set(_row)
+            self._show_day_detail(_row)
+
+    def _on_top_right_click(self, event):
+        """右键榜内行 → 详情 / 加入择日贴 / 时间轴（001 §210 Commit 4）。"""
+        _row = self.top_tree.identify_row(event.y)
+        if not _row:
+            return
+        self.top_tree.selection_set(_row)
+        self.top_tree.focus(_row)
+        _menu = tk.Menu(self.win, tearoff=0)
+        _menu.add_command(label='查看日课详情',
+                          command=lambda: self._show_day_detail(_row))
+        _menu.add_command(label='加入择日贴',
+                          command=lambda: self._add_to_tie(_row))
+        _menu.add_separator()
+        _menu.add_command(label='查看十二时辰时间轴',
+                          command=lambda: self._show_timeline(_row))
+        self._ctx_menu = _menu      # 持有引用，防止弹出前被回收
+        try:
+            _menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            _menu.grab_release()
+
+    def _add_to_tie(self, ds):
+        """右键"加入择日贴"：交主程序回调打包 entry（本模块不算分、不建第二份口径）。"""
+        _d = self._find_top(ds)
+        if _d is None:
+            return
+        if not callable(self.add_tie_callback):
+            messagebox.showinfo(
+                '暂不可用', '当前窗口未接入择日贴（请从主程序面板重新打开反推）',
+                parent=self.win)
+            return
+        try:
+            self.add_tie_callback(_d, self.event_var.get())
+        except Exception as _e:
+            messagebox.showerror('加入择日贴失败', str(_e), parent=self.win)
+
+    def _show_day_detail(self, ds):
+        """自包含日课详情窗：反推记录无主程序 result['detail']，故不依赖 self.results。"""
+        _d = self._find_top(ds)
+        if _d is None:
+            messagebox.showinfo(
+                '日课详情', '%s 不在 Top-N 榜内（热力日历仅显示归类与评分）' % ds,
+                parent=self.win)
+            return
+        _meta = (self._res or {}).get('meta', {})
+        _ev = _meta.get('event_type') or '—'
+        _bh = _d['best_hour']
+        _fit = int(_d.get('jishen_fit') or 0)
+        _stars = jishen_stars(_fit)
+
+        _win = tk.Toplevel(self.win)
+        _win.title('日课详情 · %s · %s' % (_d['date'], _ev))
+        _win.geometry('920x720')
+        _win.minsize(760, 560)
+        _win.transient(self.win)
+
+        _head = ttk.Frame(_win, padding=(12, 10, 12, 2))
+        _head.pack(fill=tk.X)
+        _font_l = ('Microsoft YaHei UI', 9, 'bold')
+        for _i, (_k, _v) in enumerate((
+                ('日　　期', '%s　%s　农历%s' % (_d['date'], _d['weekday'],
+                                               _d['lunar'])),
+                ('四　　柱', _d['sizhu']),
+                ('用　　事', _ev),
+                ('评　　分', '%s 分　%s　[%s]' % (_d['score'], _d['level'],
+                                               _d['kind'])),
+                ('最优时辰', '%s（%s）　时柱 %s' % (_bh['时辰'], _bh['时段'],
+                                                _bh['时柱'])),
+                ('吉神契合', '%s　%d 分' % ('★' * _stars if _stars else '—', _fit)),
+                ('吉　　神', str(_d.get('jishen') or '') or '—'),
+                ('扣分主因', _reason_text(_d, compact=False)),
+                ('评分理由', str(_d.get('reason') or '') or '—'))):
+            ttk.Label(_head, text=_k, font=_font_l).grid(
+                row=_i, column=0, sticky='ne', pady=1)
+            ttk.Label(_head, text=str(_v), wraplength=770,
+                      justify=tk.LEFT).grid(row=_i, column=1, sticky='w',
+                                            padx=(6, 0), pady=1)
+
+        _nb = ttk.Notebook(_win)
+        _nb.pack(fill=tk.BOTH, expand=True, padx=12, pady=(6, 6))
+
+        # 页1：扣分明细 / 忌项 / 否决原因
+        _p1 = ttk.Frame(_nb, padding=6)
+        _nb.add(_p1, text='扣分明细 / 忌项')
+        _t1 = ttk.Treeview(_p1, columns=('类型', '项目', '分值'),
+                           show='headings', height=8)
+        for _c, _w in (('类型', 110), ('项目', 470), ('分值', 70)):
+            _t1.heading(_c, text=_c)
+            _t1.column(_c, width=_w,
+                       anchor=tk.W if _c == '项目' else tk.CENTER,
+                       stretch=(_c == '项目'))
+        _t1.pack(fill=tk.BOTH, expand=True)
+        _di = _d.get('deduct_items') or []
+        _ji = _d.get('ji_items') or []
+        _vr = _d.get('veto_reasons') or []
+        for _s in _di:
+            _t1.insert('', tk.END, values=('扣分神煞', _s.get('name', ''),
+                                           int(_s.get('score') or 0)))
+        for _j in _ji:
+            _t1.insert('', tk.END, values=('忌　　项', _j, '—'))
+        for _r in _vr:
+            _t1.insert('', tk.END, values=('否决原因', _r, '—'))
+        if not (_di or _ji or _vr):
+            _t1.insert('', tk.END, values=('—', '无扣分、无忌项、无否决', '—'))
+
+        # 页2：十二时辰
+        _p2 = ttk.Frame(_nb, padding=6)
+        _nb.add(_p2, text='十二时辰')
+        _t2 = ttk.Treeview(_p2, columns=('时辰', '时段', '时柱', '评分', '等级',
+                                        '吉神', '凶煞', '行动建议'),
+                           show='headings', height=12)
+        for _c, _w in (('时辰', 54), ('时段', 60), ('时柱', 52), ('评分', 52),
+                       ('等级', 90), ('吉神', 220), ('凶煞', 132),
+                       ('行动建议', 196)):
+            _t2.heading(_c, text=_c)
+            _t2.column(_c, width=_w,
+                       anchor=tk.W if _c in ('等级', '吉神', '凶煞', '行动建议')
+                       else tk.CENTER,
+                       stretch=_c in ('吉神', '凶煞', '行动建议'))
+        _t2.pack(fill=tk.BOTH, expand=True)
+        _t2.tag_configure('best', background='#FFE082')
+        for _h in (_d.get('hours') or []):
+            _tags = ('best',) if _h['地支'] == _bh['地支'] else ()
+            _t2.insert('', tk.END, values=(
+                _h['时辰'], _h['时段'], _h['时柱'], _h['score'], _h['level'],
+                '、'.join(_h.get('吉神') or []) or '—',
+                '、'.join(_h.get('凶') or []) or '—',
+                self._hour_advice(_h, _bh['地支'], _ev, _d['score'])),
+                tags=_tags)
+
+        ttk.Button(_win, text='关闭', command=_win.destroy).pack(
+            anchor='e', padx=12, pady=(0, 10))
+
     def _on_day_click(self, ds):
         if ds in self._top_dates:
             self.top_tree.selection_set(ds)
@@ -447,11 +688,7 @@ class ReverseWindow:
         return '平：无吉神亦无凶煞'
 
     def _show_timeline(self, ds):
-        _entry = None
-        for _d in (self._res or {}).get('days', []):
-            if _d['date'] == ds:
-                _entry = _d
-                break
+        _entry = self._find_top(ds)
         if _entry is None:
             self.tl_head.set('%s：不在 Top-N 榜内（热力日历中仅显示归类与评分）' % ds)
             for _i in self.tl_tree.get_children():
@@ -496,6 +733,14 @@ class ReverseWindow:
             self.tl_tree.see(_best_row[0])
 
 
-def open_reverse_window(master, event_type, owners=None, context=None):
-    """主程序入口：打开反推面板（不阻塞主窗口，不进入评分链路）。"""
-    return ReverseWindow(master, event_type, owners, context)
+def open_reverse_window(master, event_type, owners=None, context=None,
+                        modify_callback=None, add_tie_callback=None):
+    """主程序入口：打开反推面板（不阻塞主窗口，不进入评分链路）。
+
+    modify_callback：用户点"修改事主与山向"时回调，由主程序负责把焦点
+    跳转回事主卡片与坐山输入框（方案 A：轻量回主程序改）。
+    add_tie_callback：右键"加入择日贴"回调，签名 (day_record, event_type)，
+    由主程序构建择日贴 entry（反推模块不复制 owner/山向打包口径）。
+    """
+    return ReverseWindow(master, event_type, owners, context, modify_callback,
+                         add_tie_callback)

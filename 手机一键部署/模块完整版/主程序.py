@@ -1211,6 +1211,7 @@ class ZeriApp:
                         values=shan_xiangs, width=12, state="readonly")
             shan_combo.grid(row=0, column=3, sticky=tk.W, padx=5)
             special_entries.append(shan_combo)
+            self.shan_combo = shan_combo
             
             # 兼向选择（改为下拉菜单）
             ttk.Label(self.special_frame, text="兼向：").grid(row=0, column=4, sticky=tk.W, padx=5)
@@ -1243,6 +1244,7 @@ class ZeriApp:
                         values=shan_xiangs, width=12, state="readonly")
             shan_combo.grid(row=0, column=1, sticky=tk.W, padx=5)
             special_entries.append(shan_combo)
+            self.shan_combo = shan_combo
 
             # 兼向选择
             ttk.Label(self.special_frame, text="兼向：").grid(row=0, column=2, sticky=tk.W, padx=5)
@@ -1313,6 +1315,7 @@ class ZeriApp:
                 width=10, state="readonly")
             dir_combo.grid(row=0, column=1, sticky=tk.W, padx=5)
             special_entries.append(dir_combo)
+            self.shan_combo = dir_combo
             # 出行不设兼向：重置兼向变量，防止此前其他事项残留的"兼X"被拼进方向串
             self.jian_xiang = tk.StringVar(value="正中")
             ttk.Label(self.special_frame, text="（不填则不计方位吉凶）").grid(
@@ -1638,6 +1641,7 @@ class ZeriApp:
             # 保存事主信息
             owner_info = {
                 'name': name_var,
+                'name_entry': name_entry,
                 'role': owner,
                 'warn_label': warn_label,
                 'year': year_var,
@@ -3955,6 +3959,29 @@ class ZeriApp:
                 pass
         return owners_data
 
+    def _focus_reverse_context_inputs(self):
+        """反推窗口"修改事主与山向"回调：把焦点交回事主姓名框与坐山输入框。
+
+        001 §210 Commit 3：反推面板关闭后，主程序自动定位到第一个事主的姓名输入框
+        （同时让坐山/方向下拉框获得焦点），用户可直接修改后重新打开反推。
+        """
+        try:
+            # 第一个事主的姓名输入框
+            if self.owners_info:
+                _ne = self.owners_info[0].get('name_entry')
+                if _ne is not None:
+                    _ne.focus_set()
+                    try:
+                        _ne.select_range(0, tk.END)
+                    except tk.TclError:
+                        pass
+            # 坐山/方向下拉框
+            _sc = getattr(self, 'shan_combo', None)
+            if _sc is not None:
+                _sc.focus_set()
+        except Exception:
+            pass
+
     def open_reverse_panel(self):
         """精准择时 · 反推 Top-N 面板（001 §210 Commit 2）。
 
@@ -3986,7 +4013,9 @@ class ZeriApp:
                 'zeli_mode': self._get_zeli_mode(),
             }
             open_reverse_window(self.root, self.event_var.get(),
-                                self._collect_owners_data(), _ctx)
+                                self._collect_owners_data(), _ctx,
+                                modify_callback=self._focus_reverse_context_inputs,
+                                add_tie_callback=self.add_reverse_day_to_zeri_tie)
         except Exception as _e:
             messagebox.showerror("错误", f"打开精准择时面板失败：{_e}")
 
@@ -8286,8 +8315,14 @@ class ZeriApp:
         finally:
             menu.grab_release()
 
-    def add_result_to_zeri_tie(self, values):
-        """把选中的日课暂存到择日贴（不弹窗，点面板「择日贴」按键时统一载入）"""
+    def add_result_to_zeri_tie(self, values, event_type=None, extra=None):
+        """把选中的日课暂存到择日贴（不弹窗，点面板「择日贴」按键时统一载入）
+
+        event_type：指定事项名（None 时取主面板当前事项）；反推窗口右键加入时
+        事项可能已在反推面板切换，故显式传入，避免串事。
+        extra：额外透传字段（reason/veto_reasons），反推记录不在 self.results
+        内，无法按日期回查，只可由调用方直接给出。
+        """
         try:
             def _v(i):
                 return str(values[i]) if len(values) > i else ''
@@ -8304,8 +8339,19 @@ class ZeriApp:
                 'sizhu': _cell_lines[1] if len(_cell_lines) > 1 else '',
                 'jishen': _v(8),
                 'owners': _v(10),
-                'event_type': self.event_var.get() if hasattr(self, 'event_var') else '',
+                'event_type': event_type or (
+                    self.event_var.get() if hasattr(self, 'event_var') else ''),
             }
+            if isinstance(extra, dict):
+                _vrs = extra.get('veto_reasons')
+                if _vrs:
+                    entry['veto_reasons'] = [str(x) for x in _vrs]
+                _rsn = extra.get('reason')
+                if _rsn and not entry.get('reason'):
+                    entry['reason'] = str(_rsn)
+                # §210 Commit 5：反推榜单「慎用日」标记 → 择日贴警示区置顶强提示
+                if extra.get('reverse_caution'):
+                    entry['reverse_caution'] = True
 
             def _parse_owner(info):
                 """通用：解析 UI owner_info → 扁平 dict（name/role/year_gz/year_sx/sizhu/阴阳胎/夫星子星）。
@@ -8549,6 +8595,30 @@ class ZeriApp:
         messagebox.showinfo("已加入择日贴",
                             f"{entry['date']} 日课已暂存到择日贴{hint}（共 {len(self._zeri_tie_pending)} 课）。\n"
                             f"点击主面板「择日贴」按键即可查看。")
+
+    def add_reverse_day_to_zeri_tie(self, record, event_type):
+        """精准择时反推窗口右键「加入择日贴」回调（001 §210 Commit 4）。
+
+        反推记录（modules.反推引擎._day_record）不含主结果表的行文本，故按
+        结果表同形构造 values（首列"日期\\n四柱"、第 9 列吉神、第 11 列事主），
+        复用 add_result_to_zeri_tie 的事主/山向/分金/婚嫁打包，不复制第二份口径。
+        """
+        _names = [str(_o.get('name') or '').strip()
+                  for _o in self._collect_owners_data()]
+        _names = [_n for _n in _names if _n]
+        values = ['%s\n%s' % (record.get('date', ''), record.get('sizhu', '')),
+                  str(record.get('score', '')),
+                  str(record.get('level', '')),
+                  '', '', '', '', '',
+                  str(record.get('jishen', '')),
+                  '',
+                  '、'.join(_names),
+                  '']
+        self.add_result_to_zeri_tie(
+            values, event_type=event_type,
+            extra={'reason': record.get('reason') or '',
+                   'veto_reasons': record.get('veto_reasons') or [],
+                   'reverse_caution': record.get('kind') == '慎用'})
 
     def open_today_huangli(self):
         """打开今日黄历查询（完整版）"""
