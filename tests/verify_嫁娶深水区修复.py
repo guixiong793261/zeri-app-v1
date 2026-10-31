@@ -185,9 +185,8 @@ def main():
     dd = d0
     while dd <= d1:
         sz = calculate_sizhu(dd, 10, 0)
-        names = [s.get('name') for s in ck_jq.check(sz, [])]
-        if any(n in ('黄沙', '黄沙日') for n in names) or any(
-                str(n).startswith('红砂') or str(n).startswith('红纱') for n in names):
+        # 用谓词口径取全量目标日（§212 后发射已剥离，不能靠发射清单取样）
+        if ck_jq._is_huangsha(sz) or ck_jq._is_hongsha(sz):
             tgt_days.append(dd)
         dd += dt.timedelta(days=1)
     bad = []
@@ -196,15 +195,15 @@ def main():
         names = [x.get('name') for x in (r.get('shensha_list') or []) if isinstance(x, dict)]
         if any(n in ('黄沙日', '红砂日') for n in names):
             bad.append((str(s), [n for n in names if n in ('黄沙日', '红砂日')]))
-        if names.count('黄沙') > 1 or names.count('红纱日') > 1:
-            bad.append((str(s), '重复条目'))
-    check(f'F 目标日 {len(tgt_days)} 天 展示清单无别名/重复（异常 {len(bad)}）',
+        if any(n in ('黄沙', '红纱日') for n in names):
+            bad.append((str(s), '§212 后不应发射'))
+    check(f'F 目标日 {len(tgt_days)} 天 展示清单无别名/无残留（异常 {len(bad)}）',
           not bad, f'{bad[:4]}')
-    # 抽样：2026-01-15 嫁娶只留 1 条红纱日
+    # 抽样：2026-01-15 嫁娶 §212 后已剥离红纱日（0 条）
     r = calculate_score(calculate_sizhu(dt.date(2026, 1, 15), 10, 0), '嫁娶', owners=[])
     names = [x.get('name') for x in (r.get('shensha_list') or []) if isinstance(x, dict)]
-    check(f'F 2026-01-15 红纱日恰 1 条（清单={[n for n in names if "纱" in str(n) or "砂" in str(n)]}）',
-          names.count('红纱日') == 1 and '红砂日' not in names)
+    check(f'F 2026-01-15 红纱日 §212 后 0 条（清单={[n for n in names if "纱" in str(n) or "砂" in str(n)]}）',
+          names.count('红纱日') == 0 and '红砂日' not in names)
 
     # ============ G：键表 ============
     print('[G] 键表')

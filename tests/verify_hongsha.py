@@ -24,11 +24,16 @@ D3 收敛背景（2026-10-15）：
     2026 公历年 29 天；2025 公历年 33 天。
 
 入口：
-  ① 基类 _is_hongsha（节气月支唯一出口，修造扩展/安床/通用/嫁娶均继承）
-  ② 嫁娶规则 _check_rules 忌项文案链端到端（'红纱日'，婚嫁 veto 源）
+  ① 基类 _is_hongsha（节气月支唯一出口，修造扩展/安床/通用/嫁娶均继承；
+     §212 后嫁娶通道谓词保留、发射已剥离，此处仅验证谓词）
+  ② 嫁娶规则 _check_rules 忌项文案链端到端（§212 后嫁娶已剥离 → 全期零发射）
   ③ pipeline shensha_list 端到端：四事项统一正名 '红纱日'（001 §193 C2
-     异名归一：红砂日→红纱日），修造/安床 恰 1 条 -15，嫁娶 恰 1 条 -20
-  ④ 嫁娶内部一致性：shensha_list 红纱日 IFF ji_list 红纱日
+     异名归一：红砂日→红纱日），修造/安床 恰 1 条 -15；嫁娶 0 条（§212 删除）
+  ④ 嫁娶内部一致性（§212 后 shensha_list 与 ji_list 双向均为零）
+
+§212（2026-10-31 拍板 1）：红纱日「协纪 p279217 奏疏明斥『甚属无当』
+『应请一并删去』」→ 嫁娶通道撤 -20、撤 ji_list 发射、撤 shensha_list 发射；
+修造/安床/通用通道不受影响（仍 -15）。
 
 独立运行：python tests/verify_hongsha.py    退出码 0=通过 1=失败
 """
@@ -134,6 +139,11 @@ def _exp_2025(d):
     return d.isoformat() in AUTH_2025
 
 
+def _exp_none(d):
+    """§212 后嫁娶通道剥离口径：全期零命中"""
+    return False
+
+
 # ===== 入口②：rules 嫁娶文案链端到端（婚嫁 veto 源） =====
 from modules.rules.嫁娶规则 import MarriageRuleChecker
 
@@ -199,11 +209,10 @@ for d in INPUTS_2026:
 _notes.append('四事项 _is_hongsha 2026 逐日一致（基类单点出口继承生效）')
 
 # 边界4：pipeline 单条目锁 + 分值锁
-# 修造/安床 -15；嫁娶 -20（极凶日加重）
+# 修造/安床 -15；§212 后嫁娶通道已剥离红纱日（0 条）
 for tag, cls, kw, score in [
     ('修造扩展', ConstructionShenShaCheckerExt, {'zuoshan': None, 'zhuming': None}, -15),
     ('安床', BedShenShaChecker, {}, -15),
-    ('嫁娶', MarriageShenShaChecker, {}, -20),
 ]:
     sz = calculate_sizhu(_d('2026-02-24'), 12, 0)
     sz['date'] = _d('2026-02-24')
@@ -212,34 +221,51 @@ for tag, cls, kw, score in [
     hs = [x for x in c.shensha_list if isinstance(x, dict) and '红' in str(x.get('name', ''))]
     assert [x.get('name') for x in hs] == ['红纱日'], f'{tag} 红纱条目异常: {hs}'
     assert hs[0].get('score') == score, f'{tag} 红砂应 {score}，实际 {hs[0].get("score")}'
-_notes.append('pipeline 分值锁：修造/安床 -15，嫁娶 -20（极凶日加重）')
 
-# 边界5：嫁娶内部一致性（用户可见：shensha_list 红砂日 IFF ji_list 红纱日）
+# 反向：嫁娶通道 2026 全部红纱日（29 天）shensha_list 均无红纱条目
+for d in sorted(AUTH_2026):
+    sz = calculate_sizhu(_d(d), 12, 0)
+    sz['date'] = _d(d)
+    c = MarriageShenShaChecker()
+    c.check(sz)
+    assert not [x for x in c.shensha_list
+                if isinstance(x, dict) and x.get('name') in ('红纱日', '红砂日')], \
+        f'§212 后嫁娶通道不应发射红纱日: {d} {c.shensha_list}'
+_notes.append('pipeline 分值锁：修造/安床 -15；嫁娶通道 §212 后 0 条（已删除）')
+
+# 边界5：嫁娶内部一致性（§212 后 shensha_list 与 ji_list 双向均为零）
 for d in INPUTS_2026:
     assert _ad_marriage_consistency(d), f'{d} 嫁娶 shensha_list 与 ji_list 红砂不一致'
-_notes.append('嫁娶内部一致性：2026 逐日 shensha_list 红砂日 ↔ ji_list 红纱日 同步')
+    sz = calculate_sizhu(d, 12, 0)
+    sz['date'] = d
+    mc = MarriageShenShaChecker()
+    mc.check(sz)
+    assert not any(isinstance(x, dict) and x.get('name') == '红纱日'
+                   for x in mc.shensha_list), f'{d} shensha_list 仍发射红纱日'
+    assert not any('红纱日' in str(x) for x in _rc._check_rules(sz, date_obj=d)[1]), \
+        f'{d} ji_list 仍含红纱日'
+_notes.append('嫁娶内部一致性：§212 后 shensha_list 与 ji_list 红砂双向均为零')
 
 # 边界6：黄金清单构成
 assert len(AUTH_2026) == 29 and len(AUTH_2025) == 33
 _notes.append('黄金清单：2026 公历年 29 天 / 2025 公历年 33 天（节气月支版）')
 
-# 边界7：婚嫁评分算法红砂日扣分回归锁（D3 阶段3 修复）
-# D3 阶段2 改 HONGSHA 键为节气月支后，婚嫁评分算法仍用农历月查键，
-# 导致红砂日在嫁娶总分中永久失效（-20→0）。此处锁定修复后 -20 生效。
+# 边界7：婚嫁评分算法红砂日扣分回归锁（§212 后已撤扣分）
+# §212 拍板 1：红纱日嫁娶通道撤 -20。锁定：红砂日评分不再含红纱条目，
+# 且红砂日与非红砂日总分相等（无差值）。
 from modules.婚嫁评分算法 import score_marriage_day as _smd
 _hs_day = _d('2026-02-24')  # 寅月巳日，红砂日
 _non_hs = _d('2026-02-20')  # 寅月卯日，非红砂
 _r_hs = _smd(_hs_day, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
 _r_non = _smd(_non_hs, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
-assert any('红纱' in x[0] for x in _r_hs['details']), '红砂日应在嫁娶评分 details 中'
-_hs_score = next(x[1] for x in _r_hs['details'] if '红纱' in x[0])
-assert _hs_score == -20, f'婚嫁评分红砂日应 -20，实际 {_hs_score}'
+assert not any('红纱' in x[0] for x in _r_hs['details']), \
+    f'§212 后红砂日不应在嫁娶评分 details 中: {_r_hs["details"]}'
 assert not any('红纱' in x[0] for x in _r_non['details']), '非红砂日不应含红纱扣分'
-assert _r_non['score'] - _r_hs['score'] == 20, f'红砂日应比非红砂日少 20 分，差 {_r_non["score"] - _r_hs["score"]}'
-_notes.append('婚嫁评分算法回归锁：红砂日 -20 生效，非红砂日无扣分（修复 HONGSHA 节气月支查键）')
+assert _r_hs['score'] == _r_non['score'], \
+    f'§212 后红砂日与非红砂日总分应相等，实际 {_r_hs["score"]} vs {_r_non["score"]}'
+_notes.append('婚嫁评分算法回归锁：§212 后红砂日撤 -20，红砂/非红砂总分相等')
 
-# 边界8：两套路径口径一致性（shensha_list IFF 婚嫁评分算法扣分）
-# 2025-2026 共 730 天逐日断言：shensha_list 含红砂日 ↔ 评分算法 details 含红纱日
+# 边界8：两套路径口径一致性（§212 后 2025-2026 730 天双向均为零）
 from modules.婚嫁评分算法 import score_marriage_day as _smd2
 for _yr, _auth in [(2025, AUTH_2025), (2026, AUTH_2026)]:
     for _d in _daterange(_yr, 1, 1, _yr, 12, 31):
@@ -250,8 +276,9 @@ for _yr, _auth in [(2025, AUTH_2025), (2026, AUTH_2026)]:
         _s_hit = any(isinstance(x, dict) and x.get('name') == '红纱日' for x in _mc2.shensha_list)
         _r2 = _smd2(_d, bride_bazi={'year_zhi': '子'}, groom_bazi={'year_zhi': '丑'})
         _sc_hit = any('红纱' in x[0] for x in _r2['details'])
-        assert _s_hit == _sc_hit, f'{_d} 两套路径不一致: shensha={_s_hit} score={_sc_hit}'
-_notes.append('两套路径口径一致：2025-2026 共 730 天 shensha_list 红砂日 ↔ 评分算法红纱日 完全同步')
+        assert not _s_hit and not _sc_hit, \
+            f'§212 后两套路径均应为零: {_d} shensha={_s_hit} score={_sc_hit}'
+_notes.append('两套路径口径一致：§212 后 2025-2026 共 730 天红砂双向均为零')
 
 
 cases = [
@@ -273,8 +300,8 @@ cases = [
                 inputs=INPUTS_2026, expected=_exp_2026,
                 adapter=_make_judge(MarriageShenShaChecker), compare='bool'),
     ShenShaCase(name='红砂(嫁娶规则文案链端到端·2026穷举)', category='B',
-                description='_check_rules 忌项含"红纱日"（节气月支版，与黄沙一致）',
-                inputs=INPUTS_2026, expected=_exp_2026, adapter=_ad_rules, compare='bool'),
+                description='§212 后 _check_rules 忌项已剥离红纱日（全期零发射）',
+                inputs=INPUTS_2026, expected=_exp_none, adapter=_ad_rules, compare='bool'),
     ShenShaCase(name='红纱(修造扩展·2025全年)', category='B',
                 description='公历年 33 天命中',
                 inputs=INPUTS_2025, expected=_exp_2025,
@@ -289,9 +316,9 @@ cases = [
                 description='shensha_list 单条目 -15',
                 inputs=INPUTS_2026, expected=_exp_2026,
                 adapter=_pipe_ad(BedShenShaChecker, {}), compare='bool'),
-    ShenShaCase(name='pipeline(嫁娶·红砂日-20单条目端到端)', category='B',
-                description='嫁娶极凶日加重 -20（super 后移修复）',
-                inputs=INPUTS_2026, expected=_exp_2026,
+    ShenShaCase(name='pipeline(嫁娶·红砂日§212后零条目端到端)', category='B',
+                description='§212 后嫁娶通道 shensha_list 已剥离红纱日（全期 0 条）',
+                inputs=INPUTS_2026, expected=_exp_none,
                 adapter=_pipe_ad(MarriageShenShaChecker, {}), compare='bool'),
 ]
 

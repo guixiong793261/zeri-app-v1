@@ -212,19 +212,26 @@ def _build_cases():
         inputs=DAYS, expected=lambda d: True,
         adapter=_d_tiande_value_lock, compare='bool')]
     for name in ('月德', '天罡日', '河魁日', '月破'):
+        # §212 后嫁娶通道已剥离天罡日/河魁日（D 硬编码块删除）→ 期望恒 False
+        exp = (lambda d, n=name: False) if name in ('天罡日', '河魁日') \
+            else (lambda d, n=name: _hit(n, d))
         cases.append(ShenShaCase(
             name=f'α-D端到端·{name}', category='A',
             description=f"score_marriage_day details 在权威命中日含 {_CANON_LABEL[name]}，"
-                        f'非命中日不含（2026 全年穷举，sxtwl 独立推月支/日柱）',
-            inputs=DAYS, expected=lambda d, n=name: _hit(n, d),
+                        f'非命中日不含（2026 全年穷举，sxtwl 独立推月支/日柱）'
+                        + ('；§212 后嫁娶已剥离 → 恒 False' if name in ('天罡日', '河魁日') else ''),
+            inputs=DAYS, expected=exp,
             adapter=_make_d_adapter(name), compare='bool'))
     for name, score in (('天德', 20), ('月德', 18), ('天罡日', -10),
                         ('河魁日', -10), ('月破', -30)):
         hit_days = [d for d in DAYS if _hit(name, d)]
+        # §212 后嫁娶 checker 不再发射天罡日/河魁日 → 期望恒 False
+        exp = (lambda d: False) if name in ('天罡日', '河魁日') else (lambda d: True)
         cases.append(ShenShaCase(
             name=f'α-嫁娶checker·{name}={score}', category='A',
-            description=f'否决追溯明细：工厂链路 MarriageShenShaChecker 在典据命中日解析表值 {score}',
-            inputs=hit_days, expected=lambda d: True,
+            description=f'否决追溯明细：工厂链路 MarriageShenShaChecker 在典据命中日解析表值 {score}'
+                        + ('；§212 后已剥离 → 恒 False' if name in ('天罡日', '河魁日') else ''),
+            inputs=hit_days, expected=exp,
             adapter=_make_pipe_adapter(name, score), compare='bool'))
     # 修造月破反向锁（独立键 -30，全年取一个月破日）
     po_day = next(d for d in DAYS if _hit('月破', d))

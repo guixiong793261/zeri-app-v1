@@ -12,7 +12,7 @@
 入口：
   ① ShenShaBase._is_huangsha（节气月支版，通用神煞继承）
   ② MarriageShenShaChecker._is_huangsha（节气月支版）
-  ③ 嫁娶规则 HUANGSHA（文案链端到端，_check_bad_gods 忌项含"黄沙日"）
+  ③ 嫁娶规则 HUANGSHA（文案链端到端，§212 后嫁娶已剥离 → 全期零发射）
 """
 import sys, datetime
 from pathlib import Path
@@ -66,6 +66,11 @@ def _expected(d):
     return _HUANGSHA_MAP.get(sz.get('month_zhi', '')) == sz.get('day_zhi', '')
 
 
+def _exp_none(d):
+    """§212 后嫁娶通道剥离口径：全期零命中"""
+    return False
+
+
 # 入口适配器
 _rc = MarriageRuleChecker()
 
@@ -110,17 +115,13 @@ _notes.append('反向：孟月非午(02-14丁未)不命中')
 assert len(AUTH_2026) == 31 and len(AUTH_2025) == 29
 _notes.append('黄金清单：2026 公历年 31 天 / 2025 公历年 29 天')
 
-# 边界4：pipeline 单条目锁——真黄沙日恰 1 条"黄沙日" -12
-for tag, cls in [('嫁娶神煞', MarriageShenShaChecker)]:
-    sz = calculate_sizhu(_d('2026-02-13'), 12, 0)
-    sz['date'] = _d('2026-02-13')
-    c = cls()
-    c.check(sz)
-    hs = [x for x in c.shensha_list if isinstance(x, dict) and '黄沙' in str(x.get('name', ''))]
-    assert len(hs) == 1, f'{tag} 黄沙条目异常: {hs}'
-    assert hs[0].get('name') in ('黄沙日', '黄沙'), f'{tag} 名称异常: {hs[0]}'
-    assert hs[0].get('score') == -12, f'{tag} 黄沙应 -12，实际 {hs[0].get("score")}'
-_notes.append('pipeline 单条目锁：嫁娶神煞真黄沙日恰 1 条 -12')
+# 边界4：pipeline 反向锁——§212 后嫁娶通道黄沙日已剥离（0 条）
+sz = _sz(_d('2026-02-13'))
+c = MarriageShenShaChecker()
+c.check(sz)
+hs = [x for x in c.shensha_list if isinstance(x, dict) and '黄沙' in str(x.get('name', ''))]
+assert hs == [], f'§212 后嫁娶通道不应发射黄沙日: {hs}'
+_notes.append('pipeline 反向锁：§212 后嫁娶神煞黄沙日 0 条（谓词保留）')
 
 
 cases = [
@@ -133,9 +134,9 @@ cases = [
                 inputs=_year_days(2026),
                 expected=_expected, adapter=_ad_mrg),
     ShenShaCase(name='黄沙(嫁娶规则文案链端到端·2026穷举)', category='B',
-                description='_check_rules 忌项含"黄沙日"',
+                description='§212 后 _check_rules 忌项已剥离黄沙日（全期零发射）',
                 inputs=_year_days(2026),
-                expected=_expected, adapter=_ad_rule),
+                expected=_exp_none, adapter=_ad_rule),
     ShenShaCase(name='黄沙(基类·2025全年)', category='B',
                 description='2025 公历年 29 天命中',
                 inputs=_year_days(2025),

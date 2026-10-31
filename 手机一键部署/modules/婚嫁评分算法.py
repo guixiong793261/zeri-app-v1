@@ -829,14 +829,14 @@ def check_reject_items(date_obj, sizhu):
     
     注意：月破、上朔日、四离四绝已改为高扣分项（非绝对否决），
     这些日子虽凶但有制化可用，不再一票否决。
-    保留的绝对否决项：岁破（日支冲年支）、真三娘煞
+    保留的绝对否决项：岁破（日支冲年支）
     （001 §196，2026-10-28 拍板 D1：重丧日三库明言惟丧葬忌、吉事不忌，
     嫁娶撤否决，移出神煞层 0 分纯展示，不再作为本层否决项。）
+    （§212，2026-10-31 拍板 1：真三娘煞撤除——三库零载，原为绝对否决项；
+    官方嫁娶忌表（协纪卷十一/考原卷六）只认月破、往亡等正牌凶煞。）
     """
     if is_year_break(date_obj, sizhu):
         return True, '岁破（日支冲年支）'
-    if is_sanniangsha(date_obj):
-        return True, '真三娘煞'
     return False, None
 
 # ==================== 时辰评分（已移除） ====================
@@ -945,7 +945,7 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
     try:
         from .shensha.marriage_shensha import (
             is_tiande_day, is_yuede_day, is_bujiang_day, is_huangdao_day,
-            is_sansha, get_fuxing_zixing, is_tiangang_day, is_hekui_day,
+            is_sansha, get_fuxing_zixing,
             is_da_huangdao_day, is_xiao_huangdao_day, get_jianchu
         )
         
@@ -1106,18 +1106,9 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                 result['warnings'].append(f"日支{day_zhi}冲新娘生肖{bride_bazi['year_zhi']}")
                 _day_clash_veto.append(f'日支{day_zhi}冲新娘本命{bride_bazi["year_zhi"]}')
         
-        # 天罡日（妨翁）检查 - 嫁娶大忌
-        if is_tiangang_day(date_obj):
-            # P1-C-3a：-40→-10，与通用（入学/求医/签约）口径统一
-            score -= 10  # 天罡日，妨翁
-            details.append(('天罡日（妨翁）', -10))
-            result['warnings'].append("天罡日：对新郎父亲不利")
-        # 河魁日（妨姑）检查 - 嫁娶大忌
-        if is_hekui_day(date_obj):
-            # P1-C-3a：-40→-10，与通用口径统一
-            score -= 10  # 河魁日，妨姑
-            details.append(('河魁日（妨姑）', -10))
-            result['warnings'].append("河魁日：对新郎母亲不利")
+        # 天罡日／河魁日：§212 拍板 1 删除——协纪卷四起例为「阳月/阴月 × 平/收日」，
+        # 与软件「日支临月建／日支临月破」不等价（起例错），原 -10/-10 撤销
+        # （P1-C-3a 曾自 -40 统一为 -10）。
         
         # 夫星、子星检查（年干通书口径，与头示"夫星/子星"一致）
         if bride_bazi and bride_bazi.get('year_gan'):
@@ -1247,19 +1238,12 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
         details.append(('四废', _sifei_score))
         result['warnings'].append('四废：四时衰废之气，忌嫁娶')
 
-    # 黄沙（2026-10-02 接入 D）：《协纪》义例体系黄沙日，节气月支版
-    # （四孟寅申巳亥月逢午、四仲子午卯酉月逢寅、四季辰戌丑未月逢子）。
-    # 谓词委托神煞基类.is_huangsha_by_zhi 单点出口，
-    # 分值查 ('嫁娶','黄沙')=-12（事项标准.py 已有键，本次补齐评分链路）。
-    if is_huangsha(date_obj, sizhu):
-        _huangsha_score = _shensha_score('嫁娶', '黄沙', -12)
-        score += _huangsha_score
-        details.append(('黄沙日', _huangsha_score))
-        result['warnings'].append('黄沙日：黄砂飞扬之日，忌嫁娶')
+    # 黄沙日：§212 拍板 1 删除（三库零载），原 ('嫁娶','黄沙')=-12 撤销。
 
     # ==== 2026-10-03 E008 修复：忌项与评分明细同步 ====
-    # 阴阳差错日/女命忌嫁日/红纱日/神号日/鬼哭日 此前仅由嫁娶规则加入
-    # ji_list（报告忌项），从未计入 marriage score，导致校验器 E008 报
+    # 阴阳差错日/女命忌嫁日（/红纱日/神号日/鬼哭日 三项已按 §212 拍板 1
+    # 撤计分或降 0 分提示）此前仅由嫁娶规则加入 ji_list（报告忌项），
+    # 从未计入 marriage score，导致校验器 E008 报
     # "忌项无评分出处"（365 天抽查 112 例，占 30%）。此处补齐扣分，
     # 判定表复用 MarriageRuleChecker 类常量，分值查 SHENSHA_SCORES 单一表。
     try:
@@ -1321,30 +1305,16 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                     f'年命冲岁：日课年支{_yr_zhi_cm}冲{_who}本命{_bzi}，仅扣分不否决')
                 break
 
-    # 红纱日（节气月支版：四孟寅申巳亥月逢巳、四仲子午卯酉月逢酉、四季辰戌丑未月逢丑；
-    # 2026-10-15 D3 阶段3 修复回归：原农历月查键因 HONGSHA 改节气月支键而永久失效）
-    if _month_zhi in _MRC.HONGSHA:
-        if _day_zhi_m in _MRC.HONGSHA[_month_zhi]:
-            _sc = _shensha_score('嫁娶', '红纱日', -20)
-            score += _sc
-            details.append(('红纱日', _sc))
-            result['warnings'].append('红纱日：婚嫁大忌')
+    # 红纱日／神号日：§212 拍板 1 删除——红纱日协纪 p279217 明斥「甚属无当」、
+    # 「应请一并删去」，神号日三库零载（无嫁娶专条），原 ('嫁娶','红纱日')=-20、
+    # ('嫁娶','神号')=-15 计分一并撤销。
 
-    # 神号日（农历月 -> 日支）
-    if _lunar_month_num in _MRC.SHENHAO:
-        if _day_zhi_m in _MRC.SHENHAO[_lunar_month_num]:
-            _sc = _shensha_score('嫁娶', '神号', -15)
-            score += _sc
-            details.append(('神号日', _sc))
-            result['warnings'].append('神号日：忌嫁娶')
-
-    # 鬼哭日（农历月 -> 日支）
+    # 鬼哭日（农历月 -> 日支）：仅陈书 p622 单典据、无嫁娶专条；
+    # §212 拍板 1 降为 0 分提示（原 ('嫁娶','鬼哭')=-15 撤销，保留展示与警示）。
     if _lunar_month_num in _MRC.GUIRU:
         if _day_zhi_m in _MRC.GUIRU[_lunar_month_num]:
-            _sc = _shensha_score('嫁娶', '鬼哭', -15)
-            score += _sc
-            details.append(('鬼哭日', _sc))
-            result['warnings'].append('鬼哭日：忌嫁娶')
+            details.append(('鬼哭日（单典据，仅提示不计分）', 0))
+            result['warnings'].append('鬼哭日（单典据、无嫁娶专条，仅提示不计分）')
 
     # 羊刃（2026-10-02 修复漏计）：冠带派日干查地支（甲卯乙辰丙午丁未戊午己未
     # 庚酉辛戌壬子癸丑，与评分器._YANGREN_MAP 同表）。此前羊刃仅由评分器加入

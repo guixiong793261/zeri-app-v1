@@ -32,8 +32,8 @@
   ④ ConstructionShenShaCheckerExt._is_yanggongji（字段名死链已修）
   ⑤ BedShenShaChecker._is_yanggongji（六冲错表已删）
   ⑥ MarriageShenShaChecker._is_yanggongji（反转桩已复活）
-  ⑦ rules/嫁娶规则._check_bad_gods 忌项文案链端到端（'杨公忌'）
-  ⑧ pipeline shensha_list 端到端 + 分值锁定（安床 _std_event → -10）
+  ⑦ rules/嫁娶规则._check_bad_gods 忌项文案链端到端（§212 后嫁娶已剥离 → 全期零发射）
+  ⑧ pipeline shensha_list 端到端 + 分值锁定（安床 _std_event → -10；嫁娶 §212 后 0 条）
 """
 import sys
 import datetime
@@ -136,6 +136,11 @@ def _exp_2025(d):
     return d.isoformat() in AUTH_2025
 
 
+def _exp_none(d):
+    """§212 后嫁娶通道剥离口径：全期零命中"""
+    return False
+
+
 # ===== 入口⑦：rules 嫁娶文案链端到端 =====
 from modules.rules.嫁娶规则 import MarriageRuleChecker
 
@@ -205,19 +210,21 @@ _names = [x.get('name') for x in _ext.shensha_list if isinstance(x, dict) and '�
 assert _names == ['杨公忌日'], f'修造扩展杨公忌条目应恰为1条"杨公忌日"，实际 {_names}'
 _notes.append('修造扩展 pipeline 单条目"杨公忌日"（原 _check_additional_shensha 独立分支已删，防不同名双扣）')
 
-# 边界6：分值锁定——安床 _std_event 走 SHENSHA_SCORES 单一表 = -10；其余 -20
+# 边界6：分值锁定——安床 _std_event 走 SHENSHA_SCORES 单一表 = -10；基类 -20；
+# §212 后嫁娶通道已剥离杨公忌日（0 条）
 _bed = BedShenShaChecker()
 _bed._std_event = '安床'
 _bed.check(_sz)
 _bed_scores = [x.get('score') for x in _bed.shensha_list if isinstance(x, dict) and x.get('name') == '杨公忌日']
 assert _bed_scores == [-10], f'安床杨公忌日应-10（事项标准单一表），实际 {_bed_scores}'
-for _tag, _cls, _kw in [('基类', ShenShaChecker, {}), ('嫁娶神煞', MarriageShenShaChecker, {})]:
+for _tag, _cls, _kw, _exp in [('基类', ShenShaChecker, {}, [-20]),
+                              ('嫁娶神煞', MarriageShenShaChecker, {}, [])]:
     _c = _cls(**_kw)
     _c._std_event = {'基类': '修造', '嫁娶神煞': '嫁娶'}[_tag]
     _c.check(_sz)
     _sc = [x.get('score') for x in _c.shensha_list if isinstance(x, dict) and x.get('name') == '杨公忌日']
-    assert _sc == [-20], f'{_tag}杨公忌日应-20，实际 {_sc}'
-_notes.append('分值锁定：安床-10（SHENSHA_SCORES 事项差）/ 基类-20 / 嫁娶-20')
+    assert _sc == _exp, f'{_tag}杨公忌日应{_exp}，实际 {_sc}'
+_notes.append('分值锁定：安床-10（SHENSHA_SCORES 事项差）/ 基类-20 / 嫁娶通道 §212 后 0 条')
 
 # 边界7：黄金清单构成
 assert len(AUTH_2026) == 14 and len(AUTH_2025) == 12
@@ -245,18 +252,21 @@ cases = [
                 description='原 lunar_python 恒 False 桩复活；except 死分支表(0/14)删除',
                 inputs=INPUTS_2026, expected=_exp_2026, adapter=_make_judge(MarriageShenShaChecker), compare='bool'),
     ShenShaCase(name='杨公忌(rules嫁娶文案链端到端)', category='A',
-                description='_check_rules 忌项含"杨公忌"；原唯一真活(14/14)收敛后口径不变',
-                inputs=INPUTS_2026, expected=_exp_2026, adapter=_ad_rules, compare='bool'),
+                description='§212 后 _check_rules 忌项已剥离杨公忌（全期零发射）',
+                inputs=INPUTS_2026, expected=_exp_none, adapter=_ad_rules, compare='bool'),
     ShenShaCase(name='杨公忌(2025全年·闰月不计)', category='A',
                 description='公历年 12 天：闰六月初三不计；正六月初三 06-27 命中',
                 inputs=INPUTS_2025, expected=_exp_2025, adapter=_ad_func, compare='bool'),
 ]
 
 for _tag, _, _ in _PIPE:
+    _exp = _exp_none if _tag == '嫁娶神煞' else _exp_2026
+    _desc = '§212 后嫁娶通道已剥离杨公忌日（0 条）' if _tag == '嫁娶神煞' else \
+        'shensha_list 在 14 个真日含杨公忌日、其余 351 天不含'
     cases.append(ShenShaCase(
         name=f'pipeline({_tag}·杨公忌日-20/-10端到端)', category='A',
-        description='shensha_list 在 14 个真日含杨公忌日、其余 351 天不含',
-        inputs=INPUTS_2026, expected=_exp_2026, adapter=_pipe_ad(_tag), compare='bool'))
+        description=_desc,
+        inputs=INPUTS_2026, expected=_exp, adapter=_pipe_ad(_tag), compare='bool'))
 
 
 if __name__ == '__main__':

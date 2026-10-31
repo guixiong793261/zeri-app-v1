@@ -17,7 +17,7 @@ if __name__ == '__main__' and __package__ is None:
 1. 大利月/小利月：新娘年支与农历月份关系
 2. 禁婚年/本命年：年神系统
 3. 天德/月德/不将日：日神系统
-4. 三娘煞/杨公忌/红纱日：凶神系统
+4. 受死日/往亡日：凶神系统（§212 去伪存真：伪神煞已剥离，仅留官方忌表正牌煞）
 5. 建除十二神：除、定、执、成、开为吉
 6. 月破/四离四绝：否决项（「岁破」已删：岁破批 2026-10-20，001 §140）
 7. 夫星/子星/阴胎/阳气：命理系统
@@ -25,7 +25,7 @@ if __name__ == '__main__' and __package__ is None:
 """
 
 from .规则基类 import EventRuleChecker
-from ..shensha.神煞基类 import (is_yanggongji_by_lunar, is_shousi_by_zhi)
+from ..shensha.神煞基类 import is_shousi_by_zhi
 from ..建除 import get_event_yiji
 from datetime import date, datetime
 
@@ -506,8 +506,8 @@ class MarriageRuleChecker(EventRuleChecker):
         1. 禁婚年 - 命中禁婚年
         2. 月破日 - 诸事不宜
         3. 四离四绝日 - 大事不宜
-        4. 杨公忌日 - 百事不宜
-        5. 真三娘煞 - 婚嫁大忌
+        （原 4. 杨公忌日、5. 真三娘煞 已按 §212 拍板 1 撤除：三库零载／
+          协纪辨讹，只认官方嫁娶忌表的月破、往亡等正牌凶煞）
         6. 女命忌嫁日（当梁勾绞） - 婚嫁大忌
         7. 阴阳差错日 - 婚嫁大忌
         8. 受死日 - 陈书 p152「上官起造嫁娶等凶」
@@ -533,9 +533,9 @@ class MarriageRuleChecker(EventRuleChecker):
         # 「岁破日」已删（岁破批 2026-10-20，001 §140）：日课普适岁破注册零日课典据
         veto_keywords = [
             '禁婚年', '月破日', '四离四绝日',
-            '杨公忌', '真三娘煞',
             '阴阳差错日', '女命忌嫁日', '受死日'
-        ]  # '红纱日' 已删（001 §197 D6-Q1）：主锚 p279217 明斥无当，降级 -20 扣分
+        ]  # '红纱日' 已删（001 §197 D6-Q1）：主锚 p279217 明斥无当
+           # §212：'杨公忌'/'真三娘煞' 亦删（伪神煞/零载，拍板 1）
         
         for ji in ji_list:
             for keyword in veto_keywords:
@@ -689,22 +689,10 @@ class MarriageRuleChecker(EventRuleChecker):
         # 三娘煞：按传统口径只有"真三娘煞"（农历日与干支日同时满足）才为禁忌，
         # 仅农历日相符的"假三娘煞"不再列入（见下方真三娘煞判定）
 
-        # 杨公忌（2026-09-20 收敛：委托 is_yanggongji_by_lunar，
-        # 农历月日唯一口径、闰月不计；原 13 日表已删除）
-        if date_obj and is_yanggongji_by_lunar(date_obj):
-            ji_list.append('杨公忌')
-        
-        # 红纱日（节气月支版：四孟寅申巳亥月逢巳、四仲子午卯酉月逢酉、四季辰戌丑未月逢丑；
-        # 2026-10-15 D3 统一为节气月口径，与黄沙一致，废弃农历月版）
-        if month_zhi in self.HONGSHA:
-            if day_zhi in self.HONGSHA[month_zhi]:
-                ji_list.append(f'红纱日')
-        
-        # 黄沙日（节气月支版：四孟寅申巳亥月逢午、四仲子午卯酉月逢寅、四季辰戌丑未月子；
-        # 2026-09-21 按《协纪》义例体系统一为节气月口径，废弃农历月版）
-        if month_zhi in self.HUANGSHA:
-            if day_zhi in self.HUANGSHA[month_zhi]:
-                ji_list.append(f'黄沙日')
+        # 杨公忌／红纱日／黄沙日：§212 嫁娶去伪存真批（2026-10-31 用户拍板 1）
+        # 从嫁娶忌项剥离（三库零载／协纪辨讹），本层不再写入 ji_list。
+        # 原发射：杨公忌（is_yanggongji_by_lunar，-20 且为 HARD_VETO 关键词）、
+        # 红纱日（HONGSHA 节气月支，-20）、黄沙日（HUANGSHA 节气月支，-12）。
 
         # 受死日（001 §193 主轨 C2，2026-10-28 拍板升 HARD_VETO）：
         # 陈书 p152「受死 上官起造嫁娶等凶，宜安塟」——嫁娶明载凶。
@@ -718,11 +706,8 @@ class MarriageRuleChecker(EventRuleChecker):
         # 仅由神煞层以 0 分神煞做展示提示。（§195 C2 曾为本层补齐发射以激活空转，
         # 现按 D1 拍板一并撤除。）
         
-        # 真三娘煞（特定干支；闰月不计——通用规则，与杨公忌/红纱口径一致）
-        if not is_leap and lunar_day in self.ZHEN_SANNIANGSHA:
-            ganzhi = day_gan + day_zhi
-            if ganzhi in self.ZHEN_SANNIANGSHA[lunar_day]:
-                ji_list.append(f'真三娘煞（{ganzhi}）')
+        # 真三娘煞：§212 拍板 1 删除（三库零载），本层不再写入 ji_list
+        # （原发射 真三娘煞（干支） 且为 HARD_VETO 关键词）。
         
         # 女命忌嫁日（当梁勾绞）
         if owners and day_zhi:
@@ -733,15 +718,8 @@ class MarriageRuleChecker(EventRuleChecker):
                         if day_zhi in self.NV_MING_JI_JIA[zodiac]:
                             ji_list.append(f'女命忌嫁日（{zodiac}相忌{day_zhi}日）')
         
-        # 神号日
-        if lunar_month in self.SHENHAO:
-            if day_zhi in self.SHENHAO[lunar_month]:
-                ji_list.append(f'神号日')
-        
-        # 鬼哭日
-        if lunar_month in self.GUIRU:
-            if day_zhi in self.GUIRU[lunar_month]:
-                ji_list.append(f'鬼哭日')
+        # 神号日／鬼哭日：§212 拍板 1 从忌项剥离（神号协纪辨讹删除；鬼哭仅
+        # 陈书单典据，本层不再写入 ji_list，由神煞层以 0 分条目做提示）。
         
         # 阴阳差错日
         ganzhi = day_gan + day_zhi

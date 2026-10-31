@@ -16,7 +16,7 @@
   B 慎用帖结构 + 七类事项吉语反向断言（大吉/大利/日吉时良/吉课/吉日 零命中）
   C 吉时栏保留：缓冲语 + 时辰条数口径 + 时辰行不印等级
   D 用户验收口径：33 分嫁娶不再印「大利」
-  E 真实链路：评分器实算 2026-01-15（非零分凶）→ 慎用帖 + 忌项软忌块
+  E 真实链路：评分器实算 2026-02-09（非零分凶）→ 慎用帖 + 忌项软忌块
   F 硬否决回归：0 分凶仍走否决帖（无时辰区、有「不可使用」牌）
   G 正常吉帖回归：吉/平等级仍走原吉帖模板
   H GUI/打印分流：show_detail 深红、print_detail 深红纸型 + 「日课慎用提示」标题
@@ -137,23 +137,25 @@ def main():
     check('D 33 分仍印评分（33分）', '33' in txt)
 
     # ============ E：真实链路（评分器实算） ============
-    print('[E] 真实链路：2026-01-15 嫁娶（非零分凶实算）')
+    print('[E] 真实链路：2026-02-09 嫁娶（非零分凶实算）')
+    # §212 后 2026-01-15 红纱日撤扣分 → 73 分上吉，样本日改 2026-02-09
+    # （31 分「❌ 凶」：大黄道天刑 + 小黄道建日扣分，非否决非零分）。
     from modules.四柱计算器 import calculate_sizhu
     from modules.评分器 import calculate_score
     owners = [{'name': '新娘', 'role': '新娘', 'year_sx': '猪', '性别': '女'},
               {'name': '新郎', 'role': '新郎', 'year_sx': '狗', '性别': '男'}]
-    sz = calculate_sizhu(dt.date(2026, 1, 15), 10, 0)
+    sz = calculate_sizhu(dt.date(2026, 2, 9), 10, 0)
     r = calculate_score(sz, '嫁娶', owners=owners)
     check(f"E 实算非零分且等级含凶（score={r.get('score')} level={r.get('level')}）",
           bool(r.get('score')) and '凶' in str(r.get('level')))
-    ge = _mk('2026-01-15', '嫁娶', score=r.get('score'), level=r.get('level'),
+    ge = _mk('2026-02-09', '嫁娶', score=r.get('score'), level=r.get('level'),
              reason=r.get('reason'), veto_reasons=r.get('veto_reasons'),
              owners_list=owners)
     lines = Z.compose_detail_lines(ge)
     txt = _text(lines)
     check('E 实算日课分流到慎用帖', ge['_is_soft_caution'] and not ge['_is_vetoed'])
     check('E 实算慎用帖零「大利」', '大利' not in txt)
-    check('E 实算慎用帖软忌块含红纱日', '红纱日' in txt)
+    check('E 实算慎用帖软忌块含天刑', '天刑' in txt)
     check('E 实算慎用帖有缓冲语', '若必用此日' in txt)
 
     # ============ F：硬否决回归 ============
