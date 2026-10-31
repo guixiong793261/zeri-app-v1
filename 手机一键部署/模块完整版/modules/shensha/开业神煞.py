@@ -116,6 +116,22 @@ class OpeningShenShaChecker(ShenShaChecker):
         # 月恩
         if self._is_yueen(sizhu):
             self._add_shensha('月恩', 10, '月恩日主恩泽')
+
+        # 天愿（2026-10-31，001 §209 卷十接线级补齐）：协纪卷十「开市」宜天愿、
+        # 「纳财」宜天愿；考原「纳货财等事宜，天愿」互证。谓词基类 _is_tianyuan
+        # （月支查日干，正月甲…十二月乙）。分值 12 对齐五通道在册口径。
+        if self._is_tianyuan(sizhu):
+            self._add_shensha('天愿', 12, '天愿吉星，宜开业纳财')
+
+        # 四相（§209）：协纪卷十「纳财」宜四相。谓词基类 _is_sixiang（月支查日干，
+        # 天干表）。分值 10 对齐五通道在册口径。
+        if self._is_sixiang(sizhu):
+            self._add_shensha('四相', 10, '四相吉日，宜纳财')
+
+        # 时德（§209）：协纪卷十「纳财」宜时德。谓词基类 _is_shide（月支查日支，
+        # 春午/夏辰/秋子/冬寅）。分值 10 对齐五通道在册口径。
+        if self._is_shide(sizhu):
+            self._add_shensha('时德', 10, '时德吉日，宜纳财')
         
         # 2026-10 批4（001 §74）：'吉期' 重加删除——基类月作用域已统一
         # 注册 '吉期' +10（E3 修正后委托典载《历例》"常居月建前一辰"表），
@@ -207,6 +223,16 @@ class OpeningShenShaChecker(ShenShaChecker):
         if self._is_yima(sizhu):
             self._add_shensha('驿马', 10, '驿马主行动')
 
+        # 五合（2026-10-31，001 §209 卷十接线级补齐）：协纪卷十「开市」宜五合；
+        # 《协纪》卷五·义例三引《历例》「五合者，寅卯日也」。分值 10 对齐通用族。
+        if self._is_wuhe(sizhu):
+            self._add_shensha('五合', 10, '五合之日，宜开市立券')
+
+        # 五离（§209）：协纪卷十「开市」忌五离；《历例》五合对冲之申酉日即五离。
+        # 谓词基类 _is_wuli（申酉日）。分值 -20 对齐嫁娶在册口径。
+        if self._is_wuli(sizhu):
+            self._add_shensha('五离', -20, '五离之日，开市忌（主离散）')
+
         # 2026-10 A1：'天马' 同名重加删除（典载天马为月神，基类月作用域注册）。
 
         # 天赦
@@ -270,6 +296,16 @@ class OpeningShenShaChecker(ShenShaChecker):
             elif hour_zhi and self._is_he(hour_zhi, owner_year_zhi or owner_zodiac):
                 self._add_shensha(f'时合{owner_name}', 6, f'时支与{owner_name}生肖相合')
     
+    def _is_wuhe(self, sizhu):
+        """五合日（日支为寅或卯）——2026-10-31，001 §209 开业接线新增
+
+        典据：《协纪辨方书》卷五·义例三引《历例》「五合者，寅卯日也」；
+        对冲之申酉日即五离（基类 _is_wuli）。
+        与通用神煞类别内 _is_wuhe 同一典载口径（日支寅卯），基类未提供该谓词，
+        故本通道单点复刻；如后续收口可提升为基类单点（已挂账，未在本批改动）。
+        """
+        return sizhu.get('day_zhi', '') in ('寅', '卯')
+
     def _is_yuexing(self, sizhu):
         """是否月刑"""
         month_zhi = sizhu['month_zhi']
