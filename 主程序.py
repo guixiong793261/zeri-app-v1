@@ -592,6 +592,9 @@ class ZeriApp:
                   width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="条件择日", command=self.conditional_calculation, 
                   width=12).pack(side=tk.LEFT, padx=6)
+        # 001 §210 Commit 2：精准择时反推面板（热力日历/Top-N/时间轴三层）
+        ttk.Button(button_frame, text="精准择时", command=self.open_reverse_panel,
+                  width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="日课评分", command=self.open_score_system, 
                   width=12).pack(side=tk.LEFT, padx=6)
         self.xuankong_btn = ttk.Button(button_frame, text="玄空飞星", command=self.open_xuankong,
@@ -3871,6 +3874,122 @@ class ZeriApp:
                 result.get('feixing', '-')
             ), tags=(row_tag,))
 
+    def _collect_owners_data(self):
+        """收集事主信息为标准 owners_data（扫日/精准择时反推共用）。
+
+        001 §210 Commit 2：自 start_calculation 原样迁出，逻辑逐字未改
+        （空生日跳过、无效生日回退当月末日、经度透传、喜用神可选），
+        避免反推面板另建第二份事主口径造成评分漂移。
+        """
+        owners_data = []
+        for owner in self.owners_info:
+            try:
+                # 添加防御性检查
+                year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
+                month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
+                day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
+
+                # 检查是否填写了日期
+                if not (year_str and month_str and day_str):
+                    continue
+
+                hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
+                minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
+
+                year = int(year_str)
+                month = int(month_str)
+                day = int(day_str)
+                hour = int(hour_str)
+                minute = int(minute_str)
+                gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
+
+                # 计算年干支
+                try:
+                    birth_date = date(year, month, day)
+                except ValueError as e:
+                    # 处理无效日期，使用当月最后一天
+                    import calendar
+                    last_day = calendar.monthrange(year, month)[1]
+                    birth_date = date(year, month, last_day)
+                    messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
+
+                # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
+                birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
+                owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
+                year_gan = owner_sizhu.get('year_gan', '')
+                year_zhi = owner_sizhu.get('year_zhi', '')
+
+                # 获取日柱信息（用于婚嫁评分算法）
+                day_gan = owner_sizhu.get('day_gan', '')
+                day_zhi = owner_sizhu.get('day_zhi', '')
+
+                # 构建完整的事主信息
+                name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
+                owner_data = {
+                    'name': name,
+                    'role': owner.get('role', ''),
+                    'birth_date': birth_date,
+                    'birth_hour': hour,
+                    'birth_minute': minute,
+                    'birth_longitude': birth_longitude,
+                    '性别': gender,
+                    '年干': year_gan,
+                    '年支': year_zhi,
+                    '日干': day_gan,
+                    '日支': day_zhi,
+                    '生肖': year_zhi
+                }
+
+                # 如果有喜用神信息，也添加进去
+                if 'xishen_var' in owner:
+                    xishen_val = owner['xishen_var'].get() if hasattr(owner['xishen_var'], 'get') else owner.get('xishen_var', '')
+                    if xishen_val:
+                        owner_data['xishen'] = xishen_val
+                if 'yongshen_var' in owner:
+                    yongshen_val = owner['yongshen_var'].get() if hasattr(owner['yongshen_var'], 'get') else owner.get('yongshen_var', '')
+                    if yongshen_val:
+                        owner_data['yongshen'] = yongshen_val
+
+                owners_data.append(owner_data)
+            except (ValueError, TypeError):
+                pass
+        return owners_data
+
+    def open_reverse_panel(self):
+        """精准择时 · 反推 Top-N 面板（001 §210 Commit 2）。
+
+        读取主窗口当前事项/事主/山向/灶床上下文，交由 modules.反推UI 在独立
+        后台线程内反推；不写入 self.results，不改变主窗口评分口径。
+        """
+        try:
+            from modules.反推UI import open_reverse_window
+            _shan = getattr(self, 'shan_xiang', None)
+            _shan = _shan.get() if hasattr(_shan, 'get') else (_shan or '')
+            _jx = getattr(self, 'jian_xiang', None)
+            _jx = _jx.get() if hasattr(_jx, 'get') else (_jx or '')
+            if _shan and _jx and _jx != '正中':
+                if not str(_jx).startswith('兼'):
+                    _jx = '兼' + str(_jx)
+                _shan = f"{_shan}{_jx}"
+            _ht = getattr(self, 'house_type', None)
+            _cx = getattr(self, 'zao_xiang', None)
+            _cw = getattr(self, 'zao_wei', None)
+            _ch = getattr(self, 'chuang_wei', None)
+            _zm = getattr(self, 'zaozhu_mode', None)
+            _ctx = {
+                'house_type': _ht.get() if hasattr(_ht, 'get') else _ht,
+                'shan_xiang': _shan or None,
+                'zao_xiang': _cx.get() if hasattr(_cx, 'get') else _cx,
+                'zao_wei': _cw.get() if hasattr(_cw, 'get') else _cw,
+                'chuang_wei': _ch.get() if hasattr(_ch, 'get') else _ch,
+                'zaozhu_mode': _zm.get() if hasattr(_zm, 'get') else _zm,
+                'zeli_mode': self._get_zeli_mode(),
+            }
+            open_reverse_window(self.root, self.event_var.get(),
+                                self._collect_owners_data(), _ctx)
+        except Exception as _e:
+            messagebox.showerror("错误", f"打开精准择时面板失败：{_e}")
+
     def start_calculation(self):
         """开始择日计算"""
         try:
@@ -3894,80 +4013,9 @@ class ZeriApp:
             self.progress_label.config(text=f"⏳ 开始计算：共 {total_days} 天")
             self.root.update_idletasks()
 
-            # 获取事主信息
-            owners_data = []
-            for owner in self.owners_info:
-                try:
-                    # 添加防御性检查
-                    year_str = owner['year'].get() if hasattr(owner['year'], 'get') else owner.get('year', '')
-                    month_str = owner['month'].get() if hasattr(owner['month'], 'get') else owner.get('month', '')
-                    day_str = owner['day'].get() if hasattr(owner['day'], 'get') else owner.get('day', '')
-                    
-                    # 检查是否填写了日期
-                    if not (year_str and month_str and day_str):
-                        continue
-                    
-                    hour_str = owner['hour'].get() if hasattr(owner['hour'], 'get') else owner.get('hour', '12')
-                    minute_str = owner['minute'].get() if hasattr(owner['minute'], 'get') else owner.get('minute', '0')
-                    
-                    year = int(year_str)
-                    month = int(month_str)
-                    day = int(day_str)
-                    hour = int(hour_str)
-                    minute = int(minute_str)
-                    gender = owner['gender'].get() if hasattr(owner['gender'], 'get') else owner.get('gender', '')
-                    
-                    # 计算年干支
-                    try:
-                        birth_date = date(year, month, day)
-                    except ValueError as e:
-                        # 处理无效日期，使用当月最后一天
-                        import calendar
-                        last_day = calendar.monthrange(year, month)[1]
-                        birth_date = date(year, month, last_day)
-                        messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
-                    
-                    # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
-                    birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
-                    owner_sizhu = calculate_sizhu(birth_date, hour, minute, longitude=birth_longitude)
-                    year_gan = owner_sizhu.get('year_gan', '')
-                    year_zhi = owner_sizhu.get('year_zhi', '')
-                    
-                    # 获取日柱信息（用于婚嫁评分算法）
-                    day_gan = owner_sizhu.get('day_gan', '')
-                    day_zhi = owner_sizhu.get('day_zhi', '')
-                    
-                    # 构建完整的事主信息
-                    name = owner['name'].get() if hasattr(owner['name'], 'get') else owner.get('name', '')
-                    owner_data = {
-                        'name': name,
-                        'role': owner.get('role', ''),
-                        'birth_date': birth_date,
-                        'birth_hour': hour,
-                        'birth_minute': minute,
-                        'birth_longitude': birth_longitude,
-                        '性别': gender,
-                        '年干': year_gan,
-                        '年支': year_zhi,
-                        '日干': day_gan,
-                        '日支': day_zhi,
-                        '生肖': year_zhi
-                    }
-                    
-                    # 如果有喜用神信息，也添加进去
-                    if 'xishen_var' in owner:
-                        xishen_val = owner['xishen_var'].get() if hasattr(owner['xishen_var'], 'get') else owner.get('xishen_var', '')
-                        if xishen_val:
-                            owner_data['xishen'] = xishen_val
-                    if 'yongshen_var' in owner:
-                        yongshen_val = owner['yongshen_var'].get() if hasattr(owner['yongshen_var'], 'get') else owner.get('yongshen_var', '')
-                        if yongshen_val:
-                            owner_data['yongshen'] = yongshen_val
-                    
-                    owners_data.append(owner_data)
-                except (ValueError, TypeError):
-                    pass
-            
+            # 获取事主信息（001 §210 Commit 2：抽取为 _collect_owners_data，反推面板共用）
+            owners_data = self._collect_owners_data()
+                
             # 获取特殊选项
             event_type = self.event_var.get()
             # 安葬无墓穴坐山不予计算（_azss0914）
