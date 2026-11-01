@@ -215,22 +215,26 @@ def main():
     rows = [t for _, t in Z.compose_detail_lines(ge) if '时（' in t]
     check('I 慎用帖时辰行 ① 编号 + 古风节点',
           bool(rows) and rows[0].startswith('①') and '起轿·发轿' in rows[0], f'{rows[:1]}')
-    # I-5 落款下沉弱化：〔廖贵雄印〕+ 前置 rule；七类 + 否决 + 慎用全覆盖
+    # I-5 落款下沉弱化：择日师署名 + 前置 rule；七类 + 否决 + 慎用全覆盖
     for ev in EVENTS:
         for kw, tag in ((dict(score=88, level='吉'), '吉'),
                         (dict(score=33, level='❌ 凶'), '慎用'),
                         (dict(score=0, level='大凶', veto_reasons=['月破（一票否决）']), '否决')):
             lines = Z.compose_detail_lines(_mk('2026-10-20', ev, **kw))
             txt = _text(lines)
-            seal = '〔廖贵雄印〕' in txt and '择日依据：' in txt
+            sig = '择日师：廖贵雄' in txt and '择日依据：' in txt
+            seal_gone = '〔廖贵雄印〕' not in txt
             sig_i = next((i for i, (_, t) in enumerate(lines) if '择日师' in t), -1)
             rule_before = sig_i > 0 and any(s == 'rule' for s, _ in lines[:sig_i])
-            check(f'I {ev}-{tag}帖 落款印章+前置金线', seal and rule_before)
+            check(f'I {ev}-{tag}帖 落款署名+前置金线+无印章', sig and rule_before and seal_gone)
     # I-6 嫁娶/通用/总录落款统一（原自带结尾已收编）
     ge = _mk('2026-10-20', '嫁娶', score=88, level='吉')
-    check('I 嫁娶帖落款含印章', '〔廖贵雄印〕' in _text(Z.compose_detail_lines(ge)))
+    _dtxt = _text(Z.compose_detail_lines(ge))
+    check('I 嫁娶帖落款含择日师署名（无印章）',
+          '择日师：廖贵雄' in _dtxt and '〔廖贵雄印〕' not in _dtxt)
     sm = _text(Z.compose_summary_lines([_mk('2026-10-20', '开业', score=88, level='吉')]))
-    check('I 择日总录落款含印章+依据', '〔廖贵雄印〕' in sm and '择日依据：' in sm)
+    check('I 择日总录落款含署名+依据（无印章）',
+          '择日师：廖贵雄' in sm and '择日依据：' in sm and '〔廖贵雄印〕' not in sm)
     # I-7 双击定位剥圈码（源码级）
     src_win = inspect.getsource(Z.ZeriTieWindow)
     check('I 双击定位剥离圈码', 'line[0] in _CIRCLED' in src_win)

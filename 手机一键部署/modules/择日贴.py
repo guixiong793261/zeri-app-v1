@@ -685,15 +685,15 @@ def _owner_xiyong_text(o):
 
 
 def _signature_lines(e):
-    """统一落款（001 §205 S4 下沉弱化）：前置留白 + 细金线分隔，小字收尾，
-    择日师旁缀〔廖贵雄印〕——排版下沉、增加留白，更显端庄。"""
+    """统一落款（001 §205 S4 下沉弱化）：前置留白 + 细金线分隔，小字收尾。
+    2026-11-01 取消〔廖贵雄印〕显示，仅保留择日师姓名。"""
     lines = []
     a = lines.append
     a(('', ''))
     a(('', ''))
     a(('rule', ''))
     a(('', ''))
-    a(('small', '择日师：廖贵雄　〔廖贵雄印〕'))
+    a(('small', '择日师：廖贵雄'))
     a(('small', f"择日依据：{DIANJI_BANBEN}"))
     now = datetime.now()
     a(('small', f"岁次{e['_nian']}　{_cn_year_num(now.year)}年{_cn_month_num(now.month)}月　谨识"))
