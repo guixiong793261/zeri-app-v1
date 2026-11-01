@@ -272,6 +272,35 @@ class ReverseWindow:
         self.tl_head = tk.StringVar(value='在“② Top-N 吉日”或热力日历中选择一天')
         ttk.Label(tab3, textvariable=self.tl_head,
                   font=('Microsoft YaHei UI', 10, 'bold')).pack(fill=tk.X, padx=6, pady=6)
+
+        # 001 §214 P2-B：动作轴三行（嫁娶等配置了 ACTION_SEQUENCES 的事项）
+        self.act_frame = ttk.LabelFrame(tab3, text='动作时序（一键写入红帖）', padding=6)
+        self.act_frame.pack(fill=tk.X, padx=6, pady=(0, 4))
+        self.act_status_var = tk.StringVar(value='（选择一天后显示动作时序方案）')
+        ttk.Label(self.act_frame, textvariable=self.act_status_var,
+                  foreground='#616161').pack(anchor=tk.W)
+        self.act_rows = []   # [(label, info_label), ...] 三段展示控件
+        for _i in range(3):
+            _row = ttk.Frame(self.act_frame)
+            _row.pack(fill=tk.X, pady=1)
+            _seq = ttk.Label(_row, text='①②③'[_i], width=3,
+                             font=('Microsoft YaHei UI', 11, 'bold'), foreground='#8E0000')
+            _seq.pack(side=tk.LEFT)
+            _info = ttk.Label(_row, text='—', anchor=tk.W,
+                              font=('Microsoft YaHei UI', 10))
+            _info.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            self.act_rows.append((_seq, _info))
+        self.act_alt_var = tk.StringVar(value='')
+        ttk.Label(self.act_frame, textvariable=self.act_alt_var,
+                  foreground='#E65100', wraplength=1100, justify=tk.LEFT
+                  ).pack(anchor=tk.W, pady=(2, 0))
+        _act_btn_bar = ttk.Frame(self.act_frame)
+        _act_btn_bar.pack(fill=tk.X, pady=(4, 0))
+        self.send_tie_btn = ttk.Button(
+            _act_btn_bar, text='生成红纸帖（写入动作时序）',
+            command=self._send_action_plan_to_tie, state=tk.DISABLED)
+        self.send_tie_btn.pack(side=tk.LEFT)
+
         _tcols = ('时辰', '时段', '时柱', '评分', '等级', '吉时行动建议', '备注')
         self.tl_tree = ttk.Treeview(tab3, columns=_tcols, show='headings',
                                     selectmode='browse', height=13)
@@ -731,6 +760,72 @@ class ReverseWindow:
                      if _h['地支'] == _bh['地支']]
         if _best_row:
             self.tl_tree.see(_best_row[0])
+
+        # 001 §214 P2-B：渲染动作轴三行
+        self._render_action_axis(_entry)
+
+    def _render_action_axis(self, entry):
+        """根据 day_record['action_plan'] 渲染动作轴三行 + 错峰文案 + 按钮状态。"""
+        _plan = entry.get('action_plan')
+        if not _plan:
+            self.act_status_var.set('（本事项未配置动作时序，或当日无可分配时辰）')
+            for _seq, _info in self.act_rows:
+                _info.config(text='—', foreground='')
+            self.act_alt_var.set('')
+            self.send_tie_btn.config(state=tk.DISABLED)
+            return
+        _status = _plan.get('status')
+        _status_txt = {'full': '三段齐备', 'partial': '缺段（建议错峰）',
+                       'insufficient': '仅 1 段（建议另择）',
+                       'none': '本日无可用动作时辰'}.get(_status, _status)
+        self.act_status_var.set('状态：%s' % _status_txt)
+        _segments = _plan.get('plan') or []
+        for _i, (_seq_lbl, _info_lbl) in enumerate(self.act_rows):
+            if _i < len(_segments):
+                _s = _segments[_i]
+                _txt = '%s　%s　%s　%s　%s分　%s' % (
+                    _s['label'], _s['zhi'] + '时', _s['range'],
+                    _s['ganzhi'], _s['score'], _s['level'])
+                _fg = '#1B5E20' if _status == 'full' else '#E65100'
+                _info_lbl.config(text=_txt, foreground=_fg)
+            else:
+                _info_lbl.config(text='（缺）', foreground='#C62828')
+        # 错峰建议
+        _alts = _plan.get('alt') or []
+        self.act_alt_var.set(
+            '错峰建议：' + '；'.join(a.get('suggest', '') for a in _alts)
+            if _alts else '')
+        # 交叉校验警告
+        _checks = _plan.get('checks') or []
+        _warns = [c.get('detail', '') for c in _checks if not c.get('ok')]
+        if _warns:
+            _cur = self.act_alt_var.get()
+            self.act_alt_var.set(
+                (_cur + '　' if _cur else '') + '⚠ ' + '；'.join(_warns))
+        # 按钮：仅 full/partial 可生成红帖（insufficient/none 不生成）
+        self.send_tie_btn.config(
+            state=tk.NORMAL if _status in ('full', 'partial') else tk.DISABLED)
+        # 缓存当前选中日，供按钮回调使用
+        self._current_action_entry = entry
+
+    def _send_action_plan_to_tie(self):
+        """tab3「生成红纸帖」：把带 action_plan 的日记录交主程序回调。
+
+        主程序侧透传 action_plan → 择日贴 prepare_entry 的接线在 P2-C/D；
+        本批按钮已可用，action_plan 随 day_record 透传，未消费时红帖行为不变。
+        """
+        _entry = getattr(self, '_current_action_entry', None)
+        if _entry is None:
+            return
+        if not callable(self.add_tie_callback):
+            messagebox.showinfo(
+                '暂不可用', '当前窗口未接入择日贴（请从主程序面板重新打开反推）',
+                parent=self.win)
+            return
+        try:
+            self.add_tie_callback(_entry, self.event_var.get())
+        except Exception as _e:
+            messagebox.showerror('生成红帖失败', str(_e), parent=self.win)
 
 
 def open_reverse_window(master, event_type, owners=None, context=None,

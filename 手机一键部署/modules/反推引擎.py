@@ -28,7 +28,8 @@ from datetime import date, timedelta
 
 from modules.四柱计算器 import calculate_sizhu, get_lunar_date
 from modules.评分器 import calculate_score
-from modules.事项标准 import UI_EVENTS, MARRIAGE_EVENTS
+from modules.事项标准 import UI_EVENTS, MARRIAGE_EVENTS, action_sequence_of
+from modules.动作时序 import plan_actions
 from modules.排序键 import (fenjin_preview_penalty, scoring_shensha,
                            shashi_hour, hour_rank_key,
                            classify_day, rank_day, jishen_fit,
@@ -57,8 +58,13 @@ def _pillar_text(sizhu):
     return ' '.join(str(sizhu.get(_k, '')) for _k in ('年柱', '月柱', '日柱', '时柱'))
 
 
-def _compact_hour(sizhu, result, zhi, disabled):
-    """单个时辰的紧凑记录（时间轴展示 + 交节核验用，不含大字段）。"""
+def _compact_hour(sizhu, result, zhi, disabled, disable_reasons=None):
+    """单个时辰的紧凑记录（时间轴展示 + 交节核验用，不含大字段）。
+
+    001 §214 P2-B：新增 disable_reasons（推荐时柱 lucky_hours['说明'] 中
+    含「禁用」的条目，如「冲新娘（禁用）」），供动作轴与红帖展示禁用原因；
+    不改变上游 disabled 判定（唯一事实源仍是 推荐时柱.py）。
+    """
     _ssl = result.get('shensha_list') or []
     _positive = [str(_s.get('name', '')) for _s in _ssl
                  if isinstance(_s, dict) and int(_s.get('score', 0) or 0) > 0]
@@ -76,6 +82,7 @@ def _compact_hour(sizhu, result, zhi, disabled):
         'level': str(result.get('level') or ''),
         'veto': len(result.get('veto_reasons') or []),
         'disabled': bool(disabled),
+        'disable_reasons': list(disable_reasons or []),
         'shashi': bool(shashi_hour(result)),
         '凶': _negative[:3],
         '吉神': _positive[:3],
@@ -125,7 +132,10 @@ def scan_day(d, event_type, owners=None, context=None):
     _init_result = _score_of(_base)
 
     # 时辰表分数 / 禁用时辰（仅嫁娶加权，与主程序 _ck0915 方案C 同口径）
+    # 001 §214 P2-B：额外收集每个地支的禁用原因（lucky_hours['说明'] 含「禁用」项），
+    # 透传给 _compact_hour 用于动作轴/红帖展示；不改上游 disabled 判定。
     _ck_scores, _disabled_zhi = {}, set()
+    _disable_reasons = {}
     try:
         from modules.推荐时柱 import resolve_recommended_hour
         _rec = resolve_recommended_hour(_base, event_type,
@@ -133,9 +143,15 @@ def scan_day(d, event_type, owners=None, context=None):
                                         _shan or '')
         for _h in ((_rec or {}).get('lucky_hours') or []):
             if isinstance(_h, dict):
-                _ck_scores[str(_h.get('地支', ''))] = int(_h.get('分值', 0) or 0)
+                _z = str(_h.get('地支', ''))
+                _ck_scores[_z] = int(_h.get('分值', 0) or 0)
                 if _h.get('禁用'):
-                    _disabled_zhi.add(str(_h.get('地支', '')))
+                    _disabled_zhi.add(_z)
+                # 从说明中过滤含「禁用」的条目（如「冲新娘（禁用）」「日破时（禁用）」）
+                _rs = [str(_r) for _r in (_h.get('说明') or [])
+                       if '禁用' in str(_r)]
+                if _rs:
+                    _disable_reasons[_z] = _rs
     except Exception as _re:  # 推荐时柱缺失/异常 → 不加权，与扫日一致
         print(f"[反推] resolve_recommended_hour 失败：{_re}")
     _ck_w = 1 if event_type in MARRIAGE_EVENTS else 0
@@ -165,7 +181,9 @@ def scan_day(d, event_type, owners=None, context=None):
                 # 与主程序 _rescan 一致：单个时辰计算失败即跳过该时辰，
                 # 不影响整日择优（异常本身仍会由调用方在日志中暴露）
                 continue
-        _records.append(_compact_hour(_hs, _hr, _hz, _hz in _disabled_zhi))
+        _records.append(_compact_hour(
+            _hs, _hr, _hz, _hz in _disabled_zhi,
+            disable_reasons=_disable_reasons.get(_hz, [])))
 
         #  incumbent 的时柱地支 → 时辰表分数
         _cur_zhi = ''
@@ -207,8 +225,13 @@ def _pillar_fields(sizhu):
             str(_s.get('日柱', '')), str(_s.get('时柱', '')),)
 
 
-def _day_record(d, best_sz, best_r, hours, kind):
-    """单日展示记录（反推榜 + 热力图 + 时间轴）。"""
+def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
+    """单日展示记录（反推榜 + 热力图 + 时间轴）。
+
+    001 §214 P2-B：若该事项配置了动作段序列（ACTION_SEQUENCES），调用
+    plan_actions 产出 action_plan 挂入记录，供反推UI 动作轴与红帖消费。
+    否决日不产出 action_plan（无可用时辰）。
+    """
     _level = str(best_r.get('level') or '')
     _sizhu_str = _pillar_text(best_sz)
     _gz = str(best_sz.get('时柱', '')) if isinstance(best_sz, dict) else ''
@@ -245,6 +268,11 @@ def _day_record(d, best_sz, best_r, hours, kind):
             '时段': HOUR_SPAN.get(_gz[1:2], ''),
         },
         'hours': hours,
+        # 001 §214 P2-B：动作时序方案（仅配置了 ACTION_SEQUENCES 的事项，
+        # 且非否决日；供 tab3 动作轴 + 一键生成红帖消费）
+        'action_plan': (plan_actions(hours, owners, action_sequence_of(event_type))
+                        if kind != '否决' and action_sequence_of(event_type)
+                        else None),
     }
 
 
@@ -293,7 +321,8 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
         _d = _start + timedelta(days=_i)
         _best_sz, _best_r, _hours = scan_day(_d, event_type, _owners, context)
         _kind = classify_day(_best_r, event_type)
-        _rec = _day_record(_d, _best_sz, _best_r, _hours, _kind)
+        _rec = _day_record(_d, _best_sz, _best_r, _hours, _kind,
+                           event_type=event_type, owners=_owners)
         _all.append({'date': _rec['date'], 'kind': _kind,
                      'score': _rec['score'], 'level': _rec['level'],
                      'jishen_fit': _rec['jishen_fit'],

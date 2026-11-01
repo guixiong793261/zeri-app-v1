@@ -8628,6 +8628,9 @@ class ZeriApp:
                    # ACTION_SEQUENCES 的事项；无则 None，红帖走原路径）
                    'action_plan': record.get('action_plan'),
                    'day_kind': record.get('kind') or ''})
+        # 001 §214 P2-D：反推「生成红纸帖」按钮 → 立即开窗/前置已开窗口
+        # （择日贴窗口已开则复用并 add_entry，未开则暂存+打开，F7）
+        self.open_zeeri_tie()
 
     def open_today_huangli(self):
         """打开今日黄历查询（完整版）"""

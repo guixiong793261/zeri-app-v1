@@ -286,6 +286,39 @@ def prepare_entry(entry):
 
     yi, ji = get_yi_ji(day_gan, day_zhi)
 
+    # 001 §214 P2-C：反推动作时序方案（action_plan）消费
+    # 若 entry 带 action_plan（来自反推 tab3「生成红纸帖」），则 _jishi 直接按
+    # plan 三段重建，跳过通书自动前三筛选；仍执行 R2 冲命交叉校验，
+    # 冲突则拒绝生成（绝不把冲命时辰印成吉时）。
+    _ap = e.get('action_plan')
+    if isinstance(_ap, dict) and _ap.get('plan'):
+        _ap_segs = _ap.get('plan') or []
+        _labels_ov = {}
+        _plan_jishi = []
+        for _idx, _s in enumerate(_ap_segs):
+            _zhi = str(_s.get('zhi') or '')
+            # R2 交叉校验：plan 时辰若冲事主年命，拒绝生成
+            if _zhi in _avoid_zhi:
+                raise ValueError(
+                    '动作时序第 %d 段「%s」时支 %s 冲事主年命，已拒绝生成红帖'
+                    % (_idx + 1, _s.get('label', ''), _zhi))
+            _labels_ov[str(_idx)] = str(_s.get('label') or '')
+            _plan_jishi.append({
+                'ganzhi': str(_s.get('ganzhi') or ''),
+                'zhi': _zhi,
+                'range': str(_s.get('range') or ''),
+                'grade': str(_s.get('level') or '吉'),
+                'tags': '、'.join(_s.get('tags') or []),
+                'start_hour': SHICHEN_HOURS.get(_zhi, (0,))[0] if _zhi else 0,
+                'manual': True,
+                'from_plan': True,
+            })
+        jishi = _plan_jishi
+        e['jishi_labels'] = _labels_ov
+        e['_plan_status'] = str(_ap.get('status') or '')
+        e['_plan_missing'] = list(_ap.get('missing') or [])
+        e['_hour_source'] = 'reverse_action'
+
     e['_dt'] = dt
     e['_nian'], e['_yue'], e['_ri'], e['_shi'] = nian, yue, ri, shi
     e['_lunar_month'] = _lunar_month_str(lunar.get('month'), lunar.get('is_leap', False))
@@ -1363,6 +1396,13 @@ def compose_marriage_lines(e):
             a(('', ''))
     else:
         a(('body', '今日吉时有限，请谨慎选择。'))
+        a(('', ''))
+    # 001 §214 P2-C：动作时序缺段警示（status != full 时追加 warn 行）
+    _ps = str(e.get('_plan_status') or '')
+    _pm = e.get('_plan_missing') or []
+    if _ps and _ps != 'full' and _pm:
+        a(('warn', '⚠ 本日吉时不足：缺「%s」，请另择或调整行程错峰'
+              % '、'.join(_pm)))
         a(('', ''))
     a(('body', f"冲：{e['_chong_gz']}{e['_chong_sx']}　煞：{e['_sha']}　（属{e['_chong_sx']}者当日宜避之）"))
     a(('', ''))

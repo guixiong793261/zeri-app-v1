@@ -8352,6 +8352,11 @@ class ZeriApp:
                 # §210 Commit 5：反推榜单「慎用日」标记 → 择日贴警示区置顶强提示
                 if extra.get('reverse_caution'):
                     entry['reverse_caution'] = True
+                # 001 §214 P2-C：动作时序方案透传（择日贴 prepare_entry 消费）
+                if extra.get('action_plan') is not None:
+                    entry['action_plan'] = extra.get('action_plan')
+                if extra.get('day_kind'):
+                    entry['day_kind'] = str(extra.get('day_kind'))
 
             def _parse_owner(info):
                 """通用：解析 UI owner_info → 扁平 dict（name/role/year_gz/year_sx/sizhu/阴阳胎/夫星子星）。
@@ -8618,7 +8623,14 @@ class ZeriApp:
             values, event_type=event_type,
             extra={'reason': record.get('reason') or '',
                    'veto_reasons': record.get('veto_reasons') or [],
-                   'reverse_caution': record.get('kind') == '慎用'})
+                   'reverse_caution': record.get('kind') == '慎用',
+                   # 001 §214 P2-C：动作时序方案透传（嫁娶等配置了
+                   # ACTION_SEQUENCES 的事项；无则 None，红帖走原路径）
+                   'action_plan': record.get('action_plan'),
+                   'day_kind': record.get('kind') or ''})
+        # 001 §214 P2-D：反推「生成红纸帖」按钮 → 立即开窗/前置已开窗口
+        # （择日贴窗口已开则复用并 add_entry，未开则暂存+打开，F7）
+        self.open_zeeri_tie()
 
     def open_today_huangli(self):
         """打开今日黄历查询（完整版）"""

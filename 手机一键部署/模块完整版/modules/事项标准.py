@@ -1722,6 +1722,25 @@ SHENSHA_WEIGHT_PENDING = frozenset({
 })
 
 
+# ==================== 动作时序配置（001 §214 P2-A，纯配置不改 UI_EVENTS） ====================
+# 动作段序列唯一事实源；择日贴 _STAGE_LABELS['marriage'] 改为引用本表，
+# 避免"反推写起轿、红帖写发轿"两处漂移。未配置的事项 → 动作轴整块不显示，
+# 红帖行为完全不变。seq 为时序序号（1=最早）；dir_required=True 表示该段需采集方向。
+ACTION_SEQUENCES = {
+    '嫁娶': [
+        {'seq': 1, 'key': 'fa_jiao',  'label': '起轿·发轿', 'dir_required': True},
+        {'seq': 2, 'key': 'ying_qu',  'label': '迎娶·进门', 'dir_required': False},
+        {'seq': 3, 'key': 'jiao_bai', 'label': '交拜·合卺', 'dir_required': False},
+    ],
+    # 订婚/入宅/安葬按各自 _STAGE_LABELS 后续增补（P2-B 之后，不随本批）
+}
+
+
+def action_sequence_of(event_type):
+    """按规范事项名取动作段序列；未配置返回 None（动作轴不显示）。"""
+    return ACTION_SEQUENCES.get(canonical_event(event_type))
+
+
 # ==================== 自检 ====================
 if __name__ == '__main__':
     print("规范事项：", UI_EVENTS)
