@@ -1655,6 +1655,9 @@ class ZeriTieWindow:
                          ('tbl', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
                                    'background': '#FFF3B0', 'foreground': '#4a1200'}),
+                         # §210 Commit 5：反推榜单慎用日强提示（加粗黄底，置顶警示区）
+                         ('hardwarn', {'justify': tk.LEFT, 'font': ("楷体", 16, 'bold'),
+                                       'background': '#FFFF00', 'foreground': '#8B0000'}),
                          ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
             self.detail_text.tag_configure(name, **kw)
 
@@ -1684,6 +1687,9 @@ class ZeriTieWindow:
                          ('tbl', {'justify': tk.CENTER, 'font': ("楷体", 15)}),
                          ('warn', {'justify': tk.LEFT, 'font': ("楷体", 16),
                                    'background': '#FFF3B0', 'foreground': '#4a1200'}),
+                         # §210 Commit 5：反推榜单慎用日强提示（加粗黄底，置顶警示区）
+                         ('hardwarn', {'justify': tk.LEFT, 'font': ("楷体", 16, 'bold'),
+                                       'background': '#FFFF00', 'foreground': '#8B0000'}),
                          ('rule', {'justify': tk.CENTER, 'font': ("楷体", 12), 'foreground': '#C9A227'})):
             self.summary_text.tag_configure(name, **kw)
 
