@@ -20,11 +20,13 @@
 """
 
 import calendar
+import os
 import queue
+import tempfile
 import threading
 import tkinter as tk
 from datetime import date, datetime
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_TOP_N
 from modules.排序键 import jishen_stars
@@ -705,7 +707,118 @@ class ReverseWindow:
                 tags=_tags)
 
         ttk.Button(_win, text='关闭', command=_win.destroy).pack(
-            anchor='e', padx=12, pady=(0, 10))
+            side=tk.RIGHT, padx=(4, 12), pady=(0, 10))
+        ttk.Button(_win, text='打印',
+                   command=lambda: self._print_day_detail(
+                       _d, _ev, _bh, _stars, _fit)).pack(
+            side=tk.RIGHT, padx=4, pady=(0, 10))
+        ttk.Button(_win, text='保存',
+                   command=lambda: self._save_day_detail(
+                       _d, _ev, _bh, _stars, _fit)).pack(
+            side=tk.RIGHT, padx=4, pady=(0, 10))
+
+    def _build_detail_lines(self, d, ev, bh, stars, fit):
+        """构造日课详情的纯文本行列表（保存/打印共用数据源）。"""
+        lines = []
+        lines.append('日课详情 · %s · %s' % (d['date'], ev))
+        lines.append('=' * 50)
+        lines.append('日　　期：%s　%s　农历%s' % (d['date'], d['weekday'], d['lunar']))
+        lines.append('四　　柱：%s' % d['sizhu'])
+        lines.append('用　　事：%s' % ev)
+        lines.append('评　　分：%s 分　%s　[%s]' % (d['score'], d['level'], d['kind']))
+        lines.append('最优时辰：%s（%s）　时柱 %s' % (bh['时辰'], bh['时段'], bh['时柱']))
+        lines.append('吉神契合：%s　%d 分' % ('★' * stars if stars else '—', fit))
+        lines.append('吉　　神：%s' % (str(d.get('jishen') or '') or '—'))
+        lines.append('扣分主因：%s' % _reason_text(d, compact=False))
+        lines.append('评分理由：%s' % (str(d.get('reason') or '') or '—'))
+        lines.append('')
+        lines.append('【扣分明细 / 忌项】')
+        lines.append('-' * 50)
+        _di = d.get('deduct_items') or []
+        _ji = d.get('ji_items') or []
+        _vr = d.get('veto_reasons') or []
+        if not (_di or _ji or _vr):
+            lines.append('无扣分、无忌项、无否决')
+        for _s in _di:
+            lines.append('扣分神煞　%s　%d 分' % (_s.get('name', ''),
+                                                int(_s.get('score') or 0)))
+        for _j in _ji:
+            lines.append('忌　　项　%s' % _j)
+        for _r in _vr:
+            lines.append('否决原因　%s' % _r)
+        lines.append('')
+        lines.append('【十二时辰】')
+        lines.append('-' * 50)
+        lines.append('时辰　时段　　时柱　评分　等级　　吉神　　　　凶煞　　　行动建议')
+        for _h in (d.get('hours') or []):
+            _mark = '★' if _h['地支'] == bh['地支'] else ' '
+            lines.append('%s%s　%s　%s　%s　%s　%s　%s　%s' % (
+                _mark, _h['时辰'], _h['时段'], _h['时柱'], _h['score'],
+                _h['level'],
+                '、'.join(_h.get('吉神') or []) or '—',
+                '、'.join(_h.get('凶') or []) or '—',
+                self._hour_advice(_h, bh['地支'], ev, d['score'])))
+        return lines
+
+    def _save_day_detail(self, d, ev, bh, stars, fit):
+        """保存日课详情为 TXT（filedialog 选路径，落盘后提示）。"""
+        _lines = self._build_detail_lines(d, ev, bh, stars, fit)
+        _default = '日课详情_%s_%s.txt' % (d['date'], ev)
+        _path = filedialog.asksaveasfilename(
+            title='保存日课详情',
+            defaultextension='.txt',
+            initialfile=_default,
+            filetypes=[('文本文件', '*.txt'), ('所有文件', '*.*')],
+            parent=self.win)
+        if not _path:
+            return
+        try:
+            with open(_path, 'w', encoding='utf-8') as _f:
+                _f.write('\n'.join(_lines))
+        except Exception as _e:
+            messagebox.showerror('保存失败', str(_e), parent=self.win)
+            return
+        # 落盘确认（经验 813310：必须确认文件存在且大小>0 再提示成功）
+        if os.path.exists(_path) and os.path.getsize(_path) > 0:
+            messagebox.showinfo(
+                '保存成功',
+                '已保存至：\n%s\n\n共 %d 行' % (_path, len(_lines)),
+                parent=self.win)
+        else:
+            messagebox.showerror('保存失败', '文件未成功写入，请检查路径权限',
+                                 parent=self.win)
+
+    def _print_day_detail(self, d, ev, bh, stars, fit):
+        """打印日课详情：生成临时 HTML，调用系统默认打印。"""
+        _lines = self._build_detail_lines(d, ev, bh, stars, fit)
+        _title = '日课详情 · %s · %s' % (d['date'], ev)
+        # 简单 HTML：标题 + <pre> 正文（保留等宽对齐）
+        _html = (
+            '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            '<title>%s</title>'
+            '<style>body{font-family:"Microsoft YaHei UI",sans-serif;'
+            'margin:24px;}h2{color:#8E0000;}pre{font-family:"Consolas",'
+            '"Microsoft YaHei UI",monospace;font-size:12px;line-height:1.6;'
+            'white-space:pre-wrap;}</style>'
+            '<script>window.onload=function(){window.print();}'
+            '</script></head><body>'
+            '<h2>%s</h2><pre>%s</pre></body></html>'
+        ) % (_title, _title, '\n'.join(_lines).replace('&', '&amp;')
+             .replace('<', '&lt;').replace('>', '&gt;'))
+        try:
+            _fd, _tmp = tempfile.mkstemp(suffix='.html', prefix='zeri_detail_')
+            with os.fdopen(_fd, 'w', encoding='utf-8') as _f:
+                _f.write(_html)
+        except Exception as _e:
+            messagebox.showerror('打印失败', str(_e), parent=self.win)
+            return
+        # 用系统默认浏览器打开并触发打印（HTML 内置 onload=print）
+        try:
+            os.startfile(_tmp)
+        except Exception as _e:
+            messagebox.showerror('打印失败',
+                                 '无法调用打印：%s\n临时文件：%s' % (_e, _tmp),
+                                 parent=self.win)
 
     def _on_day_click(self, ds):
         if ds in self._top_dates:
