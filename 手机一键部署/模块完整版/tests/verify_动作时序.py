@@ -58,16 +58,16 @@ def check(name, cond, detail=''):
 
 
 # ---------- 测试 1：穷举与暴力解一致 ----------
-print('\n[1] 穷举最优解 = 暴力解')
-# 给 12 时辰不同分数，断言 plan 选出的 3 个时辰总分 = 所有 3 递增组合的最大总分
+print('\n[1] 穷举最优解 = 暴力解（含民俗时间偏好加权）')
+# 给 12 时辰不同分数，断言 plan 选出的 3 个时辰（含偏好加权后）= 暴力最优
 scores = {'子': 50, '丑': 80, '寅': 90, '卯': 70, '辰': 60, '巳': 95,
           '午': 85, '未': 75, '申': 65, '酉': 88, '戌': 92, '亥': 78}
 # 子时禁用，构造时子时 score>0 但会被 R6 排除
 hours = [_mk_hour(z, score=s) for z, s in scores.items()]
 res = plan_actions(hours, owners=[], actions=ACTIONS)
 
-# 暴力：排除子时 + 不可用后，穷举所有 3 递增组合取最大总分
-from modules.动作时序 import _ZHI_START_HOUR, _is_candidate
+# 暴力：排除子时 + 不可用后，穷举所有 3 递增组合，取最大（总分+偏好加权）
+from modules.动作时序 import _ZHI_START_HOUR, _is_candidate, PREFER_BONUS
 valid = [(z, _ZHI_START_HOUR[z], scores[z]) for z in _ZHI_ORDER
          if _is_candidate({'地支': z, 'disabled': False, 'veto': 0,
                            'score': scores[z], 'shashi': False})]
@@ -76,14 +76,24 @@ best_sum = 0
 best_combo = None
 for combo in combinations(range(len(valid)), 3):
     s = sum(valid[i][2] for i in combo)
-    if s > best_sum:
-        best_sum = s
+    # 偏好加权：第 idx 段命中 ACTIONS[idx]['prefer_zhis'] 加 PREFER_BONUS
+    bonus = 0
+    for _idx, _ci in enumerate(combo):
+        _pref = (ACTIONS[_idx].get('prefer_zhis') or []) if _idx < len(ACTIONS) else []
+        if _pref and valid[_ci][0] in _pref:
+            bonus += PREFER_BONUS
+    if s + bonus > best_sum:
+        best_sum = s + bonus
         best_combo = combo
-plan_sum = sum(p['score'] for p in res['plan'])
+# plan 的实际总分（不含偏好分，偏好仅用于选优）+ 该组合的偏好分
+plan_actual = sum(p['score'] for p in res['plan'])
+plan_bonus = sum(PREFER_BONUS for _idx, p in enumerate(res['plan'])
+                 if _idx < len(ACTIONS) and p['zhi'] in (ACTIONS[_idx].get('prefer_zhis') or []))
+plan_adjusted = plan_actual + plan_bonus
 check('status=full', res['status'] == 'full', res['status'])
 check('3 段入选', len(res['plan']) == 3, str(len(res['plan'])))
-check('最优总分 = 暴力解', plan_sum == best_sum,
-      f'plan={plan_sum} brute={best_sum}')
+check('最优（含偏好）= 暴力解', plan_adjusted == best_sum,
+      f'plan={plan_adjusted} brute={best_sum}')
 check('无缺失段', res['missing'] == [], str(res['missing']))
 
 # ---------- 测试 2：只有 2 个可用时辰 → partial ----------

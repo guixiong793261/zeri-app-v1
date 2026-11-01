@@ -32,6 +32,10 @@ _ZHI_START_HOUR = {
 # 地支序（冲支计算用：年支 + 6 mod 12）
 _ZHI_ORDER = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 
+# 民俗时间偏好权重（命中 ACTION_SEQUENCES[*]['prefer_zhis'] 时每段加此分，
+# 仅用于选优排序，不写入 plan 展示的实际 score；非硬排除）
+PREFER_BONUS = 20
+
 
 def _start_hour(zhi):
     """地支 → 钟点起点；未知地支返回 0（不参与排序但不会崩溃）。"""
@@ -130,8 +134,17 @@ def plan_actions(hours, owners=None, actions=None):
             if any(starts[i] >= starts[i + 1] for i in range(len(starts) - 1)):
                 continue
             sum_score = sum(int(h.get('score') or 0) for h in combo_hours)
+            # 民俗时间偏好加权：命中 actions[idx]['prefer_zhis'] 的段 +PREFER_BONUS
+            # （仅用于选优排序，不写入 plan 的实际 score；非硬排除）
+            prefer_bonus = 0
+            for _idx, _h in enumerate(combo_hours):
+                if _idx < len(actions):
+                    _pref = actions[_idx].get('prefer_zhis') or []
+                    if _pref and str(_h.get('地支') or '') in _pref:
+                        prefer_bonus += PREFER_BONUS
+            adjusted = sum_score + prefer_bonus
             earliest = starts[0]
-            cand_key = (sum_score, -earliest)  # 同分取更早起点（更大 -earliest）
+            cand_key = (adjusted, -earliest)  # 同分取更早起点（更大 -earliest）
             if best is None or cand_key > best[0]:
                 best = (cand_key, combo_hours)
                 best_seg = seg

@@ -1726,11 +1726,16 @@ SHENSHA_WEIGHT_PENDING = frozenset({
 # 动作段序列唯一事实源；择日贴 _STAGE_LABELS['marriage'] 改为引用本表，
 # 避免"反推写起轿、红帖写发轿"两处漂移。未配置的事项 → 动作轴整块不显示，
 # 红帖行为完全不变。seq 为时序序号（1=最早）；dir_required=True 表示该段需采集方向。
+# prefer_zhis：民俗时间偏好地支（选优加权，非硬排除；命中时每段 +PREFER_BONUS 分）。
+#   嫁娶发轿俗以辰巳时（7-11 点）、进门以未申时（13-17 点）为吉。
 ACTION_SEQUENCES = {
     '嫁娶': [
-        {'seq': 1, 'key': 'fa_jiao',  'label': '起轿·发轿', 'dir_required': True},
-        {'seq': 2, 'key': 'ying_qu',  'label': '迎娶·进门', 'dir_required': False},
-        {'seq': 3, 'key': 'jiao_bai', 'label': '交拜·合卺', 'dir_required': False},
+        {'seq': 1, 'key': 'fa_jiao',  'label': '起轿·发轿', 'dir_required': True,
+         'prefer_zhis': ['辰', '巳']},
+        {'seq': 2, 'key': 'ying_qu',  'label': '迎娶·进门', 'dir_required': False,
+         'prefer_zhis': ['未', '申']},
+        {'seq': 3, 'key': 'jiao_bai', 'label': '交拜·合卺', 'dir_required': False,
+         'prefer_zhis': []},
     ],
     # 订婚/入宅/安葬按各自 _STAGE_LABELS 后续增补（P2-B 之后，不随本批）
 }

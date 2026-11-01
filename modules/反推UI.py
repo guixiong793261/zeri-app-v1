@@ -43,6 +43,35 @@ CELL_W, CELL_H = 66, 50
 PAD = 10
 
 
+class _GreenProgressbar:
+    """Canvas 自绘绿色进度条（Windows ttk 默认主题不支持改 Progressbar 颜色）。
+
+    兼容 ttk.Progressbar 的 config(maximum=, value=) 调用接口。
+    """
+
+    def __init__(self, master, length=180, height=18):
+        self._cv = tk.Canvas(master, width=length, height=height,
+                             bg='#E8E8E8', highlightthickness=1,
+                             highlightbackground='#BDBDBD')
+        self._len = length
+        self._h = height
+        self._max = 100.0
+        self._val = 0.0
+        self._fill = self._cv.create_rectangle(
+            0, 0, 0, height, fill='#2E7D32', outline='')
+
+    def config(self, **kw):
+        if 'maximum' in kw:
+            self._max = float(kw['maximum'])
+        if 'value' in kw:
+            self._val = float(kw['value'])
+        ratio = min(1.0, self._val / self._max) if self._max > 0 else 0.0
+        self._cv.coords(self._fill, 0, 0, int(self._len * ratio), self._h)
+
+    def pack(self, **kw):
+        self._cv.pack(**kw)
+
+
 def _reason_text(day, compact=True):
     """扣分主因/类型说明（Top-N 原因列 + 热力格状态栏共用）。
 
@@ -139,7 +168,7 @@ class ReverseWindow:
                                    state=tk.DISABLED)
         self.stop_btn.pack(side=tk.LEFT, padx=4)
 
-        self.progress = ttk.Progressbar(bar, mode='determinate', length=180)
+        self.progress = _GreenProgressbar(bar, length=180)
         self.progress.pack(side=tk.LEFT, padx=(12, 6))
         self.status_var = tk.StringVar(value='就绪：选择范围后点"开始反推"（默认 30 天，最大 90 天）')
         ttk.Label(bar, textvariable=self.status_var).pack(side=tk.LEFT, padx=4)
