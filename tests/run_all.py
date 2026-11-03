@@ -24,6 +24,9 @@ import sys
 import time
 
 PREFIXES = ('verify_', 'test_', 'check_')
+# 001 §214 C3（2026-11-03 拍板）：大考探针不以 verify_/test_/check_ 开头，
+# 在此显式托管；--no-write 保证跑批不产生 docs 产物、不污染工作区。
+EXTRA_SCRIPTS = [('大考_黄金课探针.py', ['--no-write'])]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TESTS = os.path.join(ROOT, 'tests')
 
@@ -37,18 +40,24 @@ def discover(only=None):
             continue
         if only and only not in fn:
             continue
-        names.append(fn)
+        names.append((fn, []))
+    for fn, extra in EXTRA_SCRIPTS:
+        if not os.path.isfile(os.path.join(TESTS, fn)):
+            continue
+        if only and only not in fn:
+            continue
+        names.append((fn, list(extra)))
     return names
 
 
-def run_one(fn, timeout):
+def run_one(fn, timeout, extra=None):
     env = dict(os.environ)
     env['PYTHONIOENCODING'] = 'utf-8'
     env['PYTHONUTF8'] = '1'
     t0 = time.time()
     try:
         p = subprocess.run(
-            [sys.executable, os.path.join(TESTS, fn)],
+            [sys.executable, os.path.join(TESTS, fn)] + list(extra or []),
             cwd=ROOT, env=env, timeout=timeout,
             capture_output=True, text=True, encoding='utf-8', errors='replace')
         code, out = p.returncode, (p.stdout or '') + (p.stderr or '')
@@ -83,8 +92,8 @@ def main():
     print('=' * 72)
 
     results = []
-    for i, fn in enumerate(scripts, 1):
-        r = run_one(fn, args.timeout)
+    for i, (fn, extra) in enumerate(scripts, 1):
+        r = run_one(fn, args.timeout, extra)
         results.append(r)
         tag = 'TIMEOUT' if r['exit'] == 'TIMEOUT' else (
             'PASS' if r['exit'] == 0 else 'FAIL')

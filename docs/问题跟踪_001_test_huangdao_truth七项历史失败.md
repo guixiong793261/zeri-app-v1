@@ -11275,3 +11275,48 @@ I tkinter 双端 tag 注册 + GUI 否决配色 + print_detail veto 分支 + 嫁�
   `评分器 F2AC51444243`。统一版仓提交 `23e03fa`（15 份 = 5 文件 × 3 层）。
 - **212.7 遗留与待补**：考原卷七/卷八语料缺失，按拍板 5 以现有覆盖定稿、
   标注待补；受死日库间分歧（协纪从删 vs 陈书嫁娶凶）维持否决并登记在案。
+
+---
+
+## 214. 大考后遗症修复批：红帖冲命锁 + 手改优先 + 反推强提示（2026-11-03）
+
+- **214.1 背景与拍板**：v2.1.x 终局大考探针（`tests/大考_黄金课探针.py`，43 项检查）
+  发现 4 个真实交互缺口：S3-8 手动改吉时不校验冲命、S3-9 `action_plan` 静默覆盖手改、
+  S3-2 反推零候选无显式提示、S3-6 无事件级「缺上轿吉时」黄标。用户 2026-11-03 拍板：
+  ①P1 双修必须把锁焊死（任何来源时辰命中禁用清单一律 `raise ValueError`）；
+  ②手改优先级高于自动排程，合法则重算缺失段、冲突则报错；③UI 提示必须显眼；
+  ④H2/H3 技术债暂缓至下一基建批次。
+
+- **214.2 Commit 1（S3-8/S3-9，`3e1026a`）**：改 `modules/择日贴.py::prepare_entry`。
+  1. 新增 `_hour_disabled_reasons()`：以 `推荐时柱.build_checker` →
+     `get_lucky_hours`（嫁娶神煞扩展）为禁用清单唯一事实源，覆盖
+     日破时/冲新娘/冲新郎/冲阴胎/冲阳气；叠加 `_avoid_zhi`（冲事主年命）兜底。
+  2. `jishi_override` 先收集为 `_ov_slots`，命中禁用清单或非十二时辰 → `raise ValueError`
+     （`add_entry` 的 `showerror` 弹窗拒绝生成），合法手改打 `manual` 标。
+  3. plan 分支先建段并保留原 R2 冲命校验，再以手改段覆盖（手改 > plan），
+     按覆盖后结果重算 `_plan_missing`；缺段补满则 partial/insufficient → full；
+     `_hour_source=reverse_action_manual`；非 plan 路径仍覆盖自动前三。
+
+- **214.3 Commit 2（S3-2/S3-6，`e87916a`）**：改 `modules/反推UI.py`。
+  1. `_on_done`：`days=[]` 时状态栏置「⚠ 当前时间范围内，没有符合条件且能避开冲煞的
+     可用吉日。请尝试扩大日期范围，或调整山向/事主信息。」+ 摘要栏同步 +
+     `messagebox.showwarning('无可用吉日', …)`，随后渲染空表并 return。
+  2. `_render_action_axis`：`partial` 且 `missing` 含发轿/起轿 → 状态前置
+     「⚠ 缺上轿吉时」；排序/入选逻辑零改动（不降权）。
+
+- **214.4 验证**：新增 `tests/verify_214_冲命锁与手改优先.py`（9 项断言，含 3 项反向拒绝）
+  与 `tests/verify_214_反推提示与黄标.py`（4 项源码接线断言），均 exit 0。
+  `tests/run_all.py` **134/134 PASS（FAIL=0 TIMEOUT=0）**；大考探针 **42/42 PASS（exit 0）**。
+
+- **214.5 Commit 3（本批收尾）**：探针纳入 `run_all` 托管——
+  `run_all.py::EXTRA_SCRIPTS = [('大考_黄金课探针.py', ['--no-write'])]`，探针新增
+  `--no-write`（跑批不写 docs 产物、不污染工作区）；S6-1（H2 pytest 外壳）降级为 OBS
+  并按拍板暂缓；白皮书与 BACKLOG §2.7 同步回填。
+
+- **214.6 六副本**：`择日贴.py`、`反推UI.py` 已同步主仓 3 内层；
+  `check_six_copies.py --main`（7 文件 × 3 层）全一致。统一版仓仍 4 漂移 + 1 缺失，
+  按 H3 触发条件挂账（本批不收敛）。
+
+- **214.7 未动项**：分值、神煞表、评分口径、排序键、动作时序穷举逻辑均零改动；
+  红纱日死键（`SHENSHA_SCORES[('嫁娶','红纱日')] = -20`）仅登记待清理。
+
