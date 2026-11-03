@@ -88,9 +88,10 @@ class StoveRuleChecker(EventRuleChecker):
         self.is_yuede_day = None
         self.is_bujiang_day = None
         self.is_month_break = None
-        self.is_year_break = None
         self.is_sili_sijue = None
-        
+        # is_year_break 接线已删（§208 双闸清理批）：规则层相主岁破发射删除后
+        # 该依赖无消费方，相主岁破否决由评分器全局相主硬门槛统一承接。
+
         try:
             from ..shensha.marriage_shensha import (
                 get_jianchu,
@@ -98,7 +99,6 @@ class StoveRuleChecker(EventRuleChecker):
                 is_yuede_day,
                 is_bujiang_day,
                 is_month_break,
-                is_year_break,
                 is_sili_sijue
             )
             self.get_jianchu = get_jianchu
@@ -106,7 +106,6 @@ class StoveRuleChecker(EventRuleChecker):
             self.is_yuede_day = is_yuede_day
             self.is_bujiang_day = is_bujiang_day
             self.is_month_break = is_month_break
-            self.is_year_break = is_year_break
             self.is_sili_sijue = is_sili_sijue
             self.has_marriage_shensha = True
         except ImportError:
@@ -238,7 +237,7 @@ class StoveRuleChecker(EventRuleChecker):
         self._check_bujiang(date_obj, yi_list)
         
         # 3. 月破、四离四绝（依赖marriage_shensha）
-        self._check_po_and_sili(date_obj, owners, ji_list)
+        self._check_po_and_sili(date_obj, ji_list)
         
         # 4. 作灶专用神煞
         self._check_stove_special(sizhu, yi_list, ji_list)
@@ -265,12 +264,15 @@ class StoveRuleChecker(EventRuleChecker):
 
         作灶一票否决项：
         1. 月破日 - 诸事不宜
-        2. 岁破日 - 诸事不宜
-        3. 四离四绝日 - 大事不宜
-        4. 冲主妇日柱 - 大忌
-        5. 冲宅主日柱 - 大忌
-        6. 灶君朝天 - 大忌（登天太微宫五日）
-        7. 逐月作灶忌日 - 大忌
+        2. 四离四绝日 - 大事不宜
+        3. 冲主妇日柱 - 大忌
+        4. 冲宅主日柱 - 大忌
+        5. 灶君朝天 - 大忌（登天太微宫五日）
+        6. 逐月作灶忌日 - 大忌
+
+        §208（2026-10-31 双闸清理批）：规则层「与{name}岁破，忌作灶」冗余
+        否决删除——相主岁破（日支冲事主年支）否决由评分器全局相主硬门槛
+        统一承接（全局单闸，001 §208 拍板二留一），规则层不再重复发射。
 
         §64（2026-10-09 拍板：D2）：天火日/地火日/灶君忌日/土府日四个次级
         神煞从一票否决降级为强扣分——忌项仍入 ji_list：天火/地火/土府由
@@ -280,12 +282,12 @@ class StoveRuleChecker(EventRuleChecker):
 
         # 从ji_list中检查是否有否决级别的禁忌
         veto_keywords = [
-            '月破日', '岁破', '四离四绝日',
+            '月破日', '四离四绝日',
             '冲主妇', '冲宅主',
             '灶君朝天', '逐月作灶忌日',  # _zjct0914
             # §64 D2 降级（强扣分不否决）：天火日/地火日/灶君忌日/土府日
-            # §203 Commit1：'岁破日'→'岁破'（实际 ji 文本为"与{name}岁破，忌作灶"，
-            # 原关键词'岁破日'永不匹配，相主岁破否决死链）
+            # §208（2026-10-31 双闸清理批）：'岁破' 关键词删除——相主岁破否决
+            # 由评分器全局相主硬门槛统一承接，规则层不再重复判（二留一拍板）。
         ]
         
         for ji in ji_list:
@@ -323,28 +325,24 @@ class StoveRuleChecker(EventRuleChecker):
         except Exception:
             pass
     
-    def _check_po_and_sili(self, date_obj, owners, ji_list):
-        """检查月破、岁破、四离四绝"""
+    def _check_po_and_sili(self, date_obj, ji_list):
+        """检查月破、四离四绝
+
+        §208（2026-10-31 双闸清理批）：原「岁破（与事主年支相冲）」发射段
+        删除——与评分器全局相主硬门槛（日支冲事主年支六冲→否决）同构重复，
+        拍板二留一保留评分器单闸；is_year_break 依赖引用同步清理。
+        """
         if not self.has_marriage_shensha:
             return
-        
+
         try:
             # 月破
             if self.is_month_break(date_obj):
                 ji_list.append('月破日忌作灶')
-            
+
             # 四离四绝
             if self.is_sili_sijue(date_obj):
                 ji_list.append('四离四绝日忌作灶')
-            
-            # 岁破（与事主年支相冲）
-            if owners:
-                for owner in owners:
-                    year_zhi = self._get_owner_year_zhi(owner)
-                    if year_zhi and self.is_year_break(date_obj, year_zhi):
-                        name = owner.get('name', '宅主')
-                        ji_list.append(f'与{name}岁破，忌作灶')
-                        break
         except Exception:
             pass
     
