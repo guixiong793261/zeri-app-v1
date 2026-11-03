@@ -206,15 +206,93 @@ def _fmt_tree_relation(text):
         return parts[0] + "\n" + "；".join(parts[1:])
     return s
 
+# 2026-11-03 001 §217 拍板：结果表“核心吉神”列口径
+_JISHEN_TREE_MIN_SCORE = 10   # 神煞入列门槛：>=10 分高权重吉神；<=5 分点缀型杂神不入列
+_JISHEN_TREE_MAX_SHOW = 4     # 列内最多显示 4 个，余者以“…”省略（完整列表走 Tooltip）
+_JISHEN_SHORT_NAMES = ('天德贵人', '月德贵人', '天乙贵人', '文昌贵人', '福星贵人', '禄神')
+
+
+def _short_jishen_name(raw):
+    """命局贵人原文（如“天乙贵人: 日干庚见时柱未”）→ 规范短名。"""
+    s = str(raw or '').strip()
+    for _n in _JISHEN_SHORT_NAMES:
+        if _n in s:
+            return _n
+    return s.split(':')[0].split('：')[0][:6].strip()
+
+
+def _extract_tree_jishen(score_result):
+    """结果表“核心吉神”列文本提取：命局贵人 + 高权重神煞（2026-11-03 001 §217）。
+
+    两个数据源合并（拍板第 2 条）：
+    1) `wu_xing_result.details['吉神']`——命局贵人（天德/月德/天乙/文昌/福星/禄神），
+       纯展示口径，恒入列；
+    2) `shensha_list` 中 score >= 10 的正分项（岁德、天德、三合、建除吉神等）——
+       滤掉 <=5 分的点缀型杂神，避免杂神挤掉真神（拍板第 4 条）。
+
+    排序：命局贵人在前，神煞按得分降序（同分按名称稳定排序）；
+    去重：同名只保留首次出现（命局贵人优先）。
+
+    Returns:
+        (列显示文本, 悬停完整文本)；命局贵人与神煞均无时返回 ('-', '')。
+    """
+    _items = []   # [(名称, 分值或 None（None=命局贵人）)]
+    _seen = set()
+    try:
+        details = ((score_result or {}).get('wu_xing_result') or {}).get('details') or {}
+    except Exception:
+        details = {}
+    for _raw in (details.get('吉神') or []):
+        _nm = _short_jishen_name(_raw)
+        if _nm and _nm not in _seen:
+            _seen.add(_nm)
+            _items.append((_nm, None))
+    _ss_items = []
+    for _sh in ((score_result or {}).get('shensha_list') or []):
+        if not isinstance(_sh, dict):
+            continue
+        try:
+            _sc = float(_sh.get('score') or 0)
+        except (TypeError, ValueError):
+            continue
+        if _sc < _JISHEN_TREE_MIN_SCORE:
+            continue
+        _nm = str(_sh.get('name') or '').strip()
+        if not _nm or _nm in _seen:
+            continue
+        _seen.add(_nm)
+        _ss_items.append((_nm, int(_sc) if _sc.is_integer() else _sc))
+    _ss_items.sort(key=lambda x: (-x[1], x[0]))
+    _items.extend(_ss_items)
+    if not _items:
+        return '-', ''
+    _shown = [nm for nm, _ in _items[:_JISHEN_TREE_MAX_SHOW]]
+    _text = '、'.join(_shown)
+    if len(_items) > _JISHEN_TREE_MAX_SHOW:
+        _text += '…'
+    # Tooltip：命局贵人与神煞（带分值）分段完整展示
+    _parts = []
+    _ming = [nm for nm, _sc in _items if _sc is None]
+    if _ming:
+        _parts.append('命局贵人：' + '、'.join(_ming))
+    if _ss_items:
+        _parts.append('神煞吉神（≥%d分）：' % _JISHEN_TREE_MIN_SCORE
+                      + '、'.join('%s+%s' % (nm, _sc) for nm, _sc in _ss_items))
+    return _text, '\n'.join(_parts)
+
+
 def _extract_tree_dizhi_jishen(score_result):
-    """结果表“地支关系/吉神”两列文本提取（统一入口，2026-09-05）。
+    """结果表“地支关系/核心吉神”两列文本提取（统一入口，2026-09-05）。
 
     从 score_result['wu_xing_result']['details'] 提取：
     - 地支关系：带主体完整文本，去掉（示例时柱/推荐时柱…）计分后缀，取前2条分号连接
-    - 吉神：规范化名称，取前2条逗号连接
+    - 核心吉神：委托 _extract_tree_jishen 合并命局贵人与高权重神煞（001 §217）
     _inject_best_hour_to_result 第(5)步会用权威四柱（含推荐时柱）重算 details，
     注入后再次调用本函数刷新两列，即可让地支关系反映真实推荐时辰
     参与的关系，而非基准午时示例（2026-09-05 用户确认）。
+
+    Returns:
+        (地支关系文本, 核心吉神列显示文本, 核心吉神完整文本)
     """
     try:
         _wr = (score_result or {}).get('wu_xing_result') or {}
@@ -226,28 +304,8 @@ def _extract_tree_dizhi_jishen(score_result):
         dizhi_text = '；'.join([re.sub(r'（(?:示例时柱|推荐时柱)[^）]*）', '', _r) for _r in rels][:2])
     else:
         dizhi_text = '-'
-    jishen_list = details.get('吉神') or []
-    if jishen_list:
-        jishen_text_list = []
-        for jishen in jishen_list:
-            if '天德贵人' in jishen:
-                jishen_text_list.append('天德贵人')
-            elif '月德贵人' in jishen:
-                jishen_text_list.append('月德贵人')
-            elif '天乙贵人' in jishen:
-                jishen_text_list.append('天乙贵人')
-            elif '文昌贵人' in jishen:
-                jishen_text_list.append('文昌贵人')
-            elif '禄神' in jishen:
-                jishen_text_list.append('禄神')
-            elif '福星' in jishen:
-                jishen_text_list.append('福星')
-            else:
-                jishen_text_list.append(jishen[:6])
-        jishen_text = ', '.join(jishen_text_list[:2])
-    else:
-        jishen_text = '-'
-    return dizhi_text, jishen_text
+    jishen_text, jishen_full = _extract_tree_jishen(score_result)
+    return dizhi_text, jishen_text, jishen_full
 
 
 
@@ -4146,8 +4204,8 @@ class ZeriApp:
                 xishen_score = score_details.get('喜用神得分', 0)
                 huangdao_score = score_details.get('黄道得分', 0)
                 
-                # 地支关系/吉神两列文本（统一入口；注入推荐时柱后会再次刷新）
-                dizhi_text, jishen_text = _extract_tree_dizhi_jishen(score_result)
+                # 地支关系/核心吉神两列文本（统一入口；注入推荐时柱后会再次刷新）
+                dizhi_text, jishen_text, jishen_full = _extract_tree_dizhi_jishen(score_result)
                 
                 # 提取大利月/小利月信息（婚嫁专用）
                 daliyue_text = '-'
@@ -4210,6 +4268,7 @@ class ZeriApp:
                     'huangdao_score': huangdao_score,
                     'dizhi_relation': dizhi_text,
                     'jishen': jishen_text,
+                    'jishen_full': jishen_full,
                     'daliyue': daliyue_text,
                     'owners': owners_text,
                     'feixing': _fmt_feixing(score_result.get('feixing_info')),
@@ -4227,9 +4286,10 @@ class ZeriApp:
                 # 参与的关系——上面注入推荐时柱后，第(5)步已用权威四柱重算 details，
                 # 这里随之刷新，避免仍显示基准午时的地支关系误导用户
                 try:
-                    _dz_txt, _js_txt = _extract_tree_dizhi_jishen(score_result)
+                    _dz_txt, _js_txt, _js_full = _extract_tree_dizhi_jishen(score_result)
                     result['dizhi_relation'] = _dz_txt
                     result['jishen'] = _js_txt
+                    result['jishen_full'] = _js_full
                 except Exception:
                     pass
 
@@ -5370,8 +5430,8 @@ class ZeriApp:
                     xishen_score = score_details.get('喜用神得分', 0)
                     huangdao_score = score_details.get('黄道得分', 0)
                     
-                    # 地支关系/吉神两列文本（统一入口；注入推荐时柱后会再次刷新）
-                    dizhi_text, jishen_text = _extract_tree_dizhi_jishen(score_result)
+                    # 地支关系/核心吉神两列文本（统一入口；注入推荐时柱后会再次刷新）
+                    dizhi_text, jishen_text, jishen_full = _extract_tree_dizhi_jishen(score_result)
                     
                     result = {
                         'date': current.strftime("%Y-%m-%d"),
@@ -5385,6 +5445,7 @@ class ZeriApp:
                         'huangdao_score': huangdao_score,
                         'dizhi_relation': dizhi_text,
                         'jishen': jishen_text,
+                        'jishen_full': jishen_full,
                         'feixing': _fmt_feixing(score_result.get('feixing_info')),
                         'owners_info': getattr(self, 'owners_info', []),
                         'zaozhu_mode': zaozhu_mode,
@@ -5400,9 +5461,10 @@ class ZeriApp:
                     # 参与的关系——上面注入推荐时柱后，第(5)步已用权威四柱重算 details，
                     # 这里随之刷新，避免仍显示基准午时的地支关系误导用户
                     try:
-                        _dz_txt, _js_txt = _extract_tree_dizhi_jishen(score_result)
+                        _dz_txt, _js_txt, _js_full = _extract_tree_dizhi_jishen(score_result)
                         result['dizhi_relation'] = _dz_txt
                         result['jishen'] = _js_txt
+                        result['jishen_full'] = _js_full
                     except Exception:
                         pass
 
