@@ -109,6 +109,26 @@ def _sx_to_zhi(sx):
     return ''
 
 
+def _hour_disabled_reasons(event_type, owners_list, shan_xiang, nian, yue, ri):
+    """手动改时禁用清单（001 §214 C1）：以 推荐时柱.build_checker→get_lucky_hours
+    （嫁娶神煞扩展）为唯一事实源，禁用 = 日破时/冲新娘/冲新郎/冲阴胎/冲阳气。
+
+    返回 {时支: [禁用说明]}。本函数不吞异常：取不到清单即向上抛出，由
+    add_entry 弹窗拒绝生成，绝不静默放行。
+    """
+    from modules.推荐时柱 import build_checker, _normalize_sizhu
+    checker, _kind = build_checker(str(event_type or ''), owners_list or [],
+                                   str(shan_xiang or ''))
+    out = {}
+    for h in checker.get_lucky_hours(
+            _normalize_sizhu({'年柱': nian, '月柱': yue, '日柱': ri})):
+        if h.get('禁用'):
+            zhi = str(h.get('地支') or '')
+            out.setdefault(zhi, []).extend(
+                x for x in (h.get('说明') or []) if '禁用' in str(x))
+    return out
+
+
 def _owner_life_line(owner, label_suffix='贵庚'):
     """按模板格式显示：父：辛卯年（辛卯干支）或 宅主：○○年（○○干支）贵庚"""
     if not isinstance(owner, dict):
@@ -255,11 +275,21 @@ def prepare_entry(entry):
             'start_hour': SHICHEN_HOURS.get(h['zhi'], (0,))[0] if h.get('zhi') else 0,
         })
 
-    # 吉时手动覆盖（2026-09-07用户要求：吉时支持手动修改）
-    # jishi_override = {'段序号': '时支'}；段序号0起，时支须为当日十二时辰之一。
-    # 手动段显示该时辰自身吉凶等级（吉/平/凶），区别于自动段的名次等级（大吉/吉/次吉）。
+    # 吉时手动覆盖（2026-09-07 用户要求：吉时支持手动修改）
+    # jishi_override = {'段序号': '时支'}；段序号 0 起，时支须为当日十二时辰之一。
+    # 001 §214 C1（2026-11-03 拍板）：手动改时与自动排程共用同一把锁——
+    # 禁用清单以 推荐时柱.build_checker→get_lucky_hours（嫁娶神煞扩展）为唯一
+    # 事实源（日破时/冲新娘/冲新郎/冲阴胎/冲阳气），并叠加 _avoid_zhi 兜底；
+    # 命中即 ValueError，拒绝生成红帖（绝不把冲命时辰印成吉时）。
+    # 优先级：手动修改 > action_plan；手改段在下方 plan 分支覆盖并重算缺失段。
     _ov = e.get('jishi_override')
+    _ov_slots = {}
     if isinstance(_ov, dict) and _ov:
+        _ban_map = _hour_disabled_reasons(
+            e.get('event_type'), _prepare_owners(e).get('list') or [],
+            e.get('shan_xiang'), nian, yue, ri)
+        for _z in _avoid_zhi:
+            _ban_map.setdefault(_z, []).append('冲事主年命（禁用）')
         for _k, _zhi in _ov.items():
             try:
                 _idx = int(_k)
@@ -267,10 +297,17 @@ def prepare_entry(entry):
                 continue
             if not (0 <= _idx <= 5):
                 continue
+            _zhi = str(_zhi or '')
             _h = next((x for x in hours if x.get('zhi') == _zhi), None)
             if _h is None:
-                continue
-            _slot = {
+                raise ValueError(
+                    '手动修改第 %d 段时间「%s」不是合法时辰（须为当日十二时辰之一），已拒绝生成红帖'
+                    % (_idx + 1, _zhi))
+            if _zhi in _ban_map:
+                raise ValueError(
+                    '手动修改第 %d 段时间 %s 命中禁用清单（%s），已拒绝生成红帖'
+                    % (_idx + 1, _zhi, '、'.join(_ban_map.get(_zhi) or ['禁用'])))
+            _ov_slots[_idx] = {
                 'ganzhi': _h['ganzhi'],
                 'zhi': _h['zhi'],
                 'range': _SHICHEN_RANGE.get(_h['zhi'], ''),
@@ -279,10 +316,6 @@ def prepare_entry(entry):
                 'start_hour': SHICHEN_HOURS.get(_h['zhi'], (0,))[0] if _h.get('zhi') else 0,
                 'manual': True,
             }
-            if _idx < len(jishi):
-                jishi[_idx] = _slot
-            else:
-                jishi.append(_slot)
 
     yi, ji = get_yi_ji(day_gan, day_zhi)
 
@@ -290,6 +323,7 @@ def prepare_entry(entry):
     # 若 entry 带 action_plan（来自反推 tab3「生成红纸帖」），则 _jishi 直接按
     # plan 三段重建，跳过通书自动前三筛选；仍执行 R2 冲命交叉校验，
     # 冲突则拒绝生成（绝不把冲命时辰印成吉时）。
+    _plan_applied = False
     _ap = e.get('action_plan')
     if isinstance(_ap, dict) and _ap.get('plan'):
         _ap_segs = _ap.get('plan') or []
@@ -315,9 +349,41 @@ def prepare_entry(entry):
             })
         jishi = _plan_jishi
         e['jishi_labels'] = _labels_ov
-        e['_plan_status'] = str(_ap.get('status') or '')
-        e['_plan_missing'] = list(_ap.get('missing') or [])
-        e['_hour_source'] = 'reverse_action'
+        # 001 §214 C1（2026-11-03 拍板）：手动修改优先于自动排程——
+        # 手改合法时辰在 plan 之上覆盖，绝不静默丢弃；缺失段按覆盖后结果重算。
+        if _ov_slots:
+            for _idx, _slot in sorted(_ov_slots.items()):
+                if _idx < len(jishi):
+                    jishi[_idx] = _slot
+                else:
+                    jishi.append(_slot)
+                _labels_ov.setdefault(str(_idx), '自定段 %d' % (_idx + 1))
+            _missing = []
+            for _i, _s in enumerate(_ap_segs):
+                if str(_s.get('zhi') or ''):
+                    continue
+                if _i < len(jishi) and jishi[_i].get('zhi'):
+                    continue
+                _missing.append(_labels_ov.get(str(_i), ''))
+            e['_plan_missing'] = _missing
+            _st = str(_ap.get('status') or '')
+            if _st in ('partial', 'insufficient') and not _missing:
+                _st = 'full'
+            e['_plan_status'] = _st
+            e['_hour_source'] = 'reverse_action_manual'
+        else:
+            e['_plan_status'] = str(_ap.get('status') or '')
+            e['_plan_missing'] = list(_ap.get('missing') or [])
+            e['_hour_source'] = 'reverse_action'
+        _plan_applied = True
+
+    # 非 plan 路径：手改段直接覆盖通书自动前三/前四
+    if _ov_slots and not _plan_applied:
+        for _idx, _slot in sorted(_ov_slots.items()):
+            if _idx < len(jishi):
+                jishi[_idx] = _slot
+            else:
+                jishi.append(_slot)
 
     e['_dt'] = dt
     e['_nian'], e['_yue'], e['_ri'], e['_shi'] = nian, yue, ri, shi
