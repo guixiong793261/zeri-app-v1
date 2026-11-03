@@ -289,7 +289,7 @@ def prepare_entry(entry):
             e.get('event_type'), _prepare_owners(e).get('list') or [],
             e.get('shan_xiang'), nian, yue, ri)
         for _z in _avoid_zhi:
-            _ban_map.setdefault(_z, []).append('冲事主年命（禁用）')
+            _ban_map.setdefault(_z, []).append('冲事主年命')
         for _k, _zhi in _ov.items():
             try:
                 _idx = int(_k)
