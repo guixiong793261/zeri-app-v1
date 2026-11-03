@@ -753,12 +753,12 @@ class ZeriApp:
         tree_frame.pack(fill=tk.BOTH, expand=True)
         
         # 结果列表（2026-09-03：四柱并入"日期/四柱"列两行显示，删除独立四柱列）
-        columns = ("日期/四柱", "评分", "等级", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "吉神信息", "利月", "事主信息", "玄空")
+        columns = ("日期/四柱", "评分", "等级", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "核心吉神", "利月", "事主信息", "玄空")
         self.result_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
 
-        # 设置列宽（2026-09-08 用户反馈：地支关系太宽挤占吉神信息）：
-        # 地支关系固定宽度容纳两行文本，不再独占拉伸余量；吉神信息加宽并接管 stretch，
-        # 让"天乙贵人 ㄅ 凶-20"等内容完整可见。
+        # 设置列宽（2026-09-08 用户反馈：地支关系太宽挤占吉神列）：
+        # 地支关系固定宽度容纳两行文本，不再独占拉伸余量；2026-11-03 §217 拍板：
+        # 该列正名为“核心吉神”，宽度放宽以容纳最多 4 个吉神名，完整列表走 Tooltip。
         self.result_tree.column("日期/四柱", width=140, anchor=tk.W, stretch=False)
         self.result_tree.column("评分", width=48, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("等级", width=104, anchor=tk.CENTER, stretch=False)
@@ -767,7 +767,7 @@ class ZeriApp:
         self.result_tree.column("喜用神得分", width=76, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("黄道得分", width=62, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("地支关系", width=300, anchor=tk.W, stretch=False)
-        self.result_tree.column("吉神信息", width=200, anchor=tk.W, stretch=True)
+        self.result_tree.column("核心吉神", width=230, anchor=tk.W, stretch=True)
         self.result_tree.column("利月", width=56, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("事主信息", width=80, anchor=tk.W, stretch=False)
         self.result_tree.column("玄空", width=66, anchor=tk.CENTER, stretch=False)
@@ -798,6 +798,14 @@ class ZeriApp:
         
         # 绑定鼠标悬停效果
         self.result_tree.bind("<Motion>", self.on_tree_motion)
+
+        # 核心吉神列 Tooltip（2026-11-03 §217 拍板第 3 条）：
+        # 列内截断只显示 4 个，悬停弹层展示命局贵人 + 全部 ≥10 分神煞完整列表
+        self._jishen_full_map = {}
+        self._jishen_tip_win = None
+        self._jishen_tip_text = None
+        self.result_tree.bind("<Leave>", self._hide_jishen_tooltip, add="+")
+        self.result_tree.bind("<MouseWheel>", self._hide_jishen_tooltip, add="+")
         
         # 绑定触摸事件到结果树
         self.result_tree.bind("<Button-1>", self._on_tree_touch_start)
@@ -970,10 +978,78 @@ class ZeriApp:
                        troughcolor='#e0e0e0',
                        borderwidth=0)
     
+    def _tree_jishen_column(self):
+        """返回“核心吉神”列在当前 displaycolumns 下的标识（如 '#9'），不可见时返回 None。"""
+        try:
+            _disp = self.result_tree['displaycolumns']
+        except Exception:
+            return None
+        if not _disp or str(_disp) in ('#all', '(#all,)', ''):
+            _cols = list(self.result_tree['columns'])
+        elif isinstance(_disp, str):
+            _cols = _disp.split()
+        else:
+            _cols = list(_disp)
+        try:
+            return '#%d' % (_cols.index('核心吉神') + 1)
+        except ValueError:
+            return None
+
+    def _hide_jishen_tooltip(self, event=None):
+        """关闭核心吉神 Tooltip 弹层（渲染/移出/滚轮/换格时调用）。"""
+        _win = getattr(self, '_jishen_tip_win', None)
+        if _win is not None:
+            try:
+                _win.destroy()
+            except Exception:
+                pass
+        self._jishen_tip_win = None
+        self._jishen_tip_text = None
+
     def on_tree_motion(self, event):
-        """树形视图鼠标悬停效果"""
-        # 鼠标悬停在树形视图上时的效果
-        pass
+        """树形视图鼠标悬停：核心吉神列弹出完整吉神列表 Tooltip（001 §217）。
+
+        列内只显示截断后的 4 个名称，悬停时展示命局贵人与全部 ≥10 分神煞
+        （带分值）的完整合并列表；离开该格/移出表格/滚轮滚动即关闭。
+        """
+        try:
+            _col = self._tree_jishen_column()
+            if not _col:
+                self._hide_jishen_tooltip()
+                return
+            _row = self.result_tree.identify_row(event.y)
+            _cur = self.result_tree.identify_column(event.x)
+        except Exception:
+            return
+        if not _row or _cur != _col:
+            self._hide_jishen_tooltip()
+            return
+        _full = (getattr(self, '_jishen_full_map', None) or {}).get(_row, '')
+        if not _full:
+            self._hide_jishen_tooltip()
+            return
+        # 同一条内容：仅让弹层跟随鼠标，不重建
+        if self._jishen_tip_win is not None and self._jishen_tip_text == _full:
+            try:
+                self._jishen_tip_win.geometry('+%d+%d' % (event.x_root + 12, event.y_root + 16))
+            except Exception:
+                pass
+            return
+        self._hide_jishen_tooltip()
+        try:
+            _tip = tk.Toplevel(self.result_tree)
+            _tip.overrideredirect(True)
+            _tip.attributes('-topmost', True)
+            tk.Label(_tip, text=_full, justify=tk.LEFT, anchor=tk.W,
+                     background='#FFFFF0', foreground='#333333',
+                     relief='solid', borderwidth=1, font=('微软雅黑', 9),
+                     padx=8, pady=6, wraplength=420).pack()
+            _tip.geometry('+%d+%d' % (event.x_root + 12, event.y_root + 16))
+            self._jishen_tip_win = _tip
+            self._jishen_tip_text = _full
+        except Exception:
+            self._jishen_tip_win = None
+            self._jishen_tip_text = None
     
     def update_pattern(self, *args):
         """根据事项类型更新择日图案"""
@@ -3009,7 +3085,7 @@ class ZeriApp:
             return
         try:
             cols = ["日期/四柱", "评分", "等级", "五行得分", "月令得分",
-                    "喜用神得分", "黄道得分", "地支关系", "吉神信息"]
+                    "喜用神得分", "黄道得分", "地支关系", "核心吉神"]
             if self.event_var.get() in MARRIAGE_EVENTS:
                 cols.append("利月")
             if self.event_var.get() in FEIXING_EVENTS and self._get_zeli_mode() == 'feixing':  # _zm0915
@@ -3901,17 +3977,19 @@ class ZeriApp:
 
         2026-09-16 口径统一：原两条计算链路各自维护一份"排序→列标题→清空→12列插入"
         代码，容易在列构造上漂移；现收口为本方法，评分/等级/五行/月令/喜用/黄道/
-        地支关系/吉神（不合格模式为原因）/大利月/事主/飞星 12 列顺序固定。
+        地支关系/核心吉神（不合格模式为原因）/大利月/事主/飞星 12 列顺序固定。
         """
         # 按评分从高到低排序
         self.results.sort(key=lambda x: x.get('score', 0), reverse=True)
 
-        # 根据输出模式动态调整"吉神信息"列标题
+        # 根据输出模式动态调整"核心吉神"列标题
         _cur_mode = self.output_mode_var.get()
-        _col_title = '不合格原因' if _cur_mode == 'unqualified' else '吉神信息'
-        self.result_tree.heading('吉神信息', text=_col_title)
+        _col_title = '不合格原因' if _cur_mode == 'unqualified' else '核心吉神'
+        self.result_tree.heading('核心吉神', text=_col_title)
 
         # 清空树形视图并重新添加排序后的结果
+        self._hide_jishen_tooltip()
+        self._jishen_full_map = {}
         for item in self.result_tree.get_children():
             self.result_tree.delete(item)
 
@@ -3919,9 +3997,9 @@ class ZeriApp:
             level = result.get('level', '未知')
             row_tag = _star_row_tag(level)
             # 得分列统一±号格式化；2026-09-03 四柱并入首列两行显示；
-            # 不合格输出模式下"吉神信息"列显示不合格原因
+            # 不合格输出模式下"核心吉神"列显示不合格原因
             _display_jishen = result.get('unqualified_reasons') or result.get('jishen', '-')
-            self.result_tree.insert("", tk.END, values=(
+            _iid = self.result_tree.insert("", tk.END, values=(
                 _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', '-')),
                 result.get('score', 0),
                 level,
@@ -3935,6 +4013,10 @@ class ZeriApp:
                 result.get('owners', '-'),
                 result.get('feixing', '-')
             ), tags=(row_tag,))
+            # 核心吉神列完整文本（Tooltip 用；不合格模式下为空，不弹提示）
+            self._jishen_full_map[_iid] = (
+                '' if _cur_mode == 'unqualified'
+                else result.get('jishen_full', '') or '')
 
     def _collect_owners_data(self):
         """收集事主信息为标准 owners_data（扫日/精准择时反推共用）。
