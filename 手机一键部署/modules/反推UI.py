@@ -450,6 +450,19 @@ class ReverseWindow:
         self.run_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
         _m = res['meta']
+        # 001 §214 C2（2026-11-03 拍板）：零候选不得只在状态栏显示数字，
+        # 必须显眼提示「本范围内无可用吉日」，杜绝用户对着空榜无从判断。
+        if not res.get('days'):
+            _zero_msg = ('⚠ 当前时间范围内，没有符合条件且能避开冲煞的可用吉日。'
+                         '请尝试扩大日期范围，或调整山向/事主信息。')
+            self.status_var.set(_zero_msg)
+            self.summary_var.set(
+                '事项 %s ｜ %s ~ %s ｜ 候选 0 条（否决 %d 天）｜ 建议扩大日期范围或调整山向/事主'
+                % (_m['event_type'], _m['start'], _m['end'], _m['vetoed']))
+            self._render_heatmap(res)
+            self._render_top(res)
+            messagebox.showwarning('无可用吉日', _zero_msg, parent=self.win)
+            return
         self.status_var.set(
             '完成：%d/%d 天，候选 %d，否决 %d，耗时 %.2fs%s' % (
                 _m['scanned'], _m['days'], _m['candidates'], _m['vetoed'],
@@ -920,6 +933,11 @@ class ReverseWindow:
         _status_txt = {'full': '三段齐备', 'partial': '缺段（建议错峰）',
                        'insufficient': '仅 1 段（建议另择）',
                        'none': '本日无可用动作时辰'}.get(_status, _status)
+        # 001 §214 C2（2026-11-03 拍板）：partial 且缺段含发轿/起轿 →
+        # 事件级黄标「缺上轿吉时」，不把提示藏在通用文案里（排序权重不变）。
+        _missing = [str(x) for x in (_plan.get('missing') or [])]
+        if _status == 'partial' and any(('发轿' in x or '起轿' in x) for x in _missing):
+            _status_txt = '⚠ 缺上轿吉时（%s）' % _status_txt
         self.act_status_var.set('状态：%s' % _status_txt)
         _segments = _plan.get('plan') or []
         for _i, (_seq_lbl, _info_lbl) in enumerate(self.act_rows):
