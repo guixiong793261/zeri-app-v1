@@ -33,6 +33,7 @@ B7 = os.path.join(DOCS, '白皮书_附录_速查表与术语表_B7.md')
 
 MANUAL_OUT = os.path.join(DOCS, '择日大师_用户操作手册_v2.2.1.md')
 WHITE_OUT = os.path.join(DOCS, '择日大师_算法与典据白皮书_v2.2.1.md')
+FULL_OUT = os.path.join(DOCS, '择日大师_完整说明书_v2.2.1.md')
 
 EDGE_CANDIDATES = [
     r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
@@ -77,6 +78,94 @@ def build_manual():
 """
     write(MANUAL_OUT, cover + '\n[TOC]\n\n' + body)
     return MANUAL_OUT
+
+
+def build_full():
+    """把 B1 操作篇 + B2 历法/评分篇 + B3–B7 白皮书分册，合为一本完整说明书。"""
+    b1 = read(MANUAL_SRC)
+    b1 = b1.replace('| 版本 | V1.0（B1 批次稿） |', '| 版本 | v2.2.1（正式发布版） |')
+    b1 = b1.replace('| 配套文档 | 《算法与典据白皮书（说明书）》第二、四部分（B2 批次稿） |',
+                    '| 配套章节 | 本书第二篇（历法）、第三篇（神煞）、第四篇（评分）、第五篇（裁决） |')
+    b1 = b1.replace('本文为文字稿；标注「配图 1-1」处将在排版阶段插入实机截图，正文不依赖截图亦可完成操作',
+                    '本文为文字稿；标注「配图 1-1」处预留实机截图位，正文不依赖截图亦可完成操作')
+    b1 = re.sub(r'^## 目录\n.*?\n---\n', '', b1, count=1, flags=re.S | re.M)
+    b1 = b1.replace('# 专业级正五行择日软件 · 用户操作手册',
+                    '# 第一篇 · 使用指南（第 1–11 章）\n\n'
+                    '> 本编只讲「怎么用」：从三分钟出第一张红帖，到红帖三态、慎用日与实战排雷。'
+                    '不想看算法的读者，读完本编即可上手。\n', 1)
+
+    b2 = read(B2)
+    m = re.search(r'^# 第二部分 底层历法机制', b2, re.M)
+    split = re.search(r'^# 第四部分 评分总则与五大核心事项', b2, re.M)
+    if not (m and split):
+        raise SystemExit('B2 结构不符，无法合并')
+    part2 = b2[m.start():split.start()].rstrip() + '\n'
+    part4 = b2[split.start():].rstrip() + '\n'
+    part2 = part2.replace('# 第二部分 底层历法机制',
+                          '# 第二篇 · 历法基石（第 7–10 章）', 1)
+    part4 = part4.replace('# 第四部分 评分总则与五大核心事项',
+                          '# 第四篇 · 评分总则与五大核心事项（第 11–17 章）', 1)
+
+    def retitle(path, old, new):
+        t = read(path).strip() + '\n'
+        if old not in t:
+            raise SystemExit(f'{os.path.basename(path)} 未找到标题「{old}」')
+        return t.replace(old, new, 1)
+
+    b3 = retitle(B3, '# 第三部分（上）· 吉神族逐项卡', '# 第三篇（上）· 吉神族逐项卡')
+    b4 = retitle(B4, '# 第三部分（下）· 凶煞族逐项卡', '# 第三篇（下）· 凶煞族逐项卡')
+    b5 = retitle(B5, '# 第三部分（末）· 制化与山家体系', '# 第三篇（末）· 制化与山家体系')
+    b6 = retitle(B6, '# 第五部分 · 争议裁决总录', '# 第五篇 · 争议裁决总录')
+    b7 = retitle(B7, '# 附录 · 神煞速查表与术语表', '# 附录 A–G · 神煞速查表与术语表')
+
+    cover = """<div class="cover">
+<div class="cover-kicker">专业级正五行择日软件</div>
+<div class="cover-title">完整说明书</div>
+<div class="cover-sub">使用指南 · 历法基石 · 神煞族谱 · 制化山家 · 评分总则 · 争议铁案 · 速查附录</div>
+<div class="cover-meta">版本 v2.2.1　·　适用软件 v2.2.1-release　·　2026-11-03</div>
+<div class="cover-line"></div>
+<div class="cover-note">三库主锚：《协纪辨方书》（主锚）·《御定星历考原》（互校）·《陈子性藏书》（第三参照）<br/>凡无典据者，只可提示，不可定罪。</div>
+</div>
+"""
+
+    preface = """
+# 前言 · 怎么读这一本书
+
+本书把原先分开的《用户操作手册》与《算法与典据白皮书》合成一册，**一册到底，前后互证**：前面教你怎么点，后面讲清为什么这样算、凭什么这样判。
+
+## 全书结构
+
+| 篇 | 章节号 | 内容 | 谁该读 |
+| --- | --- | --- | --- |
+| 第一篇 使用指南 | 第 1–11 章 | 上手、界面、参数、读结果、反推、红帖三态、导出、实战、FAQ、小词典 | 所有人，第一次使用必读 |
+| 第二篇 历法基石 | 第 7–10 章 | 晚子时派、节气换柱、真太阳时、四柱与时辰、农历与神煞取用 | 想弄明白「日子是怎么算出来的」 |
+| 第三篇 神煞族谱与制化山家 | 3.x / 4.x / 5.x | 吉神族卡、凶煞族卡（HARD_VETO 红标）、制化矩阵、山家封禁、扶山补龙相主 | 择日师、审课者 |
+| 第四篇 评分总则 | 第 11–17 章 | 总分公式、五大事项、等级映射、扣分家族、247 分例算、代码索引 | 择日师、维护者 |
+| 第五篇 争议裁决 | 6.x | 十六桩「扒皮」铁案：杀师日、红嘴朱雀、出行方向、年三煞四柱…… | 想追问「凭什么」的人 |
+| 附录 A–G | — | 191 项神煞速查总表、核心起例、五通道否决表、测试基线、版本链、术语表 | 出稿前人工复核、打印张贴 |
+
+> **编号说明**：为不改动任何跨册引用与测试断言，章节号沿用分册原始锚点——所以第二篇从「第 7 章」起、第三篇用 3.x/4.x/5.x、第五篇用 6.x。**篇内唯一，跨篇引用一律带篇名**，不影响阅读。
+
+## 三条阅读路径
+
+1. **只想择日**：第一篇 → 第 5 章（读结果）→ 第 7 章（红帖三态）→ 第 10 章（FAQ）。
+2. **想审课**：第一篇第 5 章 → 第四篇第 11 章（总分公式）→ 第三篇（认神煞）→ 附录 A（查分值与否决）。
+3. **想追责**：第五篇（先看铁案结论）→ 第三篇对应族卡（看现在怎么判）→ 第四篇附录 B（看代码在哪一行）。
+
+## 三条贯穿全书的铁律
+
+1. **否决只能来自代码显式否决点**，分数扣到负数仍是「凶」，不是「否决」。
+2. **无典据不放宽、无典据不定罪**：无载者只作提示，不作否决。
+3. **数字的唯一真源是 `modules/事项标准.py` 的 `SHENSHA_SCORES`**；本书与代码冲突时，以代码为准，并回填本书。
+"""
+
+    merged = (
+        cover + preface + '\n[TOC]\n\n' +
+        b1 + '\n' + part2 + '\n' + b3 + '\n' + b4 + '\n' + b5 + '\n' +
+        part4 + '\n' + b6 + '\n' + b7
+    )
+    write(FULL_OUT, merged)
+    return FULL_OUT
 
 
 def build_whitepaper():
@@ -180,7 +269,7 @@ a { color: #7a1414; text-decoration: none; }
 .cover-meta { font-size: 10.5pt; color: #666; }
 .cover-line { width: 90mm; height: 2.4pt; background: #8b1a1a; margin: 12mm auto; }
 .cover-note { font-size: 9.6pt; color: #666; line-height: 2; }
-.toc { page-break-after: always; }
+.toc { page-break-before: always; page-break-after: always; }
 .toc .toctitle { display: block; text-align: center; letter-spacing: 8pt;
                  font-size: 18pt; font-weight: 700; color: #5c1010; margin: 0 0 10mm; }
 .toc > ul { list-style: none; padding-left: 0; column-count: 2; column-gap: 10mm; }
@@ -256,7 +345,12 @@ def cdp_pdf(edge, html_path, pdf_path, header_left):
             if r.get('result', {}).get('result', {}).get('value') == 'complete':
                 break
             time.sleep(0.2)
-        time.sleep(0.8)
+        # 长文档（150 页级）必须在字体就绪 + 打印媒体重排完成后再打印，
+        # 否则 printToPDF 会在中途截断（实测 150 页被截成 93/110 页）。
+        send('Runtime.evaluate', {'expression': 'document.fonts.ready.then(() => 1)',
+                                  'awaitPromise': True})
+        send('Emulation.setEmulatedMedia', {'media': 'print'})
+        time.sleep(3)
         footer = ('<div style="width:100%;font-size:8px;color:#888;text-align:center;'
                   'font-family:Microsoft YaHei">'
                   '<span class="pageNumber"></span> / <span class="totalPages"></span></div>')
@@ -297,7 +391,9 @@ def edge_print_fallback(edge, html_path, pdf_path):
 def main():
     manual_md = build_manual()
     white_md = build_whitepaper()
-    print('[OK] merged:', os.path.basename(manual_md), os.path.basename(white_md))
+    full_md = build_full()
+    print('[OK] merged:', os.path.basename(manual_md), os.path.basename(white_md),
+          os.path.basename(full_md))
     if '--skip-pdf' in sys.argv:
         return
     edge = find_edge()
@@ -308,6 +404,9 @@ def main():
          '专业级正五行择日软件 · 用户操作手册 v2.2.1', True, '2-2'),
         (white_md, os.path.join(DOCS, '择日大师_算法与典据白皮书_v2.2.1.pdf'),
          '专业级正五行择日软件 · 算法与典据白皮书 v2.2.1', True, '1-2'),
+        # 完整说明书：目录靠 Markdown 里的 [TOC] 标记，此处 with_toc=False
+        (full_md, os.path.join(DOCS, '择日大师_完整说明书_v2.2.1.pdf'),
+         '专业级正五行择日软件 · 完整说明书 v2.2.1', False, '1-2'),
     ]
     for md_path, pdf_path, header, with_toc, toc_depth in jobs:
         html = md_to_html(read(md_path), header, with_toc, toc_depth)
