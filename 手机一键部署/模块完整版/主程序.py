@@ -105,6 +105,10 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+# 用户数据根目录：源码运行时为项目根；PyInstaller 打包后取 exe 所在目录。
+# 单文件模式下 __file__ 指向临时解包目录 _MEIPASS，写入其中的方案/记录会随进程退出丢失。
+APP_DIR = os.path.dirname(os.path.abspath(sys.executable)) if getattr(sys, 'frozen', False) else project_root
+
 from modules.四柱计算器 import calculate_sizhu, analyze_sizhu, get_lunar_date
 from modules.评分器 import calculate_score, Scorer
 from modules.评分器 import (ENABLE_LEVEL_NORMALIZATION,
@@ -399,7 +403,7 @@ class ZeriApp:
         """
         print("初始化ZeriApp...")
         self.root = root
-        self.root.title("专业级正五行择日软件 v1.0")
+        self.root.title("专业级正五行择日软件 v2.2.1")
         
         # 获取屏幕尺寸并设置窗口大小
         print("获取屏幕尺寸...")
@@ -484,6 +488,21 @@ class ZeriApp:
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="帮助", menu=help_menu)
         help_menu.add_command(label="使用说明", command=self.show_help)
+        help_menu.add_separator()
+        help_menu.add_command(
+            label="完整说明书（Word 版）",
+            command=lambda: self._open_bundled_doc('择日大师_完整说明书_v2.2.1.docx'))
+        help_menu.add_command(
+            label="完整说明书（PDF 版）",
+            command=lambda: self._open_bundled_doc('择日大师_完整说明书_v2.2.1.pdf'))
+        help_menu.add_command(
+            label="用户操作手册（PDF）",
+            command=lambda: self._open_bundled_doc('择日大师_用户操作手册_v2.2.1.pdf'))
+        help_menu.add_command(
+            label="算法与典据白皮书（PDF）",
+            command=lambda: self._open_bundled_doc('择日大师_算法与典据白皮书_v2.2.1.pdf'))
+        help_menu.add_command(label="打开文档目录", command=self._open_docs_folder)
+        help_menu.add_separator()
         help_menu.add_command(label="关于", command=self.show_about)
     
     def create_widgets(self):
@@ -2348,7 +2367,7 @@ class ZeriApp:
             messagebox.showwarning("提示", "请先输入方案名称再保存")
             return
         
-        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        data_dir = os.path.join(APP_DIR, 'data')
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
         
@@ -2433,7 +2452,7 @@ class ZeriApp:
         import json
         import os
         
-        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        data_dir = os.path.join(APP_DIR, 'data')
         file_path = os.path.join(data_dir, 'owners_plans.json')
         
         if not os.path.exists(file_path):
@@ -8104,7 +8123,7 @@ class ZeriApp:
         
         # 保存到文件
         try:
-            with open("择日记录.json", 'w', encoding='utf-8') as f:
+            with open(os.path.join(APP_DIR, "择日记录.json"), 'w', encoding='utf-8') as f:
                 json.dump(self.records, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"保存记录失败：{e}")
@@ -8112,8 +8131,9 @@ class ZeriApp:
     def load_records(self):
         """加载历史记录"""
         try:
-            if os.path.exists("择日记录.json"):
-                with open("择日记录.json", 'r', encoding='utf-8') as f:
+            rec_path = os.path.join(APP_DIR, "择日记录.json")
+            if os.path.exists(rec_path):
+                with open(rec_path, 'r', encoding='utf-8') as f:
                     self.records = json.load(f)
         except Exception as e:
             print(f"加载记录失败：{e}")
@@ -9067,10 +9087,47 @@ class ZeriApp:
         # 初始加载
         update_solar_terms()
     
+    def _open_bundled_doc(self, filename):
+        """帮助菜单：打开随包 docs 目录下的文档（Word / PDF）。"""
+        import webbrowser
+        candidates = [os.path.join(APP_DIR, 'docs', filename),
+                      os.path.join(getattr(sys, '_MEIPASS', APP_DIR), 'docs', filename),
+                      os.path.join(project_root, 'docs', filename)]
+        for path in candidates:
+            if os.path.exists(path):
+                try:
+                    if hasattr(os, 'startfile'):
+                        os.startfile(path)
+                    else:
+                        webbrowser.open('file://' + path.replace(os.sep, '/'))
+                except Exception as e:
+                    messagebox.showwarning('打开失败', '无法打开：\n%s\n\n%s' % (path, e))
+                return
+        messagebox.showinfo(
+            '未找到文档',
+            '未在 docs 目录找到：\n%s\n\n请把 docs 文件夹放在程序同级目录后重试。' % filename)
+
+    def _open_docs_folder(self):
+        """帮助菜单：打开 docs 目录。"""
+        folder = os.path.join(APP_DIR, 'docs')
+        if not os.path.isdir(folder):
+            folder = os.path.join(getattr(sys, '_MEIPASS', APP_DIR), 'docs')
+        if not os.path.isdir(folder):
+            messagebox.showinfo('未找到文档目录', '未找到 docs 目录，请把它放在程序同级目录。')
+            return
+        try:
+            if hasattr(os, 'startfile'):
+                os.startfile(folder)
+            else:
+                import webbrowser
+                webbrowser.open('file://' + folder.replace(os.sep, '/'))
+        except Exception as e:
+            messagebox.showwarning('打开失败', str(e))
+
     def show_about(self):
         """显示关于对话框"""
         messagebox.showinfo("关于", 
-            "专业级正五行择日软件 v1.0\n\n"
+            "专业级正五行择日软件 v2.2.1\n\n"
             "基于传统正五行择日理论\n"
             "采用'五行为主，黄道为用'架构\n\n"
             "功能特点：\n"
