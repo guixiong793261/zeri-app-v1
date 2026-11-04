@@ -963,7 +963,7 @@ class ZeriApp:
                        background='#ffffff',
                        foreground='#333333',
                        font=('微软雅黑', 10),
-                       rowheight=40,
+                       rowheight=56,
                        fieldbackground='#ffffff',
                        borderwidth=1,
                        relief='solid')
@@ -981,12 +981,12 @@ class ZeriApp:
                   foreground=[('selected', '#007bff'), ('!selected', '#333333')])
 
         # 默认 Treeview 样式（结果表等未显式指定 style 的控件实际使用此样式名）
-        # 行高40：容纳"日期/四柱""地支关系"单元格内两行文本，避免第二行被裁切
+        # 行高56：容纳"日期/四柱""地支关系"单元格内两行文本，避免文字重叠裁切
         style.configure('Treeview',
                         background='#ffffff',
                         foreground='#333333',
                         font=('微软雅黑', 10),
-                        rowheight=40,
+                        rowheight=56,
                         fieldbackground='#ffffff',
                         borderwidth=1,
                         relief='solid')
