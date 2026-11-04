@@ -278,7 +278,11 @@ class DayScoreWindow:
         y = (screen_height - window_height) // 2
         
         self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        self.window.state('zoomed')  # 窗口最大化，与主程序一致
+        try:
+            self.window.state('zoomed')  # 窗口最大化，与主程序一致
+        except Exception:
+            # 安卓 Tk 不支持 zoomed，铺满屏幕（与主程序 fallback 一致）
+            self.window.geometry("%dx%d+0+0" % (screen_width, screen_height))
         
         # 确保窗口显示
         self.window.deiconify()

@@ -424,8 +424,13 @@ class ZeriApp:
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
         print("设置窗口大小和位置成功")
         
-        self.root.state('zoomed')  # 窗口最大化
-        print("窗口最大化成功")
+        try:
+            self.root.state('zoomed')  # 窗口最大化（Windows 窗口管理器支持）
+            print("窗口最大化成功")
+        except Exception:
+            # 安卓（Pydroid）等平台 Tk 仅支持 normal/iconic/withdrawn，改为铺满屏幕
+            self.root.geometry("%dx%d+0+0" % (screen_width, screen_height))
+            print("当前平台不支持 zoomed，已铺满屏幕")
         
         # 确保窗口显示
         self.root.deiconify()
