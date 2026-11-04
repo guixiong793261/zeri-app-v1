@@ -455,7 +455,10 @@ class ZeriApp:
         print("加载历史记录...")
         self.load_records()
         print("加载历史记录成功")
-        
+
+        # 手机触屏：按住拖动即可滚动（Canvas/Treeview/Listbox/Text）
+        self._enable_touch_pan()
+
         print("ZeriApp初始化完成")
     
     def create_menu(self):
@@ -580,9 +583,7 @@ class ZeriApp:
         self._touch_start_scroll_x = 0
         self._touch_start_scroll_y = 0
         
-        # 绑定触摸事件
-        main_canvas.bind("<Button-1>", self._on_touch_start)
-        main_canvas.bind("<B1-Motion>", self._on_touch_move)
+        # 触屏拖动滚动由全局 _enable_touch_pan 统一接管（见文末方法）
         
         # 标题区域
         title_frame = ttk.Frame(self.main_frame, style="TitleFrame.TFrame")
@@ -831,10 +832,7 @@ class ZeriApp:
         self.result_tree.bind("<Leave>", self._hide_jishen_tooltip, add="+")
         self.result_tree.bind("<MouseWheel>", self._hide_jishen_tooltip, add="+")
         
-        # 绑定触摸事件到结果树
-        self.result_tree.bind("<Button-1>", self._on_tree_touch_start)
-        self.result_tree.bind("<B1-Motion>", self._on_tree_touch_move)
-        self.result_tree.bind("<ButtonRelease-1>", self._on_tree_touch_end)
+        # 触屏拖动滚动由全局 _enable_touch_pan 统一接管
 
         # 左键单击某个日期 → 提示用玄空飞星分析（延迟触发，双击查看详情时自动取消）
         self._xk_after = None
@@ -9147,59 +9145,44 @@ class ZeriApp:
             "作者: 专业择日团队"
         )
 
-    def _on_touch_start(self, event):
-        """触摸开始事件"""
-        self._touch_start_x = event.x
-        self._touch_start_y = event.y
-        self._touch_start_scroll_x = event.widget.xview()[0]
-        self._touch_start_scroll_y = event.widget.yview()[0]
+    def _enable_touch_pan(self):
+        """手机触屏拖动滚动：按住屏幕上下拖动即可滚动内容，免用细滚动条。
 
-    def _on_touch_move(self, event):
-        """触摸移动事件"""
-        if hasattr(self, '_touch_start_x') and hasattr(self, '_touch_start_y'):
-            delta_x = event.x - self._touch_start_x
-            delta_y = event.y - self._touch_start_y
-            
-            # 计算滚动距离（反向滚动）
-            scroll_delta_x = -delta_x / event.widget.winfo_width()
-            scroll_delta_y = -delta_y / event.widget.winfo_height()
-            
-            # 应用滚动
-            new_x = max(0, min(1, self._touch_start_scroll_x + scroll_delta_x))
-            new_y = max(0, min(1, self._touch_start_scroll_y + scroll_delta_y))
-            
-            event.widget.xview_moveto(new_x)
-            event.widget.yview_moveto(new_y)
+        覆盖所有 Canvas / Treeview / Listbox / Text（含条件查询、历史记录、
+        详情窗口、事主方案列表等所有可滚动控件）；Windows 下同时支持鼠标
+        左键拖动滚动。轻点（位移 < 阈值）仍正常选中 / 点击。
+        """
+        pan_types = (tk.Canvas, ttk.Treeview, tk.Listbox, tk.Text)
+        state = {'y': None, 'widget': None}
 
-    def _on_touch_end(self, event):
-        """触摸结束事件"""
-        # 重置触摸状态
-        self._touch_start_x = 0
-        self._touch_start_y = 0
-        self._touch_start_scroll_x = 0
-        self._touch_start_scroll_y = 0
+        def _press(event):
+            w = getattr(event, 'widget', None)
+            if isinstance(w, pan_types) and w.cget('state') != tk.DISABLED:
+                state['y'] = event.y_root
+                state['widget'] = w
 
-    def _on_tree_touch_start(self, event):
-        """结果列表触摸开始事件"""
-        # 检查是否点击了项目（避免干扰选择）
-        item = self.result_tree.identify_row(event.y)
-        if item:
-            # 如果点击了项目，不启动触摸滚动
-            self._touch_start_x = 0
-            self._touch_start_y = 0
-        else:
-            # 否则启动触摸滚动
-            self._on_touch_start(event)
+        def _drag(event):
+            if state['widget'] is None or state['y'] is None:
+                return
+            dy = event.y_root - state['y']
+            if abs(dy) < 8:  # 小于阈值视作点击，不误触发滚动
+                return
+            w = state['widget']
+            units = int(dy / 24)  # 每 24 像素滚动 1 单位，速度适中
+            if units != 0:
+                try:
+                    w.yview_scroll(-units, 'units')
+                except Exception:
+                    pass
+                state['y'] = event.y_root
 
-    def _on_tree_touch_move(self, event):
-        """结果列表触摸移动事件"""
-        # 只有当触摸开始坐标不为0时才执行滚动
-        if self._touch_start_x != 0 or self._touch_start_y != 0:
-            self._on_touch_move(event)
+        def _release(event):
+            state['y'] = None
+            state['widget'] = None
 
-    def _on_tree_touch_end(self, event):
-        """结果列表触摸结束事件"""
-        self._on_touch_end(event)
+        self.root.bind_all('<ButtonPress-1>', _press, add='+')
+        self.root.bind_all('<B1-Motion>', _drag, add='+')
+        self.root.bind_all('<ButtonRelease-1>', _release, add='+')
 
 def main():
     """主函数"""
