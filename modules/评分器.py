@@ -1759,7 +1759,8 @@ class Scorer:
                 sansha_info['sansha_pillar_veto'] = False
                 self._pillar_veto_mode = False
                 sansha_info['sansha_koujing'] = (
-                    '仅坐山修方论：坐山/修方犯三煞否决；月/日三煞日时柱临方扣分不否决')
+                    '坐山/修方犯年三煞否决；向首犯三煞扣分不否决；'
+                    '月/日三煞日时柱临方扣分不否决')
             else:
                 sansha_info['sansha_pillar_veto'] = True
                 self._pillar_veto_mode = True

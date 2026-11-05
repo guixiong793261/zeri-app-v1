@@ -6068,8 +6068,8 @@ class ZeriApp:
             text.insert(tk.END, "\n   ──")
             text.insert(tk.END, "\n   三煞为方道神：占山/修方/坐向方忌（「三煞可向不可坐」）")
             text.insert(tk.END, "\n   年三煞：论坐山/修方与向首（四柱月日时柱不作判定）")
-            text.insert(tk.END, "\n   月三煞：论坐山/修方与日、时柱临方（扣分不否决）")
-            text.insert(tk.END, "\n   日三煞：论坐山/修方与时柱临方（扣分不否决）")
+            text.insert(tk.END, "\n   月三煞：论坐山/修方、向首与日、时柱临方（扣分不否决）")
+            text.insert(tk.END, "\n   日三煞：论坐山/修方、向首与时柱临方（扣分不否决）")
             
             # 四柱犯三煞详情
             text.insert(tk.END, "\n\n   【三煞检查】")
@@ -6089,34 +6089,46 @@ class ZeriApp:
                 else:
                     text.insert(tk.END, f"\n   ⚠ {label}（临三煞方，扣分不否决）")
 
-            # 年三煞检查（仅山向；柱级三条已删，见 001 §211 案 B）
+            def _fan_mark_xiang(fan, label, penalty):
+                """向首层：与坐山分账，只扣分不否决（001 §185 镜像口径）。"""
+                if fan:
+                    text.insert(tk.END, f"\n   ⚠ {label}（向方，-{penalty}分，不否决）")
+
+            # 年三煞检查（仅山向/向方；柱级三条已删，见 001 §211 案 B）
             year_fan_shan = sansha_info.get('year_sansha_fan', False)
+            year_fan_xiang = sansha_info.get('year_sansha_xiang_fan', False)
 
             _fan_mark(year_fan_shan, '年三煞犯山向', is_shan=True)
+            _fan_mark_xiang(year_fan_xiang, '年三煞犯向首', 25)
 
-            if not year_fan_shan:
+            if not year_fan_shan and not year_fan_xiang:
                 text.insert(tk.END, "\n   ✅ 年三煞不犯")
 
             # 月三煞检查
             month_fan_day = sansha_info.get('month_sansha_day_fan', False)
             month_fan_hour = sansha_info.get('month_sansha_hour_fan', False)
             month_fan_shan = sansha_info.get('month_sansha_fan', False)
+            month_fan_xiang = sansha_info.get('month_sansha_xiang_fan', False)
 
             _fan_mark(month_fan_day, '月三煞犯日柱')
             _fan_mark(month_fan_hour, '月三煞犯时柱')
             _fan_mark(month_fan_shan, '月三煞犯山向', is_shan=True)
+            _fan_mark_xiang(month_fan_xiang, '月三煞犯向首', 20)
 
-            if not month_fan_day and not month_fan_hour and not month_fan_shan:
+            if not (month_fan_day or month_fan_hour
+                    or month_fan_shan or month_fan_xiang):
                 text.insert(tk.END, "\n   ✅ 月三煞不犯")
 
             # 日三煞检查
             day_fan_hour = sansha_info.get('day_sansha_hour_fan', False)
             day_fan_shan = sansha_info.get('day_sansha_fan', False)
+            day_fan_xiang = sansha_info.get('day_sansha_xiang_fan', False)
 
             _fan_mark(day_fan_hour, '日三煞犯时柱')
             _fan_mark(day_fan_shan, '日三煞犯山向', is_shan=True)
+            _fan_mark_xiang(day_fan_xiang, '日三煞犯向首', 15)
 
-            if not day_fan_hour and not day_fan_shan:
+            if not day_fan_hour and not day_fan_shan and not day_fan_xiang:
                 text.insert(tk.END, "\n   ✅ 日三煞不犯")
 
             # 年家五黄检查（详情展示宫位与坐山结论）
