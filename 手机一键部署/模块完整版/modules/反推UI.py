@@ -309,6 +309,16 @@ class ReverseWindow:
         self.top_tree.bind('<Double-Button-1>', self._on_top_double_click)
         self.top_tree.bind('<Button-3>', self._on_top_right_click)
 
+        # 榜单保存/打印（与单日详情同一套「保存 + 打印」能力）
+        _top_btn_bar = ttk.Frame(tab2)
+        _top_btn_bar.pack(fill=tk.X, padx=4, pady=(4, 2))
+        self.save_btn = ttk.Button(_top_btn_bar, text='保存榜单',
+                                   command=self._save_top_list, state=tk.DISABLED)
+        self.save_btn.pack(side=tk.LEFT)
+        self.print_btn = ttk.Button(_top_btn_bar, text='打印榜单',
+                                    command=self._print_top_list, state=tk.DISABLED)
+        self.print_btn.pack(side=tk.LEFT, padx=(6, 0))
+
         # ---- 层3：时间轴
         tab3 = ttk.Frame(self.nb)
         self.nb.add(tab3, text='③ 最优时间轴')
@@ -408,6 +418,8 @@ class ReverseWindow:
         self._cancel = False
         self.run_btn.config(state=tk.DISABLED)
         self.stop_btn.config(state=tk.NORMAL)
+        self.save_btn.config(state=tk.DISABLED)
+        self.print_btn.config(state=tk.DISABLED)
         self.progress.config(maximum=_days, value=0)
         self.status_var.set(f'正在反推：{self.event_var.get()} 共 {_days} 天 ...')
         self._thread = threading.Thread(
@@ -514,6 +526,123 @@ class ReverseWindow:
                 ('｜ 筛选：' + _flt) if _flt else ''))
         self._render_heatmap(res)
         self._render_top(res)
+        self.save_btn.config(state=tk.NORMAL)
+        self.print_btn.config(state=tk.NORMAL)
+
+    # ---------------------------------------------------------------- 榜单导出
+    def _build_top_lines(self):
+        """拼 Top-N 榜单文本（保存/打印共用，只读已算结果，不重算分值）。"""
+        _res = self._res or {}
+        _m = _res.get('meta') or {}
+        _days = _res.get('days') or []
+        _ev = _m.get('event_type', '')
+        _flt = self._filter_text(_m) or '不限'
+        _n_ji = sum(1 for _d in _days if _d['kind'] == '吉日')
+        _n_shen = sum(1 for _d in _days if _d['kind'] == '慎用')
+        _lines = [
+            '精准择时 · %s' % _ev,
+            '=' * 56,
+            '扫描范围：%s ~ %s（共 %s 天，已扫 %s 天）' % (
+                _m.get('start'), _m.get('end'), _m.get('days'), _m.get('scanned')),
+            '收录筛选：%s' % _flt,
+            '入榜：%d 条（吉日 %d / 慎用 %d）｜ 候选 %d ｜ 筛除 %s ｜ 否决 %d' % (
+                len(_days), _n_ji, _n_shen, _m.get('candidates', 0),
+                _m.get('filtered_out', 0), _m.get('vetoed', 0)),
+            '排序口径：吉日优先 → 否决数 → 吉神契合 → 总分',
+            '生成时间：%s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            '',
+        ]
+        for _i, _d in enumerate(_days, 1):
+            _fit = int(_d.get('jishen_fit') or 0)
+            _stars = jishen_stars(_fit)
+            _bh = _d.get('best_hour') or {}
+            _lines.append('%2d. %s　%s　农历%s' % (
+                _i, _d['date'], _d['weekday'], _d['lunar']))
+            _lines.append('    评分 %s 分（%s）｜ 状态 %s ｜ 吉神契合 %s（%d 分）' % (
+                _d['score'], _d['level'], _d['kind'],
+                ('★' * _stars) if _stars else '—', _fit))
+            _lines.append('    最优时辰 %s（%s）时柱 %s ｜ %s 分 %s' % (
+                _bh.get('时辰', '—'), _bh.get('时段', '—'), _bh.get('时柱', '—'),
+                _bh.get('score', '—'), _bh.get('level', '')))
+            _lines.append('    吉　　神：%s' % (str(_d.get('jishen') or '') or '—'))
+            _lines.append('    扣分主因：%s' % _reason_text(_d, compact=True))
+            _lines.append('')
+        if not _days:
+            _lines.append('（本次没有符合筛选条件的可用吉日）')
+        return _lines
+
+    def _save_top_list(self):
+        """保存 Top-N 榜单为 TXT。"""
+        _res = self._res or {}
+        if not _res.get('days'):
+            return
+        _ev = (_res.get('meta') or {}).get('event_type', '')
+        _default = '精准择时榜单_%s_%s.txt' % (
+            _ev, datetime.now().strftime('%Y%m%d'))
+        self._save_text(self._build_top_lines(), _default, '保存精准择时榜单')
+
+    def _print_top_list(self):
+        """打印 Top-N 榜单。"""
+        _res = self._res or {}
+        if not _res.get('days'):
+            return
+        _ev = (_res.get('meta') or {}).get('event_type', '')
+        self._print_text(self._build_top_lines(),
+                         '精准择时榜单 · %s' % _ev)
+
+    def _save_text(self, lines, default_name, dialog_title):
+        """通用：把文本行写入用户选定路径，并确认落盘。"""
+        _path = filedialog.asksaveasfilename(
+            title=dialog_title,
+            defaultextension='.txt',
+            initialfile=default_name,
+            filetypes=[('文本文件', '*.txt'), ('所有文件', '*.*')],
+            parent=self.win)
+        if not _path:
+            return
+        try:
+            with open(_path, 'w', encoding='utf-8') as _f:
+                _f.write('\n'.join(lines))
+        except Exception as _e:
+            messagebox.showerror('保存失败', str(_e), parent=self.win)
+            return
+        # 落盘确认（经验 813310：必须确认文件存在且大小>0 再提示成功）
+        if os.path.exists(_path) and os.path.getsize(_path) > 0:
+            messagebox.showinfo(
+                '保存成功',
+                '已保存至：\n%s\n\n共 %d 行' % (_path, len(lines)),
+                parent=self.win)
+        else:
+            messagebox.showerror('保存失败', '文件未成功写入，请检查路径权限',
+                                 parent=self.win)
+
+    def _print_text(self, lines, title):
+        """通用：生成临时 HTML（等宽对齐）并调用系统默认浏览器打印。"""
+        _html = (
+            '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            '<title>%s</title>'
+            '<style>body{font-family:"Microsoft YaHei UI",sans-serif;'
+            'margin:24px;}h2{color:#8E0000;}pre{font-family:"Consolas",'
+            '"Microsoft YaHei UI",monospace;font-size:12px;line-height:1.6;'
+            'white-space:pre-wrap;}</style>'
+            '<script>window.onload=function(){window.print();}'
+            '</script></head><body>'
+            '<h2>%s</h2><pre>%s</pre></body></html>'
+        ) % (title, title, '\n'.join(lines).replace('&', '&amp;')
+             .replace('<', '&lt;').replace('>', '&gt;'))
+        try:
+            _fd, _tmp = tempfile.mkstemp(suffix='.html', prefix='zeri_print_')
+            with os.fdopen(_fd, 'w', encoding='utf-8') as _f:
+                _f.write(_html)
+        except Exception as _e:
+            messagebox.showerror('打印失败', str(_e), parent=self.win)
+            return
+        try:
+            os.startfile(_tmp)
+        except Exception as _e:
+            messagebox.showerror('打印失败',
+                                 '无法调用打印：%s\n临时文件：%s' % (_e, _tmp),
+                                 parent=self.win)
 
     def _render_top(self, res):
         for _i in self.top_tree.get_children():
@@ -825,63 +954,14 @@ class ReverseWindow:
 
     def _save_day_detail(self, d, ev, bh, stars, fit):
         """保存日课详情为 TXT（filedialog 选路径，落盘后提示）。"""
-        _lines = self._build_detail_lines(d, ev, bh, stars, fit)
         _default = '日课详情_%s_%s.txt' % (d['date'], ev)
-        _path = filedialog.asksaveasfilename(
-            title='保存日课详情',
-            defaultextension='.txt',
-            initialfile=_default,
-            filetypes=[('文本文件', '*.txt'), ('所有文件', '*.*')],
-            parent=self.win)
-        if not _path:
-            return
-        try:
-            with open(_path, 'w', encoding='utf-8') as _f:
-                _f.write('\n'.join(_lines))
-        except Exception as _e:
-            messagebox.showerror('保存失败', str(_e), parent=self.win)
-            return
-        # 落盘确认（经验 813310：必须确认文件存在且大小>0 再提示成功）
-        if os.path.exists(_path) and os.path.getsize(_path) > 0:
-            messagebox.showinfo(
-                '保存成功',
-                '已保存至：\n%s\n\n共 %d 行' % (_path, len(_lines)),
-                parent=self.win)
-        else:
-            messagebox.showerror('保存失败', '文件未成功写入，请检查路径权限',
-                                 parent=self.win)
+        self._save_text(self._build_detail_lines(d, ev, bh, stars, fit),
+                        _default, '保存日课详情')
 
     def _print_day_detail(self, d, ev, bh, stars, fit):
         """打印日课详情：生成临时 HTML，调用系统默认打印。"""
-        _lines = self._build_detail_lines(d, ev, bh, stars, fit)
-        _title = '日课详情 · %s · %s' % (d['date'], ev)
-        # 简单 HTML：标题 + <pre> 正文（保留等宽对齐）
-        _html = (
-            '<!DOCTYPE html><html><head><meta charset="utf-8">'
-            '<title>%s</title>'
-            '<style>body{font-family:"Microsoft YaHei UI",sans-serif;'
-            'margin:24px;}h2{color:#8E0000;}pre{font-family:"Consolas",'
-            '"Microsoft YaHei UI",monospace;font-size:12px;line-height:1.6;'
-            'white-space:pre-wrap;}</style>'
-            '<script>window.onload=function(){window.print();}'
-            '</script></head><body>'
-            '<h2>%s</h2><pre>%s</pre></body></html>'
-        ) % (_title, _title, '\n'.join(_lines).replace('&', '&amp;')
-             .replace('<', '&lt;').replace('>', '&gt;'))
-        try:
-            _fd, _tmp = tempfile.mkstemp(suffix='.html', prefix='zeri_detail_')
-            with os.fdopen(_fd, 'w', encoding='utf-8') as _f:
-                _f.write(_html)
-        except Exception as _e:
-            messagebox.showerror('打印失败', str(_e), parent=self.win)
-            return
-        # 用系统默认浏览器打开并触发打印（HTML 内置 onload=print）
-        try:
-            os.startfile(_tmp)
-        except Exception as _e:
-            messagebox.showerror('打印失败',
-                                 '无法调用打印：%s\n临时文件：%s' % (_e, _tmp),
-                                 parent=self.win)
+        self._print_text(self._build_detail_lines(d, ev, bh, stars, fit),
+                         '日课详情 · %s · %s' % (d['date'], ev))
 
     def _on_day_click(self, ds):
         if ds in self._top_dates:
