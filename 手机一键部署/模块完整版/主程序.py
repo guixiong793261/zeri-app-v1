@@ -4824,7 +4824,9 @@ class ZeriApp:
         sansha_frame.pack(fill=tk.X, pady=10)
 
         self.avoid_sansha = tk.BooleanVar(value=False)
-        tk.Checkbutton(sansha_frame, text="日柱地支不在年月日三煞方", variable=self.avoid_sansha, indicatoron=True).pack(anchor=tk.W, padx=5)
+        tk.Checkbutton(sansha_frame,
+                       text="日柱地支不临月三煞方（系统默认扣20分不否决，勾选后按硬性排除）",
+                       variable=self.avoid_sansha, indicatoron=True).pack(anchor=tk.W, padx=5)
 
         # 山家检查条件
         mountain_frame = ttk.LabelFrame(main_frame, text="山家检查条件（需选择山向）")
@@ -4872,7 +4874,10 @@ class ZeriApp:
         exclude_shensha_frame.pack(fill=tk.X, pady=10)
 
         self.exclude_shensha_vars = {}
-        common_xiong = ["三煞", "岁破", "月破", "杨公忌", "四离", "四绝", "往亡", "红砂"]
+        # 只保留系统确有对应条目、且未被本窗其它条件重复覆盖的凶煞：
+        # 三煞/岁破/月破分别由上方「三煞方条件」与「避岁破/避月破」承担
+        # （岁破已按 001 §140 删除，三煞不属 shensha_list，月破仅嫁娶路径有条目）。
+        common_xiong = ["杨公忌", "四离", "四绝", "往亡", "红砂"]
         for i, shen in enumerate(common_xiong):
             var = tk.BooleanVar(value=False)
             self.exclude_shensha_vars[shen] = var
@@ -5379,27 +5384,25 @@ class ZeriApp:
                                 pass_conditions = False
                                 break
 
-                # 9. 避三煞方
+                # 9. 避三煞方（按系统口径只查"月三煞临日柱"：日柱 -20 不否决，
+                #    勾选本项后加严为硬性排除。年三煞不判四柱（001 §211 案 B 已旁路）；
+                #    日三煞由日支自身三合局取对面三支，日支恒不落入，故不查。）
                 if conditions.get('avoid_sansha', False):
                     day_zhu_str = sizhu.get('日柱', '')
                     day_zhi = day_zhu_str[1] if len(day_zhu_str) >= 2 else ''
-                    year_zhi = sizhu.get('year_zhi', '')
                     month_zhi = sizhu.get('month_zhi', '')
-                    
-                    # 三煞方位映射表（纯地支，符合三合局规则）
+
+                    # 三煞方位映射表（纯地支，符合三合局规则；与评分器 get_sansha_info 同表）
                     sansha_map = {
                         '申': ['巳', '午', '未'], '子': ['巳', '午', '未'], '辰': ['巳', '午', '未'],
                         '寅': ['亥', '子', '丑'], '午': ['亥', '子', '丑'], '戌': ['亥', '子', '丑'],
                         '巳': ['寅', '卯', '辰'], '酉': ['寅', '卯', '辰'], '丑': ['寅', '卯', '辰'],
                         '亥': ['申', '酉', '戌'], '卯': ['申', '酉', '戌'], '未': ['申', '酉', '戌']
                     }
-                    
-                    year_sansha = sansha_map.get(year_zhi, [])
+
                     month_sansha = sansha_map.get(month_zhi, [])
-                    day_sansha = sansha_map.get(day_zhi, [])
-                    
-                    # 检查日柱地支是否在年、月、日三煞方
-                    if day_zhi in year_sansha or day_zhi in month_sansha or day_zhi in day_sansha:
+
+                    if day_zhi in month_sansha:
                         pass_conditions = False
 
                 # 9. 山家专业检查（使用二十四山择吉天机模块）
@@ -5517,12 +5520,15 @@ class ZeriApp:
                     if not found_hour:
                         pass_conditions = False
 
-                # 10. 排除特定神煞
+                # 10. 排除特定神煞（按神煞名匹配，不扫说明文字：
+                #     旧写法把整条 dict 转字符串，说明里提到"三煞"也会被误判命中）
                 if conditions.get('exclude_shensha'):
                     shensha_list = score_result.get('shensha_list', [])
-                    shensha_text = ' '.join([str(s) for s in shensha_list])
+                    shensha_names = ' '.join(
+                        str(s.get('name', '')) if isinstance(s, dict) else str(s)
+                        for s in shensha_list)
                     for shen in conditions['exclude_shensha']:
-                        if shen in shensha_text:
+                        if shen in shensha_names:
                             pass_conditions = False
                             break
 
