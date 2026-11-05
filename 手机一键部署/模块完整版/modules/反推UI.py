@@ -28,7 +28,7 @@ import tkinter as tk
 from datetime import date, datetime
 from tkinter import filedialog, messagebox, ttk
 
-from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_TOP_N
+from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_DAYS, DEFAULT_TOP_N
 from modules.排序键 import jishen_stars
 from modules.事项标准 import UI_EVENTS, MOUNTAIN_CENTERED_EVENTS
 
@@ -154,15 +154,27 @@ class ReverseWindow:
         ttk.Entry(bar, textvariable=self.start_var, width=12).pack(side=tk.LEFT, padx=(2, 10))
 
         ttk.Label(bar, text='范围:').pack(side=tk.LEFT)
-        self.days_var = tk.StringVar(value='30 天')
-        ttk.Combobox(bar, textvariable=self.days_var,
-                     values=['7 天', '30 天', '60 天', '90 天'],
-                     state='readonly', width=8).pack(side=tk.LEFT, padx=(2, 10))
+        self.days_var = tk.StringVar(value=str(DEFAULT_DAYS))
+        ttk.Spinbox(bar, from_=1, to=MAX_DAYS, textvariable=self.days_var,
+                    width=5).pack(side=tk.LEFT, padx=(2, 2))
+        ttk.Label(bar, text='天').pack(side=tk.LEFT, padx=(0, 10))
 
         ttk.Label(bar, text='Top N:').pack(side=tk.LEFT)
         self.topn_var = tk.StringVar(value=str(DEFAULT_TOP_N))
         ttk.Spinbox(bar, from_=1, to=30, textvariable=self.topn_var,
                     width=5).pack(side=tk.LEFT, padx=(2, 10))
+
+        ttk.Label(bar, text='状态:').pack(side=tk.LEFT)
+        self.kind_var = tk.StringVar(value='全部')
+        ttk.Combobox(bar, textvariable=self.kind_var,
+                     values=['全部', '吉日', '慎用'],
+                     state='readonly', width=5).pack(side=tk.LEFT, padx=(2, 10))
+
+        ttk.Label(bar, text='吉神:').pack(side=tk.LEFT)
+        self.fit_var = tk.StringVar(value='不限')
+        ttk.Combobox(bar, textvariable=self.fit_var,
+                     values=['不限', '1星+', '2星+', '3星+', '4星+', '5星'],
+                     state='readonly', width=6).pack(side=tk.LEFT, padx=(2, 10))
 
         self.run_btn = ttk.Button(bar, text='开始反推', command=self._start)
         self.run_btn.pack(side=tk.LEFT, padx=(6, 4))
@@ -172,7 +184,7 @@ class ReverseWindow:
 
         self.progress = _GreenProgressbar(bar, length=180)
         self.progress.pack(side=tk.LEFT, padx=(12, 6))
-        self.status_var = tk.StringVar(value='就绪：选择范围后点"开始反推"（默认 30 天，最大 90 天）')
+        self.status_var = tk.StringVar(value='就绪：选范围后点"开始反推"（最大 365 天）')
         ttk.Label(bar, textvariable=self.status_var).pack(side=tk.LEFT, padx=4)
 
     def _build_context_bar(self):
@@ -372,6 +384,15 @@ class ReverseWindow:
                                  parent=self.win)
             return
 
+        # 收录筛选：状态（全部/吉日/慎用）+ 吉神契合星级下限（0=不限）
+        _kind_v = str(self.kind_var.get()).strip()
+        _only_kind = None if _kind_v in ('', '全部') else _kind_v
+        _fit_v = str(self.fit_var.get()).strip()
+        try:
+            _min_stars = 0 if _fit_v in ('', '不限') else int(_fit_v[0])
+        except ValueError:
+            _min_stars = 0
+
         # 山向中心事项（入宅/修造/安葬等）无坐山时提示确认（001 §210 Commit 3）
         _ev = self.event_var.get()
         _shan = str(self.context.get('shan_xiang') or '').strip()
@@ -391,16 +412,18 @@ class ReverseWindow:
         self.status_var.set(f'正在反推：{self.event_var.get()} 共 {_days} 天 ...')
         self._thread = threading.Thread(
             target=self._work,
-            args=(self.event_var.get(), _days, _topn, _start),
+            args=(self.event_var.get(), _days, _topn, _start,
+                  _only_kind, _min_stars),
             daemon=True)
         self._thread.start()
 
-    def _work(self, event_type, days, top_n, start):
+    def _work(self, event_type, days, top_n, start, only_kind, min_stars):
         """子线程：只算不碰 Tk，结果经 queue 回主线程。"""
         try:
             _res = search_top_n(
                 days=days, event_type=event_type, owners=self.owners,
                 start=start, top_n=top_n, context=self.context,
+                only_kind=only_kind, min_jishen_stars=min_stars,
                 progress=lambda done, tot, d: self._q.put(('progress', done, tot, d)),
                 cancel=lambda: self._cancel)
             self._q.put(('done', _res))
@@ -445,34 +468,50 @@ class ReverseWindow:
             self.win.after(80, self._poll)
 
     # ---------------------------------------------------------------- 渲染
+    @staticmethod
+    def _filter_text(_m):
+        """把筛选条件拼成一句可读文本（无筛选返回空串）。"""
+        _parts = []
+        if _m.get('only_kind'):
+            _parts.append('仅%s' % _m['only_kind'])
+        if _m.get('min_jishen_stars'):
+            _parts.append('吉神≥%d星' % _m['min_jishen_stars'])
+        return '、'.join(_parts)
+
     def _on_done(self, res):
         self._res = res
         self.run_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
         _m = res['meta']
+        _flt = self._filter_text(_m)
         # 001 §214 C2（2026-11-03 拍板）：零候选不得只在状态栏显示数字，
         # 必须显眼提示「本范围内无可用吉日」，杜绝用户对着空榜无从判断。
         if not res.get('days'):
             _zero_msg = ('⚠ 当前时间范围内，没有符合条件且能避开冲煞的可用吉日。'
-                         '请尝试扩大日期范围，或调整山向/事主信息。')
+                         + ('（当前筛选：%s）' % _flt if _flt else '')
+                         + '请尝试扩大日期范围、放宽筛选，或调整山向/事主信息。')
             self.status_var.set(_zero_msg)
             self.summary_var.set(
-                '事项 %s ｜ %s ~ %s ｜ 候选 0 条（否决 %d 天）｜ 建议扩大日期范围或调整山向/事主'
-                % (_m['event_type'], _m['start'], _m['end'], _m['vetoed']))
+                '事项 %s ｜ %s ~ %s ｜ 候选 0 条（否决 %d 天%s）｜ 建议扩大范围或放宽筛选'
+                % (_m['event_type'], _m['start'], _m['end'], _m['vetoed'],
+                   ('，筛除 %d 天' % _m.get('filtered_out', 0))
+                   if _m.get('filtered_out') else ''))
             self._render_heatmap(res)
             self._render_top(res)
             messagebox.showwarning('无可用吉日', _zero_msg, parent=self.win)
             return
         self.status_var.set(
-            '完成：%d/%d 天，候选 %d，否决 %d，耗时 %.2fs%s' % (
-                _m['scanned'], _m['days'], _m['candidates'], _m['vetoed'],
+            '完成：%d/%d 天，候选 %d，筛除 %d，否决 %d，耗时 %.2fs%s' % (
+                _m['scanned'], _m['days'], _m['candidates'],
+                _m.get('filtered_out', 0), _m['vetoed'],
                 _m['elapsed'], '（已停止，为部分结果）' if _m['cancelled'] else ''))
         self.summary_var.set(
-            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）｜ '
-            '排序=吉日优先→总分降序（同分看吉神契合）｜ 双击看详情，右键可加入择日贴' % (
+            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）%s｜ '
+            '排序=吉日优先→否决数→吉神契合→总分｜ 双击看详情，右键可加入择日贴' % (
                 _m['event_type'], _m['start'], _m['end'], len(res['days']),
                 sum(1 for _d in res['days'] if _d['kind'] == '吉日'),
-                sum(1 for _d in res['days'] if _d['kind'] == '慎用')))
+                sum(1 for _d in res['days'] if _d['kind'] == '慎用'),
+                ('｜ 筛选：' + _flt) if _flt else ''))
         self._render_heatmap(res)
         self._render_top(res)
 

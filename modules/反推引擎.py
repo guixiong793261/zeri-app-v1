@@ -32,7 +32,7 @@ from modules.事项标准 import UI_EVENTS, MARRIAGE_EVENTS, action_sequence_of
 from modules.动作时序 import plan_actions
 from modules.排序键 import (fenjin_preview_penalty, scoring_shensha,
                            shashi_hour, hour_rank_key,
-                           classify_day, rank_day, jishen_fit,
+                           classify_day, rank_day, jishen_fit, jishen_stars,
                            deduct_items, deduct_sum)
 
 # 十二时辰（起始小时 → 地支），与主程序扫日候选一致
@@ -46,7 +46,7 @@ HOUR_SPAN = {'子': '23-01', '丑': '01-03', '寅': '03-05', '卯': '05-07',
 
 WEEKDAY_CN = ('周一', '周二', '周三', '周四', '周五', '周六', '周日')
 
-MAX_DAYS = 90          # 用户 §210 拍板：默认 30 天，最大 90 天
+MAX_DAYS = 365         # 范围上限：一整年（默认 30 天，可选 365 天）
 DEFAULT_DAYS = 30
 DEFAULT_TOP_N = 10
 
@@ -277,11 +277,12 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
 
 
 def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
-                 top_n=DEFAULT_TOP_N, context=None, progress=None, cancel=None):
+                 top_n=DEFAULT_TOP_N, context=None, progress=None, cancel=None,
+                 only_kind=None, min_jishen_stars=0):
     """反推 Top-N 吉日（后台线程可直接调用；本函数自身不触碰任何 GUI）。
 
     Args:
-        days: 扫描天数，1..90（默认 30）
+        days: 扫描天数，1..365（默认 30，上限一整年）
         event_type: 事项名，须为 modules.事项标准.UI_EVENTS 之一
         owners: 主程序口径的事主 dict 列表（可空）
         start: 起始日期（date），默认今天
@@ -289,10 +290,12 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
         context: 见 scan_day
         progress: 回调 progress(done, total, date)，用于后台线程回主线程刷新
         cancel: 回调 bool，返回 True 则中止并返回已算部分（'cancelled': True）
+        only_kind: 只收录指定状态：None/'吉日'/'慎用'（否决日永不入榜）
+        min_jishen_stars: 吉神契合星级下限 0..5（0=不限，按 jishen_stars 分档）
 
     Returns:
         dict:
-          meta: 扫描参数/耗时/计数
+          meta: 扫描参数/耗时/计数/筛选条件
           all_days: 每日 {'date','kind','score','level'}（热力日历用，含否决日）
           days: 入榜前 top_n 条完整记录（吉日+慎用，慎用带 kind='慎用' 黄标）
           vetoed: 否决日 {'date','score','level','reasons'}
@@ -305,6 +308,13 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
     _top_n = int(top_n)
     if _top_n < 1:
         raise ValueError(f'Top N 须 ≥ 1，收到 {top_n!r}')
+    if only_kind in ('', '全部'):
+        only_kind = None
+    if only_kind not in (None, '吉日', '慎用'):
+        raise ValueError(f'only_kind 须为 None/吉日/慎用，收到 {only_kind!r}')
+    _min_stars = int(min_jishen_stars or 0)
+    if not 0 <= _min_stars <= 5:
+        raise ValueError(f'吉神星级下限须在 0~5 之间，收到 {min_jishen_stars!r}')
     _start = start or date.today()
     if not isinstance(_start, date):
         raise ValueError(f'start 须为 datetime.date，收到 {type(start).__name__}')
@@ -314,6 +324,7 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
     _cands = []      # (raw_result, record)
     _vetoed = []
     _all = []
+    _filtered = 0    # 因 only_kind / 星级门槛被筛掉的候选日数
 
     for _i in range(_days):
         if cancel is not None and cancel():
@@ -335,6 +346,10 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
             _vetoed.append({'date': _rec['date'], 'weekday': _rec['weekday'],
                             'score': _rec['score'], 'level': _rec['level'],
                             'reasons': _rec['veto_reasons']})
+        elif only_kind is not None and _kind != only_kind:
+            _filtered += 1
+        elif _min_stars and jishen_stars(_rec['jishen_fit']) < _min_stars:
+            _filtered += 1
         else:
             _cands.append((_best_r, _rec))
         if progress is not None:
@@ -354,6 +369,9 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
             'top_n': _top_n,
             'scanned': len(_all),
             'candidates': len(_cands),
+            'filtered_out': _filtered,
+            'only_kind': only_kind,
+            'min_jishen_stars': _min_stars,
             'vetoed': len(_vetoed),
             'elapsed': round(time.time() - _t0, 2),
             'cancelled': len(_all) < _days,

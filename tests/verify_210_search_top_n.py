@@ -13,7 +13,7 @@ C. 对拍零漂移：反推榜每日最优时辰的分数/时柱，与"直调 ca
 D. 收录与排序：否决日不入榜但仍进 vetoed/all_days；慎用日入榜且排吉日之后；
    榜单按 (收录层, 否决数, 吉神契合度, 总分) 非降序。
 E. 时间轴：入榜日 12 条时辰记录齐备，best_hour 与其中之一完全对上。
-F. 参数校验：未知事项 / days 越界（0、91）/ top_n<1 均抛 ValueError。
+F. 参数校验：未知事项 / days 越界（0、MAX_DAYS+1）/ top_n<1 均抛 ValueError。
 G. 线程与回调：后台线程内调用可完成且结果与同步一致；progress 按日回调；
    cancel 生效时返回已算部分并置 cancelled=True。
 
@@ -235,7 +235,7 @@ def test_validation():
     for _kw, _label in (
             ({'event_type': '不存在的事项'}, '未知事项'),
             ({'days': 0}, 'days=0'),
-            ({'days': MAX_DAYS + 1}, 'days=91'),
+            ({'days': MAX_DAYS + 1}, 'days=%d' % (MAX_DAYS + 1)),
             ({'top_n': 0}, 'top_n=0')):
         _args = {'days': 1, 'event_type': '入学', 'owners': [],
                  'start': date(2026, 6, 1)}
