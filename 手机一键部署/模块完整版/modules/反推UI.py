@@ -641,13 +641,24 @@ class ReverseWindow:
 
         _win = tk.Toplevel(self.win)
         _win.title('日课详情 · %s · %s' % (_d['date'], _ev))
-        _win.geometry('920x720')
-        _win.minsize(760, 560)
+        # 手机适配：窗口不得超过屏幕，否则底部（右侧）按钮条会被裁到屏幕外，
+        # 表现为"详情窗没有保存/打印"。按可用屏幕尺寸收敛后定位到左上角。
+        _sw = _win.winfo_screenwidth()
+        _sh = _win.winfo_screenheight()
+        _w = min(920, max(320, _sw - 40))
+        _h = min(720, max(320, _sh - 60))
+        _win.geometry('%dx%d+%d+%d' % (_w, _h, 10, 10))
+        _win.minsize(min(760, _w), min(560, _h))
         _win.transient(self.win)
+
+        # 底部按钮条：先于内容区 pack 到底边，窗口被压缩时按钮也不会消失
+        _bar = ttk.Frame(_win, padding=(4, 6, 8, 10))
+        _bar.pack(side=tk.BOTTOM, fill=tk.X)
 
         _head = ttk.Frame(_win, padding=(12, 10, 12, 2))
         _head.pack(fill=tk.X)
         _font_l = ('Microsoft YaHei UI', 9, 'bold')
+        _wrap = max(220, _w - 180)      # 随窗口宽度收敛，避免表头把窗口撑出屏幕
         for _i, (_k, _v) in enumerate((
                 ('日　　期', '%s　%s　农历%s' % (_d['date'], _d['weekday'],
                                                _d['lunar'])),
@@ -663,7 +674,7 @@ class ReverseWindow:
                 ('评分理由', str(_d.get('reason') or '') or '—'))):
             ttk.Label(_head, text=_k, font=_font_l).grid(
                 row=_i, column=0, sticky='ne', pady=1)
-            ttk.Label(_head, text=str(_v), wraplength=770,
+            ttk.Label(_head, text=str(_v), wraplength=_wrap,
                       justify=tk.LEFT).grid(row=_i, column=1, sticky='w',
                                             padx=(6, 0), pady=1)
 
@@ -719,16 +730,16 @@ class ReverseWindow:
                 self._hour_advice(_h, _bh['地支'], _ev, _d['score'])),
                 tags=_tags)
 
-        ttk.Button(_win, text='关闭', command=_win.destroy).pack(
-            side=tk.RIGHT, padx=(4, 12), pady=(0, 10))
-        ttk.Button(_win, text='打印',
+        ttk.Button(_bar, text='关闭', command=_win.destroy).pack(
+            side=tk.RIGHT, padx=(4, 4))
+        ttk.Button(_bar, text='打印',
                    command=lambda: self._print_day_detail(
                        _d, _ev, _bh, _stars, _fit)).pack(
-            side=tk.RIGHT, padx=4, pady=(0, 10))
-        ttk.Button(_win, text='保存',
+            side=tk.RIGHT, padx=4)
+        ttk.Button(_bar, text='保存',
                    command=lambda: self._save_day_detail(
                        _d, _ev, _bh, _stars, _fit)).pack(
-            side=tk.RIGHT, padx=4, pady=(0, 10))
+            side=tk.RIGHT, padx=4)
 
     def _build_detail_lines(self, d, ev, bh, stars, fit):
         """构造日课详情的纯文本行列表（保存/打印共用数据源）。"""
