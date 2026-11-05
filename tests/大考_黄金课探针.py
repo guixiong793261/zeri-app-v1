@@ -160,8 +160,9 @@ def s1_baseline(runall_json):
     print('\n[S1] 底层引擎与回归基线')
     out = {'checks': [], 'run_all': None, 'sha': {}}
 
-    # S1-1 三内层 SHA 一致性（主仓：仓根 / 手机一键部署 / 模块完整版）
-    layers = ['', '手机一键部署', os.path.join('手机一键部署', '模块完整版')]
+    # S1-1 双内层 SHA 一致性（主仓：仓根 / 手机一键部署\模块完整版）
+    # 2026-11-05：外层重复副本已按 893b33c 合并删除，仅剩仓根 + 模块完整版
+    layers = ['', os.path.join('手机一键部署', '模块完整版')]
     targets = ['主程序.py', os.path.join('modules', '评分器.py'),
                os.path.join('modules', '事项标准.py'), os.path.join('modules', '反推引擎.py'),
                os.path.join('modules', '动作时序.py'), os.path.join('modules', '择日贴.py'),
@@ -179,11 +180,11 @@ def s1_baseline(runall_json):
         out['sha'][_t] = _hs
         if len(set(_hs)) != 1:
             diff[_t] = _hs
-    check('S1-1', '三内层 SHA 逐字一致（%d 个关键文件）' % len(targets), not diff, diff)
+    check('S1-1', '双内层 SHA 逐字一致（%d 个关键文件）' % len(targets), not diff, diff)
     out['checks'].append({'id': 'S1-1', 'ok': not diff, 'diff': diff})
 
     # S1-3 六副本官方脚本对账（check_six_copies.py）：
-    #      --main 必须 0 退出（3 内层门禁）；--uni 属 H3 长尾技术债，
+    #      --main 必须 0 退出（双内层门禁）；--uni 属 H3 长尾技术债，
     #      现状存在漂移/缺失 → 记 OBS（BACKLOG §五 暂不收敛，非本批回归）。
     _script = os.path.join(ROOT, '.trae', 'skills', 'zeri-module-change',
                            'references', 'check_six_copies.py')
@@ -191,7 +192,7 @@ def s1_baseline(runall_json):
         _main = subprocess.run([sys.executable, _script, '--main'] + targets,
                                capture_output=True, text=True)
         out['six_copies_main_exit'] = _main.returncode
-        check('S1-3', '六副本脚本 --main（3 内层）全部一致', _main.returncode == 0,
+        check('S1-3', '六副本脚本 --main（双内层）全部一致', _main.returncode == 0,
               _main.stdout.strip().splitlines()[-2:] if _main.stdout else '')
         _uni = subprocess.run([sys.executable, _script, '--uni'] + targets,
                               capture_output=True, text=True)
@@ -379,7 +380,7 @@ def s2_matrix(quick=False):
 # ====================================================== S3 反推引擎与动作时序
 def s3_reverse():
     print('\n[S3] 反推引擎与动作时序（数据流 / 四态 / D4 拦截）')
-    from modules.反推引擎 import search_top_n
+    from modules.反推引擎 import search_top_n, MAX_DAYS
     from modules.事项标准 import UI_EVENTS
     out = {}
 
@@ -485,7 +486,8 @@ def s3_reverse():
     _err = []
     for _kw, _lbl in ((dict(event_type='不存在的课'), '未知事项'),
                       (dict(event_type='嫁娶', days=0), 'days=0'),
-                      (dict(event_type='嫁娶', days=91), 'days=91'),
+                      (dict(event_type='嫁娶', days=MAX_DAYS + 1),
+                       'days=%d' % (MAX_DAYS + 1)),
                       (dict(event_type='嫁娶', top_n=0), 'top_n=0')):
         try:
             search_top_n(owners=[], start=dt.date(2026, 1, 1), **_kw)

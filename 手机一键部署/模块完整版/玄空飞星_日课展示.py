@@ -107,6 +107,15 @@ class XuanKongApp:
         # 自动带入择日结果的日期/时/坐山/兼向（末尾 update_grids 即据此自动分析）
         self._apply_preset(self._preset)
 
+        # 范围声明（2026-11-05 用户指令2）：明确本模块边界，避免误当完整玄空风水排盘
+        tk.Label(
+            root,
+            text=('📌 本模块仅提供日课紫白四盘（年月日时）辅助吉凶，'
+                  '不包含宅运盘、替卦、元运旺衰等风水排盘内容。'),
+            fg='#ffd27a', bg='#3a2f1a', font=('微软雅黑', 10),
+            anchor='w', justify='left', wraplength=940, padx=10, pady=6
+        ).pack(fill='x', padx=20, pady=(0, 6))
+
         self.info_label = tk.Label(root, text="", fg='#d4af70', bg='#0b0e14', font=('微软雅黑', 10))
         self.info_label.pack(pady=5)
 

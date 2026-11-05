@@ -25,7 +25,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 SCAN_ROOTS = [
     ROOT / 'modules',
-    ROOT / '手机一键部署' / 'modules',
     ROOT / '手机一键部署' / '模块完整版' / 'modules',
 ]
 

@@ -13,7 +13,7 @@ verify_d1_zhisi 批2 删除完备性（典据：协纪卷六/卷十天吏【致�
   条目同批收口。基类 '天吏' -15（A7 修复后典载口径）保持不动。
 
 检查项：
-1. 三层 modules（根/手机一键部署/手机一键部署\模块完整版）代码行零残留；
+1. 两层 modules（根/手机一键部署\模块完整版）代码行零残留；
 2. 动态导入事项标准：零 ('安葬','致死日')/('安葬','天吏日') 注册键，
    ('安葬','天吏') 正当条目仍在（防误删）；
 3. 安葬神煞.py 墓碑 '批2（001 §71）' ≥2（发射点+谓词）；
@@ -31,7 +31,6 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = Path(__file__).resolve().parents[1]
 SCAN_ROOTS = [
     ROOT / 'modules',
-    ROOT / '手机一键部署' / 'modules',
     ROOT / '手机一键部署' / '模块完整版' / 'modules',
 ]
 TARGET = ROOT / 'modules' / 'shensha' / '安葬神煞.py'

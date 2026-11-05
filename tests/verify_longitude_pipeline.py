@@ -40,10 +40,10 @@ def norm_sha(p):
     return hashlib.sha256(b).hexdigest()[:16]
 
 groups = [
-    ("主程序", [r"主程序.py", r"手机一键部署\主程序.py", r"手机一键部署\模块完整版\主程序.py"]),
-    ("日课评分系统", [r"modules\日课评分系统.py", r"手机一键部署\modules\日课评分系统.py"]),
-    ("八字排盘", [r"modules\八字排盘.py", r"手机一键部署\modules\八字排盘.py", r"手机一键部署\模块完整版\modules\八字排盘.py"]),
-    ("八字排盘模块", [r"modules\八字排盘模块.py", r"手机一键部署\modules\八字排盘模块.py", r"手机一键部署\模块完整版\modules\八字排盘模块.py"]),
+    ("主程序", [r"主程序.py", r"手机一键部署\模块完整版\主程序.py"]),
+    ("日课评分系统", [r"modules\日课评分系统.py", r"手机一键部署\模块完整版\modules\日课评分系统.py"]),
+    ("八字排盘", [r"modules\八字排盘.py", r"手机一键部署\模块完整版\modules\八字排盘.py"]),
+    ("八字排盘模块", [r"modules\八字排盘模块.py", r"手机一键部署\模块完整版\modules\八字排盘模块.py"]),
 ]
 import os
 base = os.path.dirname(os.path.abspath(__file__))

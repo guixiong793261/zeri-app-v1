@@ -30,7 +30,6 @@ from datetime import date
 ROOT = Path(__file__).resolve().parents[1]
 SCORER_COPIES = [
     ROOT / 'modules' / '评分器.py',
-    ROOT / '手机一键部署' / 'modules' / '评分器.py',
     ROOT / '手机一键部署' / '模块完整版' / 'modules' / '评分器.py',
 ]
 
