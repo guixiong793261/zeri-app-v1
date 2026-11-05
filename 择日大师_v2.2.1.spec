@@ -2,6 +2,9 @@
 from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports = []
+# 顶层模块通过 importlib.import_module('玄空飞星_日课展示') 动态加载，
+# 静态分析抓不到，必须显式声明，否则 exe 报 No module named '玄空飞星_日课展示'
+hiddenimports += ['玄空飞星_日课展示']
 hiddenimports += collect_submodules('modules')
 
 
