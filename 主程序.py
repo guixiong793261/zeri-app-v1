@@ -4789,45 +4789,70 @@ class ZeriApp:
         current_event = self.event_var.get()
         
         # 001 §219（2026-11-06 用户拍板）：各事项吉神清单精简为「主吉神」，
-        # 次要/点缀型杂神删除；修造/动土/拆舍补入扶山、补龙、相主、山家吉神、
-        # 岁禄/岁马到山（神煞层早已发射，条件择日清单此前缺失）。
+        # 次要/点缀型杂神删除；修造补入扶山、补龙、相主、山家吉神、岁禄/岁马到山。
+        # 001 §221（2026-11-07 逐项可命中性验证后修正）：
+        #   ① 覆盖 UI_EVENTS 全部 16 个事项——原表只有 7 个键且 '其他' 不在
+        #      UI_EVENTS 中，导致订婚/纳采/开业/出行/安床/作灶/移徙/入学/求医/签约
+        #      一个勾选项都没有；
+        #   ② 删除评分层根本不发射的死选项，勾选即失效：天喜/红鸾（评分层未实现）、
+        #      入宅的岁禄/岁马到山（入宅不发射，全年 0 命中）、动土/拆舍的
+        #      扶山/补龙/山家三神/岁禄/岁马（仅修造扩展发射）、动土的母仓。
         marriage_gods = ['天德贵人', '月德贵人', '天乙贵人', '不将日', '三合', '六合',
-                         '天喜', '红鸾', '大利月', '小利月']
+                         '大利月', '小利月']
 
         common_gods = ['天德贵人', '月德贵人', '天乙贵人', '三合局', '六合',
-                       '天德日', '月德日', '天赦', '母仓']
+                       '天赦', '母仓', '王日', '生气']
 
         burial_gods = ['天德贵人', '月德贵人', '天乙贵人', '生气',
                        '三合', '六合', '太阳到山', '太阴到山', '天赦']
 
-        # 修造/动土/拆舍共用主吉神（14 项）：通用贵人 + 三合六合 + 太阳太阴到山向
-        # + 扶山/补龙/相主 + 山家三合/六合/贵人 + 岁禄/岁马到山。
+        # 修造：通用贵人 + 三合六合 + 太阳太阴到山 + 扶山/补龙/相主
+        # + 山家三合/六合/贵人 + 岁禄/岁马到山（均由修造神煞扩展发射）。
         _build_core_gods = ['天德贵人', '月德贵人', '天乙贵人',
                             '三合局', '六合', '太阳到山', '太阴到山',
                             '扶山', '补龙', '相主',
                             '山家三合', '山家六合', '山家贵人', '岁禄到山', '岁马到山']
 
         build_gods = list(_build_core_gods)
-        digging_gods = list(_build_core_gods)
-        demolition_gods = list(_build_core_gods)
+        # 动土/拆舍不走修造扩展（CONSTRUCTION_EVENTS 仅修造/装修），
+        # 扶山/补龙/山家三神/岁禄岁马永不发射，故按其实际神煞表另立清单。
+        digging_gods = ['天德贵人', '月德贵人', '天乙贵人', '三合局', '六合',
+                        '天德日', '天赦', '王日']
+        demolition_gods = ['天德贵人', '月德贵人', '天乙贵人', '三合局', '六合',
+                           '天德日', '天赦', '母仓', '生气']
 
         movein_gods = ['天德贵人', '月德贵人', '天乙贵人',
                        '三合局', '六合', '太阳到山', '太阳到向',
-                       '岁禄到山', '岁马到山']
+                       '天赦', '母仓']
 
+        # 键必须先覆盖 UI_EVENTS 全部事项；'通用' 组始终显示，供跨事项补充吉神。
         event_gods_map = {
             '嫁娶': ('嫁娶专用吉神', marriage_gods),
+            '订婚': ('订婚专用吉神', marriage_gods),
+            '纳采': ('纳采专用吉神', marriage_gods),
             '修造': ('修造专用吉神', build_gods),
             '动土': ('动土专用吉神', digging_gods),
             '拆舍': ('拆舍专用吉神', demolition_gods),
             '入宅': ('入宅专用吉神', movein_gods),
             '安葬': ('安葬专用吉神', burial_gods),
-            '其他': ('通用吉神', common_gods)
+            '开业': ('开业专用吉神', common_gods),
+            '出行': ('出行专用吉神', common_gods),
+            '安床': ('安床专用吉神', common_gods),
+            '作灶': ('作灶专用吉神', common_gods),
+            '移徙': ('移徙专用吉神', common_gods),
+            '入学': ('入学专用吉神', common_gods),
+            '求医': ('求医专用吉神', common_gods),
+            '签约': ('签约专用吉神', common_gods),
+            '通用': ('通用吉神', common_gods),
         }
 
         self.jishen_vars = {}
 
         for event_key, (label, gods) in event_gods_map.items():
+            # 只显示「当前事项」与「通用」两组：16 个事项全量平铺会让对话框过长，
+            # 且勾了别事项的专用吉神在本事项评分里不会发射，等于是死选项。
+            if event_key not in (current_event, '通用'):
+                continue
             event_frame = ttk.LabelFrame(jishen_frame, text=label)
             event_frame.pack(fill=tk.X, padx=5, pady=3)
             
@@ -5152,7 +5177,10 @@ class ZeriApp:
             # 计算每日吉凶（带条件过滤）
             current = start
             _day_index = 0
-            while current <= end and len(self.results) < conditions['max_results']:
+            # 001 §221：不再「收满 max_results 条就停」。旧写法按日期先后先到先得，
+            # 范围后段的高分上吉日会被前段低分日挤出名额，用户看到的现象就是
+            # 「明明有扶山补龙却选不到」。改为扫完整区间后统一按分数截断。
+            while current <= end:
                 _day_index += 1
                 # 001 §220：进度回显 + 处理「停止」点击（当天边界生效）
                 self.progress_var.set(_day_index)
@@ -5697,7 +5725,13 @@ class ZeriApp:
                     print(f"[条件择日] 通过: {current}, score={score}, level={level}")
                 
                 current += timedelta(days=1)
-            
+
+            # 001 §221：全区间实评完毕后按总分取前 max_results 条，
+            # 保证高分日一定入榜，不受日期先后影响。
+            self.results.sort(key=lambda _r: _r.get('score', 0), reverse=True)
+            if len(self.results) > conditions['max_results']:
+                del self.results[conditions['max_results']:]
+
             # 统一渲染结果表（排序/列标题/12列构造；与正常择日链路共用同一方法）
             self._render_result_tree()
 
