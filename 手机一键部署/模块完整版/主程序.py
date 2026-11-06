@@ -6118,7 +6118,7 @@ class ZeriApp:
             year_fan_xiang = sansha_info.get('year_sansha_xiang_fan', False)
 
             _fan_mark(year_fan_shan, '年三煞犯山向', is_shan=True)
-            _fan_mark_xiang(year_fan_xiang, '年三煞犯向首', 25)
+            _fan_mark_xiang(year_fan_xiang, '年三煞犯向首', 10)
 
             if not year_fan_shan and not year_fan_xiang:
                 text.insert(tk.END, "\n   ✅ 年三煞不犯")
@@ -6132,7 +6132,7 @@ class ZeriApp:
             _fan_mark(month_fan_day, '月三煞犯日柱')
             _fan_mark(month_fan_hour, '月三煞犯时柱')
             _fan_mark(month_fan_shan, '月三煞犯山向', is_shan=True)
-            _fan_mark_xiang(month_fan_xiang, '月三煞犯向首', 20)
+            _fan_mark_xiang(month_fan_xiang, '月三煞犯向首', 6)
 
             if not (month_fan_day or month_fan_hour
                     or month_fan_shan or month_fan_xiang):
@@ -6145,7 +6145,7 @@ class ZeriApp:
 
             _fan_mark(day_fan_hour, '日三煞犯时柱')
             _fan_mark(day_fan_shan, '日三煞犯山向', is_shan=True)
-            _fan_mark_xiang(day_fan_xiang, '日三煞犯向首', 15)
+            _fan_mark_xiang(day_fan_xiang, '日三煞犯向首', 3)
 
             if not day_fan_hour and not day_fan_shan and not day_fan_xiang:
                 text.insert(tk.END, "\n   ✅ 日三煞不犯")

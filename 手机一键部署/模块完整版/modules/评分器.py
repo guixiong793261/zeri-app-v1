@@ -1753,7 +1753,8 @@ class Scorer:
             #  三库（协纪/考原/陈书）均以三煞为方道神（占山/修方/坐向），无
             #  「月柱/日柱/时柱临煞则凶」明文，故年月日三煞的柱级判定一律停用，
             #  判定层不再置 flag（见 get_sansha_info 判定段墓碑）。
-            #  保留：坐山/修方犯年三煞一票否决；向首犯三煞重扣分不否决。
+            #  保留：坐山/修方犯年三煞一票否决；向首犯三煞轻扣分不否决
+            #  （2026-11-06 用户拍板降权：年-10／月-6／日-3）。
             _mountain_centered = _prof['mountain_center']
             if _mountain_centered:
                 sansha_info['sansha_pillar_veto'] = False
@@ -1849,23 +1850,23 @@ class Scorer:
                     if '向方月破' not in self.ji_list:
                         self.ji_list.append('向方月破')
                 if sansha_info.get('year_sansha_xiang_fan'):
-                    penalty = -25
+                    penalty = -10
                     total_sansha_penalty += penalty
-                    total_sansha_detail.append('年三煞(向方)（-25分）')
+                    total_sansha_detail.append('年三煞(向方)（-10分）')
                     self.final_score += penalty
                     if '年三煞(向方)' not in self.ji_list:
                         self.ji_list.append('年三煞(向方)')
                 if sansha_info.get('month_sansha_xiang_fan'):
-                    penalty = -20
+                    penalty = -6
                     total_sansha_penalty += penalty
-                    total_sansha_detail.append('月三煞(向方)（-20分）')
+                    total_sansha_detail.append('月三煞(向方)（-6分）')
                     self.final_score += penalty
                     if '月三煞(向方)' not in self.ji_list:
                         self.ji_list.append('月三煞(向方)')
                 if sansha_info.get('day_sansha_xiang_fan'):
-                    penalty = -15
+                    penalty = -3
                     total_sansha_penalty += penalty
-                    total_sansha_detail.append('日三煞(向方)（-15分）')
+                    total_sansha_detail.append('日三煞(向方)（-3分）')
                     self.final_score += penalty
                     if '日三煞(向方)' not in self.ji_list:
                         self.ji_list.append('日三煞(向方)')
