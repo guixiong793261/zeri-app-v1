@@ -297,6 +297,18 @@ class ReverseWindow:
             self.top_tree.heading(_c, text=_c)
             self.top_tree.column(_c, width=_w, anchor=tk.CENTER)
         self.top_tree.column('扣分主因', anchor=tk.W)
+        # 榜单保存/打印（与单日详情同一套「保存 + 打印」能力）
+        # 001 §220（2026-11-06）：必须在树之前先 pack(BOTTOM)，
+        # 否则窗口偏矮时按钮条被树挤到可视区外，用户看不到（原症状）。
+        _top_btn_bar = ttk.Frame(tab2)
+        _top_btn_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=4, pady=(4, 4))
+        self.save_btn = ttk.Button(_top_btn_bar, text='💾 保存择日结果',
+                                   command=self._save_top_list, state=tk.DISABLED)
+        self.save_btn.pack(side=tk.LEFT)
+        self.print_btn = ttk.Button(_top_btn_bar, text='🖨 打印榜单',
+                                    command=self._print_top_list, state=tk.DISABLED)
+        self.print_btn.pack(side=tk.LEFT, padx=(6, 0))
+
         _tsb = ttk.Scrollbar(tab2, orient=tk.VERTICAL,
                              command=self.top_tree.yview)
         self.top_tree.configure(yscrollcommand=_tsb.set)
@@ -308,16 +320,6 @@ class ReverseWindow:
         self.top_tree.bind('<<TreeviewSelect>>', lambda _e: self._on_tree_select())
         self.top_tree.bind('<Double-Button-1>', self._on_top_double_click)
         self.top_tree.bind('<Button-3>', self._on_top_right_click)
-
-        # 榜单保存/打印（与单日详情同一套「保存 + 打印」能力）
-        _top_btn_bar = ttk.Frame(tab2)
-        _top_btn_bar.pack(fill=tk.X, padx=4, pady=(4, 2))
-        self.save_btn = ttk.Button(_top_btn_bar, text='保存榜单',
-                                   command=self._save_top_list, state=tk.DISABLED)
-        self.save_btn.pack(side=tk.LEFT)
-        self.print_btn = ttk.Button(_top_btn_bar, text='打印榜单',
-                                    command=self._print_top_list, state=tk.DISABLED)
-        self.print_btn.pack(side=tk.LEFT, padx=(6, 0))
 
         # ---- 层3：时间轴
         tab3 = ttk.Frame(self.nb)

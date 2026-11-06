@@ -404,6 +404,9 @@ class ZeriApp:
         print("初始化ZeriApp...")
         self.root = root
         self.root.title("专业级正五行择日软件 v2.2.1")
+        # 001 §220（2026-11-06）：扫描期间可随时点「停止」终止（主扫描/条件择日共用）
+        self._stop_requested = False
+        self._scan_running = False
         
         # 获取屏幕尺寸并设置窗口大小
         print("获取屏幕尺寸...")
@@ -673,6 +676,10 @@ class ZeriApp:
                   width=12).pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="开始择日", command=self.start_calculation, 
                   width=12).pack(side=tk.LEFT, padx=6)
+        # 001 §220：停止键——扫描循环内周期性处理事件，点击即在下一天边界退出
+        self.stop_btn = ttk.Button(button_frame, text="⏹ 停止", command=self.stop_calculation,
+                                   width=8, state=tk.DISABLED)
+        self.stop_btn.pack(side=tk.LEFT, padx=6)
         ttk.Button(button_frame, text="条件择日", command=self.conditional_calculation, 
                   width=12).pack(side=tk.LEFT, padx=6)
         # 001 §210 Commit 2：精准择时反推面板（热力日历/Top-N/时间轴三层）
@@ -4194,8 +4201,51 @@ class ZeriApp:
         except Exception as _e:
             messagebox.showerror("错误", f"打开精准择时面板失败：{_e}")
 
+    # ===== 001 §220（2026-11-06）：扫描可随时终止 =====
+    def stop_calculation(self):
+        """停止键：置位终止标志，扫描循环在当天收尾后退出。"""
+        if getattr(self, '_scan_running', False):
+            self._stop_requested = True
+            try:
+                self.progress_label.config(text="⏹ 正在停止……（当天计算完后退出）")
+            except Exception:
+                pass
+
+    def _begin_scan(self):
+        """进入扫描态：复位终止标志、点亮停止键。"""
+        self._stop_requested = False
+        self._scan_running = True
+        try:
+            self.stop_btn.config(state=tk.NORMAL)
+        except Exception:
+            pass
+
+    def _end_scan(self):
+        """退出扫描态：复位标志、置灰停止键。"""
+        self._scan_running = False
+        self._stop_requested = False
+        try:
+            self.stop_btn.config(state=tk.DISABLED)
+        except Exception:
+            pass
+
+    def _pump_events(self):
+        """扫描循环内处理界面事件（让「停止」可点），返回是否已请求停止。
+
+        必须用 update() 而非 update_idletasks()：后者只处理重绘，
+        收不到按钮点击事件，停止键将永远无效。
+        """
+        try:
+            self.root.update()
+        except tk.TclError:
+            self._stop_requested = True  # 窗口已销毁，直接收工
+        return bool(self._stop_requested)
+
     def start_calculation(self):
         """开始择日计算"""
+        if getattr(self, '_scan_running', False):
+            messagebox.showinfo("提示", "正在计算中，请先点「⏹ 停止」")
+            return
         try:
             # 获取日期范围
             start = datetime.strptime(self.start_date.get(), "%Y-%m-%d").date()
@@ -4212,6 +4262,7 @@ class ZeriApp:
             
             # ===== 初始化进度条 =====
             total_days = (end - start).days + 1
+            self._begin_scan()  # 001 §220：点亮停止键
             self.progress_var.set(0.0)
             self.progress_bar['maximum'] = total_days
             self.progress_label.config(text=f"⏳ 开始计算：共 {total_days} 天")
@@ -4266,6 +4317,7 @@ class ZeriApp:
             # 计算每日吉凶
             current = start
             day_index = 0
+            _stopped = False  # 001 §220：是否被手动终止
             while current <= end:
                 day_index += 1
 
@@ -4274,7 +4326,10 @@ class ZeriApp:
                 self.progress_label.config(
                     text=f"⏳ 正在计算：第 {day_index}/{total_days} 天（{current.strftime('%Y-%m-%d')}）"
                 )
-                self.root.update_idletasks()
+                # 001 §220：用 update() 处理界面事件，「停止」点击能在当天边界生效
+                if self._pump_events():
+                    _stopped = True
+                    break
 
                 # 计算四柱
                 sizhu = calculate_sizhu(current, 12, 0)
@@ -4631,8 +4686,15 @@ class ZeriApp:
                     print(f"[诊断] 安葬0结果：坐山年家禁忌 -> {_top}")
 
             # ===== 进度完成 =====
-            self.progress_var.set(total_days)
-            self.progress_label.config(text=_finish_msg)
+            if _stopped:
+                # 001 §220：手动终止时如实回报已扫描天数与保留结果数
+                self.progress_var.set(min(day_index - 1, total_days))
+                self.progress_label.config(
+                    text=f"⏹ 已手动停止：已扫描 {day_index - 1}/{total_days} 天，"
+                         f"保留 {len(self.results)} 条结果")
+            else:
+                self.progress_var.set(total_days)
+                self.progress_label.config(text=_finish_msg)
             self.root.update_idletasks()
 
             # 统一渲染结果表（排序/列标题/12列构造；与条件择日链路共用同一方法）
@@ -4641,14 +4703,23 @@ class ZeriApp:
             # 保存到记录
             self.save_record()
             
-            self._maybe_save_owners_on_finish(f"择日计算完成！\n共计算 {(end - start).days + 1} 天")
+            if _stopped:
+                self._maybe_save_owners_on_finish(
+                    f"已手动停止：扫描 {day_index - 1} 天，保留 {len(self.results)} 条结果")
+            else:
+                self._maybe_save_owners_on_finish(f"择日计算完成！\n共计算 {(end - start).days + 1} 天")
             
         except Exception as e:
-            self.progress_var.set(0)
-            self.progress_label.config(text="❌ 计算出错")
-            messagebox.showerror("错误", f"计算出错：{str(e)}")
+            try:
+                self.progress_var.set(0)
+                self.progress_label.config(text="❌ 计算出错")
+                messagebox.showerror("错误", f"计算出错：{str(e)}")
+            except tk.TclError:
+                pass  # 窗口已被用户关闭，静默收工
             import traceback
             traceback.print_exc()
+        finally:
+            self._end_scan()  # 001 §220：无论如何都恢复停止键初始态
     
     def conditional_calculation(self):
         """按输入条件择日"""
@@ -4950,6 +5021,9 @@ class ZeriApp:
     
     def _run_conditional_calculation(self, conditions):
         """执行带条件的择日计算"""
+        if getattr(self, '_scan_running', False):
+            messagebox.showinfo("提示", "正在计算中，请先点「⏹ 停止」")
+            return
         try:
             # 获取日期范围
             start = datetime.strptime(self.start_date.get(), "%Y-%m-%d").date()
@@ -4963,6 +5037,14 @@ class ZeriApp:
             self.results = []
             for item in self.result_tree.get_children():
                 self.result_tree.delete(item)
+
+            self._begin_scan()  # 001 §220：条件择日同样可随时停止
+            _total_days = (end - start).days + 1
+            self.progress_bar['maximum'] = _total_days
+            self.progress_var.set(0.0)
+            self.progress_label.config(text=f"⏳ 条件择日：共 {_total_days} 天")
+            self.root.update_idletasks()
+            _stopped = False
             
             # 获取事主信息（同start_calculation）
             owners_data = []
@@ -5069,7 +5151,17 @@ class ZeriApp:
             
             # 计算每日吉凶（带条件过滤）
             current = start
+            _day_index = 0
             while current <= end and len(self.results) < conditions['max_results']:
+                _day_index += 1
+                # 001 §220：进度回显 + 处理「停止」点击（当天边界生效）
+                self.progress_var.set(_day_index)
+                self.progress_label.config(
+                    text=f"⏳ 条件择日：第 {_day_index}/{_total_days} 天（{current.strftime('%Y-%m-%d')}）"
+                )
+                if self._pump_events():
+                    _stopped = True
+                    break
                 sizhu = calculate_sizhu(current, 12, 0)
                 sizhu['year'] = current.year
                 sizhu['month'] = current.month
@@ -5611,10 +5703,20 @@ class ZeriApp:
 
             self.save_record()
             
-            self._maybe_save_owners_on_finish(f"条件择日完成！\n共找到 {len(self.results)} 个符合条件的吉日")
+            if _stopped:
+                self.progress_var.set(min(_day_index - 1, _total_days))
+                self.progress_label.config(
+                    text=f"⏹ 已手动停止：已扫描 {_day_index - 1}/{_total_days} 天，"
+                         f"保留 {len(self.results)} 条结果")
+                self._maybe_save_owners_on_finish(
+                    f"已手动停止：扫描 {_day_index - 1} 天，保留 {len(self.results)} 条结果")
+            else:
+                self._maybe_save_owners_on_finish(f"条件择日完成！\n共找到 {len(self.results)} 个符合条件的吉日")
             
         except Exception as e:
             messagebox.showerror("错误", f"计算出错：{str(e)}")
+        finally:
+            self._end_scan()  # 001 §220：恢复停止键初始态
     
     def on_result_double_click(self, event):
         """双击结果查看详情"""

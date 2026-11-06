@@ -11546,6 +11546,43 @@ I tkinter 双端 tag 注册 + GUI 否决配色 + print_detail veto 分支 + 嫁�
 
 - **219.5 回归**：全量测试待跑（详见 commit 说明）。
 
+---
+
+## 220. 主程序停止键 + 精准择时榜单保存键可见性（2026-11-06）
+
+- **220.1 需求**：①择日主程序增加停止键，可随时终止；②精准择时结果窗口
+  看不到「保存择日结果」按钮。
+
+- **220.2 ① 停止键实现（主程序.py）**：
+  - 新增状态：`_stop_requested` / `_scan_running`（`__init__`）；
+  - 工具栏「开始择日」右侧新增「⏹ 停止」按钮，默认 disabled，
+    扫描期间置 normal，`finally` 中恢复 disabled；
+  - `_begin_scan() / _end_scan() / stop_calculation() / _pump_events()` 四方法；
+  - **关键**：扫描循环内由 `update_idletasks()` 改为 `update()`。
+    前者只刷重绘、收不到按钮点击事件，停止键将永远点不动；后者可
+    处理点击，在**当天计算边界**退出（不强杀当天，避免半截数据）。
+  - 主扫描（start_calculation）与条件择日（_run_conditional_calculation）
+    共用同一套标志；两者入口均加 `_scan_running` 重入保护。
+  - 停止后仍渲染已得结果并落记录，进度条文案如实回报
+    「已扫描 X/共 Y 天，保留 Z 条结果」；窗口被关闭时 TclError 静默收工。
+
+- **220.3 ② 保存键不可见的根因与修复（modules/反推UI.py）**：
+  - 根因：Top-N 页签内先 pack 结果树（`fill=BOTH, expand=True`），
+    后 pack「保存榜单/打印榜单」按钮条。Tk pack 按顺序分配空间，
+    窗口偏矮时后 pack 的按钮条被挤出可视区 → 用户"看不到保存键"。
+  - 修复：按钮条改为**在树之前** `pack(side=BOTTOM, fill=X)`，先占底部，
+    树再吃剩余空间；文案同步为「💾 保存择日结果 / 🖨 打印榜单」。
+  - 与单日详情窗口的既有写法（BOTTOM 先 pack）保持一致。
+
+- **220.4 验证**：
+  - UI 探针 A：停止键状态流转 disabled→normal→disabled，`_pump_events`
+    空闲 False / 置位后 True；
+  - UI 探针 B：真实 365 天扫描，`after(1200ms)` 触发停止 →
+    进度文案「已手动停止：已扫描 7/365 天，保留 3 条结果」，停止键复位；
+  - UI 探针 C：ReverseWindow 构造后 `save_btn` 存在、按钮条
+    `pack side=bottom`、榜单生成后置 normal（L531-532）。
+  - 全量回归结果见 commit 说明。
+
 
 
 
