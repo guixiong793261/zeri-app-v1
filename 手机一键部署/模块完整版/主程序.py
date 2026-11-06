@@ -3550,7 +3550,14 @@ class ZeriApp:
                             #   ——末者恒为默认 False，导致"平/犯忌慎用"日写出"嫁娶可用"。
                             _md_real = _sd.get('marriage_details')
                             if not isinstance(_md_real, list):
-                                _md_real = _sd.get('嫁娶明细(分项)') or []
+                                _md_real = _sd.get('嫁娶明细(分项)')
+                            if not isinstance(_md_real, list):
+                                # 2026-11-06 修复（E007）：否决分支的 score_details
+                                #   不含 marriage_details / 嫁娶明细(分项)，原回退成 []，
+                                #   后续合局重算会把整张明细覆盖成单条。此处回退到顶层
+                                #   marriage_details（评分器已写入完整 7 条扣分账目）。
+                                _md_full = score_result.get('marriage_details')
+                                _md_real = _md_full if isinstance(_md_full, list) else []
                             # 2026-11-22 用户审查修复（P1）：合局按含推荐时柱口径重算。
                             # 评分器刻意用 sizhu_no_hour 算合局（时辰不入围日课），但报告
                             # 展示含推荐时柱，导致"拱合局(亥,未，拱卯)"与地支关系段
@@ -3560,6 +3567,12 @@ class ZeriApp:
                                 score_result.get('level') or '')
                             _minor_real = '降一格' in str(
                                 score_result.get('level') or '')
+                            # 2026-11-06 修复（E001）：否决日（或原分数已为 0）必须短路
+                            #   合局重算——否决分支 score_details 无明细键，重算会把
+                            #   全额合局分当作 delta 加回已归零的总分（0→8），并覆盖
+                            #   marriage_details。此处锁死：总分与 score 恒为 0。
+                            _score_locked = (bool(score_result.get('veto_reasons'))
+                                             or not (score_result.get('score') or 0))
                             try:
                                 from modules.婚嫁评分算法 import get_zhiju_score as _gzs
                                 _full_sz = {
@@ -3577,7 +3590,7 @@ class ZeriApp:
                                             and any(k in str(_d[0]) for k in _HEJU_KEYS)):
                                         _old_zj_idx, _old_zj_name, _old_zj_score = _i, str(_d[0]), _d[1]
                                         break
-                                if _zj_new_r and _zj_new_r != _old_zj_name:
+                                if _zj_new_r and _zj_new_r != _old_zj_name and not _score_locked:
                                     _delta = _zj_new_s - (_old_zj_score if _old_zj_idx is not None else 0)
                                     if _old_zj_idx is not None:
                                         _md_real[_old_zj_idx] = (_zj_new_r, _zj_new_s)
