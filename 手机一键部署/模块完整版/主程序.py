@@ -312,6 +312,21 @@ def _extract_tree_dizhi_jishen(score_result):
     return dizhi_text, jishen_text, jishen_full
 
 
+def _extract_daliyue_text(score_result, event_type):
+    """结果表"利月"列文本（001 §230 收口：正常/条件择日共用一个入口）。
+
+    仅婚嫁类（MARRIAGE_EVENTS）显示：命中大利月/小利月即取其名，
+    否则为「普通月份」；非婚嫁事项返回 '-'（该列随后由列控制器隐藏）。
+    """
+    if event_type not in MARRIAGE_EVENTS:
+        return '-'
+    for shensha in (score_result or {}).get('shensha_list', []) or []:
+        name = shensha.get('name', '') if isinstance(shensha, dict) else ''
+        if name in ('大利月', '小利月'):
+            return name
+    return '普通月份'
+
+
 
 
 # 001 §210 Commit 1：_fenjin_preview_penalty / _scoring_shensha 已迁入
@@ -4205,7 +4220,9 @@ class ZeriApp:
                 self._fmt_score(result.get('wuxing_score', 0), '0'),
                 self._fmt_score(result.get('yueling_score', 0), '0'),
                 self._fmt_score(result.get('xishen_score', 0), '0'),
-                self._fmt_score(result.get('huangdao_score', 0), '0'),
+                self._fmt_score(result.get('huangdao_score', 0), '0')
+                if not result.get('huangdao_merged')
+                else '已并入',
                 _fmt_tree_relation(result.get('dizhi_relation', '')),
                 _display_jishen,
                 result.get('daliyue', '-'),
@@ -4536,22 +4553,8 @@ class ZeriApp:
                 # 地支关系/核心吉神两列文本（统一入口；注入推荐时柱后会再次刷新）
                 dizhi_text, jishen_text, jishen_full = _extract_tree_dizhi_jishen(score_result)
                 
-                # 提取大利月/小利月信息（婚嫁专用）
-                daliyue_text = '-'
-                if event_type in MARRIAGE_EVENTS:
-                    # 【F2 一致性修复】默认普通月份：婚嫁类若无大利月/小利月条目
-                    # 即普通月份，显示"普通月份"而非"-"，与【嫁娶择日分析】利月分析一致。
-                    daliyue_text = '普通月份'
-                    shensha_list = score_result.get('shensha_list', [])
-                    for shensha in shensha_list:
-                        if isinstance(shensha, dict):
-                            shensha_name = shensha.get('name', '')
-                            if shensha_name == '大利月':
-                                daliyue_text = '大利月'
-                                break
-                            elif shensha_name == '小利月':
-                                daliyue_text = '小利月'
-                                break
+                # 提取大利月/小利月信息（婚嫁专用；001 §230 统一入口）
+                daliyue_text = _extract_daliyue_text(score_result, event_type)
                 
                 # 构建事主信息文本
                 owner_text = []
@@ -4595,6 +4598,9 @@ class ZeriApp:
                     'yueling_score': yueling_score,
                     'xishen_score': xishen_score,
                     'huangdao_score': huangdao_score,
+                    # 001 §230：嫁娶路径黄道已并入五行评分，score_details 无「黄道得分」键；
+                    # 结果表据此显示「已并入」，不再误显示 0。
+                    'huangdao_merged': '黄道得分' not in score_details,
                     'dizhi_relation': dizhi_text,
                     'jishen': jishen_text,
                     'jishen_full': jishen_full,
@@ -5948,9 +5954,13 @@ class ZeriApp:
                         'yueling_score': yueling_score,
                         'xishen_score': xishen_score,
                         'huangdao_score': huangdao_score,
+                        # 001 §230：嫁娶黄道已并入五行评分时，结果表显示「已并入」。
+                        'huangdao_merged': '黄道得分' not in score_details,
                         'dizhi_relation': dizhi_text,
                         'jishen': jishen_text,
                         'jishen_full': jishen_full,
+                        # 001 §230：条件择日补利月列（此前缺键恒显示 '-'）。
+                        'daliyue': _extract_daliyue_text(score_result, event_type),
                         'feixing': _fmt_feixing(score_result.get('feixing_info')),
                         'owners_info': getattr(self, 'owners_info', []),
                         'zaozhu_mode': zaozhu_mode,
