@@ -1,12 +1,12 @@
 {
  "meta": {
   "title": "v2.1.x 终局大考 · 黄金课全景报告",
-  "generated_at": "2026-11-07 00:17:44",
+  "generated_at": "2026-11-08 10:35:32",
   "root": "D:\\自编择日软件\\专业级正五行择日软件",
   "golden_count": 20,
   "channels": 16,
   "quick": false,
-  "elapsed": 19.1
+  "elapsed": 21.8
  },
  "s1_baseline": {
   "checks": [
@@ -21,20 +21,20 @@
   },
   "sha": {
    "主程序.py": [
-    "511f59ecd08630a2065ce7e8e53715cc323ac7cd1c3bcb61f4d057a1c2fd4c97",
-    "511f59ecd08630a2065ce7e8e53715cc323ac7cd1c3bcb61f4d057a1c2fd4c97"
+    "2b18a4a2785467622d2aeb105e7f4039e654f18e8b0cabcbb68f241cee791065",
+    "2b18a4a2785467622d2aeb105e7f4039e654f18e8b0cabcbb68f241cee791065"
    ],
    "modules\\评分器.py": [
-    "3afd3fb20a412d4b31158352a81f8903b39970115b1328d5f3deca92472d8381",
-    "3afd3fb20a412d4b31158352a81f8903b39970115b1328d5f3deca92472d8381"
+    "6bf5320f9d05174960d5833543750ed34056708ddf66b3ce696a1652fd6d5624",
+    "6bf5320f9d05174960d5833543750ed34056708ddf66b3ce696a1652fd6d5624"
    ],
    "modules\\事项标准.py": [
     "74aa54ed3ad4dfde00a456ababaa63d24793b03692761de41aad73ef12c1c9c8",
     "74aa54ed3ad4dfde00a456ababaa63d24793b03692761de41aad73ef12c1c9c8"
    ],
    "modules\\反推引擎.py": [
-    "b8d53f2e4b3fe901dee253e7485b4ed74f16425924d94c47cf83087d34a02834",
-    "b8d53f2e4b3fe901dee253e7485b4ed74f16425924d94c47cf83087d34a02834"
+    "58c0e06cbafe6f5dd9b76acecb45244bf6bb48f8760d69d147a13aae6f9166ad",
+    "58c0e06cbafe6f5dd9b76acecb45244bf6bb48f8760d69d147a13aae6f9166ad"
    ],
    "modules\\动作时序.py": [
     "2089f5d3189d2b95cd0a841c9230e60bf8bc3e9d249bd2be172244b364d61963",
@@ -71,7 +71,7 @@
    "签约",
    "安葬"
   ],
-  "elapsed": 14.8,
+  "elapsed": 16.6,
   "matrix": {
    "2026-01-05": {
     "kind": "交节·小寒",
@@ -36015,7 +36015,7 @@
   ],
   "copy_aware": {
    "aware": 7,
-   "total": 137
+   "total": 138
   }
  },
  "checks": [
@@ -36251,7 +36251,7 @@
    "id": "S6-2",
    "name": "副本感知脚本覆盖（>4 个）",
    "ok": true,
-   "detail": "{'aware': 7, 'total': 137}"
+   "detail": "{'aware': 7, 'total': 138}"
   },
   {
    "id": "S1-1",
