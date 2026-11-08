@@ -2027,6 +2027,139 @@ class Scorer:
             if day_type and day_type != '普通日':
                 sansha_info['day_type'] = day_type
 
+            # 001 §237 伐日计分（2026-11-09 用户拍板）：
+            # 伐日 = 年干死绝之支，修造类山家用事大凶，原仅作「日类」展示未计分，
+            # 导致 2026-06-04 乙酉日（丙年酉为丙死地）仍给 313 上吉。
+            # 修正：山向类用事命中伐日 → 高权重 -40 并入三煞扣分通道、入忌项；
+            # 伐日属制煞可论制化，不升级为一票否决。
+            if day_type == '伐日':
+                _fari_ji = '伐日'
+                if _fari_ji not in self.ji_list:
+                    self.ji_list.append(_fari_ji)
+                self.final_score -= 40
+                _sp = int(sansha_info.get('sansha_penalty', 0) or 0) - 40
+                sansha_info['sansha_penalty'] = _sp
+                sansha_info.setdefault('sansha_penalty_detail', []).append('伐日（-40分）')
+                # 伐日扣分已走 sansha_penalty 通道，忌事通道不再二次 -15（防双扣）
+                _ssj = getattr(self, '_sansha_scored_ji', None)
+                if _ssj is None:
+                    _ssj = set()
+                    self._sansha_scored_ji = _ssj
+                _ssj.add(_fari_ji)
+
+            # 001 §237 高分伪装防呆：汇总重煞名（伐日/金神到山/三煞临山/三煞向方），
+            # 供 UI 在总分≥200 时弹出黄底红字警示，避免高分掩盖重煞。
+            _heavy_sha_names = []
+            if day_type == '伐日':
+                _heavy_sha_names.append('伐日')
+            _sansha_detail = sansha_info.get('sansha_penalty_detail') or []
+            _has_linshan = any('临山' in str(_d) for _d in _sansha_detail)
+            _has_xiangfang = any('向方' in str(_d) for _d in _sansha_detail)
+            if not _has_linshan:
+                for _r in (sansha_info.get('mountain_block_reasons') or []):
+                    if '三煞' in str(_r):
+                        _has_linshan = True
+                        break
+            if _has_linshan:
+                _heavy_sha_names.append('三煞临山')
+            if _has_xiangfang or int(sansha_info.get('xiangfang_penalty') or 0) != 0:
+                _heavy_sha_names.append('三煞向方')
+            for _src in ((sansha_info.get('mountain_warnings') or []),
+                         (sansha_info.get('mountain_block_reasons') or [])):
+                if '金神到山' in _heavy_sha_names:
+                    break
+                for _w in _src:
+                    if '金神' in str(_w):
+                        _heavy_sha_names.append('金神到山')
+                        break
+            sansha_info['heavy_sha_names'] = _heavy_sha_names
+
+            # 001 §238（2026-11-09 用户拍板·修造榜单虚假繁荣整改）
+            # 坑二：合局克山重扣——原算法地支凑成合局即加分（半合+6），不论
+            # 合局五行对坐山是生是克（木局克坤土仍高分上榜）。修正：山向类
+            # 用事（有坐山且非出行/开业），四柱地支凑齐三合局且合局五行克
+            # 坐山五行 → -40；仅两支半合/拱合克山 → -20（同组合局只扣一次、
+            # 取最强档）。走 sansha_penalty 通道、入忌项、入 heavy_sha_names
+            # （触发 §237 高分防呆）。分值系拟定，待拍板（001 台账 §238）。
+            if shan_xiang and not _no_sansha:
+                _zs238 = (_jx_pp or {}).get('主山') or ''
+                _sz_wx238 = ''
+                if _zs238:
+                    try:
+                        from .二十四山 import get_mountain_info as _gmi238
+                    except ImportError:
+                        from 二十四山 import get_mountain_info as _gmi238
+                    _sz_wx238 = (_gmi238(_zs238) or {}).get('wuxing', '')
+                if _sz_wx238:
+                    _KE238 = {'木': '土', '土': '水', '水': '火',
+                              '火': '金', '金': '木'}
+                    _zhis238 = [_z for _z in (sizhu.get(_k, '') for _k in
+                                ('year_zhi', 'month_zhi', 'day_zhi', 'hour_zhi')) if _z]
+                    _heju_pen = 0
+                    _heju_ji = ''
+                    for _g1, _g2, _g3, _wx in (('申', '子', '辰', '水'),
+                                               ('寅', '午', '戌', '火'),
+                                               ('巳', '酉', '丑', '金'),
+                                               ('亥', '卯', '未', '木')):
+                        if _KE238.get(_wx) != _sz_wx238:
+                            continue
+                        _hit = sum(1 for _z in _zhis238 if _z in (_g1, _g2, _g3))
+                        if _hit >= 3 and _heju_pen > -40:
+                            _heju_pen = -40
+                            _heju_ji = '三合%s局克山（%s山属%s）' % (_wx, _zs238, _sz_wx238)
+                        elif _hit == 2 and _heju_pen > -20:
+                            _heju_pen = -20
+                            _heju_ji = '半合/拱合%s局克山（%s山属%s）' % (
+                                _wx, _zs238, _sz_wx238)
+                    if _heju_pen:
+                        if _heju_ji not in self.ji_list:
+                            self.ji_list.append(_heju_ji)
+                        self.final_score += _heju_pen
+                        sansha_info['sansha_penalty'] = int(
+                            sansha_info.get('sansha_penalty', 0) or 0) + _heju_pen
+                        sansha_info.setdefault('sansha_penalty_detail', []).append(
+                            '%s（%d分）' % (_heju_ji, _heju_pen))
+                        _heavy_sha_names.append(_heju_ji)
+                        # 扣分已走 sansha_penalty 通道，忌事通道不再二次 -15
+                        self._sansha_scored_ji.add(_heju_ji)
+
+            # 001 §238 坑三：自刑/伏吟加重——基线口径（_calc_all_zhi_relations_
+            # detail）：自刑（辰午酉亥同支）-8、伏吟（其余同支）0 分不计分，
+            # 对修造/入宅等山家大事过轻（古法：自刑伏吟，隐患难明）。修正：
+            # 山向类用事时自刑每对额外 -7（与基线合计 -15/对）、伏吟每对 -15；
+            # 四柱 6 组柱间对全查（与基线计分口径一致；超出用户字面
+            # 「日支与年/时支」范围，待拍板，001 台账 §238）。
+            # 不入 heavy_sha_names（保持 §237 高分防呆警示的稀缺性）。
+            if shan_xiang and not _no_sansha:
+                _pz238 = [(_cn, sizhu.get(_k, '')) for _k, _cn in
+                          (('year_zhi', '年支'), ('month_zhi', '月支'),
+                           ('day_zhi', '日支'), ('hour_zhi', '时支'))]
+                _pz238 = [(_cn, _z) for _cn, _z in _pz238 if _z]
+                _xf_pen = 0
+                _xf_segs = []
+                for _i in range(len(_pz238)):
+                    for _j in range(_i + 1, len(_pz238)):
+                        _n1, _z1 = _pz238[_i]
+                        _n2, _z2 = _pz238[_j]
+                        if _z1 != _z2:
+                            continue
+                        if _z1 in ('辰', '午', '酉', '亥'):
+                            _xf_pen -= 7
+                            _xf_segs.append('%s%s自刑' % (_n1, _n2))
+                        else:
+                            _xf_pen -= 15
+                            _xf_segs.append('%s%s伏吟' % (_n1, _n2))
+                if _xf_pen:
+                    _xf_ji = '自刑伏吟加重（%s）' % ('、'.join(_xf_segs))
+                    if _xf_ji not in self.ji_list:
+                        self.ji_list.append(_xf_ji)
+                    self.final_score += _xf_pen
+                    sansha_info['sansha_penalty'] = int(
+                        sansha_info.get('sansha_penalty', 0) or 0) + _xf_pen
+                    sansha_info.setdefault('sansha_penalty_detail', []).append(
+                        '%s（%d分）' % (_xf_ji, _xf_pen))
+                    self._sansha_scored_ji.add(_xf_ji)
+
             # 仙命信息提前构建（三级判定 + 各返回块共用）
             # §59.3（2026-10-07）：构建点前移至五行门槛审核之前，使门槛否决等
             # 提前返回路径也能携带 wangming_info/shanzuo_eval，否决日报告结构
@@ -2917,6 +3050,29 @@ class Scorer:
                 (sun_moon_info or {}).get('taiyang_taiyin_detail'),
                 self.shensha_list)
 
+            # 001 §237 高分伪装防呆：总分≥200 且命中伐日/金神到山/三煞临山/三煞向方
+            # 任一重煞时，UI 须弹出黄底红字警示，防止「高分掩盖重煞」误导用户。
+            _heavy_sha_names = list(sansha_info.get('heavy_sha_names') or [])
+            _heavy_sha_warning = bool(_heavy_sha_names) and self.final_score >= 200
+
+            # 001 §238 坑四·五行偏枯预警（纯展示，不改分）：四柱天干+地支共 8 字，
+            # 火系（丙丁巳午）≥5 → 过燥；水系（壬癸子亥）≥5 → 过寒。
+            # 阈值 5/8 为拟定值，待用户拍板。
+            _pk_fire = 0
+            _pk_water = 0
+            for _pk_k in ('year_gan', 'month_gan', 'day_gan', 'hour_gan',
+                          'year_zhi', 'month_zhi', 'day_zhi', 'hour_zhi'):
+                _pk_c = str((sizhu or {}).get(_pk_k) or '')[:1]
+                if _pk_c in '丙丁巳午':
+                    _pk_fire += 1
+                elif _pk_c in '壬癸子亥':
+                    _pk_water += 1
+            _wuxing_pian_ku = None
+            if _pk_fire >= 5:
+                _wuxing_pian_ku = '过燥'
+            elif _pk_water >= 5:
+                _wuxing_pian_ku = '过寒'
+
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -2928,6 +3084,9 @@ class Scorer:
                 'ji_list': self.ji_list,
                 'veto_reasons': veto_reasons,
                 'warnings': _shan_warnings,
+                'heavy_sha_warning': _heavy_sha_warning,
+                'heavy_sha_names': _heavy_sha_names,
+                'wuxing_pian_ku': _wuxing_pian_ku,  # 001 §238：偏枯预警（过燥/过寒/None）
                 'huangdao_info': self.huangdao_info,
                 'wu_xing_result': wu_xing_result,
                 'score_details': score_details,
