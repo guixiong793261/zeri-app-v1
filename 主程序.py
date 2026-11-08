@@ -4917,6 +4917,16 @@ class ZeriApp:
         
         # 001 §226（2026-11-08）：📖 择日通关指南（默认展开，随主界面事项联动）
         # 001 §227（2026-11-08）：升级为可点击快捷工具——蓝字穿透勾选 / 一键满配 / 一键避雷
+        # 001 §228（2026-11-08）：互斥吉神组——同一农历月不可能同时是大利月与小利月，
+        # 两者同时勾选会让「吉神条件」按 AND 求交，恒不命中，故组内只保留一个（大利月优先）。
+        guide_exclusive_groups = [('大利月', '小利月')]
+
+        def _guide_exclusive_of(god_name):
+            for group in guide_exclusive_groups:
+                if god_name in group:
+                    return [g for g in group if g != god_name]
+            return []
+
         def _guide_god_names():
             """从当前事项指南的 best 条目中解析出命中「吉神条件」复选框的神名。"""
             from modules.事项标准 import event_guide
@@ -4925,12 +4935,22 @@ class ZeriApp:
             for god in sorted((self.jishen_vars or {}).keys(), key=len, reverse=True):
                 if god in text and god not in names:
                     names.append(god)
+            # 互斥组内去重：保留组内靠前的一个（大利月优先）
+            for group in guide_exclusive_groups:
+                present = [g for g in group if g in names]
+                for extra in present[1:]:
+                    names.remove(extra)
             return names
 
         def _guide_check_god(god_name):
             var = (self.jishen_vars or {}).get(god_name)
-            if var is not None and not var.get():
+            if var is not None:
                 var.set(True)
+            # 互斥：勾选大利月即取消小利月，反之亦然
+            for other in _guide_exclusive_of(god_name):
+                other_var = (self.jishen_vars or {}).get(other)
+                if other_var is not None and other_var.get():
+                    other_var.set(False)
 
         def _guide_select_best():
             hit = [g for g in _guide_god_names() if g in (self.jishen_vars or {})]
