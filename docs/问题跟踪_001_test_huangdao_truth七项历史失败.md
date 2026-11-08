@@ -12044,3 +12044,55 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 ### 233.4 commit 与后续
 - commit `3c007f1`（独立提交，15 files，+707/-97；本批不含 exe/zip 打包，
   打包与 §234 正常结果窗口核验列合并后统一重打）。
+
+---
+
+## §234 正常择日结果窗口「核验」列 + 优吉/大吉筛选（2026-11-08）
+
+### 234.1 需求与拍板
+- 用户原话：「在正常择日结果窗口也加入满分检查显示，也可独立显示优吉和大吉的日课。」
+- 拍板一：结果表新增「核验」列（第 4 位，等级后），显示 N/5 ✓；全 ✓ 行整行金底
+  （#FFE680，替换星级 tag 非叠加）；悬停弹五项逐条 ✓/✗ 明细。
+- 拍板二：结果表上方「清空结果」旁加筛选下拉：全部 / 极品(5✓) / 大吉(4-5✓) /
+  优吉(2-3✓)，readonly，切换即重渲；口径与反推面板④优吉⑤大吉页签一致。
+- 拍板三：§233 先独立提交（3c007f1），exe/zip 打包与 §234 完成后统一重打一次
+  （本批即该统一重打）。
+
+### 234.2 实现（纯展示层，不改分值、不改排序）
+- 主程序.py（16 处编辑）：
+  - columns 第 4 位插入「核验」（宽 58/居中/不拉伸）；_update_result_columns
+    恒显集合同步（"日期/四柱","评分","等级","核验","五行得分","月令得分"…）。
+  - tag_configure('allok', background='#FFE680')；全 ✓ 行
+    tags=(('allok',) if _ok_n == 5 else (row_tag,))。
+  - _tree_column_id(self, name) 由核心吉神专用通用化；on_tree_motion 接入核验列弹层。
+  - _check_full_map[iid] 存五项明细（'\n'.join('✓ '/'✗ ' + 名称+说明)），
+    复用 _jishen_tooltip。
+  - _render_result_tree 内核验链：_collect_owners_data(silent=True) →
+    perfect_profile(result['detail'], owners, event_type) → 'N/5 ✓'；
+    无 detail（导入路径）显示 '—'。
+  - _collect_owners_data 增加 silent 形参（默认 False），缺事主弹窗守卫
+    if not silent（扫描渲染不打扰）。
+  - _check_filter_var = StringVar('全部')，values 四档 readonly；
+    <<ComboboxSelected>> → _render_result_tree()；过滤：极品 _ok_n != 5、
+    大吉 _ok_n < 4、优吉 not (2 <= _ok_n <= 3)。
+  - 导入路径三处手工 insert 各插 '—' 占位（注释 3 处）。
+- 判据单点：modules/排序键.py perfect_profile（与反推榜同口径，§233 事项定制
+  五维），本批不改排序键代码。
+
+### 234.3 验证
+- 新增 tests/verify_234_结果表核验列.py（20 断言）：A 列结构 4 / B 金底 tag 2 /
+  C 悬停弹层 4 / D 筛选下拉 3 / E 渲染接线与静默事主 5 / F 导入占位 1 /
+  G perfect_profile 真源防伪锚点 1。ALL PASS。
+- 六副本（双内层）同步：主程序.py SHA256=5f90718802d3 两层一致；
+  check_six_copies --main 7 文件 FAIL 0。
+- 大考探针：CHECK=41 PASS=41 FAIL=0（23.7s）；S1-1/S1-3 PASS；
+  H3 统一版仓漂移仍为 BACKLOG §五 长尾 OBS（非本批范围）。
+- 全量回归：TOTAL=139 PASS=139 FAIL=0 TIMEOUT=0（含新增 verify_234）。
+- 手册 B1 §3.6 更新为 13 列 + 核验列口径段 + 筛选下拉口径段；派生 md 与三本
+  PDF 由 build_docs_pdf.py 重建 [OK]。
+- 打包统一重打（§233+§234 合并）：dist/择日大师_v2.2.1.exe 17.9MB
+  （2026-11-08 21:35）；手机一键部署包.zip 5.6MB（2026-11-08 21:38）。
+
+### 234.4 commit
+- commit `1a55dd0`（9 files，+274/-41；含代码/测试/手册 md/三本 PDF/部署副本；
+  exe 与 zip 产物按惯例不入库）。
