@@ -25,8 +25,9 @@
     "veto": false,
     "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：月德）",
-    "final_score": 127
+    "final_score": 116
   },
   "notes": "公理推导=坐山克仙命/-30/凶中之凶；与判定函数交叉一致=True；veto 来自坐山克仙命（relation）判定",
-  "refreeze_note_20261031": "重冻溯源（001 §211，2026-10-31 三煞四柱级全面旁路·案B）：final 0→127；report_level ❌ 凶→❌ 凶（坐山克仙命，有制化：月德）；三煞通道 penalty -20→0（删除的是年三煞柱级通道，保留山向/向方）。 veto True→False：原否决系 ji 含年三煞(时柱) 触发「坐山克仙命叠大忌」，柱级通道删除后叠忌条件不成立；relation 判定不变，level_cap false→True，等级改写为有制化注凶。"
+  "refreeze_note_20261031": "重冻溯源（001 §211，2026-10-31 三煞四柱级全面旁路·案B）：final 0→127；report_level ❌ 凶→❌ 凶（坐山克仙命，有制化：月德）；三煞通道 penalty -20→0（删除的是年三煞柱级通道，保留山向/向方）。 veto True→False：原否决系 ji 含年三煞(时柱) 触发「坐山克仙命叠大忌」，柱级通道删除后叠忌条件不成立；relation 判定不变，level_cap false→True，等级改写为有制化注凶。",
+  "refreeze_note_20261109": "重冻溯源（001 §238，2026-11-09 合局克山＋自刑伏吟加重，用户拍板）：月支日支寅寅伏吟加重 -15（自刑伏吟专项），加权 final 127→116；report_level 与仙命坐山判定语义不变。"
 }

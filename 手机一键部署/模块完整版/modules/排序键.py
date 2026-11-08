@@ -272,14 +272,15 @@ _SPECIAL_KEYS = {
 
 
 def profile_plan_keys(event_type=''):
-    """该事项的满分核验五维名称序列（UI 图例 / 手册共用）。
+    """该事项的满分核验维名称序列（UI 图例 / 手册共用）。
 
-    专属事项：得令 · 合局 · 德神 · <专属> · 硬忌（用户示例顺序）；
-    通用事项：得令 · 合局 · 相主 · 德神 · 硬忌（§231 原序）。
+    专属事项（001 §238，2026-11-09 用户拍板）：得令 · 合局 · 德神 · <专属> ·
+    相主 · 硬忌（6 项——专属项不再替换相主，两者都查）；
+    通用事项：得令 · 合局 · 相主 · 德神 · 硬忌（§231 原序，5 项）。
     """
     _sp = _EVENT_SPECIAL.get(str(event_type or ''))
     if _sp:
-        return ['得令', '合局', '德神', _SPECIAL_KEYS[_sp], '硬忌']
+        return ['得令', '合局', '德神', _SPECIAL_KEYS[_sp], '相主', '硬忌']
     return ['得令', '合局', '相主', '德神', '硬忌']
 
 
@@ -308,17 +309,19 @@ def _xz_line_scores(details):
 
 
 def perfect_profile(result, owners=None, event_type=''):
-    """满分画像五维核验（001 §231 通用五维 + §233 事项定制判据）。
+    """满分画像核验（001 §231 通用五维 + §233 事项定制 + §238 六维）。
 
     通用底线（所有事项必有）：得令、硬忌；
-    专属事项把「相主」替换为事项核心项（扶山补龙/利月与吉日/全家相合/
-    仙命相合/出发方向），其余事项维持原五维。
+    专属事项（001 §238，2026-11-09 用户拍板）：在专属核心项（扶山补龙/
+    利月与吉日/全家相合/仙命相合/出发方向）之外保留「相主」，共 6 项——
+    专属与相主两者都查，避免空事主时相主维度整列缺失；
+    其余事项维持原通用 5 维（相主居中）。
 
     纯展示：只从 calculate_score 的既有产出（score_details / shensha_list /
     wu_xing_result.details / veto_reasons）提取，不新增任何分值或否决。
 
     Returns:
-        {'items': [{'key','ok','detail'}]×5, 'marks': '✓✓✗✓✓',
+        {'items': [{'key','ok','detail'}]×N(5或6), 'marks': '✓✓✗✓✓',
          'ok_count': int, 'all_ok': bool, 'tips': [缺失项说明]}
     """
     _r = result if isinstance(result, dict) else {}
@@ -360,9 +363,11 @@ def perfect_profile(result, owners=None, event_type=''):
                     'detail': ('一票否决：' + '；'.join(_veto)) if _veto
                     else ('神煞负分合计 %d（≤%d）' % (_ded, CAUTION_DEDUCT_THRESHOLD))
                     if _ded <= CAUTION_DEDUCT_THRESHOLD else '无硬忌/重扣'}
-    _item_xiangzhu = {'key': '相主', 'ok': _xz > 0,
-                      'detail': ('相主 %+d 分' % _xz) if _xz > 0
-                      else ('未填写事主，相主无法核验' if not _has_owner
+    _item_xiangzhu = {'key': '相主',
+                      'ok': (_xz > 0) and _has_owner,
+                      'na': (not _has_owner),
+                      'detail': ('相主 %+d 分' % _xz) if (_xz > 0 and _has_owner)
+                      else ('未填写事主，无法核验相主适配性' if not _has_owner
                             else '相主无生合加分')}
 
     # ---- 事项专属核心项（001 §233）----
@@ -380,8 +385,8 @@ def perfect_profile(result, owners=None, event_type=''):
                     else '大利月/小利月/周堂/不将日均未命中'}
     elif _sp == 'family':
         if not _has_owner:
-            _item_sp = {'key': '全家相合', 'ok': False,
-                        'detail': '未填写事主，全家相合无法核验'}
+            _item_sp = {'key': '全家相合', 'ok': False, 'na': True,
+                        'detail': '未填写事主，无法核验相主适配性'}
         else:
             _hard = [str(_t) for _t in _xz_details if str(_t).startswith('[硬性门槛]')]
             _neg = [(_t, _v) for _t, _v in _xz_line_scores(_xz_details) if _v < 0]
@@ -401,7 +406,7 @@ def perfect_profile(result, owners=None, event_type=''):
                       and str(_o.get('role') or '') in _WM_ROLES
                       for _o in (owners or []))
         if not _has_wm:
-            _item_sp = {'key': '仙命相合', 'ok': False,
+            _item_sp = {'key': '仙命相合', 'ok': False, 'na': True,
                         'detail': '未填写仙命（死者卡），无法核验'}
         else:
             _sz = int(_d.get('仙命坐山得分') or 0)
@@ -429,15 +434,21 @@ def perfect_profile(result, owners=None, event_type=''):
                           else '出行方位犯煞（%+d）' % _tds)}
 
     if _item_sp is not None:
-        _items = [_item_wangling, _item_heju, _item_deshen, _item_sp, _item_yingji]
+        # 001 §238：专属事项 6 项——专属项（索引3）与相主（索引4）都查
+        _items = [_item_wangling, _item_heju, _item_deshen, _item_sp,
+                  _item_xiangzhu, _item_yingji]
     else:
         _items = [_item_wangling, _item_heju, _item_xiangzhu, _item_deshen,
                   _item_yingji]
-    _ok = sum(1 for _i in _items if _i['ok'])
+    _ok = sum(1 for _i in _items if _i.get('ok'))
+    _any_na = any(_i.get('na') for _i in _items)
     return {
         'items': _items,
-        'marks': ''.join('✓' if _i['ok'] else '✗' for _i in _items),
+        'marks': ''.join('✓' if _i.get('ok')
+                         else ('-' if _i.get('na') else '✗')
+                         for _i in _items),
         'ok_count': _ok,
-        'all_ok': _ok == len(_items),
-        'tips': ['%s：%s' % (_i['key'], _i['detail']) for _i in _items if not _i['ok']],
+        'all_ok': (not _any_na) and _ok == len(_items),
+        'tips': ['%s：%s' % (_i['key'], _i['detail'])
+                 for _i in _items if not _i.get('ok')],
     }

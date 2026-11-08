@@ -220,8 +220,11 @@ check('场景C：score=77 等级带注凶、忌列表/调和句齐全',
 # 封顶集成（§59.9）：单凶坐山克 + 有制化 + 无否决 + 总分高分 → level 封顶凶
 r_cap1 = pure(dt.date(2023, 3, 22), [dead('甲子', '1924-03-01')], '丙山壬向')
 se_cap1 = r_cap1.get('shanzuo_eval') or {}
-check('封顶集成：2023-03-22 score=76 月德 → 等级带注凶',
-      se_cap1.get('_with_huajie') and r_cap1.get('score') == 76
+# 001 §238（2026-11-09 自刑伏吟加重，用户拍板）：2023-03-22 癸卯年乙卯月己卯日
+# 庚午时，年/月/日三卯互伏吟 -45（-15×3），加权后 76→45；final<60 致 level_cap
+# 四要件锚点失效（fixture integration/level_cap_20230322 同步改 cap=false 挂账）。
+check('封顶集成：2023-03-22 score=45 月德 → 等级带注凶',
+      se_cap1.get('_with_huajie') and r_cap1.get('score') == 45
       and not (r_cap1.get('veto_reasons') or [])
       and r_cap1.get('level') == '❌ 凶（坐山克仙命，有制化：月德）')
 check('展示调和：2023-03-22 忌列表含制化条目',
@@ -237,8 +240,10 @@ se_cap2 = r_cap2.get('shanzuo_eval') or {}
 # 子∈ → 年三煞(向方)-25+月三煞(向方)-20，×0.7 加权后 -31.5→-38（clamp 前实测）。
 # 2026-11-06 向方三煞降权（用户拍板）：年三煞(向方)-25→-10、月三煞(向方)-20→-6，
 # 加权后 -31.5→-11.2，121→139。
-check('封顶集成：2023-06-13 吉神叠满 score=139 → 等级带注凶',
-      r_cap2.get('score') == 139 and not (r_cap2.get('veto_reasons') or [])
+# 001 §238（2026-11-09 自刑伏吟加重，用户拍板）：月支午×时支午自刑额外 -7
+# （与基线-8 合计-15），加权后 139→134。
+check('封顶集成：2023-06-13 吉神叠满 score=134 → 等级带注凶',
+      r_cap2.get('score') == 134 and not (r_cap2.get('veto_reasons') or [])
       and r_cap2.get('level')
       # §59.11（2026-10-07）：坐山克场景太阳到山改写为"太阳到坐山正照制化"并置顶
       == '❌ 凶（坐山克仙命，有制化：太阳到坐山正照制化、天德、三合）'

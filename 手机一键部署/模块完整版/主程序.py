@@ -807,7 +807,7 @@ class ZeriApp:
         ttk.Label(_check_bar, text="核验筛选").pack(side=tk.LEFT)
         self._check_filter_var = tk.StringVar(value='全部')
         _check_cbo = ttk.Combobox(_check_bar, textvariable=self._check_filter_var,
-                                  values=('全部', '极品(5✓)', '大吉(4-5✓)', '优吉(2-3✓)'),
+                                  values=('全部', '极品(全✓)', '大吉(≥4✓)', '优吉(2-3✓)'),
                                   state='readonly', width=12)
         _check_cbo.pack(side=tk.LEFT, padx=(4, 0))
         _check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())
@@ -890,6 +890,10 @@ class ZeriApp:
         self.result_tree.tag_configure('veto', background='#FFE4E1', foreground='#B22222')
         # 001 §234：满分核验全✓行金底高亮（替代星级底色，与反推页签金底口径一致）
         self.result_tree.tag_configure('allok', background='#FFE680')
+        # 001 §237：高分伪装防呆——总分≥200 且犯伐日/金神/三煞等重煞行，
+        # 黄底红字强制警示
+        self.result_tree.tag_configure('heavy_warn', background='#FFE4B5',
+                                       foreground='#B22222')
 
         # 列显示初始化：事主信息栏一律不显示，利月栏仅嫁娶类事项显示
         self._update_result_columns()
@@ -4235,8 +4239,10 @@ class ZeriApp:
         for result in self.results:
             level = result.get('level', '未知')
             row_tag = _star_row_tag(level)
-            # 001 §234：核验列五维（得令/合局/事项专属/德神/硬忌），与反推页签同口径
+            # 001 §234：核验列（得令/合局/…/硬忌），与反推页签同口径；
+            # 001 §238：专属事项 6 项、通用 5 项，分母动态化
             _ok_n = -1
+            _tot_n = 0
             _chk_text = '—'
             _chk_tip = ''
             _ck_detail = result.get('detail')
@@ -4244,11 +4250,31 @@ class ZeriApp:
                 try:
                     _chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck)
                     _ok_n = int(_chk.get('ok_count', 0))
-                    _chk_text = '%d/5 ✓' % _ok_n
+                    _tot_n = len(_chk.get('items') or [])
+                    _marks = str(_chk.get('marks') or '')
+                    if _marks and '-' in _marks:
+                        _chk_text = '%d/%d %s' % (_ok_n, _tot_n, _marks)
+                    else:
+                        _chk_text = '%d/%d ✓' % (_ok_n, _tot_n)
                     _chk_tip = '\n'.join(
-                        ('✓ ' if _i.get('ok') else '✗ ') + str(_i.get('key', ''))
+                        ('✓ ' if _i.get('ok')
+                         else ('- ' if _i.get('na') else '✗ '))
+                        + str(_i.get('key', ''))
                         + '：' + str(_i.get('detail', ''))
                         for _i in (_chk.get('items') or []))
+                    # 001 §237：高分伪装防呆警示并入核验列悬停
+                    if result.get('heavy_sha_warning'):
+                        _chk_tip = (
+                            '⚠️ 本日总分虽高，但犯「伐日/金神/三煞」等重煞，'
+                            '切勿被高分蒙蔽，请谨慎使用！\n'
+                            + _chk_tip)
+                    # 001 §238 坑四：偏枯预警并入核验列悬停（纯展示不参与 ✓ 计数）
+                    _pk = _ck_detail.get('wuxing_pian_ku')
+                    if _pk:
+                        _chk_tip = (
+                            '⚠️ 本课五行极度偏枯（%s），请结合山家与事主命理三思，'
+                            '切勿迷信高分。\n' % _pk
+                            + _chk_tip)
                     # 001 §236 A 档：嫁娶相主核验提示（冲夫妻宫/年命伏吟）
                     # 并入核验列悬停，纯展示不参与 ✓ 计数。
                     _xz_tips = ((_ck_detail.get('score_details') or {})
@@ -4258,10 +4284,11 @@ class ZeriApp:
                             '\n'.join('⚠ ' + str(_t) for _t in _xz_tips)
                 except Exception:
                     _ok_n = -1
-            # 001 §234：核验筛选（全部 / 极品5✓ / 大吉4-5✓ / 优吉2-3✓）
-            if _flt == '极品(5✓)' and _ok_n != 5:
+            # 001 §234：核验筛选；§238：分母动态化（专属事项 6 项、通用 5 项），
+            # 「极品」改全✓语义（_ok_n == _tot_n），大吉≥4✓/优吉2-3✓阈值不变
+            if _flt == '极品(全✓)' and (_ok_n < 0 or _tot_n == 0 or _ok_n != _tot_n):
                 continue
-            if _flt == '大吉(4-5✓)' and _ok_n < 4:
+            if _flt == '大吉(≥4✓)' and _ok_n < 4:
                 continue
             if _flt == '优吉(2-3✓)' and not (2 <= _ok_n <= 3):
                 continue
@@ -4284,7 +4311,8 @@ class ZeriApp:
                 result.get('daliyue', '-'),
                 result.get('owners', '-'),
                 result.get('feixing', '-')
-            ), tags=(('allok',) if _ok_n == 5 else (row_tag,)))
+            ), tags=(('heavy_warn',) if result.get('heavy_sha_warning')
+                     else (('allok',) if (_tot_n > 0 and _ok_n == _tot_n) else (row_tag,))))
             # 核心吉神列完整文本（Tooltip 用；不合格模式下为空，不弹提示）
             self._jishen_full_map[_iid] = (
                 '' if _cur_mode == 'unqualified'
@@ -6182,6 +6210,14 @@ class ZeriApp:
         # §203 Commit2：详情【一票否决】段高亮（浅红背景+红字）
         text.tag_configure("veto_highlight", foreground="#B22222",
                            background="#FFE4E1")
+        # 001 §237：高分伪装防呆警示框（黄底红字）
+        text.tag_configure("heavy_warn_box", foreground="#B22222",
+                           background="#FFE4B5",
+                           font=("微软雅黑", 13, "bold"))
+        # 001 §238：五行偏枯警示框（与 heavy_warn_box 同式样，黄底红字）
+        text.tag_configure("pianku_box", foreground="#B22222",
+                           background="#FFE4B5",
+                           font=("微软雅黑", 13, "bold"))
         
         detail = result['detail']
         # 2026-09-06 修正：权威四柱覆盖块重建 detail['sizhu'] 时会丢 'date' 键，
@@ -6326,7 +6362,24 @@ class ZeriApp:
                 text.insert(tk.END, f" {other_text}")
         else:
             text.insert(tk.END, level)
-        
+
+        # 001 §237：高分伪装防呆——总分≥200 且犯伐日/金神/三煞等重煞，黄底红字强警示
+        if result.get('heavy_sha_warning'):
+            text.insert(tk.END, "\n")
+            text.insert(tk.END,
+                        "⚠️ 本日总分虽高，但犯「伐日/金神/三煞」等重煞，"
+                        "切勿被高分蒙蔽，请谨慎使用！",
+                        "heavy_warn_box")
+
+        # 001 §238 坑四：五行极度偏枯（过燥/过寒）预警——纯展示，不影响分值
+        _pianku = (result.get('detail') or {}).get('wuxing_pian_ku') or result.get('wuxing_pian_ku')
+        if _pianku:
+            text.insert(tk.END, "\n")
+            text.insert(tk.END,
+                        "⚠️ 本课五行极度偏枯（%s），请结合山家与事主命理三思，"
+                        "切勿迷信高分。" % _pianku,
+                        "pianku_box")
+
         # 如果是婚嫁择日，显示大利月/小利月信息
         if event_type in MARRIAGE_EVENTS and daliyue_info != '-':
             # 2026-10-16 第4批 L5：普通月份补括注，与【嫁娶择日分析】「非大利月，无加分」口径一致

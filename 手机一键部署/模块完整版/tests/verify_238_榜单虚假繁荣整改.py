@@ -1,0 +1,196 @@
+# -*- coding: utf-8 -*-
+"""001 §238 修造榜单「虚假繁荣」整改回归（2026-11-09 用户拍板）。
+
+背景：修造·坤山榜单 10 天全 4/5✓ 高分，实为极端偏枯日+假吉神堆分，
+且全部缺「相主」维度（空事主强行放行）。用户列出四类坑并下达整改：
+  坑一/坑四 五行过燥过寒 → 纯展示预警（wuxing_pian_ku + UI 黄底红字框）
+  坑二 合局克山仍高分   → 三合克山 -40 / 半合拱合克山 -20（拟定，待拍板）
+  坑三 自刑 -8 伏吟 0 太轻 → 自刑额外 -7（合计 -15）/ 伏吟 -15（拟定，待拍板）
+  核验 5 项改 6 项        → 专属事项序列插入「相主」
+
+A. 合局克山：三合金句 -40 / 半合 -20 / 出行旁路 / 生扶不克 / 无山向不触发
+B. 自刑伏吟加重：-7（基线-8合计-15）/ 伏吟 -15 / 无同支反向
+C. 偏枯预警：过燥 / 过寒 / 平和 None / 用户案例 06-04 边界（火=4 不触发）
+D. 6 项核验端到端：修造完美画像序列 + 空事主相主 N/A
+E. 源码锚点防回退
+"""
+import io
+import os
+import sys
+
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+from modules.四柱计算器 import calculate_sizhu
+from modules.评分器 import calculate_score
+from modules.排序键 import perfect_profile, profile_plan_keys
+
+FAILS = []
+
+
+def check(cond, label, detail=''):
+    print('  [%s] %s%s' % ('PASS' if cond else 'FAIL', label,
+                          ('  | ' + str(detail)) if detail else ''))
+    if not cond:
+        FAILS.append(label)
+
+
+def _sz(y, m, d, h=12):
+    r = calculate_sizhu((y, m, d), h, 0, longitude=120)
+    r['year'], r['month'], r['day'] = y, m, d
+    return r
+
+
+def _xj(y, m, d, h=12, ev='修造', sx='坤山艮向'):
+    return calculate_score(_sz(y, m, d, h), ev, shan_xiang=sx, zeli_mode='pure')
+
+
+def _keshan_ji(r):
+    return [str(x) for x in (r.get('ji_list') or []) if '克山' in str(x)]
+
+
+def _ss_detail(r):
+    return [str(x) for x in ((r.get('sansha_info') or {}).get('sansha_penalty_detail') or [])]
+
+
+# ==================== A. 合局克山重扣 ====================
+def test_heju_keshan():
+    print('\n[A] 合局克山重扣（坑二）')
+    # A1 三合：2026-11-17 h=6 → 丙午 己亥 乙未 己卯（亥卯未三合木局）
+    r = _xj(2026, 11, 17, 6)
+    check('三合木局克山（坤山属土）' in _keshan_ji(r), 'A1 三合木局克山入忌项', _keshan_ji(r))
+    check('三合木局克山（坤山属土）（-40分）' in _ss_detail(r),
+          'A1 三合克山 -40 分明细', _ss_detail(r))
+    check('三合木局克山（坤山属土）' in (r.get('heavy_sha_names') or []),
+          'A1 三合克山入 heavy_sha_names（触发 §237 防呆）')
+    # A2 半合：2026-11-25 h=12 → 丙午 己亥 癸卯 戊午（亥卯半合木局）
+    r = _xj(2026, 11, 25, 12)
+    check('半合/拱合木局克山（坤山属土）' in _keshan_ji(r), 'A2 半合木局克山入忌项', _keshan_ji(r))
+    check('半合/拱合木局克山（坤山属土）（-20分）' in _ss_detail(r),
+          'A2 半合克山 -20 分明细', _ss_detail(r))
+    check('半合/拱合木局克山（坤山属土）' in (r.get('heavy_sha_names') or []),
+          'A2 半合克山入 heavy_sha_names')
+    # A3 出行旁路：同日同事山向，出行不触发（_no_sansha 守卫）
+    r = _xj(2026, 11, 17, 6, ev='出行')
+    check(not _keshan_ji(r), 'A3 出行旁路不触发克山', _keshan_ji(r))
+    # A4 生扶不克：2026-10-19 h=12 → 丙午 戊戌 丙寅 甲午（寅午戌火局，火生坤土）
+    r = _xj(2026, 10, 19, 12)
+    check(not _keshan_ji(r), 'A4 火局生土不扣（反向）', _keshan_ji(r))
+    # A5 无山向不触发
+    r = calculate_score(_sz(2026, 11, 17, 6), '修造', zeli_mode='pure')
+    check(not _keshan_ji(r), 'A5 无山向不触发克山', _keshan_ji(r))
+
+
+# ==================== B. 自刑/伏吟加重 ====================
+def test_zixing_fuyin():
+    print('\n[B] 自刑/伏吟加重（坑三）')
+    # B1 自刑：2026-03-15 h=12 → 丙午 辛卯 戊子 戊午（仅年支时支午午自刑一对）
+    r = _xj(2026, 3, 15, 12)
+    ji = [str(x) for x in (r.get('ji_list') or [])]
+    hit = [x for x in ji if '自刑伏吟加重' in x]
+    check(hit == ['自刑伏吟加重（年支时支自刑）'], 'B1 午午自刑加重入忌项', hit)
+    check('自刑伏吟加重（年支时支自刑）（-7分）' in _ss_detail(r),
+          'B1 自刑额外 -7（与基线-8合计-15）', _ss_detail(r))
+    check('自刑伏吟加重（年支时支自刑）' not in (r.get('heavy_sha_names') or []),
+          'B1 自刑伏吟不入 heavy_sha_names（保 §237 稀缺性）')
+    # B2 伏吟：2023-02-14 h=12 → 癸卯 甲寅 癸卯 戊午（年支日支卯卯伏吟一对）
+    r = _xj(2023, 2, 14, 12)
+    ji = [str(x) for x in (r.get('ji_list') or [])]
+    hit = [x for x in ji if '自刑伏吟加重' in x]
+    check(any('年支日支伏吟' in x for x in hit), 'B2 卯卯伏吟加重入忌项', hit)
+    check('自刑伏吟加重（年支日支伏吟）（-15分）' in _ss_detail(r),
+          'B2 伏吟 -15 分明细', _ss_detail(r))
+    # B3 反向：同日 h=8（丙辰时，午卯子辰四支互异）→ 不触发
+    r = _xj(2026, 3, 15, 8)
+    ji = [str(x) for x in (r.get('ji_list') or [])]
+    check(not any('自刑伏吟加重' in x for x in ji), 'B3 无同支不触发（反向）',
+          [x for x in ji if '自刑' in x or '伏吟' in x])
+
+
+# ==================== C. 五行偏枯预警 ====================
+def test_pianku():
+    print('\n[C] 五行偏枯预警（坑一/坑四，纯展示不改分）')
+    r = _xj(2026, 6, 1, 12)   # 丙午 癸巳 丙午 甲午：火 6/8
+    check(r.get('wuxing_pian_ku') == '过燥', 'C1 2026-06-01 烈火 → 过燥',
+          r.get('wuxing_pian_ku'))
+    r = _xj(2026, 12, 15, 0)  # 丙午 庚子 癸亥 壬子：水 5/8
+    check(r.get('wuxing_pian_ku') == '过寒', 'C2 2026-12-15 水旺 → 过寒',
+          r.get('wuxing_pian_ku'))
+    r = _xj(2026, 8, 28, 12)  # 丙午 丙申 甲戌 庚午：火 3/8 水 0/8
+    check(r.get('wuxing_pian_ku') is None, 'C3 平和日 → None', r.get('wuxing_pian_ku'))
+    # C4 用户案例边界：2026-06-04 己酉日（火 4/8），阈值 5 → 不触发（锁定现状待拍板）
+    r = _xj(2026, 6, 4, 12)
+    check(r.get('wuxing_pian_ku') is None, 'C4 2026-06-04 火=4 < 阈值5 → None（边界锁定）',
+          r.get('wuxing_pian_ku'))
+
+
+# ==================== D. 6 项核验端到端 ====================
+def test_six_checks():
+    print('\n[D] 核验 5 项 → 6 项（含相主）')
+    check(profile_plan_keys('修造') == ['得令', '合局', '德神', '扶山补龙', '相主', '硬忌'],
+          'D1 修造 6 维序列', str(profile_plan_keys('修造')))
+    owners = [{'name': '福主', 'role': '福主', 'year_sx': '龙'}]
+    r = calculate_score(_sz(2026, 8, 28, 12), '修造', owners=[dict(o) for o in owners],
+                        shan_xiang='坤山艮向', zeli_mode='pure')
+    pp = perfect_profile(r, owners, '修造')
+    keys = [i['key'] for i in pp['items']]
+    check(keys == ['得令', '合局', '德神', '扶山补龙', '相主', '硬忌'],
+          'D2 真实评分端到端 6 维', str(keys))
+    check(pp['items'][3]['key'] == '扶山补龙', 'D3 专属项恒在 items[3]')
+    check(len(pp['marks']) == 6, 'D4 marks 与 items 同长 6')
+    # D5 空事主 → 相主 N/A 第三态（不计 ✓ 也不混入 ok 计数）
+    pp2 = perfect_profile(r, [], '修造')
+    xz = [i for i in pp2['items'] if i['key'] == '相主']
+    check(bool(xz) and xz[0].get('na'), 'D5 空事主相主 N/A',
+          xz[0] if xz else '无相主项')
+    check(not pp2['all_ok'], 'D5 空事主 all_ok=False（不再 5/5 放行）')
+
+
+# ==================== E. 源码锚点 ====================
+def test_source_anchors():
+    print('\n[E] 源码锚点防回退')
+    p1 = os.path.join(_ROOT, 'modules', '评分器.py')
+    with open(p1, 'r', encoding='utf-8') as f:
+        s1 = f.read()
+    check("'三合%s局克山（%s山属%s）'" in s1, '评分器：三合克山 -40')
+    check("'半合/拱合%s局克山（%s山属%s）'" in s1, '评分器：半合/拱合克山 -20')
+    check("'自刑伏吟加重（%s）'" in s1, '评分器：自刑伏吟加重')
+    check("'wuxing_pian_ku': _wuxing_pian_ku" in s1, '评分器：偏枯键入 return')
+    p2 = os.path.join(_ROOT, 'modules', '排序键.py')
+    with open(p2, 'r', encoding='utf-8') as f:
+        s2 = f.read()
+    check("'德神', _SPECIAL_KEYS[_sp], '相主', '硬忌'" in s2,
+          '排序键：专属 6 维序列含相主')
+    p3 = os.path.join(_ROOT, '主程序.py')
+    with open(p3, 'r', encoding='utf-8') as f:
+        s3 = f.read()
+    check('"pianku_box"' in s3, '主程序：pianku_box 样式')
+    check('本课五行极度偏枯（%s），请结合山家与事主命理三思' in s3,
+          '主程序：偏枯警示文案（详情页+tooltip）')
+
+
+def main():
+    print('=' * 74)
+    print('001 §238 修造榜单「虚假繁荣」整改回归')
+    print('=' * 74)
+    test_heju_keshan()
+    test_zixing_fuyin()
+    test_pianku()
+    test_six_checks()
+    test_source_anchors()
+    print('\n' + '=' * 74)
+    if FAILS:
+        print('FAIL %d 项：' % len(FAILS))
+        for f in FAILS:
+            print('  -', f)
+        return 1
+    print('ALL PASS')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
