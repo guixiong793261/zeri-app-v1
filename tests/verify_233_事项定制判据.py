@@ -58,8 +58,8 @@ def test_plan_keys():
         ('出行', '出发方向'),
     ]
     for _ev, _sp in _cases:
-        check(profile_plan_keys(_ev) == ['得令', '合局', '德神', _sp, '硬忌'],
-              '%s → 得令/合局/德神/%s/硬忌' % (_ev, _sp),
+        check(profile_plan_keys(_ev) == ['得令', '合局', '德神', _sp, '相主', '硬忌'],
+              '%s → 得令/合局/德神/%s/相主/硬忌' % (_ev, _sp),
               str(profile_plan_keys(_ev)))
     for _ev in ('开业', '入学', '', '通用'):
         check(profile_plan_keys(_ev) == ['得令', '合局', '相主', '德神', '硬忌'],
@@ -74,12 +74,14 @@ def test_structure():
         _keys = [i['key'] for i in _r['items']]
         check(_keys == profile_plan_keys(_ev),
               '%s items.key 序列 == profile_plan_keys' % (_ev or '空'), str(_keys))
-        check(len(_r['items']) == 5 and len(_r['marks']) == 5,
-              '%s 五维齐备' % (_ev or '空'))
+        _n = len(_r['items'])
+        check(_n == (6 if _ev in ('修造', '嫁娶', '入宅', '安葬', '出行') else 5)
+              and len(_r['marks']) == _n,
+              '%s %d 维齐备' % (_ev or '空', _n))
         check(_r['ok_count'] == sum(1 for i in _r['items'] if i['ok']),
               '%s ok_count 自洽' % (_ev or '空'))
-        check(_r['all_ok'] == (_r['ok_count'] == 5), '%s all_ok 自洽' % (_ev or '空'))
-        check(len(_r['tips']) == 5 - _r['ok_count'], '%s tips 自洽' % (_ev or '空'))
+        check(_r['all_ok'] == (_r['ok_count'] == _n), '%s all_ok 自洽' % (_ev or '空'))
+        check(len(_r['tips']) == _n - _r['ok_count'], '%s tips 自洽' % (_ev or '空'))
 
 
 # ==================== C. 专属分支判定 ====================

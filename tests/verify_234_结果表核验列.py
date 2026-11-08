@@ -45,14 +45,15 @@ check('A4 _update_result_columns 恒显集合含「核验」',
 
 # ── B：金底 tag ───────────────────────────────────────────────────
 check('B1 allok tag 注册', "tag_configure('allok', background='#FFE680')" in _src)
-check('B2 全✓行替换星级 tag（非叠加）',
-      "tags=(('allok',) if _ok_n == 5 else (row_tag,))" in _src)
+check('B2 全✓行替换星级 tag（非叠加；重煞行优先 heavy_warn；§238 分母动态化）',
+      "('allok',) if (_tot_n > 0 and _ok_n == _tot_n) else (row_tag,)" in _src
+      and "heavy_warn" in _src)
 
 # ── C：悬停弹层 ───────────────────────────────────────────────────
 check('C1 _check_full_map 初始化 + 挂载',
       'self._check_full_map = {}' in _src and 'self._check_full_map[_iid] = _chk_tip' in _src)
-check('C2 tooltip 文案逐条 ✓/✗ 生成',
-      "_chk_tip = '\\n'.join(" in _src and "('✓ ' if _i.get('ok') else '✗ ')" in _src)
+check('C2 tooltip 文案逐条 ✓/-/✗ 生成（含空事主 N/A 态）',
+      "_chk_tip = '\\n'.join(" in _src and "'- ' if _i.get('na')" in _src)
 check('C3 on_tree_motion 核验列参与弹层',
       "_cur != _col_j and _cur != _col_c" in _src
       and "if _cur == _col_c" in _src)
@@ -61,15 +62,15 @@ check('C4 _tree_column_id 通用化且核心吉神调用同行保留',
       and "self._tree_column_id('核心吉神')" in _src)
 
 # ── D：筛选下拉 ───────────────────────────────────────────────────
-check('D1 下拉变量与四档选项',
+check('D1 下拉变量与四档选项（§238 文案：极品(全✓)/大吉(≥4✓)）',
       "self._check_filter_var = tk.StringVar(value='全部')" in _src
-      and "values=('全部', '极品(5✓)', '大吉(4-5✓)', '优吉(2-3✓)')" in _src)
+      and "values=('全部', '极品(全✓)', '大吉(≥4✓)', '优吉(2-3✓)')" in _src)
 check('D2 下拉只读 + 切换即重渲',
       "state='readonly'" in _src
       and '_check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())' in _src)
-check('D3 三档过滤条件',
-      "if _flt == '极品(5✓)' and _ok_n != 5:" in _src
-      and "if _flt == '大吉(4-5✓)' and _ok_n < 4:" in _src
+check('D3 三档过滤条件（§238：极品=全✓动态分母）',
+      "if _flt == '极品(全✓)' and (_ok_n < 0 or _tot_n == 0 or _ok_n != _tot_n):" in _src
+      and "if _flt == '大吉(≥4✓)' and _ok_n < 4:" in _src
       and "if _flt == '优吉(2-3✓)' and not (2 <= _ok_n <= 3):" in _src)
 
 # ── E：渲染接线与静默事主 ─────────────────────────────────────────
@@ -98,6 +99,18 @@ check('G1 perfect_profile 返回五维且硬忌/得令项在列',
       and any(_it.get('key') == '硬忌' for _it in _pp['items'])
       and any(_it.get('key') == '得令' for _it in _pp['items']),
       str(_pp)[:120])
+
+# ── G2：001 §238 专属事项 6 维（修造含扶山补龙+相主双查）────────────────
+_pp6 = perfect_profile(
+    {'score_details': {'旺衰得分': 10}, 'score': 30, 'level': '大吉',
+     'veto_reasons': [], 'shensha_list': [{'name': '补龙', 'score': 12}]},
+    owners=None, event_type='修造')
+_k6 = [_it.get('key') for _it in (_pp6.get('items') or [])]
+check('G2 修造 6 维：得令/合局/德神/扶山补龙/相主/硬忌',
+      _k6 == ['得令', '合局', '德神', '扶山补龙', '相主', '硬忌'],
+      str(_k6))
+check('G3 修造空事主 → 相主 N/A（第三态，不计 ✗）',
+      any(_it.get('key') == '相主' and _it.get('na') for _it in _pp6['items']))
 
 print('\n' + ('ALL PASS' if not FAILS else 'FAIL %d：%s' % (len(FAILS), '；'.join(FAILS)))
       , flush=True)
