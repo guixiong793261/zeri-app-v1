@@ -226,3 +226,75 @@ def rank_day(result, event_type=''):
     """
     _tier = {'吉日': 0, '慎用': 1, '否决': 2}[classify_day(result, event_type)]
     return (_tier,) + day_rank_key(result, event_type)
+
+
+# ==================== 满分画像核验（001 §231，纯展示） ====================
+
+# 德神集（与 SHENSHA_SCORES 注册名一致；含动土的「天德日」变体）。
+DEITY_NAMES = ('天德', '天德日', '天德合', '月德', '月德合', '岁德', '岁德合',
+               '天赦', '天愿', '四相', '时德', '天医',
+               '三奇日', '三奇月', '三奇星')
+
+# 合局判据：评分类 details['地支关系'] 中的正向合局文案关键词。
+_HE_PATTERNS = ('三合', '六合', '半合', '拱合')
+
+
+def perfect_profile(result, owners=None):
+    """满分画像五维核验：得令 / 合局 / 相主 / 德神 / 硬忌（001 §231）。
+
+    纯展示：只从 calculate_score 的既有产出（score_details / shensha_list /
+    wu_xing_result.details / veto_reasons）提取，不新增任何分值或否决。
+
+    Returns:
+        {'items': [{'key','ok','detail'}]×5, 'marks': '✓✓✗✓✓',
+         'ok_count': int, 'all_ok': bool, 'tips': [缺失项说明]}
+    """
+    _r = result if isinstance(result, dict) else {}
+    _d = _r.get('score_details') or {}
+    # 1) 得令：月令旺衰（+10 旺 / +5 相 / 0 休 / -5 囚 / -10 死）
+    _wang = int((_d.get('月令详细') or {}).get('旺衰得分') or 0)
+    _wang_desc = {10: '旺', 5: '相', 0: '休', -5: '囚', -10: '死'}.get(_wang, '')
+    # 2) 合局：四柱地支三合 / 六合 / 半合 / 拱合
+    _rels = (((_r.get('wu_xing_result') or {}).get('details') or {})
+             .get('地支关系') or [])
+    _he = next((str(_x) for _x in _rels
+                if any(_p in str(_x) for _p in _HE_PATTERNS)), '')
+    # 3) 相主：相主得分（须填写事主才有意义）
+    _xz = int(_d.get('相主得分') or 0)
+    _has_owner = bool(owners)
+    # 4) 德神：计分侧命中任一德神
+    _deity = ''
+    for _s in (_r.get('shensha_list') or []):
+        if isinstance(_s, dict) and int(_s.get('score', 0) or 0) > 0:
+            _n = str(_s.get('name') or '')
+            if _n in DEITY_NAMES:
+                _deity = _n
+                break
+    # 5) 硬忌：一票否决，或神煞负分合计达慎用阈值（≤-20）
+    _veto = [str(_v) for _v in (_r.get('veto_reasons') or [])]
+    _ded = deduct_sum(_r)
+    _items = [
+        {'key': '得令', 'ok': _wang > 0,
+         'detail': ('月令%s（%+d）' % (_wang_desc, _wang)) if _wang > 0
+         else ('月令%s（%+d），未得令' % (_wang_desc or '休', _wang))},
+        {'key': '合局', 'ok': bool(_he),
+         'detail': _he if _he else '地支无三合/六合/半合'},
+        {'key': '相主', 'ok': _xz > 0,
+         'detail': ('相主 %+d 分' % _xz) if _xz > 0
+         else ('未填写事主，相主无法核验' if not _has_owner else '相主无生合加分')},
+        {'key': '德神', 'ok': bool(_deity),
+         'detail': ('命中「%s」' % _deity) if _deity
+         else '未命中天德/月德/岁德/天赦等德神'},
+        {'key': '硬忌', 'ok': (not _veto) and _ded > CAUTION_DEDUCT_THRESHOLD,
+         'detail': ('一票否决：' + '；'.join(_veto)) if _veto
+         else ('神煞负分合计 %d（≤%d）' % (_ded, CAUTION_DEDUCT_THRESHOLD))
+         if _ded <= CAUTION_DEDUCT_THRESHOLD else '无硬忌/重扣'},
+    ]
+    _ok = sum(1 for _i in _items if _i['ok'])
+    return {
+        'items': _items,
+        'marks': ''.join('✓' if _i['ok'] else '✗' for _i in _items),
+        'ok_count': _ok,
+        'all_ok': _ok == len(_items),
+        'tips': ['%s：%s' % (_i['key'], _i['detail']) for _i in _items if not _i['ok']],
+    }

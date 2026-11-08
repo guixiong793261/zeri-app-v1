@@ -288,15 +288,21 @@ class ReverseWindow:
         self.summary_var = tk.StringVar(value='尚未反推')
         ttk.Label(tab2, textvariable=self.summary_var).pack(fill=tk.X, padx=4, pady=4)
         _cols = ('排名', '日期', '星期', '农历', '评分', '等级',
-                 '吉神契合', '扣分主因', '最优时辰', '状态')
+                 '吉神契合', '满分核验', '扣分主因', '最优时辰', '状态')
         self.top_tree = ttk.Treeview(tab2, columns=_cols, show='headings',
                                      selectmode='browse', height=12)
         for _c, _w in (('排名', 48), ('日期', 100), ('星期', 56), ('农历', 96),
                        ('评分', 64), ('等级', 96), ('吉神契合', 90),
-                       ('扣分主因', 400), ('最优时辰', 122), ('状态', 56)):
+                       ('满分核验', 92), ('扣分主因', 400),
+                       ('最优时辰', 122), ('状态', 56)):
             self.top_tree.heading(_c, text=_c)
             self.top_tree.column(_c, width=_w, anchor=tk.CENTER)
         self.top_tree.column('扣分主因', anchor=tk.W)
+        # 001 §231：满分核验列顺序图例（悬停该列看逐项说明）
+        ttk.Label(tab2,
+                  text='满分核验：得令 · 合局 · 相主 · 德神 · 硬忌'
+                       '（✓/✗ 依次对应，悬停看缺失项）',
+                  foreground='#616161').pack(fill=tk.X, padx=6)
         # 榜单保存/打印（与单日详情同一套「保存 + 打印」能力）
         # 001 §220（2026-11-06）：必须在树之前先 pack(BOTTOM)，
         # 否则窗口偏矮时按钮条被树挤到可视区外，用户看不到（原症状）。
@@ -317,9 +323,18 @@ class ReverseWindow:
         self.top_tree.tag_configure('cautious', background='#FFF8E1',
                                     foreground='#6D4C00')
         self.top_tree.tag_configure('auspicious', foreground='#8E0000')
+        # 001 §231：五项全✓的极品日课整行金底高亮
+        self.top_tree.tag_configure('perfect', background='#FFF3CD',
+                                    foreground='#7A4F00')
         self.top_tree.bind('<<TreeviewSelect>>', lambda _e: self._on_tree_select())
         self.top_tree.bind('<Double-Button-1>', self._on_top_double_click)
         self.top_tree.bind('<Button-3>', self._on_top_right_click)
+        # 001 §231：满分核验列悬停 Tooltip
+        self._perfect_col = '#%d' % (list(_cols).index('满分核验') + 1)
+        self._tip_win = None
+        self.top_tree.bind('<Motion>', self._on_top_motion)
+        self.top_tree.bind('<Leave>', lambda _e: self._hide_tip())
+        self.top_tree.bind('<Button-1>', lambda _e: self._hide_tip(), add='+')
 
         # ---- 层3：时间轴
         tab3 = ttk.Frame(self.nb)
@@ -567,6 +582,15 @@ class ReverseWindow:
                 _bh.get('时辰', '—'), _bh.get('时段', '—'), _bh.get('时柱', '—'),
                 _bh.get('score', '—'), _bh.get('level', '')))
             _lines.append('    吉　　神：%s' % (str(_d.get('jishen') or '') or '—'))
+            # 001 §231：满分画像核验（五项全✓为极品日课）
+            _chk = _d.get('check') or {}
+            if _chk.get('items'):
+                _lines.append('    满分核验：%s（%d/%d）%s' % (
+                    _chk.get('marks', '—'), _chk.get('ok_count', 0),
+                    len(_chk.get('items') or []),
+                    '　★极品日课' if _chk.get('all_ok') else ''))
+                for _tip in (_chk.get('tips') or []):
+                    _lines.append('              ✗ %s' % _tip)
             _lines.append('    扣分主因：%s' % _reason_text(_d, compact=True))
             _lines.append('')
         if not _days:
@@ -650,6 +674,8 @@ class ReverseWindow:
         for _i in self.top_tree.get_children():
             self.top_tree.delete(_i)
         self._top_dates = {_d['date'] for _d in res['days']}
+        self._top_map = {_d['date']: _d for _d in res['days']}
+        self._hide_tip()
         # 001 §210 Commit 4（用户 2026-11-01 拍板）：列表按"最优在前"排列——
         # 吉日层内总分降序（同分比吉神契合），慎用层整体排后。
         # 仅调整展示顺序，不改 rank_day / Top-N 选取口径（引擎与测试基线零漂移）。
@@ -662,14 +688,63 @@ class ReverseWindow:
             _tag = 'cautious' if _d['kind'] == '慎用' else 'auspicious'
             _fit = int(_d.get('jishen_fit') or 0)
             _stars = jishen_stars(_fit)
+            # 001 §231：满分核验（得令/合局/相主/德神/硬忌），五项全✓整行金底。
+            _chk = _d.get('check') or {}
+            _marks = str(_chk.get('marks') or '—')
+            if _chk.get('all_ok'):
+                _tag = 'perfect'
             self.top_tree.insert('', tk.END, iid=_d['date'], values=(
                 _idx, _d['date'], _d['weekday'], _d['lunar'], _d['score'],
                 _d['level'], ('%s %d' % ('★' * _stars, _fit)) if _stars else '—',
+                _marks,
                 _reason_text(_d),
                 '%s（%s）%s' % (_d['best_hour']['时辰'],
                               _d['best_hour']['时段'],
                               (' ' + _d['sun_moon_tag']) if _d.get('sun_moon_tag') else ''), _d['kind']),
                 tags=(_tag,))
+
+    # ---------- 001 §231：满分核验列悬停提示 ----------
+    def _on_top_motion(self, event):
+        """悬停「满分核验」列：弹出五项逐条说明（缺失项即诊断报告）。"""
+        if getattr(self, '_tip_win', None) is not None and \
+                self.top_tree.identify_column(event.x) != self._perfect_col:
+            self._hide_tip()
+        if self.top_tree.identify_column(event.x) != self._perfect_col:
+            return
+        _iid = self.top_tree.identify_row(event.y)
+        _d = (getattr(self, '_top_map', None) or {}).get(_iid)
+        if not _d:
+            self._hide_tip()
+            return
+        _chk = _d.get('check') or {}
+        _items = _chk.get('items') or []
+        if not _items:
+            self._hide_tip()
+            return
+        _head = '满分核验  %d/%d%s' % (
+            _chk.get('ok_count', 0), len(_items),
+            '  ·  极品日课' if _chk.get('all_ok') else '')
+        _body = ['%s %s：%s' % ('✓' if _i.get('ok') else '✗',
+                                _i.get('key', ''), _i.get('detail', ''))
+                 for _i in _items]
+        self._show_tip('\n'.join([_head] + _body), event.x_root, event.y_root)
+
+    def _show_tip(self, text, x_root, y_root):
+        if getattr(self, '_tip_win', None) is None:
+            self._tip_win = tk.Toplevel(self.top_tree)
+            self._tip_win.overrideredirect(True)
+            self._tip_win.attributes('-topmost', True)
+            tk.Label(self._tip_win, text='', justify=tk.LEFT,
+                     background='#FFFDE7', foreground='#333333',
+                     relief=tk.SOLID, borderwidth=1,
+                     font=('微软雅黑', 9), padx=8, pady=6).pack()
+        self._tip_win.winfo_children()[0].configure(text=text)
+        self._tip_win.geometry('+%d+%d' % (x_root + 14, y_root + 14))
+        self._tip_win.deiconify()
+
+    def _hide_tip(self):
+        if getattr(self, '_tip_win', None) is not None:
+            self._tip_win.withdraw()
 
     def _render_heatmap(self, res):
         cv = self.heat_canvas

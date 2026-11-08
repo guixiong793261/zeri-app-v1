@@ -33,7 +33,7 @@ from modules.动作时序 import plan_actions
 from modules.排序键 import (fenjin_preview_penalty, scoring_shensha,
                            shashi_hour, hour_rank_key,
                            classify_day, rank_day, jishen_fit, jishen_stars,
-                           deduct_items, deduct_sum)
+                           deduct_items, deduct_sum, perfect_profile)
 
 # 十二时辰（起始小时 → 地支），与主程序扫日候选一致
 HOURS = [(0, '子'), (2, '丑'), (4, '寅'), (6, '卯'), (8, '辰'), (10, '巳'),
@@ -275,6 +275,8 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
                          for _n, _v in deduct_items(best_r)],
         'ji_items': [str(_j) for _j in (best_r.get('ji_list') or [])],
         'jishen': '、'.join(_pos),
+        # 001 §231：满分画像五维核验（纯展示，不参与排序与分值）
+        'check': perfect_profile(best_r, owners),
         # 001 §222：日月角标（只做展示，不产生分值）。
         # 白天（卯—申）太阳到山/到向、夜间（酉—寅）太阴到山/到向才标记。
         'sun_moon_tag': _sun_moon_tag(best_r),
