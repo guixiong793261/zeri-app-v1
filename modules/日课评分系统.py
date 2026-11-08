@@ -413,6 +413,7 @@ class DayScoreWindow:
                     
                     owner_detail = {
                         'name': name,
+                        'gender': info['gender_var'].get() if hasattr(info.get('gender_var'), 'get') else info.get('gender', ''),
                         'birth_date': f"{year}年{month}月{day}日 {hour}时{minute}分",
                         'sizhu': sizhu_str,
                         'xishen': info['xishen_var'].get() if hasattr(info.get('xishen_var'), 'get') else '',
@@ -2073,6 +2074,7 @@ class DayScoreWindow:
                 
                 owner_detail = {
                     'name': name,
+                    'gender': info['gender_var'].get() if hasattr(info.get('gender_var'), 'get') else info.get('gender', ''),
                     'birth_date': f"{year}年{month}月{day}日 {hour}时{minute}分",
                     'sizhu': f"{sizhu['年柱']} {sizhu['月柱']} {sizhu['日柱']} {sizhu['时柱']}",
                     'xishen': info['xishen_var'].get() if hasattr(info.get('xishen_var'), 'get') else '',
@@ -2439,6 +2441,28 @@ class DayScoreWindow:
                     parts.append("同气相求")
                 elif sheng.get(day_wx) == month_wx:
                     parts.append(f"{day_wx}生{month_wx}")
+            # 失令但得生扶的补充说明（与主程序 6835-6860 行对齐）
+            if state not in ('旺', '相'):
+                supports = []
+                year_zhi_v = (parts4[0] or '')[1:2]
+                day_zhi_v = (parts4[2] or '')[1:2]
+                month_gan_v = (parts4[1] or '')[:1]
+                year_gan_v = (parts4[0] or '')[:1]
+                if zhi_wx.get(day_zhi_v) and (sheng.get(zhi_wx[day_zhi_v]) == day_wx or zhi_wx[day_zhi_v] == day_wx):
+                    supports.append(f"日坐{day_zhi_v}（{zhi_wx[day_zhi_v]}气）")
+                if zhi_wx.get(year_zhi_v) and (sheng.get(zhi_wx[year_zhi_v]) == day_wx or zhi_wx[year_zhi_v] == day_wx):
+                    supports.append(f"年支{year_zhi_v}（{zhi_wx[year_zhi_v]}气）")
+                if gan_wx.get(month_gan_v) and (sheng.get(gan_wx[month_gan_v]) == day_wx or gan_wx[month_gan_v] == day_wx):
+                    supports.append(f"月干{month_gan_v}（{gan_wx[month_gan_v]}气）")
+                if gan_wx.get(year_gan_v) and (sheng.get(gan_wx[year_gan_v]) == day_wx or gan_wx[year_gan_v] == day_wx):
+                    supports.append(f"年干{year_gan_v}（{gan_wx[year_gan_v]}气）")
+                if supports:
+                    try:
+                        wang_score = (result.get('score_details') or {}).get('月令详细', {}).get('旺衰得分', 0)
+                    except Exception:
+                        wang_score = 0
+                    tail = "故月令不扣分" if wang_score >= 0 else "稍解失令之势"
+                    parts.append("惟" + "、".join(supports) + f"生扶，仍得根气，{tail}")
             return "，".join(parts)
         except Exception:
             return ''
@@ -2446,34 +2470,102 @@ class DayScoreWindow:
     def show_single_result(self, result):
         """显示单个评分结果"""
         self.result_text.delete(1.0, tk.END)
-        
-        # 构建详细结果文本
-        self._insert_colored_text("""
-╔════════════════════════════════════════════════════════════════════╗
-║                         日课评分结果                               ║
-╚════════════════════════════════════════════════════════════════════╝
 
-【基本信息】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-""")
-        self._insert_colored_text(f"  日期: {result['date']}\n")
-        self._insert_colored_text(f"  综合评分: {result['score']} 分\n")
-        
+        # 主程序顶部「评分/等级」直接取原始 result 字段（重算只影响详情段），
+        # 此处先留存，避免重算覆盖导致头部与主程序不一致
+        _orig_score = result.get('score', 0)
+        _orig_level = result.get('level', '未知')
+
+        # ── 推荐时柱重算（与主程序 _inject_best_hour_to_result 同源）──
+        # 主程序在详情渲染时会用推荐时柱重算评分，日课评分系统需同步，
+        # 否则两窗口时柱/五行/地支关系等全部不一致。
+        try:
+            _sz_raw = result.get('sizhu', {})
+            if isinstance(_sz_raw, dict) and _sz_raw.get('年柱') and _sz_raw.get('日柱'):
+                from modules.推荐时柱 import resolve_recommended_hour
+                _ev = result.get('event_type', '')
+                # 评分器需要「原始出生年月日」形态的事主（owners_detail 的 birth_date
+                # 字符串会被误判为缺失 → 触发"女命忌嫁日"等假否决），此处还原
+                _owners = result.get('owners_info') or []
+                if not _owners:
+                    import re as _re
+                    _owners = []
+                    for _o in (result.get('owners_detail') or []):
+                        if not isinstance(_o, dict):
+                            continue
+                        _m = _re.search(r'(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2})时(\d{1,2})分',
+                                        str(_o.get('birth_date', '') or ''))
+                        if _m:
+                            _owners.append({
+                                'name': _o.get('name', ''), 'role': _o.get('role', ''),
+                                'gender': _o.get('gender', ''),
+                                'year': int(_m.group(1)), 'month': int(_m.group(2)),
+                                'day': int(_m.group(3)), 'hour': int(_m.group(4)),
+                                'minute': int(_m.group(5)),
+                            })
+                    if not _owners:
+                        _owners = result.get('owners_detail') or []
+                _shan = result.get('shan_xiang', '') or ''
+                _rec = resolve_recommended_hour(_sz_raw, _ev, _owners, _shan)
+                if _rec and _rec.get('best_gz'):
+                    _best_gz = _rec['best_gz']
+                    if _best_gz != _sz_raw.get('时柱', ''):
+                        # 构造推荐时柱的 sizhu
+                        _new_sz = dict(_sz_raw)
+                        _new_sz['时柱'] = _best_gz
+                        _new_sz['hour_gan'] = _best_gz[0]
+                        _new_sz['hour_zhi'] = _best_gz[1]
+                        # 用推荐时柱重算评分
+                        from modules.评分器 import calculate_score as _recalc
+                        _house = result.get('house_type', '')
+                        _new_sr = _recalc(_new_sz, _ev, _owners, _house, _shan)
+                        if isinstance(_new_sr, dict):
+                            # 用新评分结果覆盖原 result（保留 date/event_type/owners_detail）
+                            for _k, _v in _new_sr.items():
+                                result[_k] = _v
+                            result['sizhu'] = _new_sz
+                            result['event_type'] = _ev
+                            # 重算五行明细（天干五行/十二长生/纳音/地支关系）
+                            # 与主程序渲染前重新生成 _generate_wu_xing_details 对齐，
+                            # 否则【五行分析】段会因 details 缺失而退化为空
+                            try:
+                                from modules.评分器 import Scorer as _RScorer
+                                _wd = _RScorer()._generate_wu_xing_details(
+                                    _new_sz, _owners)
+                                _wxr = result.get('wu_xing_result')
+                                if isinstance(_wxr, dict) and isinstance(_wd, dict):
+                                    _wxr['details'] = _wd
+                            except Exception:
+                                pass
+        except Exception:
+            pass
+
+        # 构建详细结果文本（与主程序 on_result_double_click 逐字对齐）
+        # 统一四柱为字符串形式（兼容字典/字符串两种输入）
+        _sizhu_raw = result.get('sizhu', '')
+        if isinstance(_sizhu_raw, dict):
+            _sizhu_str = ' '.join([_sizhu_raw.get('年柱',''), _sizhu_raw.get('月柱',''),
+                                    _sizhu_raw.get('日柱',''), _sizhu_raw.get('时柱','')])
+        else:
+            _sizhu_str = str(_sizhu_raw)
+        self._insert_colored_text(f"""
+日期：{result.get('date', '')}
+农历：{result.get('lunar', '')}
+四柱：{_sizhu_str}
+评分：{_orig_score} 分
+等级：""")
+
         # 等级评定（如果有星星，用金色显示）
-        level = result['level']
-        self._insert_colored_text("  等级评定: ")
+        level = _orig_level
         if '★' in level:
             star_count = level.count('★')
             other_text = level.replace('★', '').strip()
             self._insert_colored_text('★' * star_count, "gold_star")
             if other_text:
                 self._insert_colored_text(f" {other_text}")
-            self._insert_colored_text("\n")
         else:
-            self._insert_colored_text(f"{level}\n")
-        
-        self._insert_colored_text("\n")
-        
+            self._insert_colored_text(level)
+
         # 提取大利月/小利月信息（婚嫁专用）
         daliyue_info = '-'
         event_type = result.get('event_type', '')
@@ -2488,99 +2580,167 @@ class DayScoreWindow:
                     elif shensha_name == '小利月':
                         daliyue_info = '小利月'
                         break
-        
+
         # 如果是婚嫁择日，显示大利月/小利月信息
         if event_type in MARRIAGE_EVENTS and daliyue_info != '-':
-            self._insert_colored_text(f"  利月：{daliyue_info}\n")
+            # 2026-10-16 第4批 L5：普通月份补括注，与【嫁娶择日分析】口径一致
+            _ly_txt = '普通月份（非大利月，无利月加分）' if daliyue_info == '普通月份' else daliyue_info
+            self._insert_colored_text(f"\n利月：{_ly_txt}")
+
+        # 插入事主信息标题（与主程序一致）
+        self._insert_colored_text("\n\n[事主信息]")
+        self._insert_colored_text("\n ----------------------------------------")
         
-        self._insert_colored_text("\n")
-        
-        # 事主信息
-        self._insert_colored_text("""【事主信息】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-""")
-        
-        # 优先从原始结果获取事主信息
+        # 事主信息（与主程序 on_result_double_click 逐字对齐）
+        from modules.事项标准 import MARRIAGE_UI_EVENTS
+        from modules.喜用神计算器 import calculate_xishen_yongshen
         owners_detail = result.get('owners_detail', [])
         original_result = result.get('original_result', {})
         if not owners_detail and original_result:
-            # 尝试从原始结果获取事主信息
             owners_detail = original_result.get('owners', [])
-        
+
         if owners_detail:
-            # 处理owners可能是字典列表或字符串列表
-            for i, owner in enumerate(owners_detail[:4], 1):  # 只显示前4个事主
-                if isinstance(owner, dict):
-                    name = owner.get('name', owner.get('姓名', f'事主{i}'))
-                    self._insert_colored_text(f"  【{name}】\n")
-                    
-                    birth_date = owner.get('birth_date', owner.get('出生日期', ''))
-                    if birth_date:
-                        self._insert_colored_text(f"    出生日期: {birth_date}\n")
-                        # 晚子时派口径（典据《三命通会》"子时上半属昨日"、
-                        # 《新唐书》"古历分日起于子半"）：23:00-23:59 日柱仍属
-                        # 出生当日，时支为子、时干按当日日干五鼠遁；次日 0 点后
-                        # 日柱方进次日。四柱由四柱计算器统一按此口径排出。
-                        _bhm = re.search(r'(\d{1,2})\s*[时:\uff1a]', str(birth_date))
-                        if _bhm and int(_bhm.group(1)) == 23:
-                            _p4 = []
-                            _szs = owner.get('sizhu', owner.get('四柱', ''))
-                            if isinstance(_szs, str):
-                                _p4 = _szs.split()
-                            if len(_p4) == 4:
-                                self._insert_colored_text(
-                                    f"    ◎ 时辰说明：23时属当晚子时（晚子时派），"
-                                    f"日柱按出生当日、时柱为{_p4[3]}"
-                                    f"（次日0点后日柱方进次日）\n")
-                            else:
-                                self._insert_colored_text(
-                                    "    ◎ 时辰说明：23时属当晚子时（晚子时派），"
-                                    "日柱按出生当日，次日0点后方进次日\n")
-                    
-                    sizhu = owner.get('sizhu', owner.get('四柱', ''))
-                    if sizhu:
-                        self._insert_colored_text(f"    四柱: {sizhu}\n")
-                    
-                    xishen = owner.get('xishen', owner.get('喜神', ''))
-                    if xishen:
-                        self._insert_colored_text(f"    喜神: {xishen}\n")
-                    
-                    yongshen = owner.get('yongshen', owner.get('用神', ''))
-                    if yongshen:
-                        self._insert_colored_text(f"    用神: {yongshen}\n")
-                    
-                    # 如果是嫁娶，女命显示夫星、子星、阴胎（阴胎属女命）
-                    from modules.事项标准 import MARRIAGE_UI_EVENTS
-                    if event_type in MARRIAGE_UI_EVENTS and owner.get('gender') == '女':
-                        if owner.get('fu_xing'):
-                            self._insert_colored_text(f"    夫星: {owner['fu_xing']}\n")
-                        if owner.get('zi_xing'):
-                            self._insert_colored_text(f"    子星: {owner['zi_xing']}\n")
-                        if owner.get('yintai'):
-                            self._insert_colored_text(f"    阴胎: {owner['yintai']}\n")
-                    # 阳气属男命（与阴胎同法：月干+1月支+3即胎元，男称阳气女称阴胎）
-                    if event_type in MARRIAGE_UI_EVENTS and owner.get('gender') == '男':
-                        if owner.get('yangqi'):
-                            self._insert_colored_text(f"    阳气: {owner['yangqi']}\n")
-                    
-                    match_result = owner.get('match_result', owner.get('匹配结果', ''))
-                    if match_result:
-                        self._insert_colored_text(f"    匹配结果: {match_result}\n")
-                    
-                    self._insert_colored_text("\n")
-                else:
-                    # 如果是字符串，直接显示
-                    self._insert_colored_text(f"  {owner}\n")
+            for i, owner_info in enumerate(owners_detail[:4], 1):
+                if not isinstance(owner_info, dict):
+                    self._insert_colored_text(f"\n   {owner_info}")
+                    continue
+                name = owner_info.get('name', owner_info.get('姓名', f'事主{i}'))
+                gender = owner_info.get('gender', owner_info.get('性别', ''))
+
+                if name:
+                    self._insert_colored_text(f"\n   事主{i}:{name}")
+                    if gender:
+                        self._insert_colored_text(f"({gender})")
+
+                    # 解析出生日期
+                    birth_date = owner_info.get('birth_date', owner_info.get('出生日期', ''))
+                    _bd = None
+                    _bh = 12
+                    _bm = 0
+                    try:
+                        if hasattr(birth_date, 'year'):
+                            _bd = birth_date
+                        elif isinstance(birth_date, str):
+                            import re as _re
+                            _m = _re.match(r'(\d{4})年(\d{1,2})月(\d{1,2})日(?:\s*(\d{1,2})时(?:(\d{1,2})分)?)?', birth_date)
+                            if _m:
+                                from datetime import date as _date
+                                _bd = _date(int(_m.group(1)), int(_m.group(2)), int(_m.group(3)))
+                                if _m.group(4):
+                                    _bh = int(_m.group(4))
+                                if _m.group(5):
+                                    _bm = int(_m.group(5))
+                    except Exception:
+                        _bd = None
+
+                    if not _bd:
+                        self._insert_colored_text("\n     未提供出生日期（不参与相主计算）")
+                    else:
+                        try:
+                            from datetime import date
+                            birth_date_obj = _bd
+                            # 优先用 owner_info 中的 hour/minute，否则从 birth_date 解析
+                            hour_val = owner_info.get('hour', _bh)
+                            minute_val = owner_info.get('minute', _bm)
+                            birth_hour = int(hour_val) if str(hour_val).strip() else _bh
+                            birth_minute = int(minute_val) if str(minute_val).strip() else _bm
+
+                            # 用八字排盘计算四柱
+                            from modules.八字排盘 import BaZiPanPan
+                            panpan = BaZiPanPan(birth_date_obj.year, birth_date_obj.month, birth_date_obj.day,
+                                                birth_hour, birth_minute, gender)
+                            panpan_result = panpan.get_panpan_result()
+                            year_zhu = panpan_result['四柱']['年柱'] if '年柱' in panpan_result['四柱'] else '未知'
+                            month_zhu = panpan_result['四柱']['月柱'] if '月柱' in panpan_result['四柱'] else '未知'
+                            day_zhu = panpan_result['四柱']['日柱'] if '日柱' in panpan_result['四柱'] else '未知'
+                            hour_zhu = panpan_result['四柱']['时柱'] if '时柱' in panpan_result['四柱'] else '未知'
+                            sizhu_text = f"{year_zhu} {month_zhu} {day_zhu} {hour_zhu}"
+
+                            # 喜用神
+                            sizhu_info = {
+                                'year_gan': year_zhu[:1] if year_zhu else '',
+                                'year_zhi': year_zhu[1:] if len(year_zhu) > 1 else '',
+                                'month_gan': month_zhu[:1] if month_zhu else '',
+                                'month_zhi': month_zhu[1:] if len(month_zhu) > 1 else '',
+                                'day_gan': day_zhu[:1] if day_zhu else '',
+                                'day_zhi': day_zhu[1:] if len(day_zhu) > 1 else '',
+                                'hour_gan': hour_zhu[:1] if hour_zhu else '',
+                                'hour_zhi': hour_zhu[1:] if len(hour_zhu) > 1 else ''
+                            }
+                            xishen, yongshen = calculate_xishen_yongshen(sizhu_info)
+
+                            self._insert_colored_text(f"\n     公历:{birth_date_obj}")
+
+                            # 农历
+                            try:
+                                from modules.高精度农历转换 import HighPrecisionLunar
+                                lunar_converter = HighPrecisionLunar()
+                                lunar_info = lunar_converter._get_lunar_info_sxtwl(
+                                    birth_date_obj.year, birth_date_obj.month, birth_date_obj.day, 12, 0, 0)
+                                lunar_str = f"{lunar_info['lunar_year']}年{lunar_info['lunar_month']}月{lunar_info['lunar_day']}日"
+                                if lunar_info['is_leap']:
+                                    lunar_str = f"{lunar_info['lunar_year']}年闰{lunar_info['lunar_month']}月{lunar_info['lunar_day']}日"
+                                self._insert_colored_text(f"\n     农历:{lunar_str}")
+                            except Exception:
+                                self._insert_colored_text("\n     农历:未知")
+
+                            self._insert_colored_text(f"\n     四柱:{sizhu_text}")
+
+                            # 生肖
+                            zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                                         '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+                            year_zhi = year_zhu[1:] if len(year_zhu) > 1 else ''
+                            zodiac = zodiac_map.get(year_zhi, '')
+                            if zodiac:
+                                self._insert_colored_text(f"({zodiac})")
+
+                            self._insert_colored_text(f"\n     喜用神:{xishen}")
+
+                            # 嫁娶女命：夫星/子星/阴胎
+                            if event_type in MARRIAGE_UI_EVENTS and gender == '女':
+                                try:
+                                    from modules.工具函数 import get_fuzi, get_yintai
+                                    month_gan = month_zhu[:1] if month_zhu else '甲'
+                                    month_zhi = month_zhu[1:] if len(month_zhu) > 1 else '子'
+                                    year_gan = year_zhu[:1] if year_zhu else ''
+                                    year_zhi_part = year_zhu[1:] if len(year_zhu) > 1 else ''
+                                    if year_gan and year_zhi_part:
+                                        fuzi_info = get_fuzi(year_gan, year_zhi_part)
+                                        fu = fuzi_info.get('fu', '未知')
+                                        zi = fuzi_info.get('zi', '未知')
+                                        yintai = get_yintai(month_gan, month_zhi)
+                                        self._insert_colored_text(f"\n    夫星：{fu}")
+                                        self._insert_colored_text(f"\n    子星：{zi}")
+                                        self._insert_colored_text(f"\n    阴胎：{yintai}")
+                                except Exception:
+                                    pass
+                            # 嫁娶男命：阳气
+                            if event_type in MARRIAGE_UI_EVENTS and gender == '男':
+                                try:
+                                    from modules.工具函数 import get_yangqi
+                                    if month_zhu and len(month_zhu) >= 2:
+                                        self._insert_colored_text(f"\n    阳气：{get_yangqi(month_zhu[:1], month_zhu[1:])}")
+                                except Exception:
+                                    pass
+                        except Exception as _q1_err:
+                            self._insert_colored_text(f"\n     出生信息解析失败：{_q1_err}")
         else:
-            self._insert_colored_text("  暂无事主信息\n\n")
-        
+            self._insert_colored_text("\n  暂无事主信息")
+
+        # [二十四山方位吉凶] / [出发方向吉凶] 头部段（与主程序 6200-6379 行逐字对齐）
+        self._insert_shan_head(result)
+
         # 评分详情
-        self._insert_colored_text("""【评分详情】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        self._insert_colored_text("""
+
+【评分详情】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
         score_details = result.get('score_details', {})
         if score_details:
-            wuxing_score = score_details.get('五行评分', 100)
+            # 2026-02-05 修正：嫁娶评分路径同步有 '五行评分' 键（即嫁娶评分专用评分）；
+            # 若历史数据缺该键则取 '嫁娶评分'，不得回退100错显满分。
+            wuxing_score = score_details.get('五行评分', score_details.get('嫁娶评分', 100))
             yueling_score = score_details.get('月令得分', 0)
             xishen_score = score_details.get('喜用神得分', 0)
             huangdao_score = score_details.get('黄道得分', 0)
@@ -2602,24 +2762,36 @@ class DayScoreWindow:
                 ji_score = score_breakdown.get('忌事得分', 0)
                 if ji_score != 0:
                     self._insert_colored_text(f"    ├─ 忌事得分：{ji_score} 分\n")
-                    ji_items_bd = score_breakdown.get('忌事明细') or []
-                    if ji_items_bd:
-                        self._insert_colored_text(f"    │  忌事构成：{'、'.join(str(x) for x in ji_items_bd)}（每项-15分）\n")
                 zhangsheng = score_breakdown.get('十二长生得分', 0)
                 if zhangsheng != 0:
-                    self._insert_colored_text(f"    ├─ 十二长生得分：{zhangsheng:+d} 分\n")
-                    for _zl in (score_breakdown.get('十二长生明细') or []):
-                        self._insert_colored_text(f"    │    • {_zl}\n")
+                    self._insert_colored_text(f"    ├─ 十二长生得分（日干在各柱地支的长生旺衰）：{zhangsheng:+d} 分\n")
+                    for _zl in score_breakdown.get('十二长生明细', []):
+                        self._insert_colored_text(f"      • {_zl}\n")
                 zhizhi = score_breakdown.get('地支关系得分', 0)
-                if zhizhi != 0:
-                    self._insert_colored_text(f"    ├─ 地支关系得分：{zhizhi:+d} 分\n")
-                    for _zl in (score_breakdown.get('地支关系明细') or []):
-                        self._insert_colored_text(f"    │    • {_zl}\n")
+                # Q5（2026-10-08 拍板）：地支关系 0 分也展示总分行，
+                # 明细存在即列出（如午午午未：六合+24/自刑-24 相抵为 0），
+                # 避免审查/用户把"0 分隐藏"误读为时柱关系未计入。
+                self._insert_colored_text(f"    ├─ 地支关系得分（四柱六对合计）：{zhizhi:+d} 分\n")
+                for _zl in score_breakdown.get('地支关系明细', []):
+                    self._insert_colored_text(f"      • {_zl}\n")
                 nayin = score_breakdown.get('纳音匹配得分', 0)
                 if nayin != 0:
                     self._insert_colored_text(f"    └─ 纳音匹配得分：{nayin:+d} 分\n")
-                    for _nl in (score_breakdown.get('纳音匹配明细') or []):
-                        self._insert_colored_text(f"    │    • {_nl}\n")
+                    for _nl in score_breakdown.get('纳音匹配明细', []):
+                        self._insert_colored_text(f"      • {_nl}\n")
+                # 2026-09-10 归零透明化（2025-10-28坤山案例）：一票否决把五行评分强制
+                # 归零时，在明细末尾明示归零前合计，避免"明细正常、结果归零"无从追溯
+                # U1（2026-10-16 第6批拍板）：明细层归零注统一叙述式句式
+                # 「五行明细合计 X 分，<机制>归零为 0 分」，机制名保留区分
+                # （一票否决 vs 按规则负分），与嫁娶路径 L596x 同构。
+                if wu_xing_result.get('he_ge') is False and wuxing_score == 0:
+                    _bd_sum = 0
+                    for _bk in ('基础分', '神煞得分', '宜事得分', '忌事得分',
+                                '十二长生得分', '地支关系得分', '纳音匹配得分'):
+                        _bv = score_breakdown.get(_bk, 0)
+                        if isinstance(_bv, (int, float)):
+                            _bd_sum += int(_bv)
+                    self._insert_colored_text(f"    └─ 五行明细合计 {_bd_sum} 分，一票否决归零为 0 分\n")
             
             # 显示婚嫁评分详情（夫星受克等）
             marriage_details = result.get('marriage_details', [])
@@ -2627,14 +2799,33 @@ class DayScoreWindow:
                 for detail_name, detail_score in marriage_details:
                     if detail_score != 0:
                         self._insert_colored_text(f"    {'├─' if score_breakdown else ''}{detail_name}：{detail_score:+d} 分\n")
+                    else:
+                        # 2026-10-11 B1：0 分＝信息行（本命三煞新郎未犯/新娘对照/
+                        # 新郎生年缺失提示），只展示不标分值，不进忌项与神煞加减分。
+                        self._insert_colored_text(f"    {'├─' if score_breakdown else ''}{detail_name}\n")
+                # 2026-09-17 归零透明化：嫁娶明细合计可能为负（如 -2），算法按 max(0,…)
+                # 兜底归零显示 0。此处明示归零前合计，避免"明细加总≠显示分"无法追溯。
+                _raw_wx = score_details.get('五行原始分')
+                if isinstance(_raw_wx, (int, float)) and _raw_wx < 0 and wuxing_score == 0:
+                    _veto_tag = '（本日另触发一票否决，总分归零）' if score_details.get('否决原因') else ''
+                    self._insert_colored_text(f"    └─ 五行明细合计 {int(_raw_wx):+d} 分，按规则负分归零为 0 分{_veto_tag}\n")
+                # A4b 纳音说明（2026-10-16 第5批T4）：嫁娶评分体系（婚嫁评分算法
+                # 基础60＋利月/神煞/合局）不含纳音匹配分项，纳音行仅存在于正五行
+                # 路径（12 事项）。此处补一行说明，防审查把跨路径差异误读为渲染
+                # 缺陷（属 #2 两套评分架构差异，算法变更归该议题，本批不动分值）。
+                _mrx_prefix = '├─' if score_breakdown else ''
+                self._insert_colored_text(f"    {_mrx_prefix}纳音匹配：嫁娶评分体系不含此分项，属评分架构差异\n")
             
             self._insert_colored_text(f"  月令得分：{yueling_score:+d} 分\n")
             
             # 月令详细得分
             yueling_detail = score_details.get('月令详细', {})
             if yueling_detail:
-                self._insert_colored_text(f"    ├─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分\n")
-                self._insert_colored_text(f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分\n")
+                # 2026-10-16 第4批 L1：旺衰/支支得分补依据文案（取分口径来自评分器，纯展示拼接）
+                _ws_note = yueling_detail.get('旺衰依据', '')
+                _zz_note = yueling_detail.get('支支依据', '')
+                self._insert_colored_text(f"    ├─ 旺衰得分：{yueling_detail.get('旺衰得分', 0):+d} 分{('（' + _ws_note + '）') if _ws_note else ''}\n")
+                self._insert_colored_text(f"    └─ 支支关系得分：{yueling_detail.get('支支关系得分', 0):+d} 分{('（' + _zz_note + '）') if _zz_note else ''}\n")
             
             self._insert_colored_text(f"  喜用神得分：{xishen_score:+d} 分\n")
             
@@ -2653,10 +2844,14 @@ class DayScoreWindow:
                 for m in owner_matches:
                     if isinstance(m, dict):
                         name = m.get('name') or m.get('owner') or m.get('姓名', '事主')
-                        rmk = m.get('remark') or m.get('说明') or m.get('match_detail', '')
+                        # 2026-10-16 第4批 L2：渲染 details 明细（带分值），空则回退旧 remark 通道
+                        _dets = m.get('details') or []
+                        rmk = '，'.join(_dets) if _dets else (m.get('remark') or m.get('说明') or m.get('match_detail', ''))
                         sc  = m.get('score', m.get('得分', 0))
                         if sc or rmk:
-                            self._insert_colored_text(f"    • {name}：{rmk}（{sc:+d}分）\n")
+                            _wt = m.get('weight', 1.0)
+                            _wtag = '（辅·半权重）' if isinstance(_wt, (int, float)) and _wt < 1.0 else ''
+                            self._insert_colored_text(f"    • {name}{_wtag}：（{sc:+d}分）{rmk}\n")
                     else:
                         self._insert_colored_text(f"    • {m}\n")
             
@@ -2740,51 +2935,96 @@ class DayScoreWindow:
                 for rl in hour_rel_details:
                     self._insert_colored_text(f"    • {rl}\n")
             sansha_penalty = score_details.get('三煞扣分', 0) or 0
+            # §201：出行方位轻权重分项（仅出行通道有该键，其余事项恒 0）
+            travel_dir_score = score_details.get('出行方位得分', 0) or 0
+            # 各分项统一 `or 0`，杜绝 None 进入算术累加
             wuxing_score = wuxing_score or 0
             yueling_score = yueling_score or 0
             xishen_score = xishen_score or 0
             xiangzhu_score = xiangzhu_score or 0
             huangdao_score = huangdao_score or 0
-            raw_total = (wuxing_score + yueling_score + xishen_score + xiangzhu_score
-                         + huangdao_score + sun_moon_score + sansha_penalty)
-            # 公式行仅列非零分项（与实际合计一致，避免零分项"+0"噪声），五行评分为基数列首
-            _f_terms = [str(wuxing_score)]
-            for _lbl, _val in (('月令', yueling_score), ('喜用神', xishen_score),
-                               ('相主', xiangzhu_score), ('黄道', huangdao_score),
-                               ('太阳太阴', sun_moon_score),
-                               ('三煞扣分', sansha_penalty)):
-                if _val:
-                    _f_terms.append(f"{_val:+d}({_lbl})")
-            formula_line = "  计算公式：" + " ".join(_f_terms) + f" = {raw_total} 分\n"
+            # 太阳太阴得分（score_details['太阳太阴得分']恒为 0；实际加分已计入
+            # 五行评分·神煞得分，详见下方【太阳太阴到山到向】段，故公式行不另列
+            # "+0"项，避免与"实际加减分+25"自相矛盾——001 §222/§223 对齐）
+            sun_moon_score = sun_moon_score or 0
+            # 2026-09-09：时柱关系分已含于五行评分·地支关系得分，公式行不得再加，
+            # 否则公式合计≠总分（如 93-5+22-15=95 与总分110不符）。
+            raw_total = wuxing_score + yueling_score + xishen_score + xiangzhu_score + huangdao_score + sun_moon_score + travel_dir_score
+            _tds_term = f" {travel_dir_score:+d}(出行方位)" if travel_dir_score else ''
             self._insert_colored_text(f"  ─────────────────────────────────\n")
-            if raw_total != total_score:
-                # 三分支文案：计算异常 / 一票否决 / 真满分截断
-                level_text = result.get('level', '')
-                is_calc_error = ('计算错误' in level_text) or ('❌' in level_text and '计算' in level_text)
-                wu_xing = result.get('wu_xing_result') if isinstance(result.get('wu_xing_result'), dict) else {}
-                is_hege_false = (not wu_xing.get('he_ge', True)) and ('计算错误' not in wu_xing.get('ji_yu','')) and ('计算异常' not in wu_xing.get('ji_yu',''))
-                has_exception_info = '异常信息' in score_details
-
-                self._insert_colored_text(formula_line)
-                result_veto_reasons = result.get('veto_reasons') or []
-                # 2026-10-16 U2：三句箭头式统一为叙述式主句式（机制以括注保留）
-                if is_calc_error or has_exception_info:
-                    self._insert_colored_text(f"  总分强制归零（计算异常，明细如实保留，仅供追溯；详见下方一票否决横幅+综合评语堆栈）\n")
-                elif result_veto_reasons:
-                    self._insert_colored_text(f"  总分强制归零（一票否决：{'；'.join(str(x) for x in result_veto_reasons)}，明细如实保留，仅供追溯）\n")
-                elif is_hege_false:
-                    self._insert_colored_text(f"  总分强制归零（正五行门槛未过，明细如实保留，仅供追溯）\n")
-                elif raw_total > 150 and total_score == 150:
-                    self._insert_colored_text(f"  满分上限限制：{raw_total} → {total_score} 分\n")
+            if not has_hd_key:
+                # 公式行不含黄道项（已并入五行评分），避免与"+0"重复列出的误读
+                if sansha_penalty:
+                    self._insert_colored_text(f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n")
                 else:
-                    # 其他不一致（如上游返回值兜底），如实写
-                    self._insert_colored_text(f"  总分调整：{raw_total} → {total_score} 分\n")
+                    self._insert_colored_text(f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d}{_tds_term} = {raw_total} 分\n")
             else:
-                self._insert_colored_text(formula_line)
+                if sansha_penalty:
+                    # 总分含三煞扣分，公式行如实列出，避免误读为"满分上限"
+                    self._insert_colored_text(f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n")
+                else:
+                    self._insert_colored_text(f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d}{_tds_term} = {raw_total} 分\n")
+            # _fc0915：一票否决日公式分项合计仅供追溯、总分强制归零，明示口径
+            # 2026-10-16 U2：S2 公式层注统一为叙述式主句式（机制以括注保留）
+            result_veto_reasons = result.get('veto_reasons') or []
+            if result_veto_reasons:
+                self._insert_colored_text(f"  注：总分强制归零（一票否决，明细如实保留，仅供追溯），详见【一票否决】。\n")
+            # 2026-02-05：删除"满分上限限制：X → Y"提示行——分项键值已全部修正，
+            # （五行评分取嫁娶评分、时柱关系得分注入同步总分分键），公式合计必然等于总分分；
+            # 若仍有差额说明是代码缺陷，应在数据层修正，而非用"满分上限"措辞掩盖。
+            # 玄空加权封顶/封底透明化（2026-09-10）：总分经加权产生时，
+            # 在总分处同步明示原始加权值（与下方玄空飞星块加权公式同源同值）
+            _cap_note = ''
+            try:
+                _fi_cap = result.get('feixing_info') or {}
+                if _fi_cap:
+                    _zw_cap = score_details.get('正五行总分', total_score)
+                    _fx_cap = int(_fi_cap.get('feixing_score', 0) or 0)
+                    _wx_cap = float(_zw_cap) * 0.7 + (50 + _fx_cap) * 0.3
+                    if _wx_cap > 100 and int(total_score) == 100:
+                        _cap_note = (f"  （玄空加权：{_zw_cap}×0.7 + "
+                                     f"(50+飞星{_fx_cap:+d}={50+_fx_cap})×0.3 = {_wx_cap:.0f}，"
+                                     f"超100，封顶100）\n")
+                    elif _wx_cap < 0 and int(total_score) == 0:
+                        _cap_note = (f"  （玄空加权：{_zw_cap}×0.7 + "
+                                     f"(50+飞星{_fx_cap:+d}={50+_fx_cap})×0.3 = {_wx_cap:.0f}，"
+                                     f"低于0，封底0）\n")
+            except Exception:
+                _cap_note = ''
             _ss_detail = score_details.get('三煞扣分明细') or (result.get('sansha_info') or {}).get('sansha_penalty_detail') or []
             if _ss_detail:
                 self._insert_colored_text(f"    三煞扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n")
+            # 三煞“上管下、下不犯上”反向组合提示（与主程序 6635-6655 行对齐）
+            _ssz = result.get('sizhu') if isinstance(result.get('sizhu'), dict) else {}
+            _yz = str(_ssz.get('年柱', '') or '')[1:2]
+            _mz = str(_ssz.get('月柱', '') or '')[1:2]
+            _ssi2 = result.get('sansha_info') if isinstance(result.get('sansha_info'), dict) else {}
+            _msf = [] if event_type == '出行' else (_ssi2.get('month_sansha') or [])
+            _dsf = [] if event_type == '出行' else (_ssi2.get('day_sansha') or [])
+            _rev = []
+            if _yz and _yz in _msf:
+                _rev.append(f'年柱{_yz}临月柱三煞方（{"".join(_msf)}）')
+            if _yz and _yz in _dsf:
+                _rev.append(f'年柱{_yz}临日柱三煞方（{"".join(_dsf)}）')
+            if _mz and _mz in _dsf:
+                _rev.append(f'月柱{_mz}临日柱三煞方（{"".join(_dsf)}）')
+            for _rv in _rev:
+                self._insert_colored_text(f"    • {_rv}：三煞口径“上管下、下不犯上”，反向不查不扣分\n")
             self._insert_colored_text(f"  总分：{total_score} 分\n")
+            if _cap_note:
+                self._insert_colored_text(_cap_note)
+            # 玄空飞星占位说明（与主程序 6723-6730 行对齐）
+            _feixing_info = result.get('feixing_info') or {}
+            if not _feixing_info:
+                from modules.事项标准 import FEIXING_EVENTS
+                if event_type not in FEIXING_EVENTS:
+                    self._insert_colored_text("  玄空飞星：本事项非山向类，玄空飞星段不适用\n")
+                elif not result.get('shan_xiang', ''):
+                    self._insert_colored_text("  玄空飞星：本事项无坐山，玄空飞星段不适用\n")
+                elif result.get('veto_reasons'):
+                    self._insert_colored_text("  玄空飞星：本课已否决，玄空飞星段不展开\n")
+                else:
+                    self._insert_colored_text("  玄空飞星：本模式默认不显示玄空飞星段，如需查看请切换至对应模式\n")
         else:
             self._insert_colored_text("  暂无详细得分数据\n")
         
@@ -2796,31 +3036,33 @@ class DayScoreWindow:
         if result_veto_reasons or wx_hege_false:
                 self._insert_colored_text("""
 【⚠️ 一票否决】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
                 for _vr in result_veto_reasons:
                     self._insert_colored_text(f"  {_vr}\n")
                 if wx_hege_false:
-                    self._insert_colored_text(f"  正五行门槛未过：{wu_xing.get('ji_yu', wu_xing.get('reason', '不合格'))}\n")
-        
-        self._insert_colored_text("\n")
-        
+                    _jiyu_txt = wu_xing.get('ji_yu', wu_xing.get('reason', '不合格'))
+                    if not any(str(_jiyu_txt) in str(_v)
+                               for _v in (result.get('veto_reasons') or [])):
+                        self._insert_colored_text(f"  正五行门槛未过：{_jiyu_txt}\n")
+                # 与主程序对齐：仅有一票否决段时，段后多留一行（主程序 f-string 尾部空行）
+                self._insert_colored_text("\n")
+
         # 月令分析
-        self._insert_colored_text("""【月令分析】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        self._insert_colored_text("""\n【月令分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
         
         # 从reason中提取月令信息
         reason = result.get('reason', '') or ''
         yueling_info = ''
-        # 2026-02-26 校对：评分链reason实际写入"月令分析：…"段（原只认"月令："前缀，
-        # 提取失败误显"暂无数据"）；两种前缀都识别，提取文字与【综合评语】保持一致；
-        # 若reason无月令段，则用四柱旺相休囚死表现算兜底，确保板块不再出现"暂无数据"
-        _m_yl = re.search('月令(?:分析)?[：:]\s*([^；;\n]+)', reason)
-        if _m_yl:
-            yueling_info = _m_yl.group(1).strip()
+        # 与主程序 6756-6860 行对齐：月令分析始终由四柱旺相休囚死表现算拼装，
+        # 不从 reason 截取片段（reason 中的月令句是简写，会与主程序措辞不一致）
+        yueling_info = self._generate_yueling_analysis(result)
         if not yueling_info:
-            yueling_info = self._generate_yueling_analysis(result)
+            _m_yl = re.search('月令(?:分析)?[：:]\s*([^；;\n]+)', reason)
+            if _m_yl:
+                yueling_info = _m_yl.group(1).strip()
         
         if yueling_info:
             self._insert_colored_text(f"  {yueling_info}\n")
@@ -2833,22 +3075,23 @@ class DayScoreWindow:
         if result.get('sizhu'):
             sizhu = result['sizhu']
             self._insert_colored_text(f"""【四柱八字】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   年柱: {sizhu['年柱']}    月柱: {sizhu['月柱']}
-  日柱: {sizhu['日柱']}    时柱: {sizhu['时柱']}
+  日柱: {sizhu['日柱']}    时柱: {sizhu['时柱']}　（系统择定推荐时柱）
 
   【天干五行】
     年干: {sizhu['年柱'][0]}    月干: {sizhu['月柱'][0]}    日干: {sizhu['日柱'][0]}    时干: {sizhu['时柱'][0]}
   【地支五行】
     年支: {sizhu['年柱'][1]}    月支: {sizhu['月柱'][1]}    日支: {sizhu['日柱'][1]}    时支: {sizhu['时柱'][1]}
 
+  💡 提示：时柱为系统择定的推荐用柱，实际用课请参考下方【十二时辰吉凶】做二次确认
 """)
         
         # 五行分析
         if result.get('wu_xing_result'):
             wu_xing = result['wu_xing_result']
             self._insert_colored_text(f"""【五行分析】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   五行评分: {wu_xing.get('score', 'N/A')} 分
 """)
             if wu_xing.get('reason'):
@@ -2863,10 +3106,30 @@ class DayScoreWindow:
                         self._insert_colored_text(f"    {pillar}: {info['天干']}({info['天干五行']}) {info['地支']}({info['地支五行']})\n")
                 
                 # 2. 地支关系（三合、六合、六冲、六害、三刑）
-                if details.get('地支关系') and len(details['地支关系']) > 0:
+                # 与主程序 6975-6993 行对齐：示例时柱→推荐时柱文案
+                _is_mrg = event_type in MARRIAGE_EVENTS
+                _hour_suffix = ('（推荐时柱，冲合刑害不计入日课总分，详见十二时辰吉凶）'
+                                if _is_mrg else '（推荐时柱，已计入五行评分·地支关系得分，不重复累加）')
+                _heju_suffix = ('（合局已计入日课总分；时柱参与助局不另计分，详见十二时辰吉凶）'
+                                if _is_mrg else _hour_suffix)
+                _dz_rels = []
+                for _ln in (details.get('地支关系') or []):
+                    if '示例时柱' in _ln:
+                        _ln = _ln.replace('（示例时柱，不计分）', _hour_suffix)
+                    elif '时柱' in _ln:
+                        if _is_mrg and any(_k in _ln for _k in ('三合', '六合', '半合')):
+                            _ln = _ln + _heju_suffix
+                        else:
+                            _ln = _ln + _hour_suffix
+                    _dz_rels.append(_ln)
+                if _dz_rels:
                     self._insert_colored_text("\n  【地支关系】\n")
-                    for relation in details['地支关系']:
+                    for relation in _dz_rels:
                         self._insert_colored_text(f"    • {relation}\n")
+                    # 合刑并存声明（与主程序 7019-7023 行对齐）
+                    if any(any(_k in str(_r) for _k in ('三合', '六合', '半合'))
+                           for _r in _dz_rels) and any('刑' in str(_r) for _r in _dz_rels):
+                        self._insert_colored_text("    （合刑并存，各自计分，非只取一边）\n")
                 else:
                     self._insert_colored_text("\n  【地支关系】\n    无明显合冲刑害关系\n")
                 
@@ -2923,7 +3186,7 @@ class DayScoreWindow:
         if result.get('huangdao_info'):
             huangdao = result['huangdao_info']
             self._insert_colored_text("""【黄道信息】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
             if huangdao.get('da_huang_dao'):
                 da_hd = huangdao['da_huang_dao']
@@ -2934,42 +3197,78 @@ class DayScoreWindow:
                     self._insert_colored_text(f"    说明: {da_hd['description']}\n")
             if huangdao.get('xiao_huang_dao'):
                 xiao_hd = huangdao['xiao_huang_dao']
-                self._insert_colored_text(f"  小黄道: {xiao_hd.get('name', 'N/A')} ({xiao_hd.get('type', 'N/A')})")
-                if xiao_hd.get('score'): self._insert_colored_text(f"  {xiao_hd['score']:+d}分")
+                _xn = xiao_hd.get('name', '')
+                _xs = xiao_hd.get('score', 0)
+                _xt = xiao_hd.get('type', 'N/A')
+                _xd = xiao_hd.get('description', '')
+                # _yj0915：嫁娶场景除/危/执虽为吉但忌嫁娶，显示口径与评分详情一致
+                from modules.事项标准 import MARRIAGE_EVENTS as _mrg_evts
+                if event_type in _mrg_evts and _xn in ('除', '危', '执'):
+                    _xs = -5
+                    _xt = '凶'
+                    _xd = f'{_xn}日忌嫁娶'
+                self._insert_colored_text(f"  小黄道: {_xn} ({_xt})")
+                if _xs: self._insert_colored_text(f"  {_xs:+d}分")
                 self._insert_colored_text("\n")
-                if xiao_hd.get('description'):
-                    self._insert_colored_text(f"    说明: {xiao_hd['description']}\n")
-            if huangdao.get('shichen_huang_dao'):
-                sc_hd = huangdao['shichen_huang_dao']
-                if isinstance(sc_hd, dict):
-                    self._insert_colored_text(f"  时辰黄道: {sc_hd.get('name', 'N/A')} ({sc_hd.get('type', 'N/A')})")
-                    if sc_hd.get('score'): self._insert_colored_text(f"  {sc_hd['score']:+d}分")
-                    self._insert_colored_text("（仅参考，不计入日课总分，也不计入下方黄道综合分）\n")
-                else:
-                    self._insert_colored_text(f"  时辰黄道: {sc_hd}（仅参考，不计入日课总分，也不计入下方黄道综合分）\n")
+                if _xd:
+                    self._insert_colored_text(f"    说明: {_xd}\n")
+            # 注意："时辰黄道"基于示例午时，不计入黄道综合分，
+            # 且分值与说明可能误导用户认为推荐示例时，改由下方【十二时辰吉凶】
+            # 逐时辰显示大黄道/建除，此处不再展示。
             self._insert_colored_text(f"  黄道等级: {huangdao.get('huang_dao_level', 'N/A')}\n")
-            self._insert_colored_text(f"  黄道综合分: {huangdao.get('huang_dao_score', 0):+d} 分（=大黄道+小黄道，不含时辰黄道）\n")
+            _hd_total = huangdao.get('huang_dao_score', 0)
+            # _yj0915：嫁娶场景除/危/执小黄道+5→-5，综合分相应-10
+            _xn_for_total = (huangdao.get('xiao_huang_dao') or {}).get('name', '') if isinstance(huangdao.get('xiao_huang_dao'), dict) else ''
+            if event_type in _mrg_evts and _xn_for_total in ('除', '危', '执'):
+                _hd_total -= 10
+            self._insert_colored_text(f"  黄道综合分: {_hd_total:+d} 分\n")
             if huangdao.get('description'):
                 self._insert_colored_text(f"  综合说明: {huangdao['description']}\n")
+            # 2026-10-02 修8：嫁娶场景黄道等级"大吉"但总等级被降平时，须说明降级原因
+            if event_type in _mrg_evts and _xn_for_total in ('除', '危', '执'):
+                self._insert_colored_text(
+                    "  注：黄道虽大吉，然小黄道执/除/危日忌嫁娶，"
+                    "嫁娶场景整体降格，须慎用并择吉时。\n"
+                )
             self._insert_colored_text("\n")
         
-        # 宜忌信息
-        if result.get('yi_list') or result.get('ji_list'):
+        # 二十四山方位吉凶段已按主程序口径改为「头部插入」（见 _insert_shan_head），
+        # 不再在正文中重复渲染；此处直接进入宜忌信息。
+        # 宜忌信息（与主程序同源：口径说明 + marriage_details 负分项并入忌项）
+        yi_list = result.get('yi_list', [])
+        ji_list = result.get('ji_list', [])
+        # 婚嫁路径：评分扣分项（如大黄道凶日、日主较旺耗夫星）同步到"忌"，
+        # 与综合评语保持一致（marriage_details 为 (名称, 分值) 列表，负分为避忌项）
+        _md_items = result.get('marriage_details') or []
+        if isinstance(_md_items, list) and _md_items:
+            _ji_base = list(ji_list) if isinstance(ji_list, list) else ([ji_list] if ji_list else [])
+            for _d in _md_items:
+                try:
+                    _nm, _sc = _d[0], _d[1]
+                except Exception:
+                    continue
+                if isinstance(_sc, (int, float)) and _sc < 0 and _nm not in _ji_base:
+                    _ji_base.append(_nm)
+            ji_list = _ji_base
+        if yi_list or ji_list:
             self._insert_colored_text("""【宜忌信息】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  口径：宜项来自通书黄历/吉神/建除宜等多层；遇冲突时硬门槛优先——
+  相主（事主生肖、日柱冲刑）、三煞、山家封禁、建除当日之忌优先于通书宜项，
+  通书宜项不覆盖硬性禁忌（硬门槛未犯时方以通书宜项为用）。
 """)
-            if result.get('yi_list'):
-                yi_items = result['yi_list'] if isinstance(result['yi_list'], list) else result['yi_list'].split(', ')
+            if yi_list:
+                yi_items = yi_list if isinstance(yi_list, list) else yi_list.split(', ')
                 self._insert_colored_text(f"  宜: {', '.join(yi_items)}\n")
-            if result.get('ji_list'):
-                ji_items = result['ji_list'] if isinstance(result['ji_list'], list) else result['ji_list'].split(', ')
+            if ji_list:
+                ji_items = ji_list if isinstance(ji_list, list) else ji_list.split(', ')
                 self._insert_colored_text(f"  忌: {', '.join(ji_items)}\n")
             self._insert_colored_text("\n")
         
         # 神煞信息
         if result.get('shensha_list'):
             self._insert_colored_text("""【神煞信息】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
             # 按分值排序显示，并分别显示吉神与凶煞
             raw = result['shensha_list']
@@ -2993,7 +3292,7 @@ class DayScoreWindow:
                         name = shensha.get('name', '')
                         desc = shensha.get('description', '')
                         score = shensha.get('score', 0)
-                        self._insert_colored_text(f"  ✓ {name} (+{score}分): {desc}\n")
+                        self._insert_colored_text(f"  ✓ {name}（+{score}分）: {desc}\n")
                     else:
                         self._insert_colored_text(f"  ✓ {shensha}\n")
             
@@ -3004,7 +3303,7 @@ class DayScoreWindow:
                         name = shensha.get('name', '')
                         desc = shensha.get('description', '')
                         score = shensha.get('score', 0)
-                        self._insert_colored_text(f"  ✗ {name} ({score}分): {desc}\n")
+                        self._insert_colored_text(f"  ✗ {name}（{score}分）: {desc}\n")
                     else:
                         self._insert_colored_text(f"  ✗ {shensha}\n")
             
@@ -3015,151 +3314,84 @@ class DayScoreWindow:
                         name = shensha.get('name', '')
                         desc = shensha.get('description', '')
                         score = shensha.get('score', 0)
-                        self._insert_colored_text(f"  ○ {name}: {desc}\n")
+                        self._insert_colored_text(f"  ○ {name}（+0分）: {desc}\n")
                     else:
                         self._insert_colored_text(f"  ○ {shensha}\n")
+            # 2026-10-21 口径收口批（001 §153 拍板6）：轻重层待证提示语——
+            # 下列神煞分值为软件经验权重（三库无分值原文），弱化绝对参考性。
+            from modules.事项标准 import SHENSHA_WEIGHT_PENDING
+            _wpend = sorted({sh.get('name') for sh in result.get('shensha_list', [])
+                             if isinstance(sh, dict)
+                             and sh.get('name') in SHENSHA_WEIGHT_PENDING})
+            if _wpend:
+                self._insert_colored_text(
+                    "  注：%s 的分值为软件经验权重（轻重层待证·典籍无分值原文），"
+                    "仅供参考，待轻重层裁断后校准。\n" % '、'.join(_wpend))
             self._insert_colored_text("\n")
         
-        # 三煞检查（二十四山 / 山家封禁 / 吉神）
-        sansha_info = result.get('sansha_info', {})
-        shan_xiang = result.get('shan_xiang', '')
-        if shan_xiang or sansha_info:
-            self._insert_colored_text("""【二十四山方位吉凶】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # B2 山向年运参考（未计分）（与主程序同源）
+        _myref = result.get('mountain_year_ref') or []
+        if _myref:
+            self._insert_colored_text("""
+【山向年运参考（未计分）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  以下为二十四山年运表的原文提示，仅供参详，不计入评分与忌项：
 """)
-            if shan_xiang:
-                self._insert_colored_text(f"   坐山：{shan_xiang}\n")
-            
-            year_sansha = sansha_info.get('year_sansha', [])
-            month_sansha = sansha_info.get('month_sansha', [])
-            day_sansha = sansha_info.get('day_sansha', [])
-            if year_sansha:
-                self._insert_colored_text(f"   年三煞：{'、'.join(year_sansha)}\n")
-            if month_sansha:
-                self._insert_colored_text(f"   月三煞：{'、'.join(month_sansha)}\n")
-            if day_sansha:
-                self._insert_colored_text(f"   日三煞：{'、'.join(day_sansha)}\n")
-            self._insert_colored_text("\n   【四柱三煞检查】\n")
-            # §64（2026-10-09 拍板：B3 按柱分级 + 必修2 口径对齐）：
-            #   年/月柱——事主类（sansha_pillar_veto=True）犯即否决（❌）；
-            #     山向类（False）三煞占月按 §63 降级强扣分（⚠）；
-            #   日/时柱——两类事项统一强扣分不否决（⚠）；
-            #   坐山/修方犯年三煞仍 ❌。
-            _pv = sansha_info.get('sansha_pillar_veto', True)
-            _mk_m = '❌' if _pv else '⚠'
-            y_fan_month = sansha_info.get('year_sansha_month_fan', False)
-            y_fan_day = sansha_info.get('year_sansha_day_fan', False)
-            y_fan_hour = sansha_info.get('year_sansha_hour_fan', False)
-            y_fan_shan = sansha_info.get('year_sansha_fan', False)
-            if y_fan_month: self._insert_colored_text(f"     {_mk_m} 年三煞犯月柱{'（一票否决）' if _pv else '（三煞占月，强扣分不否决）'}\n")
-            if y_fan_day:   self._insert_colored_text("     ⚠ 年三煞犯日柱（强扣分不否决）\n")
-            if y_fan_hour:  self._insert_colored_text("     ⚠ 年三煞犯时柱（强扣分不否决）\n")
-            if y_fan_shan:  self._insert_colored_text("     ❌ 年三煞犯山向（坐山修方，一票否决）\n")
-            if not (y_fan_month or y_fan_day or y_fan_hour or y_fan_shan):
-                self._insert_colored_text("     ✅ 年三煞不犯\n")
-            m_fan_day = sansha_info.get('month_sansha_day_fan', False)
-            m_fan_hour = sansha_info.get('month_sansha_hour_fan', False)
-            m_fan_shan = sansha_info.get('month_sansha_fan', False)
-            if m_fan_day:  self._insert_colored_text("     ⚠ 月三煞犯日柱（强扣分不否决）\n")
-            if m_fan_hour: self._insert_colored_text("     ⚠ 月三煞犯时柱（强扣分不否决）\n")
-            if m_fan_shan: self._insert_colored_text("     ⚠ 月三煞犯山向（强扣分不否决）\n")
-            if not (m_fan_day or m_fan_hour or m_fan_shan):
-                self._insert_colored_text("     ✅ 月三煞不犯\n")
-            d_fan_hour = sansha_info.get('day_sansha_hour_fan', False)
-            d_fan_shan = sansha_info.get('day_sansha_fan', False)
-            if d_fan_hour: self._insert_colored_text("     ⚠ 日三煞犯时柱（轻，强扣分不否决）\n")
-            if d_fan_shan: self._insert_colored_text("     ⚠ 日三煞犯山向（轻，强扣分不否决）\n")
-            if not (d_fan_hour or d_fan_shan):
-                self._insert_colored_text("     ✅ 日三煞不犯\n")
-            # 年家五黄检查（详情展示宫位与坐山结论）
-            wuhuang_info = sansha_info.get('wuhuang_info') or {}
-            if wuhuang_info.get('宫位'):
-                self._insert_colored_text("\n   【年家五黄】\n")
-                if wuhuang_info.get('入中'):
-                    self._insert_colored_text(f"     {wuhuang_info.get('年份', '')}年五黄入中宫，无固定凶方\n")
-                else:
-                    self._insert_colored_text(f"     {wuhuang_info.get('年份', '')}年五黄在{wuhuang_info['宫位']}宫（{wuhuang_info.get('三山', '')}）\n")
-                if shan_xiang:
-                    _wu_level = wuhuang_info.get('级别', '')
-                    if _wu_level == '凶煞':
-                        self._insert_colored_text("     ❌ 坐山犯五黄，宜静不宜动，不可动土修造安葬（详见山家封禁）\n")
-                    elif _wu_level == '警告':
-                        self._insert_colored_text("     ⚠ 兼向犯五黄，须谨慎制化（详见山家警告）\n")
-                    else:
-                        self._insert_colored_text("     ✅ 坐山不犯五黄\n")
+            for _mr in _myref:
+                self._insert_colored_text(f"  • {_mr}\n")
 
-            # 年家二黑（病符星）检查
-            # 【保留·方位神语境】病符批（2026-10-20，001 §141）不删此项：为年家二黑
-            # 病符星方位展示文本，非日课病符注册。
-            erhei_info = sansha_info.get('erhei_info') or {}
-            if erhei_info.get('宫位'):
-                self._insert_colored_text("\n   【年家二黑（病符）】\n")
-                if erhei_info.get('入中'):
-                    self._insert_colored_text(f"     {erhei_info.get('年份', '')}年二黑入中宫，无固定凶方\n")
-                else:
-                    self._insert_colored_text(f"     {erhei_info.get('年份', '')}年二黑在{erhei_info['宫位']}宫（{erhei_info.get('三山', '')}）\n")
-                if shan_xiang:
-                    _eh_level = erhei_info.get('级别', '')
-                    if _eh_level == '凶煞':
-                        self._insert_colored_text("     ❌ 坐山犯二黑（病符），主疾病脾胃、妇人不安，动土修造忌之（详见山家封禁）\n")
-                    elif _eh_level == '警告':
-                        self._insert_colored_text("     ⚠ 兼向犯二黑（病符），宜慎（详见山家警告）\n")
-                    else:
-                        self._insert_colored_text("     ✅ 坐山不犯二黑\n")
+        # 评语（主程序：山向年运参考 → 综合评语 → 修造/嫁娶分析）
+        if result.get('reason'):
+            self._insert_colored_text(f"""\n【综合评语】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {result['reason']}
 
-            sansha_penalty = sansha_info.get('sansha_penalty', 0)
-            if sansha_penalty != 0:
-                self._insert_colored_text(f"\n     三煞总扣分：{sansha_penalty}\n")
-                for _sd in (sansha_info.get('sansha_penalty_detail') or []):
-                    self._insert_colored_text(f"       • {_sd}\n")
-            
-            blocked = sansha_info.get('mountain_blocked', False)
-            blocked_reasons = sansha_info.get('mountain_block_reasons', [])
-            mountain_warnings = sansha_info.get('mountain_warnings', [])
-            mountain_jishen = sansha_info.get('mountain_jishen', [])
-            mountain_day_type = sansha_info.get('mountain_day_type', sansha_info.get('day_type', ''))
-            if blocked or blocked_reasons:
-                self._insert_colored_text("\n   【⛔ 山家封禁 · 绝对不能用】\n")
-                for r in blocked_reasons:
-                    self._insert_colored_text(f"     ❌ {r}\n")
-            if mountain_warnings:
-                self._insert_colored_text("\n   【⚠️ 山家警告 · 须谨慎】\n")
-                for w in mountain_warnings:
-                    msg = w.get('说明') if isinstance(w, dict) else str(w)
-                    self._insert_colored_text(f"     ⚠ {msg}\n")
-            if mountain_jishen:
-                self._insert_colored_text("\n   【✅ 山家吉神 · 加分项】\n")
-                for js in mountain_jishen:
-                    self._insert_colored_text(f"     ✓ {js}\n")
-            if mountain_day_type and mountain_day_type not in ('', '普通日'):
-                self._insert_colored_text(f"\n   【日期类别】：{mountain_day_type}\n")
-            self._insert_colored_text("\n")
-        
+""")
+
         # 二十四山动土方位吉凶（仅限修造相关事件）
         event_type = result.get('event_type', '')
         from modules.事项标准 import CONSTRUCTION_DETAIL_UI_EVENTS as construction_events
 
         if result.get('sizhu') and event_type in construction_events:
             from modules.shensha.修造神煞扩展 import ConstructionShenShaCheckerExt
-            construction_shensha = ConstructionShenShaCheckerExt()
+            # 坐山/主命须在建 checker 之前取到（主程序 7324 行：
+            # ConstructionShenShaCheckerExt(zuoshan=..., zhuming=...)），否则十二时辰
+            # 表缺「冲/合坐山」项，与主程序不一致
+            zuoshan = None
+            zhuming = None
+            _zx = (result.get('shan_xiang') or '').strip()
+            if _zx:
+                zuoshan = _zx[0]
+            owners_detail = result.get('owners_detail', [])
+            if owners_detail and owners_detail[0].get('sizhu'):
+                zhuming = owners_detail[0]['sizhu']
+            construction_shensha = ConstructionShenShaCheckerExt(zuoshan=zuoshan, zhuming=zhuming)
+            try:
+                from modules.事项标准 import canonical_event as _canonical_event
+                construction_shensha._std_event = _canonical_event(event_type)
+            except Exception:
+                pass
             lucky_directions = construction_shensha.get_lucky_directions(result['sizhu'])
             
             # 修造专属信息（扶山相主补龙、山家吉凶、时辰吉凶、建除十二神等）
             if event_type in construction_events and result.get('shensha_list'):
                 self._insert_colored_text("""【修造择日分析】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
                 
-                # 获取坐山和主命信息
-                zuoshan = None
-                zhuming = None
-                
                 # 从owners_detail中获取事主信息
-                owners_detail = result.get('owners_detail', [])
-                if owners_detail:
-                    owner_info = owners_detail[0]
-                    if owner_info.get('sizhu'):
-                        zhuming = owner_info['sizhu']
+
+                if zuoshan:
+                    self._insert_colored_text(f"  坐山：{zuoshan}")
+                    _xiangshan_list = ['壬', '子', '癸', '丑', '艮', '寅', '甲', '卯', '乙', '辰', '巽', '巳',
+                                       '丙', '午', '丁', '未', '坤', '申', '庚', '酉', '辛', '戌', '乾', '亥']
+                    try:
+                        _idx = _xiangshan_list.index(zuoshan)
+                        self._insert_colored_text(f"  向方：{_xiangshan_list[(_idx + 12) % 24]}\n")
+                    except Exception:
+                        self._insert_colored_text("\n")
+                if zhuming:
+                    self._insert_colored_text(f"  主命：{zhuming}\n")
                 
                 # 显示神煞分类
                 shensha_items = result.get('shensha_list', [])
@@ -3240,74 +3472,602 @@ class DayScoreWindow:
             # 创建方位分数映射
             direction_scores = {item['方位']: item['分值'] for item in lucky_directions}
             
-            self._insert_colored_text("""【二十四山动土方位吉凶】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  （0分=安全可用，负分=犯煞不宜）
-
-""")
-            
+            # 与主程序 7416-7456 行逐字对齐
+            _direction_map = {d['方位']: d for d in lucky_directions}
+            self._insert_colored_text("  【二十四山动土方位吉凶】\n")
+            self._insert_colored_text("  （0分=安全可用，负分=犯煞不宜）\n")
+            self._insert_colored_text("  注：四柱不犯三煞不代表所有方位安全，动土方位仍需避犯煞方位\n")
             for direction, shan_list in direction_groups.items():
-                self._insert_colored_text(f"    {direction}：")
-                for i, shan in enumerate(shan_list):
-                    score = direction_scores.get(shan, 0)
-                    if score < 0:
-                        # 负分显示红色
-                        self._insert_colored_text(f"{shan}({score}分)  ", "unusable")
+                self._insert_colored_text(f"\n    {direction}：")
+                _dir_infos = []
+                for shan in shan_list:
+                    _d = _direction_map.get(shan, {'分值': 0, '说明': ['无煞']})
+                    if _d['分值'] == 0:
+                        _dir_infos.append(f"{shan}(0分)")
                     else:
-                        # 0分显示正常
-                        self._insert_colored_text(f"{shan}({score}分)  ")
-                self._insert_colored_text("\n\n")
-            
+                        _dir_infos.append(f"{shan}({_d['分值']}分:{'、'.join(_d['说明'])})")
+                self._insert_colored_text('  '.join(_dir_infos) + '\n')
+
             # 显示犯煞方位的具体说明
             bad_directions = [item for item in lucky_directions if item['分值'] < 0]
             safe_directions = [item for item in lucky_directions if item['分值'] == 0]
-            
+
             if safe_directions:
                 safe_names = '、'.join([f"{d['方位']}({d['分值']}分)" for d in safe_directions])
                 self._insert_colored_text(f"\n  ★ 安全方位（共{len(safe_directions)}个）：{safe_names}\n")
-            
+
             if bad_directions:
                 self._insert_colored_text(f"  ✗ 犯煞方位（共{len(bad_directions)}个）：")
                 for d in bad_directions:
                     self._insert_colored_text(f"\n    {d['方位']}（{d['分值']}分）：{'、'.join(d['说明'])}")
                 self._insert_colored_text("\n")
-        
-        # 评语
-        if result.get('reason'):
-            # 判断是否可用
-            score = result.get('score', 0)
-            level = result.get('level', '')
-            
-            # 判断是否可用（分数>=80且等级不为凶）
-            is_usable = score >= 80 and '凶' not in level
-            
-            if is_usable:
-                usability_text = "✓ 此日课可用"
-                usability_tag = "usable"
-            else:
-                usability_text = "✗ 此日课不宜使用"
-                usability_tag = "unusable"
-            
-            self._insert_colored_text(f"""【综合评语】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  {result['reason']}
 
-""")
-            # 显示是否可用
-            self._insert_colored_text(f"【使用建议】\n", "bold")
-            if is_usable:
-                self._insert_colored_text(f"  ✓ 此日课综合评分{score}分，等级为{level}，", "usable")
-                self._insert_colored_text("可以使用\n", "usable")
-            else:
-                self._insert_colored_text(f"  ✗ 此日课综合评分{score}分，等级为{level}，", "unusable")
-                self._insert_colored_text("不建议使用\n", "unusable")
+            # 十二时辰动土吉凶（不依赖坐山，始终显示）—— 与主程序 7458-7489 行对齐
+            _lucky_hours_dt = construction_shensha.get_lucky_hours(result['sizhu'])
+            lucky_hours = _lucky_hours_dt  # 供日课校验器 E004/E102 使用（与主程序同名变量）
+            _good_hours = [h for h in _lucky_hours_dt if h['分值'] > 0]
+            _bad_hours = [h for h in _lucky_hours_dt if h['分值'] < 0]
+            self._insert_colored_text("\n  【十二时辰动土吉凶】\n")
+            self._insert_colored_text("  （正分=吉时，0分=平，负分=凶时）\n")
+            for _zhi in ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']:
+                for _h in _lucky_hours_dt:
+                    if _h['地支'] == _zhi:
+                        if _h['分值'] > 0:
+                            self._insert_colored_text(
+                                f"    ★ {_h['天干']}{_h['地支']}时 {_h['时辰']}  {_h['分值']:+d}分  [{'、'.join(_h['说明'])}]\n")
+                        elif _h['分值'] < 0:
+                            self._insert_colored_text(
+                                f"    ✗ {_h['天干']}{_h['地支']}时 {_h['时辰']}  {_h['分值']:+d}分  [{'、'.join(_h['说明'])}]\n")
+                        else:
+                            self._insert_colored_text(f"      {_h['天干']}{_h['地支']}时 {_h['时辰']}  平\n")
+                        break
+            if _good_hours:
+                _good_names = '、'.join([f"{h['天干']}{h['地支']}" for h in _good_hours])
+                self._insert_colored_text(f"\n  ★ 吉利时辰（共{len(_good_hours)}个）：{_good_names}\n")
+            if _bad_hours:
+                _bad_names = '、'.join([f"{h['天干']}{h['地支']}" for h in _bad_hours])
+                self._insert_colored_text(f"  ✗ 凶时（共{len(_bad_hours)}个）：{_bad_names}\n")
             self._insert_colored_text("\n")
         
-        self._insert_colored_text("""
-╔════════════════════════════════════════════════════════════════════╗
-║              评分完成！可继续添加日课进行对比分析                  ║
-╚════════════════════════════════════════════════════════════════════╝""")
-    
+        # B1 山家警告·已制化（与主程序同源）
+        _ssi_mit = result.get('sansha_info') if isinstance(result.get('sansha_info'), dict) else {}
+        _mit_warnings = _ssi_mit.get('mountain_warnings_mitigated', []) or [] if _ssi_mit else []
+        if _mit_warnings:
+            self._insert_colored_text("""【山家警告 · 已制化】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  以下凶煞本日原有吉神制化，按制化口径不禁用、不作忌项扣分：
+""")
+            for _mw in _mit_warnings:
+                self._insert_colored_text(f"  • {_mw}\n")
+            self._insert_colored_text("\n")
+
+        # B3 嫁娶择日分析（与主程序同源）
+        from modules.事项标准 import MARRIAGE_EVENTS
+        if event_type in MARRIAGE_EVENTS:
+            try:
+                from modules.shensha.嫁娶神煞扩展 import MarriageShenShaCheckerExt
+
+                bride_gan = bride_zhi = groom_gan = groom_zhi = None
+                bride_m_gan = bride_m_zhi = groom_m_gan = groom_m_zhi = None
+
+                owners_detail = result.get('owners_detail', [])
+                for owner in owners_detail:
+                    gender = owner.get('gender', '') or owner.get('性别', '')
+                    sizhu_str = owner.get('sizhu', '')
+                    if not sizhu_str:
+                        continue
+                    _parts = sizhu_str.split()
+                    if len(_parts) < 2:
+                        continue
+                    _yzhu = _parts[0]
+                    _mzhu = _parts[1]
+                    if gender == '女':
+                        bride_gan = _yzhu[:1] if len(_yzhu) >= 1 else ''
+                        bride_zhi = _yzhu[1:] if len(_yzhu) >= 2 else ''
+                        bride_m_gan = _mzhu[:1] if len(_mzhu) >= 1 else ''
+                        bride_m_zhi = _mzhu[1:] if len(_mzhu) >= 2 else ''
+                    elif gender == '男':
+                        groom_gan = _yzhu[:1] if len(_yzhu) >= 1 else ''
+                        groom_zhi = _yzhu[1:] if len(_yzhu) >= 2 else ''
+                        groom_m_gan = _mzhu[:1] if len(_mzhu) >= 1 else ''
+                        groom_m_zhi = _mzhu[1:] if len(_mzhu) >= 2 else ''
+
+                _sizhu_src = result.get('sizhu', {}) if isinstance(result.get('sizhu'), dict) else {}
+                _detail_date = _sizhu_src.get('date') if isinstance(_sizhu_src, dict) else None
+                if not hasattr(_detail_date, 'year'):
+                    _d_alt = result.get('date')
+                    if hasattr(_d_alt, 'year'):
+                        _detail_date = _d_alt
+                    elif isinstance(_d_alt, str) and len(_d_alt) >= 10:
+                        try:
+                            from datetime import datetime as _dt
+                            _detail_date = _dt.strptime(_d_alt[:10], '%Y-%m-%d').date()
+                        except Exception:
+                            _detail_date = None
+                detail_sizhu = {
+                    'date': _detail_date,
+                    'year_gan': _sizhu_src.get('年柱', '')[:1] if _sizhu_src.get('年柱') else '',
+                    'year_zhi': _sizhu_src.get('年柱', '')[1:] if _sizhu_src.get('年柱') else '',
+                    'month_gan': _sizhu_src.get('月柱', '')[:1] if _sizhu_src.get('月柱') else '',
+                    'month_zhi': _sizhu_src.get('月柱', '')[1:] if _sizhu_src.get('月柱') else '',
+                    'day_gan': _sizhu_src.get('日柱', '')[:1] if _sizhu_src.get('日柱') else '',
+                    'day_zhi': _sizhu_src.get('日柱', '')[1:] if _sizhu_src.get('日柱') else '',
+                    'hour_gan': _sizhu_src.get('时柱', '')[:1] if _sizhu_src.get('时柱') else '',
+                    'hour_zhi': _sizhu_src.get('时柱', '')[1:] if _sizhu_src.get('时柱') else '',
+                }
+
+                checker = MarriageShenShaCheckerExt(
+                    bride_gan=bride_gan, bride_zhi=bride_zhi,
+                    groom_gan=groom_gan, groom_zhi=groom_zhi,
+                    bride_month_gan=bride_m_gan, bride_month_zhi=bride_m_zhi,
+                    groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi
+                )
+
+                self._insert_colored_text("""【嫁娶择日分析】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")
+                zodiac_map = {'子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔', '辰': '龙', '巳': '蛇',
+                             '午': '马', '未': '羊', '申': '猴', '酉': '鸡', '戌': '狗', '亥': '猪'}
+
+                if bride_gan and bride_zhi:
+                    bride_zodiac = zodiac_map.get(bride_zhi, '')
+                    self._insert_colored_text(f"  新娘：{bride_gan}{bride_zhi}年生")
+                    if bride_zodiac:
+                        self._insert_colored_text(f"（{bride_zodiac}）")
+                    self._insert_colored_text("\n")
+                if groom_gan and groom_zhi:
+                    groom_zodiac = zodiac_map.get(groom_zhi, '')
+                    self._insert_colored_text(f"  新郎：{groom_gan}{groom_zhi}年生")
+                    if groom_zodiac:
+                        self._insert_colored_text(f"（{groom_zodiac}）")
+                    self._insert_colored_text("\n")
+
+                daliyue_info = checker.get_daliyue_info(detail_sizhu)
+                self._insert_colored_text(f"\n  【利月分析】\n")
+                self._insert_colored_text(f"    大利月：{'、'.join(daliyue_info['大利月']) if daliyue_info['大利月'] else '无'}\n")
+                self._insert_colored_text(f"    小利月：{'、'.join(daliyue_info['小利月']) if daliyue_info['小利月'] else '无'}\n")
+                self._insert_colored_text(f"    当前月份：{daliyue_info['当前月份状态']}\n")
+                _cur_status = daliyue_info.get('当前月份状态', '')
+                if '大利月' not in _cur_status and '小利月' not in _cur_status:
+                    self._insert_colored_text(f"    说明：当前为非大利月，无加分\n")
+
+                shensha_items = result.get('shensha_list', [])
+                jiri_items = []
+                xiongri_items = []
+                chonghe_items = []
+                liyue_items = []
+
+                for s in shensha_items:
+                    name = s.get('name', '')
+                    _sc = s.get('score', 0)
+                    desc = s.get('description', '')
+                    tag = f"{name}（{_sc:+.0f}分）: {desc}"
+                    if '大利月' in name or '小利月' in name:
+                        tag = f"{name}（{_sc:+.0f}分，已计入五行评分）: {desc}"
+                        liyue_items.append(tag)
+                    elif '日' in name and '吉' in desc:
+                        jiri_items.append(tag)
+                    elif '日' in name and ('忌' in desc or '凶' in desc or '大忌' in desc):
+                        xiongri_items.append(tag)
+                    elif '冲' in name or '合' in name:
+                        chonghe_items.append(tag)
+                    elif '煞' in name or '忌' in name:
+                        xiongri_items.append(tag)
+
+                if liyue_items:
+                    self._insert_colored_text("\n  【利月神煞】\n")
+                    for item in liyue_items:
+                        self._insert_colored_text(f"    • {item}\n")
+                if jiri_items:
+                    self._insert_colored_text("\n  【吉日神煞】\n")
+                    for item in jiri_items:
+                        self._insert_colored_text(f"    ✓ {item}\n")
+                if xiongri_items:
+                    self._insert_colored_text("\n  【凶日神煞】\n")
+                    for item in xiongri_items:
+                        self._insert_colored_text(f"    ✗ {item}\n")
+                if chonghe_items:
+                    self._insert_colored_text("\n  【冲合关系】\n")
+                    for item in chonghe_items:
+                        self._insert_colored_text(f"    • {item}\n")
+
+                lucky_hours = checker.get_lucky_hours(detail_sizhu)
+                good_hours = [h for h in lucky_hours if h['分值'] > 0 and not h.get('禁用', False)]
+                bad_hours = [h for h in lucky_hours if h['分值'] < 0 or h.get('禁用', False)]
+
+                self._insert_colored_text("\n  【十二时辰婚嫁吉凶】\n")
+                self._insert_colored_text("  （正分=吉时，0分=平，负分=凶时，禁用=不可用）\n")
+                hour_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                for zhi in hour_order:
+                    for h in lucky_hours:
+                        if h['地支'] == zhi:
+                            _raw = list(h.get('说明', []))
+                            _has_ribo = any('日破时' in r for r in _raw)
+                            _chong_targets = [r for r in _raw if '冲新娘' in r or '冲新郎' in r]
+                            if _has_ribo and _chong_targets:
+                                _keep = [r for r in _raw if r not in _chong_targets]
+                                _suffix = '/'.join(r.split('（')[0] for r in _chong_targets)
+                                _merged = []
+                                for r in _keep:
+                                    if '日破时' in r:
+                                        _merged.append(f'日破时/{_suffix}（禁用）')
+                                    else:
+                                        _merged.append(r)
+                                _raw = _merged
+                            reasons_str = '、'.join(_raw)
+                            if h.get('禁用', False):
+                                self._insert_colored_text(f"    ✗ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            elif h['分值'] > 0:
+                                self._insert_colored_text(f"    ★ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            elif h['分值'] < 0:
+                                self._insert_colored_text(f"    ✗ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            else:
+                                self._insert_colored_text(f"      {h['天干']}{h['地支']}时 {h['时辰']}  平\n")
+                            break
+                if good_hours:
+                    good_names = '、'.join([f"{h['天干']}{h['地支']}" for h in good_hours])
+                    self._insert_colored_text(f"\n  ★ 吉利时辰（共{len(good_hours)}个）：{good_names}\n")
+                if bad_hours:
+                    bad_names = '、'.join([f"{h['天干']}{h['地支']}" for h in bad_hours])
+                    self._insert_colored_text(f"  ✗ 凶时/禁用（共{len(bad_hours)}个）：{bad_names}\n")
+                self._insert_colored_text("\n")
+            except Exception as e:
+                self._insert_colored_text(f"\n【嫁娶分析】\n  分析出错：{str(e)}\n")
+
+        # B4 通用十二时辰吉凶（与主程序同源；非修造非嫁娶事项）
+        from modules.事项标准 import BUILD_SECTION_UI_EVENTS as construction_events
+        if event_type not in construction_events and event_type not in MARRIAGE_EVENTS:
+            try:
+                from modules.推荐时柱 import build_checker as _build_hour_checker
+                _dsrc = result.get('sizhu', {}) if isinstance(result.get('sizhu'), dict) else {}
+                def _split_gz(_s):
+                    return (_s[:1], _s[1:]) if isinstance(_s, str) and len(_s) >= 2 else ('', '')
+                _ddate = _dsrc.get('date') if isinstance(_dsrc, dict) else None
+                if not hasattr(_ddate, 'year'):
+                    _dalt = result.get('date')
+                    if hasattr(_dalt, 'year'):
+                        _ddate = _dalt
+                    elif isinstance(_dalt, str) and len(_dalt) >= 10:
+                        try:
+                            from datetime import datetime as _dtx
+                            _ddate = _dtx.strptime(_dalt[:10], '%Y-%m-%d').date()
+                        except Exception:
+                            _ddate = None
+                _yg, _yz = _split_gz(_dsrc.get('年柱', ''))
+                _mg, _mz = _split_gz(_dsrc.get('月柱', ''))
+                _dg, _dz = _split_gz(_dsrc.get('日柱', ''))
+                _norm = {
+                    'date': _ddate,
+                    'year_gan': _yg, 'year_zhi': _yz,
+                    'month_gan': _mg, 'month_zhi': _mz,
+                    'day_gan': _dg, 'day_zhi': _dz,
+                }
+                _hour_checker, _ = _build_hour_checker(event_type, None, '')
+                lucky_hours = _hour_checker.get_lucky_hours(_norm)
+                good_hours = [h for h in lucky_hours if h['分值'] > 0 and not h.get('禁用', False)]
+                bad_hours = [h for h in lucky_hours if h['分值'] < 0 or h.get('禁用', False)]
+                self._insert_colored_text("\n  【十二时辰吉凶】\n")
+                self._insert_colored_text("  （正分=吉时，0分=平，负分=凶时，禁用=不可用）\n")
+                hour_order = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+                for zhi in hour_order:
+                    for h in lucky_hours:
+                        if h['地支'] == zhi:
+                            reasons_str = '、'.join(h.get('说明', []))
+                            if h.get('禁用', False):
+                                self._insert_colored_text(f"    ✗ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            elif h['分值'] > 0:
+                                self._insert_colored_text(f"    ★ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            elif h['分值'] < 0:
+                                self._insert_colored_text(f"    ✗ {h['天干']}{h['地支']}时 {h['时辰']}  {h['分值']:+d}分  [{reasons_str}]\n")
+                            else:
+                                self._insert_colored_text(f"      {h['天干']}{h['地支']}时 {h['时辰']}  平\n")
+                            break
+                if good_hours:
+                    good_names = '、'.join([f"{h['天干']}{h['地支']}" for h in good_hours])
+                    self._insert_colored_text(f"\n  ★ 吉利时辰（共{len(good_hours)}个）：{good_names}\n")
+                if bad_hours:
+                    bad_names = '、'.join([f"{h['天干']}{h['地支']}" for h in bad_hours])
+                    self._insert_colored_text(f"  ✗ 凶时/禁用（共{len(bad_hours)}个）：{bad_names}\n")
+                self._insert_colored_text("  注：四柱中的推荐时柱由系统按日课全局综合择优（四柱五行、地支合冲、\n")
+                self._insert_colored_text("事主生肖相合、神煞等整体计分）；本时辰吉凶表仅评单时干支与日柱关系，\n")
+                self._insert_colored_text("两套标准不同，故推荐时柱在表中可能为“平”，请以推荐时柱为主、本表供择时参考。\n")
+                self._insert_colored_text("\n")
+            except Exception as e:
+                self._insert_colored_text(f"\n【十二时辰吉凶】\n  分析出错：{str(e)}\n")
+
+        # B5/B6/B7 二十四山分析（分金五行/正体五行）（与主程序同源）
+        shan_xiang_val = result.get('shan_xiang', '')
+        if shan_xiang_val and event_type != '出行':
+            try:
+                from modules.二十四山 import ZhengTiWuXingSelectorDB, shan_xiang_to_shan
+                selector = ZhengTiWuXingSelectorDB()
+                shan_name = shan_xiang_to_shan(shan_xiang_val)
+                _sizhu_src = result.get('sizhu')
+                if isinstance(_sizhu_src, dict):
+                    year_gz = _sizhu_src.get('年柱', '')
+                    month_gz = _sizhu_src.get('月柱', '')
+                    day_gz = _sizhu_src.get('日柱', '')
+                    hour_gz = _sizhu_src.get('时柱', '')
+                else:
+                    _sz_parts = str(_sizhu_src).split() if _sizhu_src else []
+                    year_gz = _sz_parts[0] if len(_sz_parts) > 0 else ''
+                    month_gz = _sz_parts[1] if len(_sz_parts) > 1 else ''
+                    day_gz = _sz_parts[2] if len(_sz_parts) > 2 else ''
+                    hour_gz = _sz_parts[3] if len(_sz_parts) > 3 else ''
+                jianxiang = result.get('jian_xiang', '') or ''
+                if jianxiang and jianxiang != "正中":
+                    result_fengjin = selector.evaluate_with_fengjin(
+                        shan_name, jianxiang, year_gz, month_gz, day_gz, hour_gz,
+                        use_fengjin_wuxing=True
+                    )
+                    self._insert_colored_text(f"\n\n【分金五行分析】\n")
+                    self._insert_colored_text(f"山向：{shan_xiang_val}（坐山：{shan_name}）\n")
+                    self._insert_colored_text(f"兼向：{jianxiang}\n")
+                    self._insert_colored_text(f"分金：第{result_fengjin.get('fengjin_index', '?')}分金（{result_fengjin.get('fengjin_ganzhi', '?')}）\n")
+                    self._insert_colored_text(f"分金五行：{result_fengjin.get('fengjin_wuxing', '?')}（{result_fengjin.get('nayin_name', '?')}）\n")
+                    self._insert_colored_text(f"正体五行：{result_fengjin.get('zhengti_wuxing', '?')}\n")
+                    self._insert_colored_text(f"等级：{result_fengjin.get('level', '?')}\n")
+                    self._insert_colored_text(f"得分：{result_fengjin.get('score', '?')}\n")
+                    if result_fengjin.get('details'):
+                        self._insert_colored_text("详情：\n")
+                        for d in result_fengjin['details']:
+                            self._insert_colored_text(f"  {d}\n")
+                else:
+                    result_24 = selector.evaluate_by_name(
+                        shan_name, year_gz, month_gz, day_gz, hour_gz
+                    )
+                    if result_24.get('success'):
+                        self._insert_colored_text(f"\n\n【正体五行分析】\n")
+                        self._insert_colored_text(f"山向：{shan_xiang_val}（坐山：{shan_name}）\n")
+                        self._insert_colored_text("兼向：正中（正向）\n")
+                        self._insert_colored_text(f"等级：{result_24.get('level', '?')}\n")
+                        self._insert_colored_text(f"得分：{result_24.get('score', '?')}\n")
+                        if 'summary' in result_24:
+                            summary = result_24['summary']
+                            self._insert_colored_text(f"坐山得分：{summary.get('mountain_score', 'N/A')}\n")
+                    else:
+                        self._insert_colored_text(f"\n\n【正体五行分析】\n")
+                        self._insert_colored_text(f"山向：{shan_xiang_val}（坐山：{shan_name}）\n")
+                        self._insert_colored_text(f"分析失败：{result_24.get('error', '未知错误')}\n")
+            except Exception as e:
+                self._insert_colored_text(f"\n\n【二十四山分析】\n分析出错：{str(e)}\n")
+
+        # 日课校验器（与主程序同源：lint_lesson + LLM 审查 + ERROR 置顶否决提示）
+        try:
+            from modules.日课校验器 import lint_lesson
+            # rendered_content 只取【评分详情】及之后的内容（与主程序 content 范围一致）
+            _full = self.detail_text.get(1.0, tk.END)
+            _sp = _full.find('【评分详情】')
+            _rendered = _full[_sp:] if _sp >= 0 else _full
+            # 提取新娘年支（与主程序 get_bride_year_zhi 同源）
+            _bride_yz = None
+            for _o in (result.get('owners_detail') or []):
+                if isinstance(_o, dict) and _o.get('gender') == '女':
+                    _sz = _o.get('sizhu', '')
+                    if isinstance(_sz, str) and len(_sz.split()) >= 1:
+                        _yz = _sz.split()[0]
+                        if len(_yz) >= 2:
+                            _bride_yz = _yz[1]
+                    break
+            _lint = lint_lesson(result, lucky_hours=locals().get('lucky_hours'), rendered_content=_rendered, bride_year_zhi=_bride_yz)
+            self._insert_colored_text(_lint.format_text())
+            # LLM 语义审查（默认关闭）
+            try:
+                import os as _os
+                _enable_llm = (
+                    _os.environ.get('ENABLE_LLM_REVIEW', '').lower() in ('1', 'true', 'yes')
+                    and (_os.environ.get('OPENAI_API_KEY') or _os.environ.get('DASHSCOPE_API_KEY'))
+                )
+                if _enable_llm:
+                    from modules.日课校验器 import llm_review as _llm_review
+                    _llm_issues = _llm_review(result, _rendered, cache={})
+                    if _llm_issues:
+                        self._insert_colored_text("\n\n【语义审查（LLM 辅助）】\n")
+                        self._insert_colored_text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+                        for _li in _llm_issues:
+                            self._insert_colored_text(f"  {_li.rule_id} [{_li.severity}] {_li.message}\n")
+                            if _li.suggestion:
+                                self._insert_colored_text(f"      建议：{_li.suggestion}\n")
+            except Exception:
+                pass
+            # ERROR 否决提示：插入到【评分详情】段之前（与主程序 content = _warn + content 对齐）
+            if _lint.has_error:
+                # 主程序 content 开头为 \n\n【评分详情】，否决提示末尾 \n\n 拼接后产生 3 个空行
+                _warn = ('⛔ 本报告未通过日课校验（ERROR 项见文末），不应直接交付\n'
+                         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
+                # 主程序为 content = _warn + "\n\n【评分详情】"，
+                # 即否决提示紧贴前一文本插入点（\n\n 在提示之后），此处须插到 \n\n 之前
+                _pos = self.detail_text.search('\n\n【评分详情】', '1.0')
+                if not _pos:
+                    _pos = self.detail_text.search('【评分详情】', '1.0')
+                if _pos:
+                    self.detail_text.insert(_pos, _warn)
+        except Exception as _lint_err:
+            self._insert_colored_text(
+                '\n\n【日课校验】\n'
+                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  校验器自身执行异常：{type(_lint_err).__name__}: {_lint_err}\n'
+                '  （校验通道故障，不影响报告内容，但须排查校验器）')
+
+        # §190/§191 顶层警示（如入宅未填山向）—— 红字块置顶，与主程序对齐
+        try:
+            _warns = list((result.get('warnings') if isinstance(result, dict) else None) or [])
+        except Exception:
+            _warns = []
+        if _warns:
+            _wblock = ('【⚠ 重要警示】\n'
+                       + '\n'.join(str(_w) for _w in _warns)
+                       + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
+            try:
+                self.detail_text.insert("1.0", _wblock)
+            except Exception:
+                pass
+
+    def _insert_shan_head(self, result):
+        """[二十四山方位吉凶] / [出发方向吉凶] 头部段。
+
+        逐字对齐主程序 on_result_double_click 的 6200-6379 行：
+        该段在主程序里是用 text.insert 插入到正文【评分详情】之前的，
+        不是正文 content 的一部分，因此必须在 show_single_result 的头部显式还原。
+        """
+        event_type = result.get('event_type', '')
+        sansha_info = result.get('sansha_info') or {}
+        shan_xiang = result.get('shan_xiang', '') or ''
+        _ins = self._insert_colored_text
+        from modules.事项标准 import MARRIAGE_EVENTS as _MARRIAGE_EVENTS
+
+        _is_travel_event = (event_type == '出行')
+        _show_shan_section = False
+        if not _is_travel_event:
+            if shan_xiang:
+                _show_shan_section = True
+            elif sansha_info and event_type not in _MARRIAGE_EVENTS:
+                _show_shan_section = True
+
+        if _show_shan_section:
+            _ins("\n\n[二十四山方位吉凶]")
+            _ins("\n ----------------------------------------")
+            if shan_xiang:
+                _ins(f"\n   坐山：{shan_xiang}")
+
+            year_sansha = sansha_info.get('year_sansha', [])
+            month_sansha = sansha_info.get('month_sansha', [])
+            day_sansha = sansha_info.get('day_sansha', [])
+            if year_sansha:
+                _ins(f"\n   年三煞：{'、'.join(year_sansha)}")
+            if month_sansha:
+                _ins(f"\n   月三煞：{'、'.join(month_sansha)}")
+            if day_sansha:
+                _ins(f"\n   日三煞：{'、'.join(day_sansha)}")
+
+            _ins("\n\n   【三煞避忌原则】")
+            _ins("\n   ──")
+            _ins("\n   三煞为方道神：占山/修方/坐向方忌（「三煞可向不可坐」）")
+            _ins("\n   年三煞：论坐山/修方与向首（四柱月日时柱不作判定）")
+            _ins("\n   月三煞：论坐山/修方、向首与日、时柱临方（扣分不否决）")
+            _ins("\n   日三煞：论坐山/修方、向首与时柱临方（扣分不否决）")
+
+            _ins("\n\n   【三煞检查】")
+            _ins("\n   ──")
+            _pv = sansha_info.get('sansha_pillar_veto', True)
+            _kj = sansha_info.get('sansha_koujing', '')
+            if _kj:
+                _ins(f"\n   判定口径：{_kj}")
+
+            def _fan_mark(fan, label, is_shan=False):
+                if not fan:
+                    return
+                if is_shan or _pv:
+                    _ins(f"\n   ❌ {label}")
+                else:
+                    _ins(f"\n   ⚠ {label}（临三煞方，扣分不否决）")
+
+            def _fan_mark_xiang(fan, label, penalty):
+                if fan:
+                    _ins(f"\n   ⚠ {label}（向方，-{penalty}分，不否决）")
+
+            year_fan_shan = sansha_info.get('year_sansha_fan', False)
+            year_fan_xiang = sansha_info.get('year_sansha_xiang_fan', False)
+            _fan_mark(year_fan_shan, '年三煞犯山向', is_shan=True)
+            _fan_mark_xiang(year_fan_xiang, '年三煞犯向首', 10)
+            if not year_fan_shan and not year_fan_xiang:
+                _ins("\n   ✅ 年三煞不犯")
+
+            month_fan_day = sansha_info.get('month_sansha_day_fan', False)
+            month_fan_hour = sansha_info.get('month_sansha_hour_fan', False)
+            month_fan_shan = sansha_info.get('month_sansha_fan', False)
+            month_fan_xiang = sansha_info.get('month_sansha_xiang_fan', False)
+            _fan_mark(month_fan_day, '月三煞犯日柱')
+            _fan_mark(month_fan_hour, '月三煞犯时柱')
+            _fan_mark(month_fan_shan, '月三煞犯山向', is_shan=True)
+            _fan_mark_xiang(month_fan_xiang, '月三煞犯向首', 6)
+            if not (month_fan_day or month_fan_hour or month_fan_shan or month_fan_xiang):
+                _ins("\n   ✅ 月三煞不犯")
+
+            day_fan_hour = sansha_info.get('day_sansha_hour_fan', False)
+            day_fan_shan = sansha_info.get('day_sansha_fan', False)
+            day_fan_xiang = sansha_info.get('day_sansha_xiang_fan', False)
+            _fan_mark(day_fan_hour, '日三煞犯时柱')
+            _fan_mark(day_fan_shan, '日三煞犯山向', is_shan=True)
+            _fan_mark_xiang(day_fan_xiang, '日三煞犯向首', 3)
+            if not day_fan_hour and not day_fan_shan and not day_fan_xiang:
+                _ins("\n   ✅ 日三煞不犯")
+
+            wuhuang_info = sansha_info.get('wuhuang_info') or {}
+            if wuhuang_info.get('宫位'):
+                _ins("\n\n   【年家五黄】")
+                _ins("\n   ──")
+                if wuhuang_info.get('入中'):
+                    _ins(f"\n   {wuhuang_info.get('年份', '')}年五黄入中宫，无固定凶方")
+                else:
+                    _ins(f"\n   {wuhuang_info.get('年份', '')}年五黄在{wuhuang_info['宫位']}宫（{wuhuang_info.get('三山', '')}）")
+                if shan_xiang:
+                    _wu_level = wuhuang_info.get('级别', '')
+                    if _wu_level == '凶煞':
+                        _ins("\n   ❌ 坐山犯五黄，宜静不宜动，不可动土修造安葬（详见山家封禁）")
+                    elif _wu_level == '警告':
+                        _ins("\n   ⚠ 兼向犯五黄，须谨慎制化（详见山家警告）")
+                    else:
+                        _ins("\n   ✅ 坐山不犯五黄")
+
+            sansha_penalty = sansha_info.get('sansha_penalty', 0)
+            if sansha_penalty != 0:
+                _ins(f"\n\n   三煞总扣分：{sansha_penalty}")
+
+            blocked = sansha_info.get('mountain_blocked', False)
+            blocked_reasons = sansha_info.get('mountain_block_reasons', [])
+            mountain_warnings = sansha_info.get('mountain_warnings', [])
+            mountain_jishen = sansha_info.get('mountain_jishen', [])
+            mountain_day_type = sansha_info.get('mountain_day_type', sansha_info.get('day_type', ''))
+
+            if blocked or blocked_reasons:
+                _ins("\n\n   【⛔ 山家封禁 · 绝对不能用】")
+                _ins("\n   ──")
+                for r in blocked_reasons:
+                    _ins(f"\n   ❌ {r}")
+                    if '月冲山' in str(r):
+                        _ins("\n        （协纪辨方书：月破山方皆凶，坐山尤凶，造葬皆不可犯）")
+            if mountain_warnings:
+                _ins("\n\n   【⚠️ 山家警告 · 须谨慎】")
+                _ins("\n   ──")
+                for w in mountain_warnings:
+                    if isinstance(w, dict):
+                        msg = w.get('说明') or w.get('msg') or str(w)
+                    else:
+                        msg = str(w)
+                    _ins(f"\n   ⚠ {msg}")
+            if mountain_jishen:
+                _ins("\n\n   【✅ 山家吉神 · 加分项】")
+                _ins("\n   ──")
+                for js in mountain_jishen:
+                    _ins(f"\n   ✓ {js}")
+            if mountain_day_type and mountain_day_type not in ('', '普通日'):
+                _ins(f"\n\n   【日期类别】：{mountain_day_type}")
+
+        if _is_travel_event:
+            _tdi = result.get('travel_dir_info') or {}
+            _ins("\n\n[出发方向吉凶]")
+            _ins("\n ----------------------------------------")
+            _tdir = _tdi.get('direction') or ''
+            if _tdir:
+                _ins(f"\n   出发方向：{_tdir}")
+                for _it in (_tdi.get('ji_items') or []):
+                    _ins(f"\n   ✅ {_it}")
+                for _it in (_tdi.get('xiong_items') or []):
+                    _ins(f"\n   ⚠ {_it}")
+                if not (_tdi.get('ji_items') or _tdi.get('xiong_items')):
+                    _ins("\n   本日诸吉凶方位均不在所行方向，方位不计分")
+                _tdi_score = _tdi.get('score', 0) or 0
+                _ins(f"\n   出行方位得分：{_tdi_score:+d} 分")
+                _tdi_map = _tdi.get('details') or {}
+                if isinstance(_tdi_map, dict) and _tdi_map:
+                    _ins("\n   【本日吉凶方参照】")
+                    for _k, _v in _tdi_map.items():
+                        _vtxt = _v if _v not in (None, '') else '—（本日无固定方位）'
+                        _ins(f"\n   · {_k}：{_vtxt}")
+            else:
+                _ins("\n   未填出发方向，方位吉凶不参与计分")
+
     def compare_analysis(self):
         """对比分析 - 对比多个日课的评分结果"""
         # 从Treeview获取日期列表
