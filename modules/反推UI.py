@@ -666,8 +666,9 @@ class ReverseWindow:
                 _idx, _d['date'], _d['weekday'], _d['lunar'], _d['score'],
                 _d['level'], ('%s %d' % ('★' * _stars, _fit)) if _stars else '—',
                 _reason_text(_d),
-                '%s（%s）' % (_d['best_hour']['时辰'],
-                            _d['best_hour']['时段']), _d['kind']),
+                '%s（%s）%s' % (_d['best_hour']['时辰'],
+                              _d['best_hour']['时段'],
+                              (' ' + _d['sun_moon_tag']) if _d.get('sun_moon_tag') else ''), _d['kind']),
                 tags=(_tag,))
 
     def _render_heatmap(self, res):
@@ -839,7 +840,8 @@ class ReverseWindow:
                 ('最优时辰', '%s（%s）　时柱 %s' % (_bh['时辰'], _bh['时段'],
                                                 _bh['时柱'])),
                 ('吉神契合', '%s　%d 分' % ('★' * _stars if _stars else '—', _fit)),
-                ('吉　　神', str(_d.get('jishen') or '') or '—'),
+                ('吉　　神', (str(_d.get('jishen') or '') or '—')
+                 + (('　｜　' + _d['sun_moon_tag']) if _d.get('sun_moon_tag') else '')),
                 ('扣分主因', _reason_text(_d, compact=False)),
                 ('评分理由', str(_d.get('reason') or '') or '—'))):
             ttk.Label(_head, text=_k, font=_font_l).grid(

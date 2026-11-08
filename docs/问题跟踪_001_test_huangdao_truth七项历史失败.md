@@ -11633,6 +11633,43 @@ I tkinter 双端 tag 注册 + GUI 否决配色 + print_detail veto 分支 + 嫁�
   同步两个部署副本后全量回归 **136/136 PASS**（含六副本 SHA 一致性、
   经度管线、大考黄金课探针）。
 
+---
+
+## 222. 太阳太阴到山到向：结构化透传 + 时辰生效 + 详情三段提示（2026-11-08）
+
+### 222.1 底层（modules/评分器.py）
+- `calculate_sun_moon_position` 新增结构化输出 `taiyang_taiyin_detail`：
+  `sun_position/moon_position`（sxtwl 节气过宫宫位）、四个 `*_to_mountain/_to_direction`、
+  `hour_zhi/day_or_night`、`sun_effective/moon_effective`、`sun_text/moon_text`、
+  `effective_text`、`score_applied/score_applied_items`、`scoring_note`。
+- 时辰生效口径：太阳限白天（卯—申）、太阴限夜间（酉—寅）；混合场景逐项写清
+  “谁生效、谁不发挥”，避免夜间太阳只显示一个“已生效”。
+- 透传通道：`sun_moon_info.taiyang_taiyin_detail` 与
+  `score_details['太阳太阴明细']`（四条组装路径均已补键）。
+- 正常评分路径组装前回填 `score_applied`（从 `shensha_list` 的
+  太阳到山/到向、太阴到山/到向求和），只做展示，不参与计算。
+
+### 222.2 详情页（主程序.py）
+- 原单行“太阳太阴得分：+0 分”升级为四段式：
+  ☀️ 太阳位置、🌙 太阴位置、✅/⚠️ 生效判定、💰 实际加减分（逐项）、📌 权威警示。
+- 新增常驻区块【📖 专业提示与禁忌】：三不赦警示、太阴到向争议、身份与承受力；
+  **即使该日已被岁破/三煞/五黄一票否决，照样打印**。
+
+### 222.3 反推面板（modules/反推引擎.py + 反推UI.py）
+- `_day_record` 新增 `sun_moon_tag`（只展示）：白天太阳到山/到向标 ☀️，
+  夜间太阴到山/到向标 🌙；未命中为空串。
+- Top-N 列表“最优时辰”列、详情窗“吉神”行追加角标，不参与排序与分值。
+
+### 222.4 测试与文档
+- 新增 `tests/verify_太阳太阴到山到向.py`（T1 白天太阳到山生效、T2 夜间不生效、
+  T3 HARD_VETO 不被日月加分救活、T4 无山向不报错），实测 T3 日月档合计 +40 分
+  而总分恒 0。
+- 白皮书 §3.12.1.1 增补字段表、时辰生效口径、三段专业提示与防御性断言。
+- 分值未改动：日月加分仍按 `SHENSHA_SCORES` 全天候登记；若要“时辰不匹配不加分”
+  需单独立项并重冻课例。
+
+
+
 
 
 

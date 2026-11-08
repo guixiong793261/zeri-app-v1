@@ -1164,6 +1164,7 @@ class Scorer:
                                 # 【D5】嫁娶路径黄道已并入嫁娶评分，不单独列黄道得分键
                                 # （主程序渲染时 has_hd_key=False → 显示"已并入五行评分"）
                                 '太阳太阴得分': sun_moon_score,
+                                '太阳太阴明细': sun_moon_info.get('taiyang_taiyin_detail', {}),
                                 '相主得分': xiangzhu_score,
                                 '相主详情': xiangzhu_details,
                                 '事主匹配': owner_matches,
@@ -1365,6 +1366,7 @@ class Scorer:
                             '月令得分': yueling_score,
                             '喜用神得分': xishen_score,
                             '太阳太阴得分': sun_moon_score,
+                            '太阳太阴明细': sun_moon_info.get('taiyang_taiyin_detail', {}),
                             '嫁娶明细(分项)': marriage_result.get('details', []),
                             '总分': total_score
                         }
@@ -2221,6 +2223,7 @@ class Scorer:
                     '喜用神得分': xishen_score,
                     '黄道得分': huangdao_score,
                     '太阳太阴得分': sun_moon_score,
+                    '太阳太阴明细': sun_moon_info.get('taiyang_taiyin_detail', {}),
                     '相主得分': xiangzhu_score,
                     '相主详情': xiangzhu_details,
                     '事主匹配': owner_matches,
@@ -2705,6 +2708,7 @@ class Scorer:
                 '相主得分': xiangzhu_score,
                 '黄道得分': huangdao_score,
                 '太阳太阴得分': sun_moon_score,
+                '太阳太阴明细': sun_moon_info.get('taiyang_taiyin_detail', {}),
                 '三煞扣分': sansha_info.get('sansha_penalty', 0),
                 '三煞扣分明细': sansha_info.get('sansha_penalty_detail', []),
                 '向方扣分': sansha_info.get('xiangfang_penalty', 0),
@@ -2857,6 +2861,18 @@ class Scorer:
             if _canonical_event(event_type) in _MOUNTAIN_SCORE_EVENTS and not shan_xiang:
                 _shan_warnings.append(
                     '⚠ 未提供山向，无法评估方位吉凶，请勿盲目使用')
+
+            # 001 §222：回填太阳太阴实际加减分（sun_moon_info.score 恒 0，
+            # 真实分值在修造神煞档，此处只做透传，不参与计算）。
+            _sm_names = ('太阳到山', '太阳到向', '太阴到山', '太阴到向')
+            _sm_items = [{'name': _s.get('name'), 'score': int(_s.get('score', 0) or 0)}
+                         for _s in (self.shensha_list or [])
+                         if isinstance(_s, dict) and _s.get('name') in _sm_names]
+            _sm_detail = (sun_moon_info or {}).get('taiyang_taiyin_detail')
+            if isinstance(_sm_detail, dict):
+                _sm_detail['score_applied'] = sum(_i['score'] for _i in _sm_items)
+                _sm_detail['score_applied_items'] = _sm_items
+            score_details['太阳太阴明细'] = _sm_detail or {}
 
             return {
                 'score': self.final_score,
@@ -7904,6 +7920,79 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
     moon_to_mountain = moon_position == zuoshan
     moon_to_direction = bool(xiangshan) and moon_position == xiangshan
 
+    # 001 §222（2026-11-08 用户拍板）：太阳太阴「结构透传 + 时辰生效判定」。
+    # 口径：太阳吉力限白天（卯—申时，05:00-17:00），太阴吉力限夜间
+    # （酉—寅时，17:00-05:00）。此处只产出「是否生效」的结构与文案，
+    # 不改变任何分值（加分仍由修造神煞扩展单轨登记，改动分值需另立专项）。
+    _hour_zhi = str(sizhu.get('时支') or '')
+    if not _hour_zhi:
+        _gz = str(sizhu.get('时柱') or '')
+        _hour_zhi = _gz[1:2] if len(_gz) >= 2 else ''
+    _DAY_ZHI = ('卯', '辰', '巳', '午', '未', '申')
+    _is_daytime = _hour_zhi in _DAY_ZHI
+    _has_hour = bool(_hour_zhi)
+    sun_effective = bool((sun_to_mountain or sun_to_direction) and _is_daytime)
+    moon_effective = bool((moon_to_mountain or moon_to_direction)
+                          and _has_hour and not _is_daytime)
+
+    def _pos_text(name, pos, to_mountain, to_direction, shan):
+        if to_mountain:
+            return f"{name}到坐山（{shan}）"
+        if to_direction:
+            return f"{name}到向首（{xiangshan}）"
+        return f"{name}在{pos}方（未到{shan}山）"
+
+    _sun_text = _pos_text('太阳', sun_position, sun_to_mountain,
+                          sun_to_direction, zuoshan)
+    _moon_text = _pos_text('太阴', moon_position, moon_to_mountain,
+                           moon_to_direction, zuoshan)
+    _hit = sun_to_mountain or sun_to_direction or moon_to_mountain or moon_to_direction
+    if not _hit:
+        _eff_text = '未生效：本日日月未到山到向，不发挥化解吉力'
+    elif sun_effective or moon_effective:
+        # 混合场景（如夜间太阳到山 + 太阴到向）必须逐项写清谁生效、谁不发挥，
+        # 否则用户只看到"已生效"会误以为太阳在夜里也能用。
+        _parts = []
+        if sun_effective:
+            _parts.append(f'太阳吉力生效（{_hour_zhi}时·白天用事）')
+        if moon_effective:
+            _parts.append(f'太阴吉力生效（{_hour_zhi}时·夜间用事）')
+        if (sun_to_mountain or sun_to_direction) and not sun_effective:
+            _parts.append('太阳虽到山到向但夜间用事，太阳吉力不发挥')
+        if (moon_to_mountain or moon_to_direction) and not moon_effective:
+            _parts.append('太阴虽到山到向但白天用事，太阴吉力不发挥')
+        _eff_text = '已生效：' + '；'.join(_parts)
+    else:
+        # 命中但时辰不对：太阳在夜里 / 太阴在白天
+        _bad = '太阳' if (sun_to_mountain or sun_to_direction) else '太阴'
+        _need = '白天（卯—申时）' if _bad == '太阳' else '夜间（酉—寅时）'
+        _seg = '夜间' if _is_daytime is False else '白天'
+        _eff_text = f'未生效（{_hour_zhi}时·{_seg}用事，{_bad}吉力需{_need}方发挥）'
+
+    _detail = {
+        'scope': '日太阳（sxtwl 节气过宫，冬至到子）',
+        'zuoshan': zuoshan,
+        'xiangshan': xiangshan,
+        'sun_position': sun_position,
+        'moon_position': moon_position,
+        'sun_to_mountain': sun_to_mountain,
+        'sun_to_direction': sun_to_direction,
+        'moon_to_mountain': moon_to_mountain,
+        'moon_to_direction': moon_to_direction,
+        'sun_text': _sun_text,
+        'moon_text': _moon_text,
+        'hour_zhi': _hour_zhi,
+        'day_or_night': ('白天' if _is_daytime else '夜间') if _has_hour else '未知',
+        'sun_effective': sun_effective,
+        'moon_effective': moon_effective,
+        'effective_text': _eff_text,
+        # 实际加减分由修造神煞档单轨登记，评分器组装层回填（见 score_details）
+        'score_applied': 0,
+        'scoring_note': ('加分口径：修造神煞档单轨登记（太阳到山+25/到向+20、'
+                         '太阴到山+20/到向+15）；时辰生效状态用于择时提示，'
+                         '本结构不改动分值'),
+    }
+
     return {
         'sun_position': sun_position,
         'moon_position': moon_position,
@@ -7911,6 +8000,10 @@ def calculate_sun_moon_position(sizhu, shan_xiang):
         'sun_to_direction': sun_to_direction,
         'moon_to_mountain': moon_to_mountain,
         'moon_to_direction': moon_to_direction,
+        'sun_effective': sun_effective,
+        'moon_effective': moon_effective,
+        'hour_zhi': _hour_zhi,
+        'taiyang_taiyin_detail': _detail,
         'score': 0,  # 计分已收敛至修造神煞档（+25/+20/+20/+15），此处不再双轨加分
         'details': f"太阳在{sun_position}方，太阴在{moon_position}方"
     }

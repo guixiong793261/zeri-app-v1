@@ -225,6 +225,21 @@ def _pillar_fields(sizhu):
             str(_s.get('日柱', '')), str(_s.get('时柱', '')),)
 
 
+def _sun_moon_tag(score_result):
+    """日月到山到向角标（001 §222，只做展示）。
+
+    只有「命中 + 时辰匹配」才标记：太阳限白天（卯—申），太阴限夜间（酉—寅）。
+    返回如 '☀️ 太阳到山' / '🌙 太阴到向'，未命中返回空串。
+    """
+    _smd = ((score_result or {}).get('sun_moon_info') or {}).get(
+        'taiyang_taiyin_detail') or {}
+    if _smd.get('sun_effective'):
+        return '☀️ ' + ('太阳到山' if _smd.get('sun_to_mountain') else '太阳到向')
+    if _smd.get('moon_effective'):
+        return '🌙 ' + ('太阴到山' if _smd.get('moon_to_mountain') else '太阴到向')
+    return ''
+
+
 def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
     """单日展示记录（反推榜 + 热力图 + 时间轴）。
 
@@ -260,6 +275,9 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
                          for _n, _v in deduct_items(best_r)],
         'ji_items': [str(_j) for _j in (best_r.get('ji_list') or [])],
         'jishen': '、'.join(_pos),
+        # 001 §222：日月角标（只做展示，不产生分值）。
+        # 白天（卯—申）太阳到山/到向、夜间（酉—寅）太阴到山/到向才标记。
+        'sun_moon_tag': _sun_moon_tag(best_r),
         'reason': str(best_r.get('reason') or ''),
         'best_hour': {
             '时柱': _gz,
