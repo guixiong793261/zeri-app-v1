@@ -1,12 +1,12 @@
 {
  "meta": {
   "title": "v2.1.x 终局大考 · 黄金课全景报告",
-  "generated_at": "2026-11-08 10:35:32",
+  "generated_at": "2026-11-08 14:26:15",
   "root": "D:\\自编择日软件\\专业级正五行择日软件",
   "golden_count": 20,
   "channels": 16,
   "quick": false,
-  "elapsed": 21.8
+  "elapsed": 24.8
  },
  "s1_baseline": {
   "checks": [
@@ -21,16 +21,16 @@
   },
   "sha": {
    "主程序.py": [
-    "2b18a4a2785467622d2aeb105e7f4039e654f18e8b0cabcbb68f241cee791065",
-    "2b18a4a2785467622d2aeb105e7f4039e654f18e8b0cabcbb68f241cee791065"
+    "dce1d49bc11b84baaae552b5b7c27941904bc001038ffe0278a9ce85c4fd7668",
+    "dce1d49bc11b84baaae552b5b7c27941904bc001038ffe0278a9ce85c4fd7668"
    ],
    "modules\\评分器.py": [
     "6bf5320f9d05174960d5833543750ed34056708ddf66b3ce696a1652fd6d5624",
     "6bf5320f9d05174960d5833543750ed34056708ddf66b3ce696a1652fd6d5624"
    ],
    "modules\\事项标准.py": [
-    "74aa54ed3ad4dfde00a456ababaa63d24793b03692761de41aad73ef12c1c9c8",
-    "74aa54ed3ad4dfde00a456ababaa63d24793b03692761de41aad73ef12c1c9c8"
+    "2a59caa83543d4c79358d5972e3a94b9f304ec96862da21c42e27f0ad71cc5c6",
+    "2a59caa83543d4c79358d5972e3a94b9f304ec96862da21c42e27f0ad71cc5c6"
    ],
    "modules\\反推引擎.py": [
     "58c0e06cbafe6f5dd9b76acecb45244bf6bb48f8760d69d147a13aae6f9166ad",
@@ -71,7 +71,7 @@
    "签约",
    "安葬"
   ],
-  "elapsed": 16.6,
+  "elapsed": 19.5,
   "matrix": {
    "2026-01-05": {
     "kind": "交节·小寒",
@@ -36008,10 +36008,11 @@
   "runner_shell": false,
   "pyproject": false,
   "uni_exists": true,
-  "uni_same": 1,
+  "uni_same": 0,
   "uni_diff": [
    "主程序.py",
-   "modules\\评分器.py"
+   "modules\\评分器.py",
+   "modules\\事项标准.py"
   ],
   "copy_aware": {
    "aware": 7,

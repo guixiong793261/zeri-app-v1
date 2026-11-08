@@ -653,6 +653,11 @@ class ZeriApp:
         self.special_frame = ttk.LabelFrame(self.main_frame, text="特殊选项", padding="8")
         self.special_frame.pack(fill=tk.X, pady=6, padx=20)
         self.update_special_options()
+
+        # 001 §226（2026-11-08）：📖 择日通关指南——静态配置 + 随事项联动，
+        # 默认折叠；切换事项时自动展开并刷新。数据源 modules.事项标准.event_guide。
+        self._build_event_guide_panel(self.main_frame, self.event_var,
+                                      start_expanded=False, pady=6, padx=20)
         
         # _zm0915 择日模式：纯正五行（协纪辨方书，默认；玄空飞星/年家五黄二黑紫白封禁不参与择日）
         # / 正五行+玄空飞星（2026-09-15前的“正常择日”混合规则，改名保留）
@@ -3097,6 +3102,75 @@ class ZeriApp:
         except Exception:
             pass
 
+    # ============================================================
+    # 【📖 择日通关指南】折叠面板（001 §226，2026-11-08）
+    # 数据源：modules.事项标准.event_guide（纯静态文案，不参与计分与否决）
+    # 联动：监听传入的事项 StringVar，切换事项时自动展开并刷新
+    # ============================================================
+    def _build_event_guide_panel(self, parent, event_var, start_expanded=False, **pack_kw):
+        """在 parent 内构建「📖 择日通关指南」折叠面板，返回外层框。"""
+        from modules.事项标准 import event_guide
+
+        outer = ttk.LabelFrame(parent, text="📖 择日通关指南", padding="4")
+        outer.pack(fill=tk.X, **pack_kw)
+
+        head = ttk.Frame(outer)
+        head.pack(fill=tk.X)
+        toggle_btn = ttk.Button(head, text="展开 ▾", width=8)
+        toggle_btn.pack(side=tk.LEFT)
+        cur_label = ttk.Label(head, text="", font=("微软雅黑", 8), foreground="#666666")
+        cur_label.pack(side=tk.LEFT, padx=8)
+
+        body = tk.Text(outer, height=12, wrap='word', relief=tk.FLAT, bg="#fcfcfc",
+                       font=("微软雅黑", 9), spacing1=1, spacing3=1, padx=6, pady=4)
+        body.tag_configure('best_h', foreground="#1a7f37", font=("微软雅黑", 9, "bold"))
+        body.tag_configure('best', foreground="#1a7f37")
+        body.tag_configure('worst_h', foreground="#c00000", font=("微软雅黑", 9, "bold"))
+        body.tag_configure('worst', foreground="#c00000")
+        body.tag_configure('note', foreground="#888888")
+        body.configure(state=tk.DISABLED)
+
+        ui_state = {'open': bool(start_expanded)}
+
+        def _apply_open():
+            if ui_state['open']:
+                body.pack(fill=tk.X, pady=(4, 0))
+                toggle_btn.config(text="收起 ▴")
+            else:
+                body.pack_forget()
+                toggle_btn.config(text="展开 ▾")
+
+        def _refresh(auto_expand=False):
+            data = event_guide(event_var.get())
+            cur_label.config(text=f"当前事项：{event_var.get()}")
+            body.configure(state=tk.NORMAL)
+            body.delete('1.0', tk.END)
+            body.insert(tk.END, "🌟 最优条件（加分要诀）\n", 'best_h')
+            for item in data['best']:
+                body.insert(tk.END, f"  · {item}\n", 'best')
+            body.insert(tk.END, "\n🚫 一票否决（绝对红线）\n", 'worst_h')
+            for item in data['worst']:
+                body.insert(tk.END, f"  · {item}\n", 'worst')
+            if data.get('note'):
+                body.insert(tk.END, f"\n※ {data['note']}\n", 'note')
+            body.configure(state=tk.DISABLED)
+            if auto_expand and not ui_state['open']:
+                ui_state['open'] = True
+                _apply_open()
+
+        def _toggle():
+            ui_state['open'] = not ui_state['open']
+            _apply_open()
+
+        toggle_btn.config(command=_toggle)
+        _refresh()
+        _apply_open()
+        try:
+            event_var.trace_add('write', lambda *_a: _refresh(auto_expand=True))
+        except Exception:
+            pass
+        return outer
+
     def on_event_change(self, event=None):
         """事项类型改变时的处理"""
         self.update_special_options()
@@ -4764,6 +4838,10 @@ class ZeriApp:
             'require_owner_match': tk.BooleanVar(value=False)
         }
         
+        # 001 §226（2026-11-08）：📖 择日通关指南（默认展开，随主界面事项联动）
+        self._build_event_guide_panel(main_frame, self.event_var,
+                                      start_expanded=True, pady=10)
+
         # 评分条件
         score_frame = ttk.LabelFrame(main_frame, text="评分条件")
         score_frame.pack(fill=tk.X, pady=10)
