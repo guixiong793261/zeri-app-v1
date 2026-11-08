@@ -2668,7 +2668,68 @@ class DayScoreWindow:
                 # 如实说明而非显示误导性的"+0 分"（口径同主程序详情页）
                 self._insert_colored_text("  黄道得分：已并入五行评分（大黄道/小黄道明细见五行评分项内）\n")
             sun_moon_score = score_details.get('太阳太阴得分', 0) or 0
-            self._insert_colored_text(f"  太阳太阴得分：{sun_moon_score:+d} 分\n")
+            # 001 §222/§223（2026-11-08）：与主程序【日课详情】同源——太阳太阴由单行
+            # 数字升级为「位置 / 到山到向 / 时辰生效 / 实际加减分」四段式，并追加三段
+            # 专业提示。旧版单显"太阳太阴得分：+0"与实际加分（已计入神煞得分）矛盾，
+            # 是用户反馈"日课评分详情与日课详情不一致"的根因。
+            _sm_detail = score_details.get('太阳太阴明细') or {}
+            if not _sm_detail:
+                _smi = (result.get('sun_moon_info') or {})
+                _sm_detail = (_smi.get('taiyang_taiyin_detail') or {})
+            _sm_shan = result.get('shan_xiang', '')
+            if not _sm_shan:
+                self._insert_colored_text("  【太阳太阴到山到向】\n")
+                self._insert_colored_text(
+                    "    （本事项未提供山向，日月到山到向不适用；"
+                    "相关加分仅山向类事项单轨登记）\n")
+            elif _sm_detail:
+                self._insert_colored_text("  【太阳太阴到山到向】\n")
+                self._insert_colored_text(f"    ☀️ {_sm_detail.get('sun_text', '')}\n")
+                self._insert_colored_text(f"    🌙 {_sm_detail.get('moon_text', '')}\n")
+                _sm_eff = bool(_sm_detail.get('sun_effective')
+                               or _sm_detail.get('moon_effective'))
+                self._insert_colored_text(
+                    f"    {'✅' if _sm_eff else '⚠️'} 生效判定："
+                    f"{_sm_detail.get('effective_text', '')}\n")
+                _sm_applied = int(_sm_detail.get('score_applied') or 0)
+                if _sm_applied:
+                    _sm_items_txt = '、'.join(
+                        '%s%+d' % (_i.get('name', ''), int(_i.get('score') or 0))
+                        for _i in (_sm_detail.get('score_applied_items') or []))
+                    self._insert_colored_text(
+                        f"    💰 实际加减分：{_sm_applied:+d} 分"
+                        f"（{_sm_items_txt}，已计入神煞得分，此分项不再重复累加）\n")
+                else:
+                    _sm_hit = bool(_sm_detail.get('sun_to_mountain')
+                                   or _sm_detail.get('sun_to_direction')
+                                   or _sm_detail.get('moon_to_mountain')
+                                   or _sm_detail.get('moon_to_direction'))
+                    self._insert_colored_text(
+                        "    💰 实际加减分：0 分（时辰不匹配，日月吉力未计入）\n"
+                        if _sm_hit else
+                        "    💰 实际加减分：0 分（未触发日月到山到向加分）\n")
+                self._insert_colored_text(
+                    "    📌 权威警示：日月到山到向可化解大部分中低阶凶煞，"
+                    "但不制岁破、三煞、五黄等结构性大凶。\n")
+            else:
+                self._insert_colored_text(
+                    f"  太阳太阴得分：{sun_moon_score:+d} 分"
+                    "（本日太阳太阴未到山到向）\n")
+            # 三段专业提示为常驻区块：即使本日已被岁破/三煞/五黄一票否决，
+            # 或日月根本未到山，也照样打印，与主程序详情页保持一致。
+            self._insert_colored_text("  【📖 专业提示与禁忌】\n")
+            self._insert_colored_text(
+                "    ⚠️ 三不赦警示：岁破、三煞、五黄为择日公认的"
+                "\u201c三不赦\u201d结构性大凶。即使太阳太阴到山到向，"
+                "遇此三煞临山或临向，日月光辉亦难压制，绝不宜用事。\n")
+            self._insert_colored_text(
+                "    🌙 太阴到向争议：太阴到向存在流派争议。"
+                "部分观点认为月建天帝到山为吉，到向形成\u201c冲山\u201d之势反凶；"
+                "也有流派认为山向皆可。故非绝对百无禁忌，用事请结合师承。\n")
+            self._insert_colored_text(
+                "    👑 身份与承受力：《协纪辨方书》指明，太阳到山过于尊贵，"
+                "多利国家修造，平民用事可能反招不利。相较之下，太阳到向或"
+                "太阴到山到向，对平民更为稳妥。\n")
             # 时柱地支关系得分：分数本已含于五行评分·地支关系得分（四柱六对全局分），
             # 仅拆出时柱参与的三对供追溯，展示但不重复累加（2026-09-10勘正：
             # 旧版加进 raw_total 致"公式114≠总分108"误显"总分调整"）

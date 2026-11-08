@@ -6581,6 +6581,9 @@ class ZeriApp:
             xishen_score = xishen_score or 0
             xiangzhu_score = xiangzhu_score or 0
             huangdao_score = huangdao_score or 0
+            # 太阳太阴得分（score_details['太阳太阴得分']恒为 0；实际加分已计入
+            # 五行评分·神煞得分，详见下方【太阳太阴到山到向】段，故公式行不另列
+            # "+0"项，避免与"实际加减分+25"自相矛盾——001 §222/§223 对齐）
             sun_moon_score = sun_moon_score or 0
             # 2026-09-09：时柱关系分已含于五行评分·地支关系得分，公式行不得再加，
             # 否则公式合计≠总分（如 93-5+22-15=95 与总分110不符）。
@@ -6590,15 +6593,15 @@ class ZeriApp:
             if not has_hd_key:
                 # 公式行不含黄道项（已并入五行评分），避免与"+0"重复列出的误读
                 if sansha_penalty:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
                 else:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {sun_moon_score:+d}{_tds_term} = {raw_total} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d}{_tds_term} = {raw_total} 分\n"
             else:
                 if sansha_penalty:
                     # 总分含三煞扣分，公式行如实列出，避免误读为"满分上限"
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d}{_tds_term} {sansha_penalty:+d}(三煞扣分) = {raw_total + sansha_penalty} 分\n"
                 else:
-                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d} {sun_moon_score:+d}{_tds_term} = {raw_total} 分\n"
+                    content += f"  计算公式：{wuxing_score} {yueling_score:+d} {xishen_score:+d} {xiangzhu_score:+d} {huangdao_score:+d}{_tds_term} = {raw_total} 分\n"
             # _fc0915：一票否决日公式分项合计仅供追溯、总分强制归零，明示口径
             # 2026-10-16 U2：S2 公式层注统一为叙述式主句式（机制以括注保留）
             if detail.get('veto_reasons'):
