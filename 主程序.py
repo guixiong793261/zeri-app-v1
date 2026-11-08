@@ -3107,9 +3107,27 @@ class ZeriApp:
     # 数据源：modules.事项标准.event_guide（纯静态文案，不参与计分与否决）
     # 联动：监听传入的事项 StringVar，切换事项时自动展开并刷新
     # ============================================================
-    def _build_event_guide_panel(self, parent, event_var, start_expanded=False, **pack_kw):
-        """在 parent 内构建「📖 择日通关指南」折叠面板，返回外层框。"""
+    def _build_event_guide_panel(self, parent, event_var, start_expanded=False,
+                                 on_god_click=None, on_select_best=None,
+                                 on_avoid_veto=None, hint_text='', **pack_kw):
+        """在 parent 内构建「📖 择日通关指南」折叠面板，返回外层框。
+
+        可选联动（001 §227）：
+          on_god_click(吉神名) —— 点击面板里的吉神名，勾选下方同名复选框
+          on_select_best()     —— 「一键选中最优吉神」按钮
+          on_avoid_veto()      —— 「一键避开绝对红线」按钮
+          hint_text            —— 面板底部灰色引导语
+        """
         from modules.事项标准 import event_guide
+
+        # 可点击吉神名：必须与「吉神条件」复选框同名，长名优先避免「三合」吃掉「三合局」
+        click_gods = sorted([
+            '山家贵人', '山家三合', '山家六合', '岁禄到山', '岁马到山',
+            '太阳到山', '太阳到向', '太阴到山', '天德贵人', '月德贵人',
+            '天乙贵人', '大利月', '小利月', '不将日', '三合局', '天德日',
+            '天赦', '母仓', '王日', '生气', '扶山', '补龙', '相主',
+            '三合', '六合',
+        ], key=len, reverse=True)
 
         outer = ttk.LabelFrame(parent, text="📖 择日通关指南", padding="4")
         outer.pack(fill=tk.X, **pack_kw)
@@ -3120,6 +3138,9 @@ class ZeriApp:
         toggle_btn.pack(side=tk.LEFT)
         cur_label = ttk.Label(head, text="", font=("微软雅黑", 8), foreground="#666666")
         cur_label.pack(side=tk.LEFT, padx=8)
+        if on_god_click is not None:
+            ttk.Label(head, text="（点下面蓝色吉神名可直接勾选）",
+                      font=("微软雅黑", 8), foreground="#1565c0").pack(side=tk.LEFT, padx=4)
 
         body = tk.Text(outer, height=12, wrap='word', relief=tk.FLAT, bg="#fcfcfc",
                        font=("微软雅黑", 9), spacing1=1, spacing3=1, padx=6, pady=4)
@@ -3128,17 +3149,64 @@ class ZeriApp:
         body.tag_configure('worst_h', foreground="#c00000", font=("微软雅黑", 9, "bold"))
         body.tag_configure('worst', foreground="#c00000")
         body.tag_configure('note', foreground="#888888")
+        # 链接标签最后配置 → 优先级最高，覆盖绿/红前景
+        body.tag_configure('link', foreground="#1565c0", underline=True)
         body.configure(state=tk.DISABLED)
+
+        action = ttk.Frame(outer)
+        if on_select_best:
+            ttk.Button(action, text="🌟 一键选中最优吉神", width=20,
+                       command=on_select_best).pack(side=tk.LEFT, padx=(0, 6))
+        if on_avoid_veto:
+            ttk.Button(action, text="🚫 一键避开绝对红线", width=20,
+                       command=on_avoid_veto).pack(side=tk.LEFT)
+        hint_lbl = ttk.Label(outer, text=hint_text, font=("微软雅黑", 8),
+                             foreground="#888888", wraplength=640, justify=tk.LEFT)
+        has_action = bool(on_select_best or on_avoid_veto)
 
         ui_state = {'open': bool(start_expanded)}
 
         def _apply_open():
             if ui_state['open']:
                 body.pack(fill=tk.X, pady=(4, 0))
+                if has_action:
+                    action.pack(fill=tk.X, pady=(4, 0))
+                if hint_text:
+                    hint_lbl.pack(fill=tk.X, pady=(4, 0))
                 toggle_btn.config(text="收起 ▴")
             else:
                 body.pack_forget()
+                action.pack_forget()
+                hint_lbl.pack_forget()
                 toggle_btn.config(text="展开 ▾")
+
+        def _insert_item(line, base_tag, linkable):
+            """插入一条要诀；linkable 时把其中吉神名渲染成可点击蓝色下划线。"""
+            if not linkable or on_god_click is None:
+                body.insert(tk.END, f"  · {line}\n", base_tag)
+                return
+            body.insert(tk.END, "  · ", base_tag)
+            spans, occupied = [], []
+            for name in click_gods:
+                start = 0
+                while True:
+                    i = line.find(name, start)
+                    if i < 0:
+                        break
+                    if any(not (i + len(name) <= a or i >= b) for a, b in occupied):
+                        start = i + 1
+                        continue
+                    occupied.append((i, i + len(name)))
+                    spans.append((i, i + len(name), name))
+                    start = i + len(name)
+            spans.sort()
+            pos = 0
+            for a, b, name in spans:
+                if a > pos:
+                    body.insert(tk.END, line[pos:a], base_tag)
+                body.insert(tk.END, line[a:b], (base_tag, 'link', f'link::{name}'))
+                pos = b
+            body.insert(tk.END, line[pos:] + "\n", base_tag)
 
         def _refresh(auto_expand=False):
             data = event_guide(event_var.get())
@@ -3147,10 +3215,10 @@ class ZeriApp:
             body.delete('1.0', tk.END)
             body.insert(tk.END, "🌟 最优条件（加分要诀）\n", 'best_h')
             for item in data['best']:
-                body.insert(tk.END, f"  · {item}\n", 'best')
+                _insert_item(item, 'best', linkable=True)
             body.insert(tk.END, "\n🚫 一票否决（绝对红线）\n", 'worst_h')
             for item in data['worst']:
-                body.insert(tk.END, f"  · {item}\n", 'worst')
+                _insert_item(item, 'worst', linkable=False)
             if data.get('note'):
                 body.insert(tk.END, f"\n※ {data['note']}\n", 'note')
             body.configure(state=tk.DISABLED)
@@ -3161,6 +3229,15 @@ class ZeriApp:
         def _toggle():
             ui_state['open'] = not ui_state['open']
             _apply_open()
+
+        if on_god_click is not None:
+            for name in click_gods:
+                body.tag_bind(f'link::{name}', '<Button-1>',
+                              lambda _e, n=name: on_god_click(n))
+                body.tag_bind(f'link::{name}', '<Enter>',
+                              lambda _e: body.config(cursor='hand2'))
+                body.tag_bind(f'link::{name}', '<Leave>',
+                              lambda _e: body.config(cursor=''))
 
         toggle_btn.config(command=_toggle)
         _refresh()
@@ -4839,8 +4916,54 @@ class ZeriApp:
         }
         
         # 001 §226（2026-11-08）：📖 择日通关指南（默认展开，随主界面事项联动）
-        self._build_event_guide_panel(main_frame, self.event_var,
-                                      start_expanded=True, pady=10)
+        # 001 §227（2026-11-08）：升级为可点击快捷工具——蓝字穿透勾选 / 一键满配 / 一键避雷
+        def _guide_god_names():
+            """从当前事项指南的 best 条目中解析出命中「吉神条件」复选框的神名。"""
+            from modules.事项标准 import event_guide
+            text = ' '.join(event_guide(self.event_var.get())['best'])
+            names = []
+            for god in sorted((self.jishen_vars or {}).keys(), key=len, reverse=True):
+                if god in text and god not in names:
+                    names.append(god)
+            return names
+
+        def _guide_check_god(god_name):
+            var = (self.jishen_vars or {}).get(god_name)
+            if var is not None and not var.get():
+                var.set(True)
+
+        def _guide_select_best():
+            hit = [g for g in _guide_god_names() if g in (self.jishen_vars or {})]
+            for god in hit:
+                self.jishen_vars[god].set(True)
+            if hit:
+                messagebox.showinfo(
+                    "已选中最优吉神",
+                    f"已按「{self.event_var.get()}」通关指南勾选 {len(hit)} 项：\n"
+                    + "、".join(hit))
+            else:
+                messagebox.showinfo(
+                    "暂无对应复选框",
+                    "本事项指南条款中的吉神，当前吉神条件区没有同名选项，无需勾选。")
+
+        def _guide_avoid_veto():
+            self.condition_vars['exclude_xiong'].set(True)
+            self.condition_vars['exclude_ji'].set(True)
+            messagebox.showinfo(
+                "已开启红线拦截",
+                "已勾选『排除凶日』与『排除有忌项的日课』。\n\n"
+                "底层红线（三煞×坐山、岁破、月破、四离四绝、重丧、受死日、红嘴朱雀、"
+                "双干正阴府、山家封禁、相主冲命）在评分阶段直接判否决，不会进入可选结果，"
+                "无需在此重复设置。")
+
+        self._build_event_guide_panel(
+            main_frame, self.event_var, start_expanded=True,
+            on_god_click=_guide_check_god,
+            on_select_best=_guide_select_best,
+            on_avoid_veto=_guide_avoid_veto,
+            hint_text="💡 需要按『旺相得令、五行相生、山向大利』等复杂条件自动挑日子？"
+                      "请前往【精准择时】使用智能反推。",
+            pady=10)
 
         # 评分条件
         score_frame = ttk.LabelFrame(main_frame, text="评分条件")
