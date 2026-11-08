@@ -275,8 +275,9 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
                          for _n, _v in deduct_items(best_r)],
         'ji_items': [str(_j) for _j in (best_r.get('ji_list') or [])],
         'jishen': '、'.join(_pos),
-        # 001 §231：满分画像五维核验（纯展示，不参与排序与分值）
-        'check': perfect_profile(best_r, owners),
+        # 001 §231/§233：满分画像五维核验（纯展示，不参与排序与分值）；
+        # §233 事项定制判据：按 event_type 替换 1 项为专属核心项
+        'check': perfect_profile(best_r, owners, event_type),
         # 001 §222：日月角标（只做展示，不产生分值）。
         # 白天（卯—申）太阳到山/到向、夜间（酉—寅）太阴到山/到向才标记。
         'sun_moon_tag': _sun_moon_tag(best_r),

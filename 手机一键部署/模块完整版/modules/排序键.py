@@ -228,7 +228,7 @@ def rank_day(result, event_type=''):
     return (_tier,) + day_rank_key(result, event_type)
 
 
-# ==================== 满分画像核验（001 §231，纯展示） ====================
+# ==================== 满分画像核验（001 §231/§233，纯展示） ====================
 
 # 德神集（与 SHENSHA_SCORES 注册名一致；含动土的「天德日」变体）。
 DEITY_NAMES = ('天德', '天德日', '天德合', '月德', '月德合', '岁德', '岁德合',
@@ -238,9 +238,81 @@ DEITY_NAMES = ('天德', '天德日', '天德合', '月德', '月德合', '岁�
 # 合局判据：评分类 details['地支关系'] 中的正向合局文案关键词。
 _HE_PATTERNS = ('三合', '六合', '半合', '拱合')
 
+# ---- 001 §233（2026-11-08 用户拍板）：事项定制判据 ------------------------
+# 通用底线（所有事项必有）：得令、硬忌；中间三项按事项替换 1 项为专属核心项。
+# 专属项数据源（全部为 calculate_score 既有产出，本模块只读不写）：
+#   扶山补龙   shensha_list 名 ∈ _FUSHAN_NAMES 且 score>0（修造神煞扩展.py）
+#   利月与吉日 shensha_list 名 ∈ _LIYUE_NAMES（嫁娶神煞.py：大利月/小利月/
+#              周堂吉日/不将日）
+#   全家相合   score_details['相主得分'] + ['相主详情'] 逐条尾部分值
+#   仙命相合   score_details['仙命坐山得分'] + 仙命冲条目（评分器 §186/真冲）
+#   出发方向   score_details['出行方位得分']（评分器 §201 出行方位通道）
+_FUSHAN_NAMES = ('扶山', '补龙', '山家三合')
+_LIYUE_NAMES = ('大利月', '小利月', '周堂吉日', '不将日')
+# 与评分器 WANGMING_ROLES 同源（本模块不 import 评分器，保持轻量纯函数定位）
+_WM_ROLES = ('死者', '亡命', '仙命', '亡人')
 
-def perfect_profile(result, owners=None):
-    """满分画像五维核验：得令 / 合局 / 相主 / 德神 / 硬忌（001 §231）。
+# 事项 → 专属核验项代码；未列出的事项走通用五维（相主）。
+_EVENT_SPECIAL = {
+    '修造': 'fushan', '动土': 'fushan',
+    '嫁娶': 'liyue', '订婚': 'liyue', '纳采': 'liyue',
+    '入宅': 'family', '移徙': 'family',
+    '安葬': 'xianming',
+    '出行': 'travel',
+}
+
+# 专属项代码 → 展示名
+_SPECIAL_KEYS = {
+    'fushan': '扶山补龙',
+    'liyue': '利月与吉日',
+    'family': '全家相合',
+    'xianming': '仙命相合',
+    'travel': '出发方向',
+}
+
+
+def profile_plan_keys(event_type=''):
+    """该事项的满分核验五维名称序列（UI 图例 / 手册共用）。
+
+    专属事项：得令 · 合局 · 德神 · <专属> · 硬忌（用户示例顺序）；
+    通用事项：得令 · 合局 · 相主 · 德神 · 硬忌（§231 原序）。
+    """
+    _sp = _EVENT_SPECIAL.get(str(event_type or ''))
+    if _sp:
+        return ['得令', '合局', '德神', _SPECIAL_KEYS[_sp], '硬忌']
+    return ['得令', '合局', '相主', '德神', '硬忌']
+
+
+def _positive_hit(result, names):
+    """shensha_list 中命中 names 且 score>0 的名称列表（保持 names 顺序去重）。"""
+    _hit = []
+    for _s in (result.get('shensha_list') or []):
+        if not isinstance(_s, dict):
+            continue
+        _n = str(_s.get('name') or '')
+        if _n in names and int(_s.get('score', 0) or 0) > 0 and _n not in _hit:
+            _hit.append(_n)
+    return _hit
+
+
+def _xz_line_scores(details):
+    """相主详情逐条尾部分值（格式 '……，±N分'）；提取不到分值的条目跳过。"""
+    import re as _re
+    _out = []
+    for _t in details:
+        _m = _re.findall(r'([+-]?\d+)\s*分', str(_t))
+        if _m:
+            _xz_line_scores_v = int(_m[-1])
+            _out.append((str(_t), _xz_line_scores_v))
+    return _out
+
+
+def perfect_profile(result, owners=None, event_type=''):
+    """满分画像五维核验（001 §231 通用五维 + §233 事项定制判据）。
+
+    通用底线（所有事项必有）：得令、硬忌；
+    专属事项把「相主」替换为事项核心项（扶山补龙/利月与吉日/全家相合/
+    仙命相合/出发方向），其余事项维持原五维。
 
     纯展示：只从 calculate_score 的既有产出（score_details / shensha_list /
     wu_xing_result.details / veto_reasons）提取，不新增任何分值或否决。
@@ -262,6 +334,7 @@ def perfect_profile(result, owners=None):
     # 3) 相主：相主得分（须填写事主才有意义）
     _xz = int(_d.get('相主得分') or 0)
     _has_owner = bool(owners)
+    _xz_details = list(_d.get('相主详情') or [])
     # 4) 德神：计分侧命中任一德神
     _deity = ''
     for _s in (_r.get('shensha_list') or []):
@@ -273,23 +346,93 @@ def perfect_profile(result, owners=None):
     # 5) 硬忌：一票否决，或神煞负分合计达慎用阈值（≤-20）
     _veto = [str(_v) for _v in (_r.get('veto_reasons') or [])]
     _ded = deduct_sum(_r)
-    _items = [
-        {'key': '得令', 'ok': _wang > 0,
-         'detail': ('月令%s（%+d）' % (_wang_desc, _wang)) if _wang > 0
-         else ('月令%s（%+d），未得令' % (_wang_desc or '休', _wang))},
-        {'key': '合局', 'ok': bool(_he),
-         'detail': _he if _he else '地支无三合/六合/半合'},
-        {'key': '相主', 'ok': _xz > 0,
-         'detail': ('相主 %+d 分' % _xz) if _xz > 0
-         else ('未填写事主，相主无法核验' if not _has_owner else '相主无生合加分')},
-        {'key': '德神', 'ok': bool(_deity),
-         'detail': ('命中「%s」' % _deity) if _deity
-         else '未命中天德/月德/岁德/天赦等德神'},
-        {'key': '硬忌', 'ok': (not _veto) and _ded > CAUTION_DEDUCT_THRESHOLD,
-         'detail': ('一票否决：' + '；'.join(_veto)) if _veto
-         else ('神煞负分合计 %d（≤%d）' % (_ded, CAUTION_DEDUCT_THRESHOLD))
-         if _ded <= CAUTION_DEDUCT_THRESHOLD else '无硬忌/重扣'},
-    ]
+
+    _item_wangling = {'key': '得令', 'ok': _wang > 0,
+                      'detail': ('月令%s（%+d）' % (_wang_desc, _wang)) if _wang > 0
+                      else ('月令%s（%+d），未得令' % (_wang_desc or '休', _wang))}
+    _item_heju = {'key': '合局', 'ok': bool(_he),
+                  'detail': _he if _he else '地支无三合/六合/半合'}
+    _item_deshen = {'key': '德神', 'ok': bool(_deity),
+                    'detail': ('命中「%s」' % _deity) if _deity
+                    else '未命中天德/月德/岁德/天赦等德神'}
+    _item_yingji = {'key': '硬忌',
+                    'ok': (not _veto) and _ded > CAUTION_DEDUCT_THRESHOLD,
+                    'detail': ('一票否决：' + '；'.join(_veto)) if _veto
+                    else ('神煞负分合计 %d（≤%d）' % (_ded, CAUTION_DEDUCT_THRESHOLD))
+                    if _ded <= CAUTION_DEDUCT_THRESHOLD else '无硬忌/重扣'}
+    _item_xiangzhu = {'key': '相主', 'ok': _xz > 0,
+                      'detail': ('相主 %+d 分' % _xz) if _xz > 0
+                      else ('未填写事主，相主无法核验' if not _has_owner
+                            else '相主无生合加分')}
+
+    # ---- 事项专属核心项（001 §233）----
+    _sp = _EVENT_SPECIAL.get(str(event_type or ''))
+    _item_sp = None
+    if _sp == 'fushan':
+        _hit = _positive_hit(_r, _FUSHAN_NAMES)
+        _item_sp = {'key': '扶山补龙', 'ok': bool(_hit),
+                    'detail': ('命中「%s」' % '、'.join(_hit)) if _hit
+                    else '未生扶坐山（扶山/补龙/山家三合均无加分）'}
+    elif _sp == 'liyue':
+        _hit = _positive_hit(_r, _LIYUE_NAMES)
+        _item_sp = {'key': '利月与吉日', 'ok': bool(_hit),
+                    'detail': ('命中「%s」' % '、'.join(_hit)) if _hit
+                    else '大利月/小利月/周堂/不将日均未命中'}
+    elif _sp == 'family':
+        if not _has_owner:
+            _item_sp = {'key': '全家相合', 'ok': False,
+                        'detail': '未填写事主，全家相合无法核验'}
+        else:
+            _hard = [str(_t) for _t in _xz_details if str(_t).startswith('[硬性门槛]')]
+            _neg = [(_t, _v) for _t, _v in _xz_line_scores(_xz_details) if _v < 0]
+            _ok_f = (_xz >= 0) and not _hard and not _neg
+            if _ok_f:
+                _det_f = '全家相主 %+d 分，无冲' % _xz
+            elif _hard:
+                _det_f = '含冲命：' + _hard[0]
+            elif _neg:
+                _det_f = '%d 位事主相主扣分（最低 %+d 分）' % (
+                    len(_neg), min(_v for _t, _v in _neg))
+            else:
+                _det_f = '相主合计 %+d 分' % _xz
+            _item_sp = {'key': '全家相合', 'ok': _ok_f, 'detail': _det_f}
+    elif _sp == 'xianming':
+        _has_wm = any(isinstance(_o, dict)
+                      and str(_o.get('role') or '') in _WM_ROLES
+                      for _o in (owners or []))
+        if not _has_wm:
+            _item_sp = {'key': '仙命相合', 'ok': False,
+                        'detail': '未填写仙命（死者卡），无法核验'}
+        else:
+            _sz = int(_d.get('仙命坐山得分') or 0)
+            _chong = ([str(_t) for _t in _xz_details
+                       if ('真冲' in str(_t) or '冲坐山' in str(_t))]
+                      + [str(_v) for _v in _veto
+                         if '仙命' in str(_v) and '冲' in str(_v)])
+            if _d.get('仙命冲坐山六冲') is not None:
+                _chong.append('仙命冲坐山六冲 %+d 分'
+                              % int(_d.get('仙命冲坐山六冲') or 0))
+            _ok_x = (_sz >= 0) and not _chong
+            if _ok_x:
+                _det_x = '仙命与坐山相合（%+d），无冲无克' % _sz
+            elif _chong:
+                _det_x = '仙命犯冲：' + _chong[0]
+            else:
+                _det_x = ('坐山克仙命（%+d）' % _sz) if _sz <= -30 \
+                    else ('仙命克坐山（%+d）' % _sz)
+            _item_sp = {'key': '仙命相合', 'ok': _ok_x, 'detail': _det_x}
+    elif _sp == 'travel':
+        _tds = int(_d.get('出行方位得分') or 0)
+        _item_sp = {'key': '出发方向', 'ok': _tds >= 0,
+                    'detail': ('出行方位吉（%+d）' % _tds) if _tds > 0
+                    else ('未犯煞' if _tds == 0
+                          else '出行方位犯煞（%+d）' % _tds)}
+
+    if _item_sp is not None:
+        _items = [_item_wangling, _item_heju, _item_deshen, _item_sp, _item_yingji]
+    else:
+        _items = [_item_wangling, _item_heju, _item_xiangzhu, _item_deshen,
+                  _item_yingji]
     _ok = sum(1 for _i in _items if _i['ok'])
     return {
         'items': _items,

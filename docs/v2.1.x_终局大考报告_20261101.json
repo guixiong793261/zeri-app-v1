@@ -1,12 +1,12 @@
 {
  "meta": {
   "title": "v2.1.x 终局大考 · 黄金课全景报告",
-  "generated_at": "2026-11-08 18:46:03",
+  "generated_at": "2026-11-08 20:40:42",
   "root": "D:\\自编择日软件\\专业级正五行择日软件",
   "golden_count": 20,
   "channels": 16,
   "quick": false,
-  "elapsed": 20.3
+  "elapsed": 20.6
  },
  "s1_baseline": {
   "checks": [
@@ -33,8 +33,8 @@
     "51f2572df8c6fe062b3a7a440fbf108d3551a55c12bf2db0ac58468c2d914bfa"
    ],
    "modules\\反推引擎.py": [
-    "5010d6248ab35faae61bfe44a21150021bd81077b1d5b05ea99e1dd2859f5fad",
-    "5010d6248ab35faae61bfe44a21150021bd81077b1d5b05ea99e1dd2859f5fad"
+    "dac0ee2d98c92e863c314a456c8c6b4724bde4363d709ff7b80ab906a952fb04",
+    "dac0ee2d98c92e863c314a456c8c6b4724bde4363d709ff7b80ab906a952fb04"
    ],
    "modules\\动作时序.py": [
     "2089f5d3189d2b95cd0a841c9230e60bf8bc3e9d249bd2be172244b364d61963",
@@ -45,8 +45,8 @@
     "72a070a347bf576ccf31f65519015e777538da47b74025523b5107f2582b1a8f"
    ],
    "modules\\排序键.py": [
-    "f2bf8e29d524c5fa6779c2fa7a8926205ce7ceb9b4339a29137c9b5acc2313ce",
-    "f2bf8e29d524c5fa6779c2fa7a8926205ce7ceb9b4339a29137c9b5acc2313ce"
+    "4c8514b77145d929214f333f5cb98cac73cac7fea27e51cb274d8bcf3c9ec780",
+    "4c8514b77145d929214f333f5cb98cac73cac7fea27e51cb274d8bcf3c9ec780"
    ]
   },
   "six_copies_main_exit": 0,
@@ -71,7 +71,7 @@
    "签约",
    "安葬"
   ],
-  "elapsed": 15.7,
+  "elapsed": 15.9,
   "matrix": {
    "2026-01-05": {
     "kind": "交节·小寒",
@@ -36016,7 +36016,7 @@
   ],
   "copy_aware": {
    "aware": 7,
-   "total": 138
+   "total": 139
   }
  },
  "checks": [
@@ -36252,7 +36252,7 @@
    "id": "S6-2",
    "name": "副本感知脚本覆盖（>4 个）",
    "ok": true,
-   "detail": "{'aware': 7, 'total': 138}"
+   "detail": "{'aware': 7, 'total': 139}"
   },
   {
    "id": "S1-1",

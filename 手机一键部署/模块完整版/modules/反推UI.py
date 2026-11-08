@@ -30,7 +30,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from modules.反推引擎 import (search_top_n, record_of_day, MAX_DAYS,
                              DEFAULT_DAYS, DEFAULT_TOP_N)
-from modules.排序键 import jishen_stars
+from modules.排序键 import jishen_stars, profile_plan_keys
 from modules.事项标准 import UI_EVENTS, MOUNTAIN_CENTERED_EVENTS
 
 COLOR_JI = '#C62828'        # 吉日：红
@@ -129,6 +129,9 @@ class ReverseWindow:
         self._res = None
         self._day_map = {}
         self._top_dates = set()
+        # 001 §233：两处「满分核验」图例引用（事项切换时联动刷新）
+        self._legend_top = None
+        self._legend_perf = {}
 
         self.win = tk.Toplevel(master)
         self.win.title('精准择时 · 反推 Top-N（001 §210）')
@@ -140,7 +143,20 @@ class ReverseWindow:
         self._build_top_bar(event_type)
         self._build_context_bar()
         self._build_tabs()
+        self._refresh_plan_legends()
         self._poll()
+
+    def _refresh_plan_legends(self):
+        """001 §233：按当前事项刷新两处「满分核验」图例（通用底线+专属核心）。"""
+        _keys = ' · '.join(profile_plan_keys(self.event_var.get()))
+        if self._legend_top is not None:
+            self._legend_top.configure(
+                text='满分核验：%s（✓/✗ 依次对应，悬停看缺失项）' % _keys)
+        for _band, (_lbl, _lo, _hi) in self._legend_perf.items():
+            _lbl.configure(
+                text='%s：满分核验命中 %d–%d 项 ✓（已排除否决日，按评分降序）'
+                     '　核验顺序：%s（悬停看缺失项，双击看日课详情）'
+                     % (_band, _lo, _hi, _keys))
 
     # ---------------------------------------------------------------- UI 构建
     def _build_top_bar(self, event_type):
@@ -152,6 +168,8 @@ class ReverseWindow:
             value=event_type if event_type in UI_EVENTS else UI_EVENTS[0])
         ttk.Combobox(bar, textvariable=self.event_var, values=list(UI_EVENTS),
                      state='readonly', width=8).pack(side=tk.LEFT, padx=(2, 10))
+        # 001 §233：事项切换时联动刷新两处「满分核验」图例（专科体检单）
+        self.event_var.trace_add('write', lambda *_a: self._refresh_plan_legends())
 
         ttk.Label(bar, text='起始日:').pack(side=tk.LEFT)
         self.start_var = tk.StringVar(value=date.today().strftime('%Y-%m-%d'))
@@ -303,10 +321,9 @@ class ReverseWindow:
             self.top_tree.column(_c, width=_w, anchor=tk.CENTER)
         self.top_tree.column('扣分主因', anchor=tk.W)
         # 001 §231：满分核验列顺序图例（悬停该列看逐项说明）
-        ttk.Label(tab2,
-                  text='满分核验：得令 · 合局 · 相主 · 德神 · 硬忌'
-                       '（✓/✗ 依次对应，悬停看缺失项）',
-                  foreground='#616161').pack(fill=tk.X, padx=6)
+        # 001 §233：图例按事项动态生成（通用底线 + 事项专属核心）
+        self._legend_top = ttk.Label(tab2, foreground='#616161')
+        self._legend_top.pack(fill=tk.X, padx=6)
         # 榜单保存/打印（与单日详情同一套「保存 + 打印」能力）
         # 001 §220（2026-11-06）：必须在树之前先 pack(BOTTOM)，
         # 否则窗口偏矮时按钮条被树挤到可视区外，用户看不到（原症状）。
@@ -416,11 +433,10 @@ class ReverseWindow:
             _tv.heading(_c, text=_c)
             _tv.column(_c, width=_w, anchor=tk.CENTER)
         _tv.column('扣分主因', anchor=tk.W)
-        ttk.Label(_tab,
-                  text='%s：满分核验命中 %d–%d 项 ✓（已排除否决日，按评分降序）'
-                       '　核验顺序：得令 · 合局 · 相主 · 德神 · 硬忌'
-                       '（悬停看缺失项，双击看日课详情）'
-                  % (band, _lo, _hi), foreground='#616161').pack(fill=tk.X, padx=6)
+        # 001 §233：分档页图例按事项动态生成，存引用以便切换事项时刷新
+        _legend = ttk.Label(_tab, foreground='#616161')
+        _legend.pack(fill=tk.X, padx=6)
+        self._legend_perf[band] = (_legend, _lo, _hi)
         _sb = ttk.Scrollbar(_tab, orient=tk.VERTICAL, command=_tv.yview)
         _tv.configure(yscrollcommand=_sb.set)
         _sb.pack(side=tk.RIGHT, fill=tk.Y)
