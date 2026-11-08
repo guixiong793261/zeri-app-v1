@@ -3209,6 +3209,12 @@ class ZeriApp:
             body.insert(tk.END, line[pos:] + "\n", base_tag)
 
         def _refresh(auto_expand=False):
+            # 条件窗关闭后 trace 仍会回调，控件已销毁则直接跳过，避免 TclError。
+            try:
+                if not body.winfo_exists():
+                    return
+            except Exception:
+                return
             data = event_guide(event_var.get())
             cur_label.config(text=f"当前事项：{event_var.get()}")
             body.configure(state=tk.NORMAL)
@@ -4907,6 +4913,9 @@ class ZeriApp:
             'min_score': tk.IntVar(value=60),
             'min_stars': tk.IntVar(value=2),
             'must_have_jishen': tk.StringVar(value=''),
+            # 001 §229（2026-11-08）：吉神条件改为可选「任一命中」模式。
+            # 原逻辑为 AND 求交，一次勾多项（通关指南一键选中）会恒不命中。
+            'jishen_any': tk.BooleanVar(value=False),
             'must_have_huangdao': tk.BooleanVar(value=False),
             'exclude_xiong': tk.BooleanVar(value=True),
             'exclude_ji': tk.BooleanVar(value=False),
@@ -4957,14 +4966,21 @@ class ZeriApp:
             for god in hit:
                 self.jishen_vars[god].set(True)
             if hit:
+                # 001 §229（2026-11-08）：多神同勾必须配合「任一命中」，
+                # 否则 7 项求交全年恒空（嫁娶实测 0 命中）。
+                self.condition_vars['jishen_any'].set(True)
                 messagebox.showinfo(
                     "已选中最优吉神",
                     f"已按「{self.event_var.get()}」通关指南勾选 {len(hit)} 项：\n"
-                    + "、".join(hit))
+                    + "、".join(hit)
+                    + "\n\n已同时勾选『所勾吉神满足任意一项即可』，命中其中一项即入选。",
+                    parent=condition_window)
+                condition_window.lift()
             else:
                 messagebox.showinfo(
                     "暂无对应复选框",
-                    "本事项指南条款中的吉神，当前吉神条件区没有同名选项，无需勾选。")
+                    "本事项指南条款中的吉神，当前吉神条件区没有同名选项，无需勾选。",
+                    parent=condition_window)
 
         def _guide_avoid_veto():
             self.condition_vars['exclude_xiong'].set(True)
@@ -4974,7 +4990,9 @@ class ZeriApp:
                 "已勾选『排除凶日』与『排除有忌项的日课』。\n\n"
                 "底层红线（三煞×坐山、岁破、月破、四离四绝、重丧、受死日、红嘴朱雀、"
                 "双干正阴府、山家封禁、相主冲命）在评分阶段直接判否决，不会进入可选结果，"
-                "无需在此重复设置。")
+                "无需在此重复设置。",
+                parent=condition_window)
+            condition_window.lift()
 
         self._build_event_guide_panel(
             main_frame, self.event_var, start_expanded=True,
@@ -5007,6 +5025,11 @@ class ZeriApp:
         jishen_frame = ttk.LabelFrame(main_frame, text="吉神条件")
         jishen_frame.pack(fill=tk.X, pady=10)
 
+        tk.Checkbutton(jishen_frame,
+                       text="所勾吉神满足任意一项即可（勾选本项＝任一命中，不勾＝需全部命中）",
+                       variable=self.condition_vars['jishen_any'],
+                       indicatoron=True).pack(anchor=tk.W, padx=6, pady=(2, 4))
+
         current_event = self.event_var.get()
         
         # 001 §219（2026-11-06 用户拍板）：各事项吉神清单精简为「主吉神」，
@@ -5027,10 +5050,13 @@ class ZeriApp:
         burial_gods = ['天德贵人', '月德贵人', '天乙贵人', '生气',
                        '三合', '六合', '太阳到山', '太阴到山', '天赦']
 
-        # 修造：通用贵人 + 三合六合 + 太阳太阴到山 + 扶山/补龙/相主
+        # 修造：通用贵人 + 三合六合 + 太阳太阴到山/到向 + 扶山/补龙/相主
         # + 山家三合/六合/贵人 + 岁禄/岁马到山（均由修造神煞扩展发射）。
+        # 001 §229（2026-11-08）：补入太阳 / 太阴到向——修造看山亦看向，
+        # 评分层 sun_to_direction / moon_to_direction 对修造同样发射，非死选项。
         _build_core_gods = ['天德贵人', '月德贵人', '天乙贵人',
                             '三合局', '六合', '太阳到山', '太阴到山',
+                            '太阳到向', '太阴到向',
                             '扶山', '补龙', '相主',
                             '山家三合', '山家六合', '山家贵人', '岁禄到山', '岁马到山']
 
@@ -5237,6 +5263,7 @@ class ZeriApp:
                 'min_score': self.condition_vars['min_score'].get(),
                 'min_stars': self.condition_vars['min_stars'].get(),
                 'must_have_jishen': selected_jishen,
+                'jishen_any': self.condition_vars['jishen_any'].get(),
                 'must_have_huangdao': self.condition_vars['must_have_huangdao'].get(),
                 'exclude_xiong': self.condition_vars['exclude_xiong'].get(),
                 'exclude_ji': self.condition_vars['exclude_ji'].get(),
@@ -5624,7 +5651,11 @@ class ZeriApp:
                             missing_items.append(item)
 
                     if missing_items:
-                        pass_conditions = False
+                        # 001 §229（2026-11-08）：勾选「任意一项即可」时，只要命中一项即通过；
+                        # 未勾选（默认）仍按原口径要求全部命中。
+                        _any_mode = bool(conditions.get('jishen_any'))
+                        if not (_any_mode and len(missing_items) < len(selected_items)):
+                            pass_conditions = False
                 
                 # 5. 黄道条件
                 if conditions['must_have_huangdao']:
