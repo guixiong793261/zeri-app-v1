@@ -3549,6 +3549,8 @@ class DayScoreWindow:
 
                 bride_gan = bride_zhi = groom_gan = groom_zhi = None
                 bride_m_gan = bride_m_zhi = groom_m_gan = groom_m_zhi = None
+                # 001 §236 B2：时支冲事主日支（夫妻宫）→ 禁用该时辰
+                bride_d_zhi = groom_d_zhi = None
 
                 owners_detail = result.get('owners_detail', [])
                 for owner in owners_detail:
@@ -3561,16 +3563,19 @@ class DayScoreWindow:
                         continue
                     _yzhu = _parts[0]
                     _mzhu = _parts[1]
+                    _rzhu = _parts[2] if len(_parts) >= 3 else ''
                     if gender == '女':
                         bride_gan = _yzhu[:1] if len(_yzhu) >= 1 else ''
                         bride_zhi = _yzhu[1:] if len(_yzhu) >= 2 else ''
                         bride_m_gan = _mzhu[:1] if len(_mzhu) >= 1 else ''
                         bride_m_zhi = _mzhu[1:] if len(_mzhu) >= 2 else ''
+                        bride_d_zhi = _rzhu[1:] if len(_rzhu) >= 2 else None
                     elif gender == '男':
                         groom_gan = _yzhu[:1] if len(_yzhu) >= 1 else ''
                         groom_zhi = _yzhu[1:] if len(_yzhu) >= 2 else ''
                         groom_m_gan = _mzhu[:1] if len(_mzhu) >= 1 else ''
                         groom_m_zhi = _mzhu[1:] if len(_mzhu) >= 2 else ''
+                        groom_d_zhi = _rzhu[1:] if len(_rzhu) >= 2 else None
 
                 _sizhu_src = result.get('sizhu', {}) if isinstance(result.get('sizhu'), dict) else {}
                 _detail_date = _sizhu_src.get('date') if isinstance(_sizhu_src, dict) else None
@@ -3600,7 +3605,8 @@ class DayScoreWindow:
                     bride_gan=bride_gan, bride_zhi=bride_zhi,
                     groom_gan=groom_gan, groom_zhi=groom_zhi,
                     bride_month_gan=bride_m_gan, bride_month_zhi=bride_m_zhi,
-                    groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi
+                    groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi,
+                    bride_day_zhi=bride_d_zhi, groom_day_zhi=groom_d_zhi
                 )
 
                 self._insert_colored_text("""【嫁娶择日分析】

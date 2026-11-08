@@ -339,7 +339,8 @@ def rule_e001(ctx):
         return None
 
     if ctx.is_marriage:
-        keys = ['五行评分', '月令得分', '喜用神得分', '太阳太阴得分']
+        # 001 §236 B3（2026-11-08）：相主得分并入嫁娶总分，恒等式须含该键。
+        keys = ['五行评分', '月令得分', '喜用神得分', '相主得分', '太阳太阴得分']
     else:
         keys = ['五行评分', '月令得分', '喜用神得分', '相主得分',
                 '黄道得分', '太阳太阴得分', '三煞扣分']
@@ -820,7 +821,8 @@ def rule_e207(ctx):
 
     嫁娶路径（2026-10-16 P1-C-1-c 拍板，#2 两套评分架构·部分统一 1-C）：
     由显式跳过改为轻量总分恒等式校验——
-        总分 = 嫁娶评分 + 月令得分 + 喜用神得分 + 太阳太阴得分
+        总分 = 嫁娶评分 + 月令得分 + 喜用神得分 + 太阳太阴得分 + 相主得分
+        （相主得分项为 001 §236 B3，2026-11-08 拍板并入）
     键取 score_details，不引入地支关系分项、不补 score_breakdown：
       - 一票否决日（veto_reasons 非空）：总分强制归零，恒等式不适用，留注；
       - 非否决且四键齐备为数值：独立加总比对，相符留“已启用…校验通过”注，
@@ -834,7 +836,7 @@ def rule_e207(ctx):
         if ctx.veto:
             return ('嫁娶路径已启用轻量总分恒等式（一票否决日总分强制归零，'
                     '恒等式不适用）')
-        _keys = ('嫁娶评分', '月令得分', '喜用神得分', '太阳太阴得分')
+        _keys = ('嫁娶评分', '月令得分', '喜用神得分', '太阳太阴得分', '相主得分')
         parts = [ctx.sd.get(k) for k in _keys]
 
         def _is_num(v):
@@ -846,7 +848,7 @@ def rule_e207(ctx):
         if not all(_is_num(v) for v in parts):
             return ('嫁娶路径已启用轻量总分恒等式（score_details 键不齐，'
                     '无法加总，留档核对）')
-        expected = parts[0] + parts[1] + parts[2] + parts[3]
+        expected = parts[0] + parts[1] + parts[2] + parts[3] + parts[4]
         claimed = ctx.sd.get('总分')
         if not _is_num(claimed):
             claimed = ctx.detail.get('score')
@@ -854,14 +856,14 @@ def rule_e207(ctx):
             ctx.issue(
                 'E207',
                 f'嫁娶总分恒等式不符：嫁娶评分{parts[0]:g}{_sgn(parts[1])}'
-                f'{_sgn(parts[2])}{_sgn(parts[3])}={expected:g}，'
+                f'{_sgn(parts[2])}{_sgn(parts[3])}{_sgn(parts[4])}={expected:g}，'
                 f'总分记{claimed if _is_num(claimed) else "<缺>"}',
                 source='score_details 轻量总分恒等式独立加总',
-                suggestion='核对嫁娶评分/月令/喜用/太阳太阴是否漏计或重复计')
+                suggestion='核对嫁娶评分/月令/喜用/太阳太阴/相主是否漏计或重复计')
             return None
         return (f'嫁娶路径已启用轻量总分恒等式'
                 f'（{parts[0]:g}{_sgn(parts[1])}{_sgn(parts[2])}'
-                f'{_sgn(parts[3])}={expected:g}，校验通过）')
+                f'{_sgn(parts[3])}{_sgn(parts[4])}={expected:g}，校验通过）')
 
     sz = ctx.detail.get('sizhu')
     if not isinstance(sz, dict):

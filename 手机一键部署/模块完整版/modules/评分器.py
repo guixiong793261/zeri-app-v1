@@ -1124,6 +1124,10 @@ class Scorer:
                         #   仅合并含「六冲」的硬门槛；「自刑」维持嫁娶现状不否决，
                         #   改写为提示行待裁（BACKLOG G-4），避免未经快照扩大否决面。
                         xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(
+                            sizhu, owners, strict_fuyin=True)
+                        # 001 §236 A 档（2026-11-08 用户拍板）：嫁娶相主核验提示，
+                        # 纯展示（月/时支冲夫妻宫、年命伏吟），不产生任何分值。
+                        xiangzhu_verify_notes = self._marriage_owner_verify_notes(
                             sizhu, owners)
                         _xz_display = []
                         for _d in xiangzhu_details:
@@ -1192,6 +1196,7 @@ class Scorer:
                                     self.shensha_list),
                                 '相主得分': xiangzhu_score,
                                 '相主详情': xiangzhu_details,
+                                '相主核验提示': xiangzhu_verify_notes,
                                 '事主匹配': owner_matches,
                                 '总分': 0,
                                 '否决原因': veto_reasons,
@@ -1341,9 +1346,13 @@ class Scorer:
                         sun_moon_info = calculate_sun_moon_position(sizhu, shan_xiang)
                         sun_moon_score = sun_moon_info.get('score', 0)
 
-                        # 综合得分 = 婚嫁评分（含黄道得分）+ 喜用神得分 + 月令得分 + 太阳太阴得分
+                        # 综合得分 = 婚嫁评分（含黄道得分）+ 喜用神得分 + 月令得分 + 太阳太阴得分 + 相主得分
                         # 注意：黄道得分已包含在marriage_result['score']中，不再重复加
-                        total_score = marriage_result['score'] + xishen_score + yueling_score + sun_moon_score
+                        # 001 §236 B3（2026-11-08 用户拍板）：相主得分并入嫁娶总分。
+                        # 通用通道（下方 final_score）历来含相主，嫁娶通道未加属架构分叉，
+                        # 导致相主生合加分与伏吟扣分都不影响嫁娶排序，本次对齐。
+                        total_score = (marriage_result['score'] + xishen_score + yueling_score
+                                       + sun_moon_score + xiangzhu_score)
 
                         # 等级判定（2026-02-05 统一）：婚嫁与通用事项共用同一纯函数
                         # _get_level（依据2026-09-02用户确认：等级必须是总分的纯函数，
@@ -1397,11 +1406,15 @@ class Scorer:
                             '嫁娶明细(分项)': marriage_result.get('details', []),
                             # 001 §235：相主明细入展示（含年命/日支冲刑破害逐条），
                             # 本路径无 [硬性门槛] 命中（有命中已被上方否决分支拦截），
-                            # 故此处明细均为未达否决线的普通扣分/加分，仅作核验展示；
-                            # 相主为 0/1 硬门槛而非加分项，不计入总分（总分口径不变）。
+                            # 故此处明细均为未达否决线的普通扣分/加分；
+                            # 001 §236 B3 起相主得分已计入总分（见上方 total_score）。
                             '相主得分': xiangzhu_score,
                             '相主详情': xiangzhu_details,
-                            '相主核验说明': '相主为硬门槛项（冲即否决），明细仅供核验，不计入总分',
+                            '相主核验提示': xiangzhu_verify_notes,
+                            # 001 §236：B3 起相主得分已并入嫁娶总分；A3 原拟的
+                            # “不计入总分”文案与 B3 冲突，按用户“立刻并入”拍板
+                            # 改为如实声明，硬门槛仍单独否决。
+                            '相主核验说明': '相主为硬门槛项（冲夫妻宫/年命冲即否决），相主得分已并入总分',
                             '总分': total_score
                         }
                         
@@ -5213,12 +5226,34 @@ class Scorer:
 
         return total_score, owner_matches
     
+    def _owner_ri_zhi(self, owner):
+        """取事主日支：优先 sizhu 第三柱，其次 birth_date 反算；无法解析返回 ''。"""
+        if not isinstance(owner, dict):
+            return ''
+        if owner.get('sizhu'):
+            parts = str(owner['sizhu']).split()
+            if len(parts) >= 3 and len(parts[2]) >= 2:
+                return parts[2][1]
+        if owner.get('birth_date'):
+            try:
+                from .四柱计算器 import calculate_sizhu as _calc_sz
+                _osz = _calc_sz(owner.get('birth_date'), owner.get('birth_hour', 12),
+                                owner.get('birth_minute', 0),
+                                longitude=owner.get('birth_longitude'))
+                return _osz.get('day_zhi', '')
+            except Exception:
+                return ''
+        return ''
+
     def _check_marriage_day_chong(self, sizhu, owners):
         """
-        婚嫁硬性否决检查：日课日支冲事主日支（冲夫妻宫，婚嫁大忌）
+        婚嫁硬性否决检查：日课日支/月支冲事主日支（冲夫妻宫，婚嫁大忌）
 
-        嫁娶以日柱为夫妻宫，日课日支冲新郎/新娘日支为大忌，
-        与重丧日、三娘煞等同列一票否决（归零），不另设扣分项。
+        嫁娶以日柱为夫妻宫：
+        - 日课日支冲新郎/新娘日支 → 一票否决（归零）；
+        - 001 §236 B1（2026-11-08 用户拍板）：日课月支（提纲）冲事主日支 →
+          同步升级为一票否决。月建为当令之气，提纲冲夫妻宫为婚嫁死穴。
+        - 时支冲夫妻宫不否决整日，只禁用该时辰（见嫁娶神煞扩展 get_lucky_hours）。
         否决原因通过 veto_reasons 明确显示，避免用户只看到模糊的门槛提示。
         """
         veto_list = []
@@ -5227,33 +5262,66 @@ class Scorer:
         day_zhi = sizhu.get('day_zhi', '')
         if not day_zhi and sizhu.get('日柱'):
             day_zhi = str(sizhu['日柱'])[1:2]
-        if not day_zhi:
+        month_zhi = sizhu.get('month_zhi', '')
+        if not month_zhi and sizhu.get('月柱'):
+            month_zhi = str(sizhu['月柱'])[1:2]
+        if not day_zhi and not month_zhi:
             return veto_list
         liuchong_map = {'子': '午', '午': '子', '丑': '未', '未': '丑',
                         '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
                         '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳'}
-        chong_zhi = liuchong_map.get(day_zhi, '')
-        if not chong_zhi:
-            return veto_list
+        chong_day = liuchong_map.get(day_zhi, '')
+        chong_month = liuchong_map.get(month_zhi, '')
         for idx, owner in enumerate(owners):
             if not isinstance(owner, dict):
                 continue
-            name = owner.get('name') or f"事主{idx + 1}"
-            owner_day_zhi = ''
-            if owner.get('sizhu'):
-                parts = str(owner['sizhu']).split()
-                if len(parts) >= 3 and len(parts[2]) >= 2:
-                    owner_day_zhi = parts[2][1]
-            elif owner.get('birth_date'):
-                try:
-                    from .四柱计算器 import calculate_sizhu as _calc_sz
-                    _osz = _calc_sz(owner.get('birth_date'), owner.get('birth_hour', 12), owner.get('birth_minute', 0), longitude=owner.get('birth_longitude'))
-                    owner_day_zhi = _osz.get('day_zhi', '')
-                except Exception:
-                    owner_day_zhi = ''
-            if owner_day_zhi == chong_zhi:
+            name = owner.get('name') or owner.get('role') or f"事主{idx + 1}"
+            owner_day_zhi = self._owner_ri_zhi(owner)
+            if not owner_day_zhi:
+                continue
+            if day_zhi and owner_day_zhi == chong_day:
                 veto_list.append(f"日课日支{day_zhi}冲{name}日支{owner_day_zhi}（冲夫妻宫，婚嫁大忌）")
+            if month_zhi and owner_day_zhi == chong_month:
+                veto_list.append(f"日课月支{month_zhi}冲{name}日支{owner_day_zhi}（提纲冲夫妻宫，婚嫁大忌）")
         return veto_list
+
+    def _marriage_owner_verify_notes(self, sizhu, owners):
+        """嫁娶相主核验提示（001 §236 A 档，2026-11-08 用户拍板）。
+
+        纯展示，不计分、不改否决：把「月支/时支冲夫妻宫」与「年命伏吟」
+        在详情与榜单核验悬停中显式列出，避免用户只看到总分看不到暗雷。
+        """
+        notes = []
+        if not owners:
+            return notes
+        day_zhi = sizhu.get('day_zhi', '') or str(sizhu.get('日柱', ''))[1:2]
+        month_zhi = sizhu.get('month_zhi', '') or str(sizhu.get('月柱', ''))[1:2]
+        hour_zhi = sizhu.get('hour_zhi', '') or str(sizhu.get('时柱', ''))[1:2]
+        liuchong_map = {'子': '午', '午': '子', '丑': '未', '未': '丑',
+                        '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
+                        '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳'}
+        for idx, owner in enumerate(owners):
+            if not isinstance(owner, dict):
+                continue
+            name = owner.get('name') or owner.get('role') or f"事主{idx + 1}"
+            owner_day_zhi = self._owner_ri_zhi(owner)
+            owner_year_zhi = ''
+            if owner.get('sizhu'):
+                _ps = str(owner['sizhu']).split()
+                if len(_ps) >= 1 and len(_ps[0]) >= 2:
+                    owner_year_zhi = _ps[0][1]
+            elif owner.get('生肖'):
+                owner_year_zhi = _SHENGXIAO_TO_ZHI.get(owner['生肖'], owner['生肖'])
+            if owner_day_zhi:
+                if month_zhi and liuchong_map.get(month_zhi) == owner_day_zhi:
+                    notes.append(f"月支{month_zhi}冲{name}夫妻宫（日支{owner_day_zhi}）：提纲冲夫妻宫，已列一票否决")
+                if day_zhi and liuchong_map.get(day_zhi) == owner_day_zhi:
+                    notes.append(f"日支{day_zhi}冲{name}夫妻宫（日支{owner_day_zhi}）：已列一票否决")
+                if hour_zhi and liuchong_map.get(hour_zhi) == owner_day_zhi:
+                    notes.append(f"时支{hour_zhi}冲{name}夫妻宫（日支{owner_day_zhi}）：该时辰禁用，不否决整日")
+            if owner_year_zhi and day_zhi == owner_year_zhi:
+                notes.append(f"日课日支{day_zhi}与{name}年命{owner_year_zhi}同字（年命伏吟）：扣15分，不否决")
+        return notes
 
     def _detect_wm_resolvers(self, wu_xing_result=None, sun_moon_info=None):
         """仙命真冲的化解吉神探测（宽集，2026-10-04 用户拍板）。
@@ -5470,7 +5538,7 @@ class Scorer:
                     break
         return items
 
-    def _check_owner_day_zhichong(self, sizhu, owners):
+    def _check_owner_day_zhichong(self, sizhu, owners, strict_fuyin=False):
         """
         检查日课日支与事主日支的冲合关系（相主原则）
         
@@ -5480,11 +5548,16 @@ class Scorer:
         - 日课日支破事主日支：凶，-15分（相破为破坏、捣乱之象）
         - 日课日支害事主日支：小凶，-5分
         - 日课日支合事主日支：吉，+8分
-        - 日课日支与事主日支相同（伏吟）：小吉，+3分
+        - 日课日支与事主日支相同（伏吟）：默认小吉 +3 分；
+          strict_fuyin=True（001 §236 B4，嫁娶从严）时改判 -15 分
+        - 年命伏吟（日课日支与事主年命同字）：默认 0 分；
+          strict_fuyin=True 时改判 -15 分（不否决）
         
         Args:
             sizhu: 日课四柱信息
             owners: 事主信息列表
+            strict_fuyin: 是否启用嫁娶从严伏吟口径（仅嫁娶通道传 True，
+                避免其他事项相主分值整体漂移）
             
         Returns:
             tuple: (总评分, 详细信息列表)
@@ -5592,6 +5665,13 @@ class Scorer:
                         score = 10
                         total_score += score
                         details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}三合（年支合），+{score}分")
+                    # 年命伏吟（001 §236 B4，2026-11-08 用户拍板）：
+                    # 日课日支与事主年命同字（如属虎见寅日）原为 0 分，
+                    # 嫁娶从严改判 -15（不否决，体现民俗忌讳）。
+                    elif strict_fuyin and day_zhi == owner_year_zhi:
+                        score = -15
+                        total_score += score
+                        details.append(f"{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟），{score}分")
                 
                 # 然后检查日课日支与事主日柱地支的关系。
                 # 2026-09-18 三档口径：硬否决仅定义在【事主年命】层；事主日元（日支）
@@ -5629,11 +5709,18 @@ class Scorer:
                         score = 8
                         total_score += score
                         details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相合，+{score}分")
-                    # 伏吟（相同地支）
+                    # 伏吟（相同地支）——001 §236 B4（2026-11-08 用户拍板）：
+                    # 夫妻宫伏吟主泣，嫁娶从严改判 -15（原 +3 属方向性错误）；
+                    # 其他事项维持 +3 不动，避免全事项分值漂移。
                     elif day_zhi == owner_day_zhi:
-                        score = 3
-                        total_score += score
-                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
+                        if strict_fuyin:
+                            score = -15
+                            total_score += score
+                            details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（夫妻宫伏吟），{score}分")
+                        else:
+                            score = 3
+                            total_score += score
+                            details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
 
                 # 三档口径·档2：年命×日课月支/时支六冲 = 扣分不否决。
                 # 月为提纲，对齐本函数末段"流年冲太岁"-15 档；时为末位，

@@ -4249,6 +4249,13 @@ class ZeriApp:
                         ('✓ ' if _i.get('ok') else '✗ ') + str(_i.get('key', ''))
                         + '：' + str(_i.get('detail', ''))
                         for _i in (_chk.get('items') or []))
+                    # 001 §236 A 档：嫁娶相主核验提示（冲夫妻宫/年命伏吟）
+                    # 并入核验列悬停，纯展示不参与 ✓ 计数。
+                    _xz_tips = ((_ck_detail.get('score_details') or {})
+                                .get('相主核验提示')) or []
+                    if _xz_tips:
+                        _chk_tip = ((_chk_tip + '\n') if _chk_tip else '') + \
+                            '\n'.join('⚠ ' + str(_t) for _t in _xz_tips)
                 except Exception:
                     _ok_n = -1
             # 001 §234：核验筛选（全部 / 极品5✓ / 大吉4-5✓ / 优吉2-3✓）
@@ -6798,15 +6805,19 @@ class ZeriApp:
             # 生肖相主得分（新增）
             xiangzhu_score = score_details.get('相主得分', 0)
             xiangzhu_details = score_details.get('相主详情', [])
-            if xiangzhu_score != 0 or xiangzhu_details:
+            # 001 §236 A 档：嫁娶相主核验提示（纯展示，不计分）
+            _xz_verify_notes = score_details.get('相主核验提示') or []
+            if xiangzhu_score != 0 or xiangzhu_details or _xz_verify_notes:
                 content += f"  生肖相主得分：{xiangzhu_score:+d} 分\n"
-                # 001 §235：嫁娶通道相主为硬门槛（0/1），明细仅供核验，
-                # 显式声明不计入总分，避免用户把明细当成可加分的分项。
+                # 001 §235/§236：嫁娶通道相主为硬门槛（冲夫妻宫/年命冲即否决），
+                # 得分口径按 B3 已并入总分，此处显式声明避免用户误解。
                 _xz_note = str(score_details.get('相主核验说明') or '')
                 if _xz_note:
                     content += f"    （{_xz_note}）\n"
                 for detail_item in xiangzhu_details:
                     content += f"    • {detail_item}\n"
+                for _vnote in _xz_verify_notes:
+                    content += f"    ⚠ {_vnote}\n"
             
             # 事主匹配得分（喜用神匹配明细）
             owner_matches = score_details.get('事主匹配', [])
@@ -7826,6 +7837,8 @@ class ZeriApp:
                 bride_m_zhi = None
                 groom_m_gan = None
                 groom_m_zhi = None
+                bride_d_zhi = None
+                groom_d_zhi = None
                 
                 # 从owners_info中获取事主信息
                 owners_info = getattr(self, 'owners_info', [])
@@ -7901,7 +7914,28 @@ class ZeriApp:
                                         groom_m_zhi = owner_sizhu.get('月柱', '')[1:]
                                 except:
                                     pass
-                
+
+                # 001 §236 B2：时辰冲事主日支（夫妻宫）禁时的入参。
+                # GUI 事主卡只填生日，日支此处按 birth_date 补齐。
+                for _od in owners:
+                    _bd = _od.get('birth_date')
+                    if not hasattr(_bd, 'year'):
+                        continue
+                    try:
+                        _osz = calculate_sizhu(
+                            _bd, _od.get('birth_hour', 12),
+                            _od.get('birth_minute', 0),
+                            longitude=_od.get('birth_longitude'))
+                        _dz = str(_osz.get('日柱', ''))[1:]
+                    except Exception:
+                        _dz = ''
+                    if not _dz:
+                        continue
+                    if _od.get('性别') == '女' and not bride_d_zhi:
+                        bride_d_zhi = _dz
+                    elif _od.get('性别') == '男' and not groom_d_zhi:
+                        groom_d_zhi = _dz
+
                 # detail_sizhu 带上真实公历日期，供神煞扩展按高精度农历取月
                 # （修复“节气寅月但农历腊月”交界日被月支回退法误判大利月的矛盾）
                 _detail_sizhu_src = detail.get('sizhu', {})
@@ -7932,7 +7966,8 @@ class ZeriApp:
                     bride_gan=bride_gan, bride_zhi=bride_zhi,
                     groom_gan=groom_gan, groom_zhi=groom_zhi,
                     bride_month_gan=bride_m_gan, bride_month_zhi=bride_m_zhi,
-                    groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi
+                    groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi,
+                    bride_day_zhi=bride_d_zhi, groom_day_zhi=groom_d_zhi
                 )
                 
                 content += """【嫁娶择日分析】

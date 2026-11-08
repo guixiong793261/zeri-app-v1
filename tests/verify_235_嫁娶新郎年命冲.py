@@ -109,18 +109,19 @@ def test_xiangzhu_detail():
     r2 = _score(2026, 8, 28, [BRIDE, GROOM])
     sd2 = r2.get('score_details') or {}
     check(bool(sd2.get('相主核验说明')),
-          '非否决日标注相主不计分', sd2.get('相主核验说明'))
+          '非否决日标注相主口径', sd2.get('相主核验说明'))
 
 
-# ==================== F. 总分口径不变 ====================
-def test_total_unchanged():
-    print('\n[F] 非否决日总分构成不变（相主不入总分）')
+# ==================== F. 总分口径：001 §236 B3 起相主已并入 ====================
+def test_total_includes_xiangzhu():
+    print('\n[F] 非否决日总分 = 嫁娶评分+月令+喜用+太阳太阴+相主（§236 B3）')
     r = _score(2026, 8, 28, [BRIDE, GROOM])
     sd = r.get('score_details') or {}
     _parts = (int(sd.get('嫁娶评分') or 0) + int(sd.get('月令得分') or 0)
-              + int(sd.get('喜用神得分') or 0) + int(sd.get('太阳太阴得分') or 0))
+              + int(sd.get('喜用神得分') or 0) + int(sd.get('太阳太阴得分') or 0)
+              + int(sd.get('相主得分') or 0))
     check(_parts == int(sd.get('总分') or 0),
-          '总分 == 嫁娶评分+月令+喜用神+太阳太阴',
+          '总分 == 嫁娶评分+月令+喜用+太阳太阴+相主',
           '%s vs %s' % (_parts, sd.get('总分')))
     check(_parts == int(r.get('score') or 0),
           '顶层 score 与总分一致', '%s vs %s' % (_parts, r.get('score')))
@@ -146,8 +147,8 @@ def test_source_anchors():
           '评分器：婚嫁分支接入统一硬门槛清单')
     check("if _s.startswith('[硬性门槛]') and '六冲' not in _s:" in s1,
           '评分器：婚嫁分支仅合并六冲（自刑留待裁，BACKLOG G-4）')
-    check("'相主核验说明': '相主为硬门槛项（冲即否决），明细仅供核验，不计入总分'" in s1,
-          '评分器：非否决日相主不计分声明')
+    check("'相主核验说明': '相主为硬门槛项（冲夫妻宫/年命冲即否决），相主得分已并入总分'" in s1,
+          '评分器：非否决日相主已并入总分声明')
     p2 = os.path.join(_ROOT, 'modules', '婚嫁评分算法.py')
     with open(p2, 'r', encoding='utf-8') as f:
         s2 = f.read()
@@ -178,7 +179,7 @@ def main():
     test_normal_day()
     test_single_groom()
     test_xiangzhu_detail()
-    test_total_unchanged()
+    test_total_includes_xiangzhu()
     test_general_channel()
     test_source_anchors()
     test_zixing_not_vetoed()

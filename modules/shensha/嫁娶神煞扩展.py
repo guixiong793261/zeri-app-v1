@@ -66,7 +66,8 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
     
     def __init__(self, bride_gan=None, bride_zhi=None, groom_gan=None, groom_zhi=None,
                  bride_month_gan=None, bride_month_zhi=None,
-                 groom_month_gan=None, groom_month_zhi=None):
+                 groom_month_gan=None, groom_month_zhi=None,
+                 bride_day_zhi=None, groom_day_zhi=None):
         """
         初始化
         
@@ -79,6 +80,8 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
             bride_month_zhi: 新娘生月地支
             groom_month_gan: 新郎生月天干（推阳气，用于时辰冲阳气禁用）
             groom_month_zhi: 新郎生月地支
+            bride_day_zhi: 新娘日支（夫妻宫，001 §236 B2：时支冲则禁用该时辰）
+            groom_day_zhi: 新郎日支（夫妻宫，同上）
         """
         super().__init__()
         self.bride_gan = bride_gan
@@ -89,6 +92,8 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
         self.bride_month_zhi = bride_month_zhi
         self.groom_month_gan = groom_month_gan
         self.groom_month_zhi = groom_month_zhi
+        self.bride_day_zhi = bride_day_zhi
+        self.groom_day_zhi = groom_day_zhi
     
     def get_lucky_hours(self, sizhu):
         """
@@ -188,6 +193,15 @@ class MarriageShenShaCheckerExt(MarriageShenShaChecker):
                     if self._is_banhe_zhi(self.groom_zhi, zhi):
                         hour_score += 6
                         reasons.append('半合新郎')
+
+            # 冲夫妻宫（001 §236 B2，2026-11-08 用户拍板）：
+            # 时支冲新娘/新郎日支 → 只禁用该时辰，不否决整日（换时辰即可）。
+            if self.bride_day_zhi and self._is_chong_zhi(self.bride_day_zhi, zhi):
+                is_disabled = True
+                reasons.append(f'冲新娘夫妻宫（{zhi}{self.bride_day_zhi}冲，禁用）')
+            if self.groom_day_zhi and self._is_chong_zhi(self.groom_day_zhi, zhi):
+                is_disabled = True
+                reasons.append(f'冲新郎夫妻宫（{zhi}{self.groom_day_zhi}冲，禁用）')
 
             # 冲阴胎 / 冲阳气（典籍"日时勿冲犯阴胎阳气"）：
             # 时支冲新娘阴胎地支（子午冲等）或新郎阳气地支（丑未冲等）→ 该时辰禁用。

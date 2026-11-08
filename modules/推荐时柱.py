@@ -80,6 +80,33 @@ def _owner_yue_ganzhi(owner):
     return '', ''
 
 
+def _owner_ri_ganzhi(owner):
+    """取事主日干支：优先日干/日支字段，否则从 birth_date 反算。 # 001 §236 B2"""
+    if not isinstance(owner, dict):
+        return '', ''
+    rg = owner.get('日干', '') or owner.get('day_gan', '')
+    rz = owner.get('日支', '') or owner.get('day_zhi', '')
+    if rg and rz:
+        return rg, rz
+    siz = owner.get('sizhu')
+    if isinstance(siz, str):
+        _ps = siz.split()
+        if len(_ps) >= 3:
+            return _gz(_ps[2])
+    bd = owner.get('birth_date')
+    if bd:
+        try:
+            from modules.四柱计算器 import calculate_sizhu
+            bh = owner.get('birth_hour', 12) or 12
+            bm = owner.get('birth_minute', 0) or 0
+            osz = calculate_sizhu(bd, int(bh), int(bm),
+                                  longitude=owner.get('birth_longitude'))
+            return _gz(osz.get('日柱', ''))
+        except Exception:
+            return '', ''
+    return '', ''
+
+
 def _normalize_sizhu(sizhu):
     """完整 sizhu dict 或四柱字符串 -> {year_gan,...day_zhi} 六字字典。"""
     if isinstance(sizhu, dict):
@@ -130,6 +157,8 @@ def build_checker(event_type, owners_info=None, shan_xiang_str=''):
         # _yt0915：提取新娘月生干支（推阴胎）与新郎月生干支（推阳气），
         # 否则 get_lucky_hours 中冲阴胎/冲阳气检查被跳过，禁用时柱可能被推荐。
         bride_m_gan = bride_m_zhi = groom_m_gan = groom_m_zhi = None
+        # 001 §236 B2：时支冲事主日支（夫妻宫）→ 禁用该时辰
+        bride_d_zhi = groom_d_zhi = None
         if isinstance(owners_info, list):
             for owner in owners_info:
                 role = owner.get('role', '') if hasattr(owner.get('role'), 'lower') else owner.get('role')
@@ -140,17 +169,21 @@ def build_checker(event_type, owners_info=None, shan_xiang_str=''):
                 is_groom = (role in ['新郎', '乾造']) or (not role and gender == '男')
                 zg, zz = _owner_nian_ganzhi(owner)
                 mg, mz = _owner_yue_ganzhi(owner)
+                rg, rz = _owner_ri_ganzhi(owner)
                 if is_bride and not bride_gan:
                     bride_gan, bride_zhi = zg, zz
                     bride_m_gan, bride_m_zhi = mg, mz
+                    bride_d_zhi = rz or None
                 if is_groom and not groom_gan:
                     groom_gan, groom_zhi = zg, zz
                     groom_m_gan, groom_m_zhi = mg, mz
+                    groom_d_zhi = rz or None
         checker = MarriageShenShaCheckerExt(
             bride_gan=bride_gan, bride_zhi=bride_zhi,
             groom_gan=groom_gan, groom_zhi=groom_zhi,
             bride_month_gan=bride_m_gan, bride_month_zhi=bride_m_zhi,
-            groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi
+            groom_month_gan=groom_m_gan, groom_month_zhi=groom_m_zhi,
+            bride_day_zhi=bride_d_zhi, groom_day_zhi=groom_d_zhi
         )
         checker._std_event = std_event
         return checker, 'marriage'
