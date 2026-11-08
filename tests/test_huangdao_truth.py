@@ -1033,7 +1033,9 @@ GOLD_JQ_20260222_DETAILS = {
     # 除日由-5→+5，五行 43→53、总分 48→58；等级后缀「犯忌嫁娶」同步移除。
     '五行评分': 53, '月令得分': 5, '喜用神得分': 0,
     '黄道得分_IS_NONE': True,    # 嫁娶类该项应为 None（True：None→0；若漂移为数字立即FAIL）
-    '相主得分_IS_NONE': True,
+    '相主得分_IS_NONE': False,  # 001 §235（2026-11-08）：嫁娶通道已接入相主硬门槛，
+    #                              score_details 必须输出「相主得分」（本日无冲无刑=0）
+    #                              且保留不计入总分口径（见 test_02 的 else 分支）
     '太阳太阴得分': 0, '总分': 58,
 }
 # 001 §179（2026-10-25 拍板，阶段3·方案A）：嫁娶等级判定输入走分位归一化。
@@ -1157,6 +1159,16 @@ class TestJiaQu20260222(unittest.TestCase):
         if GOLD_JQ_20260222_DETAILS['相主得分_IS_NONE']:
             self.assertIsNone(sd.get('相主得分'),
                 "嫁娶类 score_details['相主得分'] 应为 None，实际=%r" % (sd.get('相主得分'),))
+        else:
+            # 001 §235：嫁娶通道接入相主硬门槛后，该项必须存在且为 0（本日丁卯，
+            # 与事主年命/日支无冲），同时不得混入总分（总分锁仍为 58）。
+            self.assertIn('相主得分', sd,
+                "001 §235：嫁娶通道 score_details 应输出『相主得分』")
+            self.assertEqual(int(sd.get('相主得分') or 0), 0,
+                "001 §235：2026-02-22 丁卯日 相主得分应为 0，实际=%r"
+                % (sd.get('相主得分'),))
+            self.assertTrue(bool(sd.get('相主核验说明')),
+                "001 §235：嫁娶通道应声明相主不计入总分")
         # wu_xing_result.has_deduction=False（F2 正例前置条件）
         wxr = r.get('wu_xing_result') or {}
         hd = wxr.get('has_deduction') if isinstance(wxr, dict) else getattr(wxr, 'has_deduction', None)

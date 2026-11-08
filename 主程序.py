@@ -6800,6 +6800,11 @@ class ZeriApp:
             xiangzhu_details = score_details.get('相主详情', [])
             if xiangzhu_score != 0 or xiangzhu_details:
                 content += f"  生肖相主得分：{xiangzhu_score:+d} 分\n"
+                # 001 §235：嫁娶通道相主为硬门槛（0/1），明细仅供核验，
+                # 显式声明不计入总分，避免用户把明细当成可加分的分项。
+                _xz_note = str(score_details.get('相主核验说明') or '')
+                if _xz_note:
+                    content += f"    （{_xz_note}）\n"
                 for detail_item in xiangzhu_details:
                     content += f"    • {detail_item}\n"
             

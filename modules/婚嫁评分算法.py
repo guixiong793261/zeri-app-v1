@@ -1105,6 +1105,18 @@ def score_marriage_day(date_obj, bride_bazi=None, groom_bazi=None, hour=12):
                 details.append(('日支冲新娘生肖', -45))
                 result['warnings'].append(f"日支{day_zhi}冲新娘生肖{bride_bazi['year_zhi']}")
                 _day_clash_veto.append(f'日支{day_zhi}冲新娘本命{bride_bazi["year_zhi"]}')
+
+        # 日支冲新郎生肖（年支）- 大凶
+        # 001 §235（2026-11-08 用户拍板）：原实现只判新娘、不判新郎，导致
+        # 「日支冲新郎年命」在嫁娶通道完全放行（2026-08-26 壬申冲新郎寅仍评上吉）。
+        # 男女平权：新郎侧补同一口径 -45 并入一票否决，与新娘侧完全对称。
+        if groom_bazi and groom_bazi.get('year_zhi'):
+            day_gan, day_zhi = get_day_ganzhi(date_obj)
+            if is_chong(day_zhi, groom_bazi['year_zhi']):
+                score -= 45  # 日支冲新郎生肖
+                details.append(('日支冲新郎生肖', -45))
+                result['warnings'].append(f"日支{day_zhi}冲新郎生肖{groom_bazi['year_zhi']}")
+                _day_clash_veto.append(f'日支{day_zhi}冲新郎本命{groom_bazi["year_zhi"]}')
         
         # 天罡日／河魁日：§212 拍板 1 删除——协纪卷四起例为「阳月/阴月 × 平/收日」，
         # 与软件「日支临月建／日支临月破」不等价（起例错），原 -10/-10 撤销

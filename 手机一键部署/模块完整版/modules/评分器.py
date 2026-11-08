@@ -1114,6 +1114,32 @@ class Scorer:
                         # 婚嫁硬性否决：日课日支冲事主日支（冲夫妻宫，婚嫁大忌）
                         cfz_veto_list = self._check_marriage_day_chong(sizhu, owners)
 
+                        # 001 §235（2026-11-08 用户拍板 方案C）：嫁娶通道接入统一相主硬门槛。
+                        # 修复前嫁娶路径只查「日支冲事主日支」与「日支冲新娘生肖」，
+                        # 日支冲【新郎生肖（年命）】在婚嫁通道完全未判（2026-08-26 壬申
+                        # 冲新郎寅被放行为上吉）。此处复用通用通道同一函数，
+                        # 把 [硬性门槛] 并入否决；相主明细一并入 score_details 供展示。
+                        # 嫁娶/订婚/纳采全体事主 1.0 权重（§62 不打标），故为全权硬否决。
+                        # 口径边界（拍板仅覆盖「相冲」，快照亦只统计冲日）：
+                        #   仅合并含「六冲」的硬门槛；「自刑」维持嫁娶现状不否决，
+                        #   改写为提示行待裁（BACKLOG G-4），避免未经快照扩大否决面。
+                        xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(
+                            sizhu, owners)
+                        _xz_display = []
+                        for _d in xiangzhu_details:
+                            _s = str(_d)
+                            if _s.startswith('[硬性门槛]') and '六冲' not in _s:
+                                _s = (_s.replace('[硬性门槛]', '[自刑提示]')
+                                      .replace('，不可用', '，嫁娶通道暂不否决（待裁）'))
+                            _xz_display.append(_s)
+                        xiangzhu_hard = [_d for _d in _xz_display
+                                         if _d.startswith('[硬性门槛]')]
+                        if xiangzhu_hard:
+                            cfz_veto_list = list(cfz_veto_list) + [
+                                _d.replace('[硬性门槛]', '').replace('，不可用', '')
+                                for _d in xiangzhu_hard]
+                        xiangzhu_details = _xz_display
+
                         if marriage_result.get('reject_reason') or cfz_veto_list:
                             # 汇总否决原因（用于横幅/归零文案/综合评语明确显示）
                             veto_reasons = []
@@ -1150,12 +1176,9 @@ class Scorer:
                             # 太阳太阴得分
                             sun_moon_info = calculate_sun_moon_position(sizhu, shan_xiang)
                             sun_moon_score = sun_moon_info.get('score', 0)
-                            # 相主得分
-                            try:
-                                xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(sizhu, owners)
-                            except Exception:
-                                xiangzhu_score, xiangzhu_details = 0, []
-                            
+                            # 相主得分：复用本分支上方统一计算的 xiangzhu_score/明细
+                            # （001 §235 起必须在否决判定之前算好，故此处不再重复调用）
+
                             score_details = {
                                 '五行评分': marriage_result.get('score', 0),
                                 '五行原始分': marriage_result.get('raw_score', marriage_result.get('score', 0)),
@@ -1372,6 +1395,13 @@ class Scorer:
                                 sun_moon_info.get('taiyang_taiyin_detail'),
                                 self.shensha_list),
                             '嫁娶明细(分项)': marriage_result.get('details', []),
+                            # 001 §235：相主明细入展示（含年命/日支冲刑破害逐条），
+                            # 本路径无 [硬性门槛] 命中（有命中已被上方否决分支拦截），
+                            # 故此处明细均为未达否决线的普通扣分/加分，仅作核验展示；
+                            # 相主为 0/1 硬门槛而非加分项，不计入总分（总分口径不变）。
+                            '相主得分': xiangzhu_score,
+                            '相主详情': xiangzhu_details,
+                            '相主核验说明': '相主为硬门槛项（冲即否决），明细仅供核验，不计入总分',
                             '总分': total_score
                         }
                         
