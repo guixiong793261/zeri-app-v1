@@ -11955,3 +11955,39 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 - 合成 5✓ 记录：`marks=✓✓✓✓✓`、`all_ok=True`、行标签 `perfect`（金底）。
 - 全量回归：TOTAL=137 PASS=137 FAIL=0 TIMEOUT=0，耗时 278.7s。
 - 手册 PDF 重建：用户操作手册 18 页 813,915 字节，新增章节位于第 12 页。
+
+---
+
+## 232. 精准择时新增「优吉 / 大吉」满分核验分档页签（2026-11-08）
+
+### 232.1 需求（用户拍板）
+在反推面板「① 热力日历 / ② Top-N 吉日 / ③ 最优时间轴」之后增加两个键
+（页签）「④ 优吉」「⑤ 大吉」，按满分核验 ✓ 数量分档：
+**大吉 = 4-5 ✓，优吉 = 2-3 ✓**（用户明确对调原话顺序，大吉为更高档）。
+
+### 232.2 实现（纯展示层，不改分值、不改排序）
+- `modules/反推引擎.py`
+  - `all_days` 每条补 `weekday / lunar / best_hour / check`（分档榜展示所需，
+    均为 `_day_record` 既有字段，不新增计算）。
+  - 新增 `record_of_day(d, event_type, owners, context)`：单日 `scan_day →
+    classify_day → _day_record`，供分档榜双击非 Top-N 日按需取详情，与榜单同源。
+- `modules/反推UI.py`
+  - 模块常量 `PERF_BANDS = (('优吉', 2, 3), ('大吉', 4, 5))`；
+    `_build_perf_tab()` 建两个页签（列：排名/日期/星期/农历/评分/等级/满分核验/
+    扣分主因/最优时辰/状态），金底 `perfect`、黄底 `cautious`、红字 `auspicious` 沿用。
+  - `_render_perf(res)`：从 `all_days` 按 `check.ok_count` 落入区间取数，
+    **排除否决日**，按评分降序；页签标题行显示「N 天（区间）/ 本范围内暂无」。
+  - `_bind_perfect_tip()` / `_on_perf_motion()`：悬停提示泛化，Top-N 与两个分档榜
+    共用同一 Tooltip 逻辑（数据源挂 `tree._tip_map`）。
+  - 双击分档榜行 → `_show_day_detail`；非 Top-N 日走 `_record_on_demand()`
+    单日同源重算后再开详情（不伪造、不复用 Top-N 空缺记录）。
+
+### 232.3 验证
+- 探针（嫁娶 2026-01-01 起 60 天，未填事主）：引擎分档 优吉 18 天 / 大吉 0 天；
+  UI 两页签行数 18 / 0 与引擎逐条相符；页签顺序
+  `① 热力日历 ② Top-N 吉日 ③ 最优时间轴 ④ 优吉 ⑤ 大吉`；
+  首三行 ✓ 数均落在 2-3；`record_of_day` 重建记录 12 时辰齐全；
+  悬停数据源与 `_day_map` 命中，双击详情前置条件成立。
+- 六副本同步后大考探针 S1-1/S1-3 复跑 PASS（CHECK=41 PASS=41 FAIL=0）。
+- 全量回归：TOTAL=137 PASS=137 FAIL=0 TIMEOUT=0，耗时 256.7s。
+

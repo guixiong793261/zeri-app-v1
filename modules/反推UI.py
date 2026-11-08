@@ -28,7 +28,8 @@ import tkinter as tk
 from datetime import date, datetime
 from tkinter import filedialog, messagebox, ttk
 
-from modules.反推引擎 import search_top_n, MAX_DAYS, DEFAULT_DAYS, DEFAULT_TOP_N
+from modules.反推引擎 import (search_top_n, record_of_day, MAX_DAYS,
+                             DEFAULT_DAYS, DEFAULT_TOP_N)
 from modules.排序键 import jishen_stars
 from modules.事项标准 import UI_EVENTS, MOUNTAIN_CENTERED_EVENTS
 
@@ -43,6 +44,9 @@ STAR_ON_CAUTION = '#6D4C00' # 黄格上的深棕星（保证对比度）
 
 CELL_W, CELL_H = 66, 50
 PAD = 10
+
+# 001 §232：满分核验分档榜（用户拍板：大吉=4-5✓，优吉=2-3✓）
+PERF_BANDS = (('优吉', 2, 3), ('大吉', 4, 5))
 
 
 class _GreenProgressbar:
@@ -389,6 +393,47 @@ class ReverseWindow:
         self.tl_tree.tag_configure('bad', foreground='#616161')
         self.tl_tree.tag_configure('disabled', foreground='#9E9E9E')
 
+        # ---- 层4/5：优吉 / 大吉（满分核验分档榜，001 §232）
+        self.perf_trees = {}
+        self.perf_vars = {}
+        for _band, _title in (('优吉', '④ 优吉'), ('大吉', '⑤ 大吉')):
+            self._build_perf_tab(_band, _title)
+
+    def _build_perf_tab(self, band, title):
+        """满分核验分档榜单页（只读展示，取引擎 all_days，不重算任何分值）。"""
+        _lo, _hi = next((_l, _h) for _b, _l, _h in PERF_BANDS if _b == band)
+        _tab = ttk.Frame(self.nb)
+        self.nb.add(_tab, text=title)
+        _var = tk.StringVar(value='尚未反推')
+        ttk.Label(_tab, textvariable=_var).pack(fill=tk.X, padx=4, pady=4)
+        _cols = ('排名', '日期', '星期', '农历', '评分', '等级',
+                 '满分核验', '扣分主因', '最优时辰', '状态')
+        _tv = ttk.Treeview(_tab, columns=_cols, show='headings',
+                           selectmode='browse', height=13)
+        for _c, _w in (('排名', 48), ('日期', 100), ('星期', 56), ('农历', 96),
+                       ('评分', 64), ('等级', 110), ('满分核验', 110),
+                       ('扣分主因', 380), ('最优时辰', 130), ('状态', 56)):
+            _tv.heading(_c, text=_c)
+            _tv.column(_c, width=_w, anchor=tk.CENTER)
+        _tv.column('扣分主因', anchor=tk.W)
+        ttk.Label(_tab,
+                  text='%s：满分核验命中 %d–%d 项 ✓（已排除否决日，按评分降序）'
+                       '　核验顺序：得令 · 合局 · 相主 · 德神 · 硬忌'
+                       '（悬停看缺失项，双击看日课详情）'
+                  % (band, _lo, _hi), foreground='#616161').pack(fill=tk.X, padx=6)
+        _sb = ttk.Scrollbar(_tab, orient=tk.VERTICAL, command=_tv.yview)
+        _tv.configure(yscrollcommand=_sb.set)
+        _sb.pack(side=tk.RIGHT, fill=tk.Y)
+        _tv.pack(fill=tk.BOTH, expand=True, padx=4, pady=(0, 4))
+        _tv.tag_configure('cautious', background='#FFF8E1', foreground='#6D4C00')
+        _tv.tag_configure('auspicious', foreground='#8E0000')
+        _tv.tag_configure('perfect', background='#FFF3CD', foreground='#7A4F00')
+        _tv.bind('<Double-Button-1>',
+                 lambda _e, _t=_tv: self._on_perf_double_click(_e, _t))
+        self._bind_perfect_tip(_tv, _cols)
+        self.perf_trees[band] = _tv
+        self.perf_vars[band] = _var
+
     # ---------------------------------------------------------------- 调度
     def _start(self):
         if self._thread is not None and self._thread.is_alive():
@@ -527,6 +572,7 @@ class ReverseWindow:
                    if _m.get('filtered_out') else ''))
             self._render_heatmap(res)
             self._render_top(res)
+            self._render_perf(res)
             messagebox.showwarning('无可用吉日', _zero_msg, parent=self.win)
             return
         self.status_var.set(
@@ -543,6 +589,7 @@ class ReverseWindow:
                 ('｜ 筛选：' + _flt) if _flt else ''))
         self._render_heatmap(res)
         self._render_top(res)
+        self._render_perf(res)
         self.save_btn.config(state=tk.NORMAL)
         self.print_btn.config(state=tk.NORMAL)
 
@@ -676,6 +723,8 @@ class ReverseWindow:
         self._top_dates = {_d['date'] for _d in res['days']}
         self._top_map = {_d['date']: _d for _d in res['days']}
         self._hide_tip()
+        # 001 §232：悬停提示数据源随榜单切换
+        self.top_tree._tip_map = self._top_map
         # 001 §210 Commit 4（用户 2026-11-01 拍板）：列表按"最优在前"排列——
         # 吉日层内总分降序（同分比吉神契合），慎用层整体排后。
         # 仅调整展示顺序，不改 rank_day / Top-N 选取口径（引擎与测试基线零漂移）。
@@ -703,16 +752,66 @@ class ReverseWindow:
                               (' ' + _d['sun_moon_tag']) if _d.get('sun_moon_tag') else ''), _d['kind']),
                 tags=(_tag,))
 
-    # ---------- 001 §231：满分核验列悬停提示 ----------
+    def _render_perf(self, res):
+        """优吉 / 大吉分档榜（001 §232）：按满分核验 ✓ 数分档，否决日不入榜。"""
+        _days = [_d for _d in (res.get('all_days') or [])
+                 if _d.get('kind') != '否决' and _d.get('check')]
+        for _band, _lo, _hi in PERF_BANDS:
+            _tv = self.perf_trees[_band]
+            for _i in _tv.get_children():
+                _tv.delete(_i)
+            _rows = [d for d in _days
+                     if _lo <= int((d.get('check') or {}).get('ok_count') or 0)
+                     <= _hi]
+            _rows.sort(key=lambda d: (-int(d.get('score') or 0), d['date']))
+            _mp = {}
+            for _idx, _d in enumerate(_rows, 1):
+                _chk = _d.get('check') or {}
+                if _chk.get('all_ok'):
+                    _tag = 'perfect'
+                elif _d.get('kind') == '慎用':
+                    _tag = 'cautious'
+                else:
+                    _tag = 'auspicious'
+                _bh = _d.get('best_hour') or {}
+                _tv.insert('', tk.END, iid=_d['date'], values=(
+                    _idx, _d['date'], _d.get('weekday', ''), _d.get('lunar', ''),
+                    _d['score'], _d['level'], str(_chk.get('marks') or '—'),
+                    _reason_text(_d),
+                    ('%s（%s）' % (_bh.get('时辰', ''), _bh.get('时段', ''))
+                     if _bh else '—'), _d['kind']), tags=(_tag,))
+                _mp[_d['date']] = _d
+            _tv._tip_map = _mp
+            self.perf_vars[_band].set(
+                '%s：%d 天（满分核验 %d–%d ✓，已排除否决日，按评分降序）%s'
+                % (_band, len(_rows), _lo, _hi,
+                   '' if _rows else '　本范围内暂无，可扩大范围或补全事主信息'))
+
+    def _on_perf_double_click(self, event, tree):
+        """双击分档榜行 → 日课详情（非 Top-N 日按需单日同源重算）。"""
+        _row = tree.identify_row(event.y)
+        if _row:
+            tree.selection_set(_row)
+            self._show_day_detail(_row)
+
+    # ---------- 001 §231/§232：满分核验列悬停提示 ----------
+    def _bind_perfect_tip(self, tree, cols):
+        """把「满分核验」列悬停提示绑到任意榜单树（Top-N / 优吉 / 大吉）。"""
+        _col = '#%d' % (list(cols).index('满分核验') + 1)
+        tree.bind('<Motion>', lambda _e: self._on_perf_motion(_e, tree, _col))
+        tree.bind('<Leave>', lambda _e: self._hide_tip())
+        tree.bind('<Button-1>', lambda _e: self._hide_tip(), add='+')
+
     def _on_top_motion(self, event):
         """悬停「满分核验」列：弹出五项逐条说明（缺失项即诊断报告）。"""
-        if getattr(self, '_tip_win', None) is not None and \
-                self.top_tree.identify_column(event.x) != self._perfect_col:
+        self._on_perf_motion(event, self.top_tree, self._perfect_col)
+
+    def _on_perf_motion(self, event, tree, col):
+        if tree.identify_column(event.x) != col:
             self._hide_tip()
-        if self.top_tree.identify_column(event.x) != self._perfect_col:
             return
-        _iid = self.top_tree.identify_row(event.y)
-        _d = (getattr(self, '_top_map', None) or {}).get(_iid)
+        _iid = tree.identify_row(event.y)
+        _d = (getattr(tree, '_tip_map', None) or {}).get(_iid)
         if not _d:
             self._hide_tip()
             return
@@ -828,6 +927,22 @@ class ReverseWindow:
                 return _d
         return None
 
+    def _record_on_demand(self, ds):
+        """非 Top-N 日按需取完整记录（001 §232：优吉/大吉分档榜双击详情）。
+
+        仅在扫描范围内才重算；口径与榜单同日链路完全同源（record_of_day）。
+        """
+        if ds not in (getattr(self, '_day_map', None) or {}):
+            return None
+        _meta = (self._res or {}).get('meta') or {}
+        try:
+            return record_of_day(date.fromisoformat(ds),
+                                 _meta.get('event_type') or self.event_var.get(),
+                                 self.owners, self.context)
+        except Exception as _e:
+            messagebox.showerror('日课详情失败', str(_e), parent=self.win)
+            return None
+
     def _on_top_double_click(self, event):
         """双击榜内行 → 日课详情窗口（001 §210 Commit 4）。"""
         _row = self.top_tree.identify_row(event.y)
@@ -874,6 +989,9 @@ class ReverseWindow:
     def _show_day_detail(self, ds):
         """自包含日课详情窗：反推记录无主程序 result['detail']，故不依赖 self.results。"""
         _d = self._find_top(ds)
+        if _d is None:
+            # 001 §232：优吉/大吉分档榜可能含非 Top-N 日 → 单日同源重算
+            _d = self._record_on_demand(ds)
         if _d is None:
             messagebox.showinfo(
                 '日课详情', '%s 不在 Top-N 榜内（热力日历仅显示归类与评分）' % ds,

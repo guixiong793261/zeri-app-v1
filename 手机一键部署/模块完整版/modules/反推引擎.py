@@ -296,6 +296,20 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
     }
 
 
+def record_of_day(d, event_type, owners=None, context=None):
+    """单日完整记录（001 §232）。
+
+    供反推面板的「优吉 / 大吉」分档榜对非 Top-N 日按需取详情：
+    与 search_top_n 内同日链路完全同源（scan_day → classify_day → _day_record），
+    不产生第二套口径，也不回写榜单。
+    """
+    _owners = owners if isinstance(owners, list) else []
+    _best_sz, _best_r, _hours = scan_day(d, event_type, _owners, context)
+    _kind = classify_day(_best_r, event_type)
+    return _day_record(d, _best_sz, _best_r, _hours, _kind,
+                       event_type=event_type, owners=_owners)
+
+
 def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
                  top_n=DEFAULT_TOP_N, context=None, progress=None, cancel=None,
                  only_kind=None, min_jishen_stars=0):
@@ -357,6 +371,9 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
         _all.append({'date': _rec['date'], 'kind': _kind,
                      'score': _rec['score'], 'level': _rec['level'],
                      'jishen_fit': _rec['jishen_fit'],
+                     # 001 §232：优吉/大吉分档榜展示所需（星期/农历/最优时辰/满分画像）
+                     'weekday': _rec['weekday'], 'lunar': _rec['lunar'],
+                     'best_hour': _rec['best_hour'], 'check': _rec['check'],
                      'deduct_sum': _rec['deduct_sum'],
                      # 热力格悬浮提示用（与 Top-N 原因列同一数据源）
                      'deduct_items': _rec['deduct_items'],
