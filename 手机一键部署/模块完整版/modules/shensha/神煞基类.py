@@ -1264,6 +1264,30 @@ def get_xiangshan_24(shan):
         return ''
 
 
+# ===== 日月吉力昼夜门控（001 §223，2026-11-08 用户拍板）=====
+# 太阳吉力限白天（卯辰巳午未申，05:00-17:00），太阴吉力限夜间
+# （酉戌亥子丑寅，17:00-05:00）。本分界是评分器（判定/展示）与修造神煞扩展
+# （计分门控）的唯一事实源，禁止各处分头硬写时辰表。
+DAY_HOUR_ZHI = ('卯', '辰', '巳', '午', '未', '申')
+NIGHT_HOUR_ZHI = ('酉', '戌', '亥', '子', '丑', '寅')
+
+
+def get_hour_zhi(sizhu):
+    """取时支：优先 '时支'，回退 '时柱' 第二字；缺失返回 ''。"""
+    if not isinstance(sizhu, dict):
+        return ''
+    zhi = str(sizhu.get('时支') or '')
+    if zhi:
+        return zhi
+    gz = str(sizhu.get('时柱') or '')
+    return gz[1:2] if len(gz) >= 2 else ''
+
+
+def is_daytime_hour(sizhu):
+    """是否白天用事（卯—申）。时支缺失返回 False，由调用方另行判空。"""
+    return get_hour_zhi(sizhu) in DAY_HOUR_ZHI
+
+
 # ===== 异名神煞归一去重表（2026-10 A6-3） =====
 # 同一神煞（同一谓词）常以「正名」与「正名+日」两种名字分别在月/日作用域或
 # 基类/子类各注册一次（如 往亡/往亡日、四废/四废日、鬼哭/鬼哭日、黄沙/黄沙日、

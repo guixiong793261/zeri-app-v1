@@ -6540,7 +6540,15 @@ class ZeriApp:
                     content += (f"    💰 实际加减分：{_sm_applied:+d} 分"
                                 f"（{_sm_items_txt}，已计入神煞得分，此分项不再重复累加）\n")
                 else:
-                    content += "    💰 实际加减分：0 分（未触发日月到山到向加分）\n"
+                    # 001 §223：时辰不匹配时日月不计分，须与「生效判定」文案自洽，
+                    # 不能笼统写成"未触发"，否则用户会误以为当日根本没到山到向。
+                    _sm_hit = bool(_sm_detail.get('sun_to_mountain')
+                                   or _sm_detail.get('sun_to_direction')
+                                   or _sm_detail.get('moon_to_mountain')
+                                   or _sm_detail.get('moon_to_direction'))
+                    content += ("    💰 实际加减分：0 分（时辰不匹配，"
+                                "日月吉力未计入）\n" if _sm_hit else
+                                "    💰 实际加减分：0 分（未触发日月到山到向加分）\n")
                 content += ("    📌 权威警示：日月到山到向可化解大部分中低阶凶煞，"
                             "但不制岁破、三煞、五黄等结构性大凶。\n")
             else:

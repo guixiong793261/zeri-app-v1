@@ -159,26 +159,40 @@ assert get_xiangshan_24('艮') == '坤' and get_xiangshan_24('壬') == '丙'
 assert get_xiangshan_24('X') == ''
 
 
-def _ext_register(d, z):
-    """修造扩展端到端：跑 _check_taiyang_taiyin，返回 {名称: 分值}。"""
+def _ext_register(d, z, hour='午'):
+    """修造扩展端到端：跑 _check_taiyang_taiyin，返回 {名称: 分值}。
+
+    001 §223 时辰门控（2026-11-08 用户拍板）后，日月加分只在时辰生效时登记：
+    hour 为白天支（卯—申）只登记太阳，夜间支（酉—寅）只登记太阴；
+    hour=None 表示时支缺失 → 日月均不计分（返回空）。
+    """
     c = _checkers[z]
     c.shensha_list = []
-    c._check_taiyang_taiyin({'date': d})
+    _sz = {'date': d}
+    if hour:
+        _sz['时支'] = hour
+    c._check_taiyang_taiyin(_sz)
     return {item.get('name'): item.get('score') for item in c.shensha_list
             if isinstance(item, dict) and ('太阳' in str(item.get('name', '')) or '太阴' in str(item.get('name', '')))}
 
 
 _checkers = {z: ConstructionShenShaCheckerExt(zuoshan=z) for z in COMPASS}
 
-# 端到端锚点：2026-02-24 雨水段，寅山申向 → 太阳到山 + 太阴到向；子山同日反向不登记
-assert _ext_register(_d('2026-02-24'), '寅') == {'太阳到山': SCORE_DAOSHAN, '太阴到向': MOON_SCORE_DAOXIANG}
-assert _ext_register(_d('2026-01-03'), '子') == {'太阳到山': SCORE_DAOSHAN, '太阴到向': MOON_SCORE_DAOXIANG}
-# 同段太阳在寅：坐申山寅向 → 太阳到向 + 太阴到山
-assert _ext_register(_d('2026-02-24'), '申') == {'太阳到向': SCORE_DAOXIANG, '太阴到山': MOON_SCORE_DAOSHAN}
+# 端到端锚点（午时·白天：只认太阳；001 §223 门控后太阴不计分）
+assert _ext_register(_d('2026-02-24'), '寅') == {'太阳到山': SCORE_DAOSHAN}
+assert _ext_register(_d('2026-01-03'), '子') == {'太阳到山': SCORE_DAOSHAN}
+# 同段太阳在寅：坐申山寅向 → 太阳到向（白天）
+assert _ext_register(_d('2026-02-24'), '申') == {'太阳到向': SCORE_DAOXIANG}
 # 邻山（艮/甲）同日既不到山也不到向
 assert _ext_register(_d('2026-02-24'), '艮') == {}
 assert _ext_register(_d('2026-02-24'), '甲') == {}
-_notes.append('端到端登记锁：02-24寅山{太阳到山25,太阴到向15}、申山{太阳到向20,太阴到山20}、邻山空')
+# 端到端锚点（子时·夜间：只认太阴）
+assert _ext_register(_d('2026-02-24'), '寅', '子') == {'太阴到向': MOON_SCORE_DAOXIANG}
+assert _ext_register(_d('2026-02-24'), '申', '子') == {'太阴到山': MOON_SCORE_DAOSHAN}
+# 时支缺失：无法判定昼夜 → 日月均不计分（不臆造白天）
+assert _ext_register(_d('2026-02-24'), '寅', None) == {}
+_notes.append('端到端登记锁：02-24 寅山(午时太阳到山25/子时太阴到向15)、'
+              '申山(午时太阳到向20/子时太阴到山20)、邻山空、时支缺失空')
 
 # 评分器：标志位正确、score 恒 0（计分已下线）；无山向/无日期不炸
 _info = calculate_sun_moon_position({'date': _d('2026-02-24')}, '寅山申向')
@@ -235,24 +249,40 @@ def _exp_scorer(inp):
     return (s, m) + auth_flags(d, z) + (0,)  # score 恒 0（计分下线锁）
 
 
-def _ad_ext(inp):
-    d, z = inp
-    return tuple(sorted(_ext_register(d, z).items()))
-
-
-def _exp_ext(inp):
-    d, z = inp
-    f_sun_m, f_sun_x, f_moon_m, f_moon_x = auth_flags(d, z)
+def _sm_items(f_sun_m, f_sun_x, f_moon_m, f_moon_x, night=False):
+    """按 001 §223 时辰门控生成期望登记项：白天只认太阳，夜间只认太阴。"""
     items = []
-    if f_sun_m:
-        items.append(('太阳到山', SCORE_DAOSHAN))
-    elif f_sun_x:
-        items.append(('太阳到向', SCORE_DAOXIANG))
-    if f_moon_m:
-        items.append(('太阴到山', MOON_SCORE_DAOSHAN))
-    elif f_moon_x:
-        items.append(('太阴到向', MOON_SCORE_DAOXIANG))
+    if not night:
+        if f_sun_m:
+            items.append(('太阳到山', SCORE_DAOSHAN))
+        elif f_sun_x:
+            items.append(('太阳到向', SCORE_DAOXIANG))
+    else:
+        if f_moon_m:
+            items.append(('太阴到山', MOON_SCORE_DAOSHAN))
+        elif f_moon_x:
+            items.append(('太阴到向', MOON_SCORE_DAOXIANG))
     return tuple(sorted(items))
+
+
+def _ad_ext_day(inp):
+    d, z = inp
+    return tuple(sorted(_ext_register(d, z, '午').items()))
+
+
+def _exp_ext_day(inp):
+    d, z = inp
+    return _sm_items(*auth_flags(d, z), night=False)
+
+
+def _ad_ext_night(inp):
+    d, z = inp
+    return tuple(sorted(_ext_register(d, z, '子').items()))
+
+
+def _exp_ext_night(inp):
+    d, z = inp
+    return _sm_items(*auth_flags(d, z), night=True)
 
 
 cases = [
@@ -262,9 +292,12 @@ cases = [
     ShenShaCase(name='太阳太阴到山到向(评分器层3收敛·365×24+跨年)', category='B',
                 description='calculate_sun_moon_position 标志位与单点一致且 score 恒 0',
                 inputs=INPUTS, expected=_exp_scorer, adapter=_ad_scorer),
-    ShenShaCase(name='太阳太阴到山到向(修造扩展神煞登记·365×24+跨年)', category='B',
-                description='_check_taiyang_taiyin 端到端：到山25/到向20 太阴到山20/到向15',
-                inputs=INPUTS, expected=_exp_ext, adapter=_ad_ext),
+    ShenShaCase(name='太阳太阴到山到向(修造扩展·午时白天只认太阳·365×24+跨年)', category='B',
+                description='_check_taiyang_taiyin 端到端：白天太阳到山25/到向20，太阴门控为0',
+                inputs=INPUTS, expected=_exp_ext_day, adapter=_ad_ext_day),
+    ShenShaCase(name='太阳太阴到山到向(修造扩展·子时夜间只认太阴·365×24+跨年)', category='B',
+                description='_check_taiyang_taiyin 端到端：夜间太阴到山20/到向15，太阳门控为0',
+                inputs=INPUTS, expected=_exp_ext_night, adapter=_ad_ext_night),
 ]
 
 

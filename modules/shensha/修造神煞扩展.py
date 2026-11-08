@@ -35,7 +35,8 @@ if __name__ == '__main__' and __package__ is None:
 try:
     from .修造神煞 import ConstructionShenShaChecker
     from .神煞基类 import (is_yanggongji_by_lunar, is_furi_by_date,
-                           get_sun_moon_mountains, get_xiangshan_24)
+                           get_sun_moon_mountains, get_xiangshan_24,
+                           DAY_HOUR_ZHI, get_hour_zhi)
     from .时辰系 import (
         WUSHU_DUN,
         get_gui_ren_shichen as _ss_gui_ren,
@@ -46,7 +47,8 @@ try:
     from ..二十四山 import ZhengTiWuXingSelectorDB
 except ImportError:
     from 修造神煞 import ConstructionShenShaChecker
-    from 神煞基类 import is_yanggongji_by_lunar, get_sun_moon_mountains, get_xiangshan_24
+    from 神煞基类 import (is_yanggongji_by_lunar, get_sun_moon_mountains,
+                          get_xiangshan_24, DAY_HOUR_ZHI, get_hour_zhi)
     from 时辰系 import (
         WUSHU_DUN,
         get_gui_ren_shichen as _ss_gui_ren,
@@ -775,17 +777,33 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
         taiyang_shan, taiyin_shan = get_sun_moon_mountains(dq)
         xiangshan = self._get_xiangshan(self.zuoshan)
 
+        # 001 §223（2026-11-08 用户拍板）：时辰门控落地——分值严格受时辰约束。
+        # 太阳吉力限白天（卯—申）、太阴吉力限夜间（酉—寅）；时辰不匹配或
+        # 时支缺失时，对应吉神**不计分**（不登记、不占位），与评分器
+        # taiyang_taiyin_detail 的 sun_effective / moon_effective 同源判定。
+        # 依据：展示层已明示"未生效、吉力不发挥"，后台仍加分将造成
+        # "说不生效却给 +25"的自相矛盾，择日结论失真。
+        _hour_zhi = get_hour_zhi(sizhu)
+        _has_hour = bool(_hour_zhi)
+        _is_daytime = _hour_zhi in DAY_HOUR_ZHI
+        _sun_ok = _has_hour and _is_daytime
+        _moon_ok = _has_hour and not _is_daytime
+
         # 太阳到山
         if taiyang_shan == self.zuoshan:
-            self._add_shensha('太阳到山', 25, '太阳到山，诸凶回避，大吉')
+            if _sun_ok:
+                self._add_shensha('太阳到山', 25, '太阳到山，诸凶回避，大吉')
         elif taiyang_shan == xiangshan:
-            self._add_shensha('太阳到向', 20, '太阳到向，主光明吉利')
+            if _sun_ok:
+                self._add_shensha('太阳到向', 20, '太阳到向，主光明吉利')
 
         # 太阴到山
         if taiyin_shan == self.zuoshan:
-            self._add_shensha('太阴到山', 20, '太阴到山，主阴德吉利')
+            if _moon_ok:
+                self._add_shensha('太阴到山', 20, '太阴到山，主阴德吉利')
         elif taiyin_shan == xiangshan:
-            self._add_shensha('太阴到向', 15, '太阴到向，主财禄')
+            if _moon_ok:
+                self._add_shensha('太阴到向', 15, '太阴到向，主财禄')
 
     def _get_xiangshan(self, shan):
         """获取向山（委托神煞基类单点 helper，罗盘序 +12）"""
