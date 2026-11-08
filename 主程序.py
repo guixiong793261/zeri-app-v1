@@ -118,7 +118,8 @@ from modules.评分器 import (ENABLE_LEVEL_NORMALIZATION,
 from modules.排序键 import (fenjin_preview_penalty as _fenjin_preview_penalty,
                             scoring_shensha as _scoring_shensha,
                             shashi_hour as _shashi_hour,
-                            hour_rank_key)
+                            hour_rank_key,
+                            perfect_profile)
 from modules.工具函数 import DI_ZHI_WUXING, TIAN_GAN_WUXING
 from modules.黄道 import 黄道计算器
 from modules.喜用神计算器 import calculate_xishen_yongshen
@@ -797,15 +798,27 @@ class ZeriApp:
         # 垂直排列按钮，适应屏幕
         ttk.Button(result_button_frame, text="全部导入到评分系统", 
                   command=self.import_all_to_score_system, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
-        ttk.Button(result_button_frame, text="清空结果", 
+        ttk.Button(result_button_frame, text="清空结果",
                   command=self.clear_results, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
-        
+
+        # 001 §234：满分核验筛选下拉（全部/极品5✓/大吉4-5✓/优吉2-3✓），选中即重渲染过滤
+        _check_bar = ttk.Frame(result_button_frame)
+        _check_bar.pack(side=tk.TOP, pady=2, fill=tk.X)
+        ttk.Label(_check_bar, text="核验筛选").pack(side=tk.LEFT)
+        self._check_filter_var = tk.StringVar(value='全部')
+        _check_cbo = ttk.Combobox(_check_bar, textvariable=self._check_filter_var,
+                                  values=('全部', '极品(5✓)', '大吉(4-5✓)', '优吉(2-3✓)'),
+                                  state='readonly', width=12)
+        _check_cbo.pack(side=tk.LEFT, padx=(4, 0))
+        _check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())
+
         # 结果列表包装器 - 使用网格布局
         tree_frame = ttk.Frame(result_frame)
         tree_frame.pack(fill=tk.BOTH, expand=True)
         
-        # 结果列表（2026-09-03：四柱并入"日期/四柱"列两行显示，删除独立四柱列）
-        columns = ("日期/四柱", "评分", "等级", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "核心吉神", "利月", "事主信息", "玄空")
+        # 结果列表（2026-09-03：四柱并入"日期/四柱"列两行显示，删除独立四柱列；
+        # 001 §234：新增"核验"列，显示满分核验 N/5 ✓，全✓行金底高亮）
+        columns = ("日期/四柱", "评分", "等级", "核验", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "核心吉神", "利月", "事主信息", "玄空")
         self.result_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
 
         # 设置列宽（2026-09-08 用户反馈：地支关系太宽挤占吉神列）：
@@ -814,6 +827,7 @@ class ZeriApp:
         self.result_tree.column("日期/四柱", width=140, anchor=tk.W, stretch=False)
         self.result_tree.column("评分", width=48, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("等级", width=104, anchor=tk.CENTER, stretch=False)
+        self.result_tree.column("核验", width=58, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("五行得分", width=62, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("月令得分", width=62, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("喜用神得分", width=76, anchor=tk.CENTER, stretch=False)
@@ -854,6 +868,7 @@ class ZeriApp:
         # 核心吉神列 Tooltip（2026-11-03 §217 拍板第 3 条）：
         # 列内截断只显示 4 个，悬停弹层展示命局贵人 + 全部 ≥10 分神煞完整列表
         self._jishen_full_map = {}
+        self._check_full_map = {}   # 001 §234：核验列悬停五项逐条明细
         self._jishen_tip_win = None
         self._jishen_tip_text = None
         self.result_tree.bind("<Leave>", self._hide_jishen_tooltip, add="+")
@@ -873,6 +888,8 @@ class ZeriApp:
         self.result_tree.tag_configure('1star', background='#F5F5F5')  # 淡灰色背景
         # §203 Commit2：否决日（❌ 凶）浅红背景+深红字体，强警示
         self.result_tree.tag_configure('veto', background='#FFE4E1', foreground='#B22222')
+        # 001 §234：满分核验全✓行金底高亮（替代星级底色，与反推页签金底口径一致）
+        self.result_tree.tag_configure('allok', background='#FFE680')
 
         # 列显示初始化：事主信息栏一律不显示，利月栏仅嫁娶类事项显示
         self._update_result_columns()
@@ -1027,8 +1044,8 @@ class ZeriApp:
                        troughcolor='#e0e0e0',
                        borderwidth=0)
     
-    def _tree_jishen_column(self):
-        """返回“核心吉神”列在当前 displaycolumns 下的标识（如 '#9'），不可见时返回 None。"""
+    def _tree_column_id(self, name):
+        """返回指定列名在当前 displaycolumns 下的标识（如 '#4'），不可见时返回 None。"""
         try:
             _disp = self.result_tree['displaycolumns']
         except Exception:
@@ -1040,7 +1057,7 @@ class ZeriApp:
         else:
             _cols = list(_disp)
         try:
-            return '#%d' % (_cols.index('核心吉神') + 1)
+            return '#%d' % (_cols.index(name) + 1)
         except ValueError:
             return None
 
@@ -1056,24 +1073,25 @@ class ZeriApp:
         self._jishen_tip_text = None
 
     def on_tree_motion(self, event):
-        """树形视图鼠标悬停：核心吉神列弹出完整吉神列表 Tooltip（001 §217）。
+        """树形视图鼠标悬停：核心吉神列弹出完整吉神列表 Tooltip（001 §217）；
+        001 §234：核验列悬停弹出五维逐条明细（与反推页签同一弹层）。
 
         列内只显示截断后的 4 个名称，悬停时展示命局贵人与全部 ≥10 分神煞
         （带分值）的完整合并列表；离开该格/移出表格/滚轮滚动即关闭。
         """
         try:
-            _col = self._tree_jishen_column()
-            if not _col:
-                self._hide_jishen_tooltip()
-                return
+            _col_j = self._tree_column_id('核心吉神')
+            _col_c = self._tree_column_id('核验')
             _row = self.result_tree.identify_row(event.y)
             _cur = self.result_tree.identify_column(event.x)
         except Exception:
             return
-        if not _row or _cur != _col:
+        if not _row or (_cur != _col_j and _cur != _col_c):
             self._hide_jishen_tooltip()
             return
-        _full = (getattr(self, '_jishen_full_map', None) or {}).get(_row, '')
+        _map = (getattr(self, '_check_full_map', None) if _cur == _col_c
+                else getattr(self, '_jishen_full_map', None))
+        _full = (_map or {}).get(_row, '')
         if not _full:
             self._hide_jishen_tooltip()
             return
@@ -3285,7 +3303,7 @@ class ZeriApp:
         if not hasattr(self, 'result_tree'):
             return
         try:
-            cols = ["日期/四柱", "评分", "等级", "五行得分", "月令得分",
+            cols = ["日期/四柱", "评分", "等级", "核验", "五行得分", "月令得分",
                     "喜用神得分", "黄道得分", "地支关系", "核心吉神"]
             if self.event_var.get() in MARRIAGE_EVENTS:
                 cols.append("利月")
@@ -4204,12 +4222,42 @@ class ZeriApp:
         # 清空树形视图并重新添加排序后的结果
         self._hide_jishen_tooltip()
         self._jishen_full_map = {}
+        self._check_full_map = {}  # 001 §234：核验列悬停五项逐条明细
         for item in self.result_tree.get_children():
             self.result_tree.delete(item)
+
+        # 001 §234：满分核验（纯展示，不改分值/排序）；事主收集走静默模式，避免渲染期重复弹窗
+        _owners_ck = self._collect_owners_data(silent=True)
+        _ev_ck = self.event_var.get() if hasattr(self, 'event_var') else ''
+        _flt_var = getattr(self, '_check_filter_var', None)
+        _flt = _flt_var.get() if _flt_var is not None else '全部'
 
         for result in self.results:
             level = result.get('level', '未知')
             row_tag = _star_row_tag(level)
+            # 001 §234：核验列五维（得令/合局/事项专属/德神/硬忌），与反推页签同口径
+            _ok_n = -1
+            _chk_text = '—'
+            _chk_tip = ''
+            _ck_detail = result.get('detail')
+            if isinstance(_ck_detail, dict) and _ck_detail.get('score_details'):
+                try:
+                    _chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck)
+                    _ok_n = int(_chk.get('ok_count', 0))
+                    _chk_text = '%d/5 ✓' % _ok_n
+                    _chk_tip = '\n'.join(
+                        ('✓ ' if _i.get('ok') else '✗ ') + str(_i.get('key', ''))
+                        + '：' + str(_i.get('detail', ''))
+                        for _i in (_chk.get('items') or []))
+                except Exception:
+                    _ok_n = -1
+            # 001 §234：核验筛选（全部 / 极品5✓ / 大吉4-5✓ / 优吉2-3✓）
+            if _flt == '极品(5✓)' and _ok_n != 5:
+                continue
+            if _flt == '大吉(4-5✓)' and _ok_n < 4:
+                continue
+            if _flt == '优吉(2-3✓)' and not (2 <= _ok_n <= 3):
+                continue
             # 得分列统一±号格式化；2026-09-03 四柱并入首列两行显示；
             # 不合格输出模式下"核心吉神"列显示不合格原因
             _display_jishen = result.get('unqualified_reasons') or result.get('jishen', '-')
@@ -4217,6 +4265,7 @@ class ZeriApp:
                 _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', '-')),
                 result.get('score', 0),
                 level,
+                _chk_text,
                 self._fmt_score(result.get('wuxing_score', 0), '0'),
                 self._fmt_score(result.get('yueling_score', 0), '0'),
                 self._fmt_score(result.get('xishen_score', 0), '0'),
@@ -4228,18 +4277,22 @@ class ZeriApp:
                 result.get('daliyue', '-'),
                 result.get('owners', '-'),
                 result.get('feixing', '-')
-            ), tags=(row_tag,))
+            ), tags=(('allok',) if _ok_n == 5 else (row_tag,)))
             # 核心吉神列完整文本（Tooltip 用；不合格模式下为空，不弹提示）
             self._jishen_full_map[_iid] = (
                 '' if _cur_mode == 'unqualified'
                 else result.get('jishen_full', '') or '')
+            # 001 §234：核验列五项逐条明细（Tooltip 用；无数据时为空不弹）
+            self._check_full_map[_iid] = _chk_tip
 
-    def _collect_owners_data(self):
+    def _collect_owners_data(self, silent=False):
         """收集事主信息为标准 owners_data（扫日/精准择时反推共用）。
 
         001 §210 Commit 2：自 start_calculation 原样迁出，逻辑逐字未改
         （空生日跳过、无效生日回退当月末日、经度透传、喜用神可选），
         避免反推面板另建第二份事主口径造成评分漂移。
+        001 §234：silent=True 时无效生日仅静默回退当月末日、不弹修正提示
+        （结果表渲染/筛选切换会反复调用，弹窗会刷屏）。
         """
         owners_data = []
         for owner in self.owners_info:
@@ -4271,7 +4324,8 @@ class ZeriApp:
                     import calendar
                     last_day = calendar.monthrange(year, month)[1]
                     birth_date = date(year, month, last_day)
-                    messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
+                    if not silent:
+                        messagebox.showwarning("日期修正", f"您输入的日期 {year}-{month}-{day} 无效，已自动修正为 {year}-{month}-{last_day}")
 
                 # 真太阳时 §48：事主经度透传（扫日回路不弹窗，入口已警告）
                 birth_longitude = _parse_owner_longitude(owner.get('longitude'), show_warning=False)
@@ -8468,6 +8522,7 @@ class ZeriApp:
                                 _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', result.get('四柱', '-'))),
                                 result.get('score', '-'),
                                 result.get('level', '-'),
+                                '—',  # 001 §234：导入路径无 detail，核验列占位
                                 self._fmt_score(result.get('wuxing_score', '-'), '-'),
                                 self._fmt_score(result.get('yueling_score', '-'), '-'),
                                 self._fmt_score(result.get('xishen_score', '-'), '-'),
@@ -8507,6 +8562,7 @@ class ZeriApp:
                                 _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', result.get('四柱', '-'))),
                                 result.get('score', '-'),
                                 result.get('level', '-'),
+                                '—',  # 001 §234：导入路径无 detail，核验列占位
                                 self._fmt_score(result.get('wuxing_score', '-'), '-'),
                                 self._fmt_score(result.get('yueling_score', '-'), '-'),
                                 self._fmt_score(result.get('xishen_score', '-'), '-'),
@@ -8557,6 +8613,7 @@ class ZeriApp:
                             _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', result.get('四柱', '-'))),
                             result.get('score', '-'),
                             result.get('level', '-'),
+                            '—',  # 001 §234：导入路径无 detail，核验列占位
                             self._fmt_score(result.get('wuxing_score', '-'), '-'),
                             self._fmt_score(result.get('yueling_score', '-'), '-'),
                             self._fmt_score(result.get('xishen_score', '-'), '-'),
