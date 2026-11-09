@@ -5833,37 +5833,36 @@ class Scorer:
                         details.append(f"{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟），{score}分")
                 
                 # 然后检查日课日支与事主日柱地支的关系。
-                # 2026-09-18 三档口径：硬否决仅定义在【事主年命】层；事主日元（日支）
-                # 与日课日支的冲/自刑降为普通扣分（日元为辅，有制化余地）。
-                # 嫁娶另由 _check_marriage_day_chong 独立判"冲夫妻宫"大忌并归零，
-                # 不受此处降级影响。
+                # 001 §238.18：用户拍板——所有日课地支六冲事主本命/日支 = HARD_VETO
+                # （与年命×日支硬门槛同口径；日元六冲为夫妻宫冲主，同属大忌）。
+                # 辅助者半权重不再豁免，一律否决。
                 if owner_day_zhi and owner_day_zhi != owner_year_zhi and not _is_wm:  # 亡命只论年命，不论日柱
-                    # 六冲（扣分不否决；-20）
+                    # 六冲 → HARD_VETO（001 §238.18 用户拍板）
                     if check_liuchong(day_zhi, owner_day_zhi):
-                        score = -20
+                        score = -100  # 否决级扣分
                         total_score += score
-                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}六冲，{score}分")
-                    # 自刑（辰午酉亥同支；扣分不否决，-15）
+                        details.append(f"[硬性门槛]{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}六冲（夫妻宫冲主，一票否决），{score}分")
+                    # 自刑（辰午酉亥同支 → 同属大忌，HARD_VETO）
                     elif day_zhi == owner_day_zhi and day_zhi in ('辰', '午', '酉', '亥'):
-                        score = -15
+                        score = -25
                         total_score += score
-                        details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}自刑，{score}分")
-                    # 三刑检查
+                        details.append(f"[硬性门槛]{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}自刑，不可用，{score}分")
+                    # 三刑检查（扣分，不否决）
                     elif check_xing(day_zhi, owner_day_zhi):
                         score = -15
                         total_score += score
                         details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相刑，{score}分")
-                    # 相破检查
+                    # 相破检查（扣分，不否决）
                     elif check_po(day_zhi, owner_day_zhi):
                         score = -15  # 相破为破坏之象
                         total_score += score
                         details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相破，{score}分")
-                    # 六害检查
+                    # 六害检查（扣分，不否决）
                     elif check_liuhai(day_zhi, owner_day_zhi):
                         score = -5
                         total_score += score
                         details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相害，{score}分")
-                    # 六合检查
+                    # 六合检查（加分）
                     elif check_liuhe(day_zhi, owner_day_zhi):
                         score = 8
                         total_score += score
@@ -5881,28 +5880,47 @@ class Scorer:
                             total_score += score
                             details.append(f"{owner_name}日支{owner_day_zhi}与日课日支{day_zhi}相同（伏吟），+{score}分")
 
-                # 三档口径·档2：年命×日课月支/时支六冲 = 扣分不否决。
-                # 月为提纲，对齐本函数末段"流年冲太岁"-15 档；时为末位，
-                # 对齐既有相害 -10 档。年支档（流年冲太岁）在本函数末段统一处理。
+                # 001 §238.18 用户拍板：年命×月/时支六冲 也升级为 HARD_VETO
+                # 旧口径：-15/-10 分扣分不否决 → 太松，与传统择日学"冲主命忌"矛盾
                 _xz_mz = sizhu.get('month_zhi', '')
                 _xz_hz = sizhu.get('hour_zhi', '')
                 if owner_year_zhi and _xz_mz and not _is_wm and check_liuchong(_xz_mz, owner_year_zhi):
-                    score = -15
+                    score = -100
                     total_score += score
-                    details.append(f"{owner_name}年命{owner_year_zhi}与日课月支{_xz_mz}六冲（月柱冲年命，扣分不否决），{score}分")
+                    details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课月支{_xz_mz}六冲（月柱冲年命，一票否决），{score}分")
                 if owner_year_zhi and _xz_hz and not _is_wm and check_liuchong(_xz_hz, owner_year_zhi):
-                    score = -10
+                    score = -100
                     total_score += score
-                    details.append(f"{owner_name}年命{owner_year_zhi}与日课时支{_xz_hz}六冲（时柱冲年命，扣分不否决），{score}分")
+                    details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课时支{_xz_hz}六冲（时柱冲年命，一票否决），{score}分")
             except Exception as e:
                 logger.error(f"相主检查失败({owner_name}日支{owner_day_zhi}与日课日支{day_zhi}): {str(e)}")
                 pass
 
-            # 辅助事主（半权重）：本主新增扣分减半；[硬性门槛]降为普通扣分项（不否决）
+            # 辅助事主（半权重）：001 §238.18 用户拍板——相主硬门槛不再降级！
+            # 日课地支六冲任何事主（主/辅）本命或日支 = HARD_VETO，一律否决。
+            # 旧逻辑（2026-09 拍板）：辅助事主相主扣分减半，[硬性门槛]前缀去降为普通扣分。
+            # 用户反馈：辅助者被冲也属于"冲主命忌"，不应豁免。故保留辅助事主的加分/
+            # 减分（非 veto）减半逻辑，但 veto 级一律不降权。
             if _zz_w < 1.0 and total_score != _zz_sc0:
-                total_score = _zz_sc0 + _zaozhu_weighted(total_score - _zz_sc0, _zz_w)
+                # 先把 veto 项（[硬性门槛]）的分数保留 100%（veto 靠前缀而非分数），
+                # 非 veto 项才减半。实现方式：临时去掉 veto 项让 _zaozhu_weighted 只作用于普通项。
+                _hard_part = 0
+                _normal_items = []
+                _hard_items = []
                 for _zz_i in range(_zz_det0, len(details)):
-                    details[_zz_i] = _zaozhu_aux_detail(details[_zz_i], _zz_w)
+                    _zz_d = details[_zz_i]
+                    if str(_zz_d).startswith('[硬性门槛]'):
+                        _hard_items.append(_zz_d)
+                    else:
+                        _normal_items.append(_zz_d)
+                # 普通扣分项减半（不碰 veto 项）
+                _delta = total_score - _zz_sc0
+                _was_hard = any(str(d).startswith('[硬性门槛]') for d in details[_zz_det0:])
+                if not _was_hard:
+                    total_score = _zz_sc0 + _zaozhu_weighted(_delta, _zz_w)
+                    for _zz_i, _zz_d in enumerate(_normal_items):
+                        _real_i = _zz_det0 + _zz_i
+                        details[_real_i] = _zaozhu_aux_detail(_zz_d, _zz_w)
 
         # 流年冲太岁检查：日课年柱地支（流年支）与命主年支六冲 → 扣分并提示（年运层面，不否决）
         year_zhi = ''

@@ -812,26 +812,28 @@ class ConstructionShenShaCheckerExt(ConstructionShenShaChecker):
     # ===== 扶山、相主、补龙 =====
     
     def _check_fushan_xiangzhu_bulong(self, sizhu):
-        """检查扶山、相主、补龙"""
+        """检查扶山、相主、补龙
+        
+        001 §238.18：相主通道已彻底交回评分器统一决策（HARD_VETO + 评分器相主详情），
+        修造神煞扩展.py 此处**不再**通过 _calc_xiangzhu 加减累计算荒唐分数
+        （如"冲主 -3分"），扶山/补龙保留（修造专属，评分器不涉及）。
+        """
         if not self.zuoshan:
             return
         
-        # 扶山：日课五行生扶坐山五行
+        # 扶山：日课五行生扶坐山五行（修造专属，保留）
         fushan_score = self._calc_fushan(sizhu)
         if fushan_score > 0:
             self._add_shensha('扶山', fushan_score, f'日课生扶{self.zuoshan}山，主吉利')
         elif fushan_score < 0:
             self._add_shensha('克山', fushan_score, f'日课克泄{self.zuoshan}山，主凶')
         
-        # 相主：日课与主命相生相合
-        if self.zhuming:
-            xiangzhu_score = self._calc_xiangzhu(sizhu)
-            if xiangzhu_score > 0:
-                self._add_shensha('相主', xiangzhu_score, '日课与主命相生，主吉')
-            elif xiangzhu_score < 0:
-                self._add_shensha('冲主', xiangzhu_score, '日课冲克主命，主凶')
+        # === 相主：已交给评分器统一处理，不再在此 shensha 通道登记 ===
+        #  历史坑：旧 _calc_xiangzhu 是"加减累计抵消"逻辑（日干生年干 +8 +
+        #  日支克年支 -8 + 其他 = -3 分的荒唐值），且与评分器相主详情通道
+        #  并行不互斥，导致双重扣分但又无 HARD_VETO。现已彻底废弃。
         
-        # 补龙：补坐山来龙之不足
+        # 补龙：补坐山来龙之不足（修造专属，保留）
         bulong_score = self._calc_bulong(sizhu)
         if bulong_score > 0:
             self._add_shensha('补龙', bulong_score, '日课补龙脉之不足，主兴旺')
