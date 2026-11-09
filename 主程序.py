@@ -8484,8 +8484,47 @@ class ZeriApp:
                 return
             
             try:
-                # 001 §244：保存时一并带上顶部「重要警示」块（detail['warnings']），
-                #   与窗口渲染顺序一致（警示置顶 → 正文）。
+                # 001 §244：保存时一并带上顶部「决策分析面板」+「重要警示」块，
+                #   与窗口渲染顺序一致（裁决置顶 → 警示 → 正文）。
+                # ① 决策分析面板（红绿灯裁决：综合裁决/依据/山家·事主影响/结论）
+                _dr_block = ''
+                _dr = None
+                try:
+                    from modules.决策分析 import build_decision_report
+                    _dr = build_decision_report(detail, event_type)
+                    _icon = {'ok': '✅', 'warn': '⚠️', 'veto': '🚫'}.get(
+                        _dr.get('verdict_key'), '⚠️')
+                    _dr_lines = ['%s 【综合裁决：%s】 总分 %s 分 · %s' % (
+                        _icon, _dr.get('verdict', ''), _dr.get('score', 0),
+                        _dr.get('level', '') or '—')]
+                    if _dr.get('verdict_reason'):
+                        _dr_lines.append('裁决依据：%s' % _dr['verdict_reason'])
+                    _shan = _dr.get('shan_items') or []
+                    _owner = _dr.get('owner_items') or []
+                    if _shan:
+                        _dr_lines.append('对坐山的影响：')
+                        for _g, _t in _shan:
+                            _m = '✓' if _g else ('ℹ' if _g is None else '✗')
+                            _dr_lines.append('  %s %s' % (_m, _t))
+                    else:
+                        _dr_lines.append('对坐山的影响：— 无显著影响')
+                    if _owner:
+                        _dr_lines.append('对事主的影响：')
+                        for _g, _t in _owner:
+                            _m = '✓' if _g else ('ℹ' if _g is None else '✗')
+                            _dr_lines.append('  %s %s' % (_m, _t))
+                    else:
+                        _dr_lines.append('对事主的影响：— 无显著影响')
+                    _ov = _dr.get('other_veto') or []
+                    if _ov:
+                        _dr_lines.append('其他否决：' + '；'.join(_ov))
+                    if _dr.get('advice'):
+                        _dr_lines.append('结论：%s' % _dr['advice'])
+                    _dr_block = ('\n'.join(_dr_lines)
+                                 + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
+                except Exception as _e:
+                    print('保存时决策面板生成失败：%s' % _e)
+                # ② 顶部重要警示（detail['warnings']）
                 _warns_save = list((detail.get('warnings')
                                     if isinstance(detail, dict) else None) or [])
                 _warn_block = ''
@@ -8496,7 +8535,7 @@ class ZeriApp:
                 # 保存为文本文件
                 if file_path.endswith('.txt'):
                     with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(_warn_block + content)
+                        f.write(_dr_block + _warn_block + content)
                     messagebox.showinfo("成功", f"日课详情已保存到：{file_path}")
                 
                 # 保存为JSON文件
@@ -8507,6 +8546,7 @@ class ZeriApp:
                         'sizhu': result.get('sizhu', ''),
                         'score': result.get('score', 0),
                         'level': result.get('level', '未知'),
+                        'decision_report': _dr,
                         'warnings': _warns_save,
                         'yi_list': detail['yi_list'],
                         'ji_list': detail['ji_list'],

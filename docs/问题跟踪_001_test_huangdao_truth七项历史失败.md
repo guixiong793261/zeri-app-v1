@@ -12851,11 +12851,11 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 
 **244.3 修复（`主程序.py` `on_result_double_click`）**
 - 按钮条 `button_frame` 提前到 main_frame 创建后、决策面板之前，`pack(side=tk.BOTTOM, fill=tk.X)` 占位；按钮本身在 content 生成后再创建（闭包延迟求值，不影响）。
-- `save_detail`：保存前从 `detail['warnings']` 拼出「【⚠ 重要警示】」块，txt 写入 `_warn_block + content`，json 新增 `warnings` 字段。
+- `save_detail`：保存内容按窗口渲染顺序拼接——① 决策分析面板（调 `build_decision_report` 生成综合裁决/裁决依据/对坐山影响/对事主影响/结论，格式化为文本块置顶）→ ② `detail['warnings']` 重要警示块 → ③ 正文 `content`。JSON 同步新增 `decision_report` 与 `warnings` 字段。
 
 **244.4 验证**
 - 布局探针：决策面板 15 行（345px）时，修复前 `button_frame` h=1，修复后 h=27 可见。
-- 保存探针：含 2 条 warnings 的 detail → 输出 txt 首段为「【⚠ 重要警示】」，json 含 `warnings` 数组。
+- 保存探针：detail 含扣分神煞 → 输出 txt 依次为「【综合裁决…】→ 对坐山/事主影响 → 结论 → 【⚠ 重要警示】→ 正文」，json 含 `decision_report` 与 `warnings`。
 - py_compile 通过；`verify_234` ALL PASS。
 
 
