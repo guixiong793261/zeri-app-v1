@@ -41,6 +41,7 @@ from modules.二十四山 import get_shan_xiang_list, shan_xiang_to_shan
 from modules.城市经度 import CITY_NAMES, get_longitude
 from modules.四柱计算器 import calculate_sizhu
 from modules.反推UI import open_reverse_window
+from modules.高精度农历转换 import get_lunar_converter
 
 VERSION = 'v1.0'
 # 宅型适用事项（与主程序 L1401 同口径）
@@ -77,6 +78,7 @@ class 精准择时版App:
         self.reverse_window = None
         self.owner_rows = []
         self._zeri_tie_pending = []       # 择日贴暂存（窗口未开时先存，开窗后灌入）
+        self.calendar_type_var = tk.StringVar(value='solar')  # 'solar'=公历, 'lunar'=农历（闰月填负数，如闰五月=-5）
 
         self._build_toolbar()
         self._build_param_area()
@@ -145,17 +147,32 @@ class 精准择时版App:
         head = ["角色", "姓名", "性别", "出生年", "月", "日", "时", "分", "出生城市/经度"]
         for c, t in enumerate(head):
             ttk.Label(self.owner_frame, text=t).grid(row=0, column=c, padx=3, sticky=tk.W)
+        # 001 §238.17 公历/农历切换（闰月填负数，如闰五月=-5）
+        cal_row = ttk.Frame(self.owner_frame)
+        cal_row.grid(row=1, column=0, columnspan=9, sticky=tk.W, padx=3, pady=(2, 2))
+        ttk.Label(cal_row, text="历法：").pack(side=tk.LEFT)
+        ttk.Radiobutton(cal_row, text="公历(阳历)", variable=self.calendar_type_var,
+                        value='solar', command=self._on_calendar_change).pack(side=tk.LEFT, padx=2)
+        ttk.Radiobutton(cal_row, text="农历(阴历)", variable=self.calendar_type_var,
+                        value='lunar', command=self._on_calendar_change).pack(side=tk.LEFT, padx=2)
+        ttk.Label(cal_row, text="（农历闰月填负数，如闰五月=-5）",
+                  foreground="gray").pack(side=tk.LEFT, padx=8)
         self._add_owner_row(1, "事主")
         self._add_owner_row(2, "家人")
+
+    def _on_calendar_change(self):
+        """公历/农历切换后，所有事主四柱回显立即刷新。"""
+        for i in range(len(self.owner_rows)):
+            self._update_owner_sizhu(i)
 
     def _add_owner_row(self, idx, default_role):
         """新增一位事主：输入行 + 四柱/生肖/喜用神回显行（001 §238.14 P1-b）。
 
-        idx 从 1 起：输入行占 grid 行 2*idx-1，回显行占 2*idx（表头占 0）。
-        回显与主程序 calculate_owner_sizhu 同源（calculate_sizhu 透传经度 +
-        calculate_xishen_yongshen），纯展示，不参与评分。
+        idx 从 1 起：输入行占 grid 行 2*idx（表头 0 + 日历切换 1 各占一行后），
+        回显行占 2*idx+1。回显与主程序 calculate_owner_sizhu 同源（calculate_sizhu
+        透传经度 + calculate_xishen_yongshen），纯展示，不参与评分。
         """
-        r = idx * 2 - 1
+        r = idx * 2          # 表头 row 0，日历切换 row 1，事主1输入 row 2，回显 row 3
         i = len(self.owner_rows)          # owner_rows 下标（0 起）
         role = ttk.Combobox(self.owner_frame, values=["事主", "新郎", "新娘", "家人"],
                             width=6)
@@ -237,6 +254,7 @@ class 精准择时版App:
 
         非法/缺失抛 ValueError（文案可直接展示）；经度口径同 _city_to_longitude，
         与 _collect_owners_data / 主程序 calculate_owner_sizhu 一致。
+        001 §238.17：支持农历输入（闰月填负数如闰五月=-5），底层走高精度农历转换。
         """
         row = self.owner_rows[i]
         y = row['year'].get().strip()
@@ -247,6 +265,14 @@ class 精准择时版App:
         year, month, day = int(y), int(m), int(d)
         hour = int(row['hour'].get().strip() or '12')
         minute = int(row['minute'].get().strip() or '0')
+        # 001 §238.17：农历转公历（闰月填负数，如闰五月=-5，与主程序 L2780-2791 同口径）
+        if self.calendar_type_var.get() == 'lunar':
+            try:
+                converter = get_lunar_converter()
+                solar_date = converter.lunar_to_solar(year, month, day, hour, minute, 0)
+                year, month, day = solar_date['year'], solar_date['month'], solar_date['day']
+            except Exception as e:
+                raise ValueError(f'农历转公历失败：{e}')
         return date(year, month, day), hour, minute, _city_to_longitude(row['city'].get())
 
     def _update_owner_sizhu(self, i):
@@ -382,6 +408,15 @@ class 精准择时版App:
                 hour = int(row['hour'].get().strip() or '12')
                 minute = int(row['minute'].get().strip() or '0')
                 gender = row['gender'].get()
+                # 001 §238.17：农历转公历（闰月填负数，如闰五月=-5）
+                if self.calendar_type_var.get() == 'lunar':
+                    try:
+                        converter = get_lunar_converter()
+                        solar_date = converter.lunar_to_solar(year, month, day, hour, minute, 0)
+                        year, month, day = solar_date['year'], solar_date['month'], solar_date['day']
+                    except Exception as e:
+                        print(f"事主 {row['name'].get().strip()} 农历转公历失败：{e}")
+                        continue
                 try:
                     birth_date = date(year, month, day)
                 except ValueError:
@@ -664,6 +699,7 @@ class 精准择时版App:
                 'house_type': self.house_type_var.get(),
                 'shan_xiang': self.shan_xiang_var.get(),
                 'jian_xiang': self.jian_xiang_var.get(),
+                'calendar_type': self.calendar_type_var.get(),  # 001 §238.17
                 'owners': [{
                     'role': r['role'].get(), 'name': r['name'].get(),
                     'gender': r['gender'].get(),
@@ -692,6 +728,8 @@ class 精准择时版App:
                 self.shan_xiang_var.set(data['shan_xiang'])
             if data.get('jian_xiang'):
                 self.jian_xiang_var.set(data['jian_xiang'])
+            if data.get('calendar_type') in ('solar', 'lunar'):   # 001 §238.17
+                self.calendar_type_var.set(data['calendar_type'])
             for row, saved in zip(self.owner_rows, data.get('owners', [])):
                 for key, widget in row.items():
                     val = saved.get(key)
