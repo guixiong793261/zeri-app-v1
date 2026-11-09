@@ -362,7 +362,7 @@ class 精准择时版App:
     def _build_action_area(self):
         frm = ttk.Frame(self.root, padding=8)
         frm.pack(fill=tk.X, padx=10, pady=4)
-        ttk.Button(frm, text="开始精准择时（反推 Top-N 榜单）",
+        ttk.Button(frm, text="开始精准择时（反推优选吉日榜）",
                    command=self.open_reverse_panel).pack(side=tk.LEFT, padx=4)
         ttk.Button(frm, text="保存当前参数", command=self._save_config).pack(side=tk.LEFT, padx=4)
 

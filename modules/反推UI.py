@@ -210,7 +210,7 @@ class ReverseWindow:
         self._legend_perf = {}
 
         self.win = tk.Toplevel(master)
-        self.win.title('精准择时 · 反推 Top-N（001 §210）')
+        self.win.title('精准择时 · 反推优选吉日榜（001 §210）')
         self.win.geometry('1240x820')
         self.win.minsize(1000, 640)
         self.win.protocol('WM_DELETE_WINDOW', self._on_close)
@@ -260,7 +260,7 @@ class ReverseWindow:
                     width=5).pack(side=tk.LEFT, padx=(2, 2))
         ttk.Label(bar, text='天').pack(side=tk.LEFT, padx=(0, 10))
 
-        ttk.Label(bar, text='Top N:').pack(side=tk.LEFT)
+        ttk.Label(bar, text='榜单条数:').pack(side=tk.LEFT)
         self.topn_var = tk.StringVar(value=str(DEFAULT_TOP_N))
         ttk.Spinbox(bar, from_=1, to=30, textvariable=self.topn_var,
                     width=5).pack(side=tk.LEFT, padx=(2, 10))
@@ -386,7 +386,7 @@ class ReverseWindow:
                            width=2)
             _sw.pack(side=tk.LEFT, padx=(6, 2))
             ttk.Label(legend, text=_txt).pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Label(legend, text='（蓝框=入榜 Top-N，★=吉神星级，悬停看归类与分值，点击可跳时间轴）'
+        ttk.Label(legend, text='（蓝框=入选优选榜，★=吉神星级，悬停看归类与分值，点击可跳时间轴）'
                   ).pack(side=tk.LEFT, padx=8)
 
         body = ttk.Frame(tab1)
@@ -401,7 +401,7 @@ class ReverseWindow:
 
         # ---- 层2：Top-N 列表
         tab2 = ttk.Frame(self.nb)
-        self.nb.add(tab2, text='② Top-N 吉日')
+        self.nb.add(tab2, text='② 优选吉日榜')
         self.summary_var = tk.StringVar(value='尚未反推')
         ttk.Label(tab2, textvariable=self.summary_var).pack(fill=tk.X, padx=4, pady=4)
         _cols = ('排名', '日期', '星期', '农历', '评分', '等级',
@@ -458,7 +458,7 @@ class ReverseWindow:
         # ---- 层3：时间轴
         tab3 = ttk.Frame(self.nb)
         self.nb.add(tab3, text='③ 最优时间轴')
-        self.tl_head = tk.StringVar(value='在“② Top-N 吉日”或热力日历中选择一天')
+        self.tl_head = tk.StringVar(value='在“② 优选吉日榜”或热力日历中选择一天')
         ttk.Label(tab3, textvariable=self.tl_head,
                   font=('Microsoft YaHei UI', 10, 'bold')).pack(fill=tk.X, padx=6, pady=6)
 
@@ -563,7 +563,7 @@ class ReverseWindow:
             _days = int(str(self.days_var.get()).split('天')[0].strip())
             _topn = int(str(self.topn_var.get()).strip())
         except ValueError:
-            messagebox.showerror('参数错误', '范围/Top N 须为整数', parent=self.win)
+            messagebox.showerror('参数错误', '范围/榜单条数须为整数', parent=self.win)
             return
         if not 1 <= _days <= MAX_DAYS:
             messagebox.showerror('范围超限', f'范围须在 1~{MAX_DAYS} 天之间',
@@ -1153,7 +1153,7 @@ class ReverseWindow:
             _d = self._record_on_demand(ds)
         if _d is None:
             messagebox.showinfo(
-                '日课详情', '%s 不在 Top-N 榜内（热力日历仅显示归类与评分）' % ds,
+                '日课详情', '%s 不在优选榜内（热力日历仅显示归类与评分）' % ds,
                 parent=self.win)
             return
         _meta = (self._res or {}).get('meta', {})
@@ -1558,7 +1558,7 @@ class ReverseWindow:
     def _show_timeline(self, ds):
         _entry = self._find_top(ds)
         if _entry is None:
-            self.tl_head.set('%s：不在 Top-N 榜内（热力日历中仅显示归类与评分）' % ds)
+            self.tl_head.set('%s：不在优选榜内（热力日历中仅显示归类与评分）' % ds)
             for _i in self.tl_tree.get_children():
                 self.tl_tree.delete(_i)
             return

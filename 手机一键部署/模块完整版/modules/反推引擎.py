@@ -405,11 +405,51 @@ def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
         elif _min_stars and jishen_stars(_rec['jishen_fit']) < _min_stars:
             _filtered += 1
         else:
-            _cands.append((_best_r, _rec))
+            _cands.append((_best_r, _rec, _best_sz))
         if progress is not None:
             progress(_i + 1, _days, _d)
 
     _cands.sort(key=lambda _p: rank_day(_p[0], event_type))
+
+    # 001 §241：Top-N 时辰精筛——为入榜日补全十二时辰表重跑日课校验，
+    # 与详情页【日课校验】口径绝对对齐（粗筛不带时辰表，E004/E102 等
+    # 时辰类规则按「缺十二时辰表数据」跳过；时辰表与详情页同源：
+    # resolve_recommended_hour → build_checker 按事项分发）。
+    # 时辰校验新增警告即撤销极品标记：check['hour_demoted']=True，
+    # lint_note 标注「本日原为极品，因时辰校验警告被降级」。
+    # 原样 mutating check dict（_all 热力图 / _top 榜单共享同一引用），
+    # 三处视图一次同步；仅改展示口径，排序与分值不受影响。
+    if _cands:
+        _shan0 = (context or {}).get('shan_xiang') if isinstance(context, dict) else None
+        try:
+            from modules.推荐时柱 import resolve_recommended_hour as _rrh
+        except Exception as _e:
+            _rrh = None
+            print(f'[反推] 推荐时柱模块不可用，Top-N 时辰精筛跳过：{_e}')
+        if _rrh is not None:
+            for _p in _cands[:_top_n]:
+                _r0, _rec0, _sz0 = _p
+                _chk0 = _rec0.get('check')
+                if not isinstance(_chk0, dict):
+                    continue
+                try:
+                    _rh = _rrh(_sz0, event_type, _owners, _shan0 or '')
+                    _lh = (_rh or {}).get('lucky_hours') or None
+                    if not _lh:
+                        continue
+                    _inp = dict(_r0)
+                    _inp['lucky_hours'] = _lh
+                    _chk2 = perfect_profile(_inp, _owners, event_type)
+                    if _chk0.get('perfect') and not _chk2.get('perfect'):
+                        _chk2['hour_demoted'] = True
+                        _chk2['lint_note'] = (
+                            '%s；本日原为极品，因时辰校验警告被降级'
+                            % str(_chk2.get('lint_note') or ''))
+                    _chk0.clear()
+                    _chk0.update(_chk2)
+                except Exception as _e:
+                    print(f'[反推] Top-N 时辰精筛失败（{_rec0.get("date")}）：{_e}')
+
     _top = [dict(_p[1]) for _p in _cands[:_top_n]]
 
     _end = _start + timedelta(days=max(0, len(_all) - 1))
