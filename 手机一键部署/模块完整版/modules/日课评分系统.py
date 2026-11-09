@@ -4019,6 +4019,17 @@ class DayScoreWindow:
             sansha_penalty = sansha_info.get('sansha_penalty', 0)
             if sansha_penalty != 0:
                 _ins(f"\n\n   三煞总扣分：{sansha_penalty}")
+                # 001 §238.13：三煞扣分通道同时承载自刑伏吟(-7/-15)、合局克山
+                # (-20/-40)、伐日(-40)、山家封禁(-15) 等不在上方 ⚠ 行内的扣分，
+                # 逐项列出「另计项」，否则用户会看到「明细 -19、总额 -26」对不上。
+                _sp_det = sansha_info.get('sansha_penalty_detail') or []
+                _sp_extra = [str(d) for d in _sp_det
+                             if not str(d).startswith(
+                                 ('年三煞(', '月三煞(', '日三煞('))]
+                if _sp_extra:
+                    _ins("\n   另计项（与上方三煞各项合计得出总额）：")
+                    for _it in _sp_extra:
+                        _ins(f"\n     · {_it}")
 
             blocked = sansha_info.get('mountain_blocked', False)
             blocked_reasons = sansha_info.get('mountain_block_reasons', [])

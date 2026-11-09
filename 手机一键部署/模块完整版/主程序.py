@@ -6709,6 +6709,18 @@ class ZeriApp:
             sansha_penalty = sansha_info.get('sansha_penalty', 0)
             if sansha_penalty != 0:
                 text.insert(tk.END, f"\n\n   三煞总扣分：{sansha_penalty}")
+                # 001 §238.13：三煞扣分通道同时承载自刑伏吟(-7/-15)、合局克山
+                # (-20/-40)、伐日(-40)、山家封禁(-15) 等不在上方 ⚠ 行内的扣分，
+                # 逐项列出「另计项」，否则用户会看到「明细 -19、总额 -26」对不上。
+                _sp_det = sansha_info.get('sansha_penalty_detail') or []
+                _sp_extra = [str(d) for d in _sp_det
+                             if not str(d).startswith(
+                                 ('年三煞(', '月三煞(', '日三煞('))]
+                if _sp_extra:
+                    text.insert(tk.END,
+                                "\n   另计项（与上方三煞各项合计得出总额）：")
+                    for _it in _sp_extra:
+                        text.insert(tk.END, f"\n     · {_it}")
             
             # 山家封禁 / 山家警告 / 山家吉神（专业级天机模块）
             blocked = sansha_info.get('mountain_blocked', False)
