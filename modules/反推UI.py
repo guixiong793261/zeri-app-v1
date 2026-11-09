@@ -442,7 +442,7 @@ class ReverseWindow:
         self.top_tree.tag_configure('cautious_score', background='#FFF8E1',
                                     foreground='#C62828')
         self.top_tree.tag_configure('auspicious', foreground='#8E0000')
-        # 001 §231：五项全✓的极品日课整行金底高亮
+        # 001 §240：五项全✓已不足以保证极品，需日课校验无警告（整行金底仍表示极品）
         self.top_tree.tag_configure('perfect', background='#FFF3CD',
                                     foreground='#7A4F00')
         self.top_tree.bind('<<TreeviewSelect>>', lambda _e: self._on_tree_select())
@@ -749,13 +749,17 @@ class ReverseWindow:
                 _bh.get('时辰', '—'), _bh.get('时段', '—'), _bh.get('时柱', '—'),
                 _bh.get('score', '—'), _bh.get('level', '')))
             _lines.append('    吉　　神：%s' % (str(_d.get('jishen') or '') or '—'))
-            # 001 §231：满分画像核验（五项全✓为极品日课）
+            # 001 §240：极品口径＝日课校验无警告（详情页【日课校验】通过）
             _chk = _d.get('check') or {}
             if _chk.get('items'):
                 _lines.append('    满分核验：%s（%d/%d）%s' % (
                     _chk.get('marks', '—'), _chk.get('ok_count', 0),
                     len(_chk.get('items') or []),
-                    '　★极品日课' if _chk.get('all_ok') else ''))
+                    '　★极品日课' if _chk.get('perfect') else ''))
+                _ln = str(_chk.get('lint_note') or '')
+                if _ln:
+                    _lines.append('    日课校验：%s%s' % (
+                        _ln, '' if _chk.get('perfect') else '（不列极品）'))
                 for _tip in (_chk.get('tips') or []):
                     _lines.append('              ✗ %s' % _tip)
             _lines.append('    扣分主因：%s' % _reason_text(_d, compact=True))
@@ -855,10 +859,10 @@ class ReverseWindow:
             _tag = 'cautious' if _d['kind'] == '慎用' else 'auspicious'
             _fit = int(_d.get('jishen_fit') or 0)
             _stars = jishen_stars(_fit)
-            # 001 §231：满分核验（得令/合局/相主/德神/硬忌），五项全✓整行金底。
+            # 001 §240：极品口径＝日课校验无警告（五项核验仅作展示与分档）
             _chk = _d.get('check') or {}
             _marks = str(_chk.get('marks') or '—')
-            if _chk.get('all_ok'):
+            if _chk.get('perfect'):
                 _tag = 'perfect'
             _reason = _reason_text(_d)
             if _mode == SORT_MODE_SCORE and _d['kind'] == '慎用':
@@ -918,7 +922,7 @@ class ReverseWindow:
             _mp = {}
             for _idx, _d in enumerate(_rows, 1):
                 _chk = _d.get('check') or {}
-                if _chk.get('all_ok'):
+                if _chk.get('perfect'):
                     _tag = 'perfect'
                 elif _d.get('kind') == '慎用':
                     _tag = 'cautious'
@@ -974,7 +978,10 @@ class ReverseWindow:
             return
         _head = '满分核验  %d/%d%s' % (
             _chk.get('ok_count', 0), len(_items),
-            '  ·  极品日课' if _chk.get('all_ok') else '')
+            '  ·  极品日课' if _chk.get('perfect') else '')
+        _ln = str(_chk.get('lint_note') or '')
+        if _ln:
+            _head += '\n日课校验：%s' % _ln
         _body = ['%s %s：%s' % ('✓' if _i.get('ok') else '✗',
                                 _i.get('key', ''), _i.get('detail', ''))
                  for _i in _items]

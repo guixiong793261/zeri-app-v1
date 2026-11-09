@@ -442,6 +442,25 @@ def perfect_profile(result, owners=None, event_type=''):
                   _item_yingji]
     _ok = sum(1 for _i in _items if _i.get('ok'))
     _any_na = any(_i.get('na') for _i in _items)
+    # 001 §240：极品口径改为「日课校验无警告」——即详情页【日课校验】结论为
+    # ✅ 通过（ERROR=0 且 WARN=0）。五项满分核验仅作展示与分档，不再决定极品。
+    _lint_ok = False
+    _lint_note = ''
+    try:
+        from modules.日课校验器 import lint_lesson
+        # detail 若已带十二时辰表则一并校验（E004 等时辰类规则），
+        # 未带则相关规则跳过、不计警告
+        _lh = _r.get('lucky_hours') if isinstance(_r, dict) else None
+        _lr = lint_lesson(_r, lucky_hours=_lh)
+        _lint_ok = (not _lr.has_error) and _lr.warn_count == 0
+        if _lint_ok:
+            _lint_note = '日课校验通过（%d 项规则，无警告）' % len(_lr.executed_ids)
+        elif _lr.has_error:
+            _lint_note = '日课校验未通过：%d 项错误' % _lr.error_count
+        else:
+            _lint_note = '日课校验有 %d 项警告' % _lr.warn_count
+    except Exception as _e:
+        _lint_note = '日课校验未执行：%s' % _e
     return {
         'items': _items,
         'marks': ''.join('✓' if _i.get('ok')
@@ -449,6 +468,9 @@ def perfect_profile(result, owners=None, event_type=''):
                          for _i in _items),
         'ok_count': _ok,
         'all_ok': (not _any_na) and _ok == len(_items),
+        'lint_ok': _lint_ok,
+        'lint_note': _lint_note,
+        'perfect': _lint_ok,
         'tips': ['%s：%s' % (_i['key'], _i['detail'])
                  for _i in _items if not _i.get('ok')],
     }

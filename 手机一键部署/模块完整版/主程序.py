@@ -807,7 +807,7 @@ class ZeriApp:
         ttk.Label(_check_bar, text="核验筛选").pack(side=tk.LEFT)
         self._check_filter_var = tk.StringVar(value='全部')
         _check_cbo = ttk.Combobox(_check_bar, textvariable=self._check_filter_var,
-                                  values=('全部', '极品(全✓)', '大吉(≥4✓)', '优吉(2-3✓)'),
+                                  values=('全部', '极品(无警告)', '大吉(≥4✓)', '优吉(2-3✓)'),
                                   state='readonly', width=12)
         _check_cbo.pack(side=tk.LEFT, padx=(4, 0))
         _check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())
@@ -4243,6 +4243,7 @@ class ZeriApp:
             # 001 §238：专属事项 6 项、通用 5 项，分母动态化
             _ok_n = -1
             _tot_n = 0
+            _lint_ok = False
             _chk_text = '—'
             _chk_tip = ''
             _ck_detail = result.get('detail')
@@ -4251,6 +4252,8 @@ class ZeriApp:
                     _chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck)
                     _ok_n = int(_chk.get('ok_count', 0))
                     _tot_n = len(_chk.get('items') or [])
+                    # 001 §240：极品口径＝日课校验无警告（详情页【日课校验】✅ 通过）
+                    _lint_ok = bool(_chk.get('perfect'))
                     _marks = str(_chk.get('marks') or '')
                     if _marks and '-' in _marks:
                         _chk_text = '%d/%d %s' % (_ok_n, _tot_n, _marks)
@@ -4262,6 +4265,10 @@ class ZeriApp:
                         + str(_i.get('key', ''))
                         + '：' + str(_i.get('detail', ''))
                         for _i in (_chk.get('items') or []))
+                    # 001 §240：极品判定依据＝日课校验结论，悬停展示原因
+                    _ln = str(_chk.get('lint_note') or '')
+                    if _ln:
+                        _chk_tip = ('日课校验：%s\n' % _ln) + _chk_tip
                     # 001 §237：高分伪装防呆警示并入核验列悬停
                     if result.get('heavy_sha_warning'):
                         _chk_tip = (
@@ -4284,9 +4291,9 @@ class ZeriApp:
                             '\n'.join('⚠ ' + str(_t) for _t in _xz_tips)
                 except Exception:
                     _ok_n = -1
-            # 001 §234：核验筛选；§238：分母动态化（专属事项 6 项、通用 5 项），
-            # 「极品」改全✓语义（_ok_n == _tot_n），大吉≥4✓/优吉2-3✓阈值不变
-            if _flt == '极品(全✓)' and (_ok_n < 0 or _tot_n == 0 or _ok_n != _tot_n):
+            # 001 §234：核验筛选；§240：「极品」口径改为日课校验无警告，
+            # 大吉≥4✓/优吉2-3✓阈值不变
+            if _flt == '极品(无警告)' and not _lint_ok:
                 continue
             if _flt == '大吉(≥4✓)' and _ok_n < 4:
                 continue
@@ -4312,7 +4319,7 @@ class ZeriApp:
                 result.get('owners', '-'),
                 result.get('feixing', '-')
             ), tags=(('heavy_warn',) if result.get('heavy_sha_warning')
-                     else (('allok',) if (_tot_n > 0 and _ok_n == _tot_n) else (row_tag,))))
+                     else (('allok',) if _lint_ok else (row_tag,))))
             # 核心吉神列完整文本（Tooltip 用；不合格模式下为空，不弹提示）
             self._jishen_full_map[_iid] = (
                 '' if _cur_mode == 'unqualified'
