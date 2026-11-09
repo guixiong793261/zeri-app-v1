@@ -89,6 +89,42 @@ def _penalty_index(penalty_detail):
     return _out
 
 
+# 001 §238.10：Top-N 排序模式（用户 2026-11-09 拍板：默认吉日优先，可切纯总分）
+SORT_MODE_TIER = '吉日优先（推荐）'
+SORT_MODE_SCORE = '纯总分排序'
+SORT_MODE_WARN = ('⚠️ 注意：纯按总分排序会导致带有“鲁班煞/土王用事/重丧”等'
+                  '重大扣分的高分日排在吉日之前，极易误导实战。是否确定切换？')
+
+
+def _top_sort_key(d, mode):
+    """Top-N 展示排序键（001 §238.10）：默认吉日层优先，可切纯总分。"""
+    if mode == SORT_MODE_SCORE:
+        return (-int(d.get('score') or 0), str(d.get('date') or ''))
+    return (0 if d.get('kind') == '吉日' else 1,
+            -int(d.get('score') or 0),
+            -int(d.get('jishen_fit') or 0),
+            str(d.get('date') or ''))
+
+
+def _deduct_brief(d, limit=3):
+    """慎用日降权说明：最重扣分项名称与合计（001 §238.10，纯展示）。"""
+    _items = []
+    for _x in (d.get('deduct_items') or []):
+        try:
+            _sc = int(_x.get('score') or 0)
+        except (TypeError, ValueError):
+            continue
+        if _sc < 0:
+            _items.append((str(_x.get('name') or ''), _sc))
+    if not _items:
+        return '', 0
+    _items.sort(key=lambda _t: _t[1])
+    _names = '、'.join(_n for _n, _ in _items[:limit])
+    if len(_items) > limit:
+        _names += '等'
+    return _names, sum(_s for _, _s in _items)
+
+
 class _GreenProgressbar:
     """Canvas 自绘绿色进度条（Windows ttk 默认主题不支持改 Progressbar 颜色）。
 
@@ -241,6 +277,15 @@ class ReverseWindow:
                      values=['不限', '1星+', '2星+', '3星+', '4星+', '5星'],
                      state='readonly', width=6).pack(side=tk.LEFT, padx=(2, 10))
 
+        # 001 §238.10：排序模式（默认吉日优先；切纯总分需二次确认）
+        ttk.Label(bar, text='排序:').pack(side=tk.LEFT)
+        self.sort_mode_var = tk.StringVar(value=SORT_MODE_TIER)
+        _sort_cb = ttk.Combobox(bar, textvariable=self.sort_mode_var,
+                                values=[SORT_MODE_TIER, SORT_MODE_SCORE],
+                                state='readonly', width=14)
+        _sort_cb.pack(side=tk.LEFT, padx=(2, 10))
+        _sort_cb.bind('<<ComboboxSelected>>', self._on_sort_mode_change)
+
         self.run_btn = ttk.Button(bar, text='开始反推', command=self._start)
         self.run_btn.pack(side=tk.LEFT, padx=(6, 4))
         self.stop_btn = ttk.Button(bar, text='停止', command=self._stop,
@@ -386,6 +431,9 @@ class ReverseWindow:
         self.top_tree.pack(fill=tk.BOTH, expand=True, padx=4)
         self.top_tree.tag_configure('cautious', background='#FFF8E1',
                                     foreground='#6D4C00')
+        # 001 §238.10：纯总分模式下慎用高分日——黄底红字，防误用
+        self.top_tree.tag_configure('cautious_score', background='#FFF8E1',
+                                    foreground='#C62828')
         self.top_tree.tag_configure('auspicious', foreground='#8E0000')
         # 001 §231：五项全✓的极品日课整行金底高亮
         self.top_tree.tag_configure('perfect', background='#FFF3CD',
@@ -629,6 +677,7 @@ class ReverseWindow:
                 % (_m['event_type'], _m['start'], _m['end'], _m['vetoed'],
                    ('，筛除 %d 天' % _m.get('filtered_out', 0))
                    if _m.get('filtered_out') else ''))
+            self._summary_base = ''
             self._render_heatmap(res)
             self._render_top(res)
             self._render_perf(res)
@@ -639,13 +688,13 @@ class ReverseWindow:
                 _m['scanned'], _m['days'], _m['candidates'],
                 _m.get('filtered_out', 0), _m['vetoed'],
                 _m['elapsed'], '（已停止，为部分结果）' if _m['cancelled'] else ''))
-        self.summary_var.set(
-            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）%s｜ '
-            '排序=吉日优先→否决数→吉神契合→总分｜ 双击看详情，右键可加入择日贴' % (
+        self._summary_base = (
+            '事项 %s ｜ %s ~ %s ｜ 入榜 %d 条（吉日 %d / 慎用 %d）%s' % (
                 _m['event_type'], _m['start'], _m['end'], len(res['days']),
                 sum(1 for _d in res['days'] if _d['kind'] == '吉日'),
                 sum(1 for _d in res['days'] if _d['kind'] == '慎用'),
                 ('｜ 筛选：' + _flt) if _flt else ''))
+        self._update_summary_sort()
         self._render_heatmap(res)
         self._render_top(res)
         self._render_perf(res)
@@ -657,7 +706,10 @@ class ReverseWindow:
         """拼 Top-N 榜单文本（保存/打印共用，只读已算结果，不重算分值）。"""
         _res = self._res or {}
         _m = _res.get('meta') or {}
-        _days = _res.get('days') or []
+        _mode = getattr(self, 'sort_mode_var', None)
+        _mode = _mode.get() if _mode is not None else SORT_MODE_TIER
+        _days = sorted(_res.get('days') or [],
+                       key=lambda _d: _top_sort_key(_d, _mode))
         _ev = _m.get('event_type', '')
         _flt = self._filter_text(_m) or '不限'
         _n_ji = sum(1 for _d in _days if _d['kind'] == '吉日')
@@ -671,7 +723,9 @@ class ReverseWindow:
             '入榜：%d 条（吉日 %d / 慎用 %d）｜ 候选 %d ｜ 筛除 %s ｜ 否决 %d' % (
                 len(_days), _n_ji, _n_shen, _m.get('candidates', 0),
                 _m.get('filtered_out', 0), _m.get('vetoed', 0)),
-            '排序口径：吉日优先 → 否决数 → 吉神契合 → 总分',
+            '排序口径：%s' % ('纯总分（已关闭安全分层）'
+                           if _mode == SORT_MODE_SCORE
+                           else '吉日优先 → 否决数 → 吉神契合 → 总分'),
             '生成时间：%s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             '',
         ]
@@ -787,11 +841,9 @@ class ReverseWindow:
         # 001 §210 Commit 4（用户 2026-11-01 拍板）：列表按"最优在前"排列——
         # 吉日层内总分降序（同分比吉神契合），慎用层整体排后。
         # 仅调整展示顺序，不改 rank_day / Top-N 选取口径（引擎与测试基线零漂移）。
-        _rows = sorted(res['days'], key=lambda _d: (
-            0 if _d['kind'] == '吉日' else 1,
-            -int(_d.get('score') or 0),
-            -int(_d.get('jishen_fit') or 0),
-            _d['date']))
+        # 001 §238.10：新增「纯总分排序」切换，默认仍为吉日优先（安全分层）。
+        _mode = self.sort_mode_var.get()
+        _rows = sorted(res['days'], key=lambda _d: _top_sort_key(_d, _mode))
         for _idx, _d in enumerate(_rows, 1):
             _tag = 'cautious' if _d['kind'] == '慎用' else 'auspicious'
             _fit = int(_d.get('jishen_fit') or 0)
@@ -801,15 +853,47 @@ class ReverseWindow:
             _marks = str(_chk.get('marks') or '—')
             if _chk.get('all_ok'):
                 _tag = 'perfect'
+            _reason = _reason_text(_d)
+            if _mode == SORT_MODE_SCORE and _d['kind'] == '慎用':
+                # 001 §238.10：纯总分模式下慎用高分日红字标出扣分合计
+                _tag = 'cautious_score'
+                _dn, _ds = _deduct_brief(_d)
+                if _ds:
+                    _reason = '⚠ 合计 %d 分（%s）｜ %s' % (_ds, _dn, _reason)
             self.top_tree.insert('', tk.END, iid=_d['date'], values=(
                 _idx, _d['date'], _d['weekday'], _d['lunar'], _d['score'],
                 _d['level'], ('%s %d' % ('★' * _stars, _fit)) if _stars else '—',
                 _marks,
-                _reason_text(_d),
+                _reason,
                 '%s（%s）%s' % (_d['best_hour']['时辰'],
                               _d['best_hour']['时段'],
                               (' ' + _d['sun_moon_tag']) if _d.get('sun_moon_tag') else ''), _d['kind']),
                 tags=(_tag,))
+
+    def _on_sort_mode_change(self, _ev=None):
+        """排序模式切换（001 §238.10）：切纯总分需二次确认，取消则回退。"""
+        if self.sort_mode_var.get() == SORT_MODE_SCORE:
+            _ok = messagebox.askyesno('排序风险确认', SORT_MODE_WARN,
+                                      parent=self.win, icon='warning')
+            if not _ok:
+                self.sort_mode_var.set(SORT_MODE_TIER)
+                return
+        self._update_summary_sort()
+        if self._res:
+            self._render_top(self._res)
+
+    def _sort_mode_label(self):
+        if self.sort_mode_var.get() == SORT_MODE_SCORE:
+            return '纯总分（已关闭安全分层，慎用日红字标注扣分）'
+        return '吉日优先→否决数→吉神契合→总分'
+
+    def _update_summary_sort(self):
+        """只刷新汇总行里的排序口径文案（不重算任何分值）。"""
+        _base = getattr(self, '_summary_base', '')
+        if not _base:
+            return
+        self.summary_var.set('%s｜ 排序=%s｜ 双击看详情，右键可加入择日贴'
+                             % (_base, self._sort_mode_label()))
 
     def _render_perf(self, res):
         """优吉 / 大吉分档榜（001 §232）：按满分核验 ✓ 数分档，否决日不入榜。"""
@@ -1103,6 +1187,20 @@ class ReverseWindow:
             ttk.Label(_head, text=str(_v), wraplength=_wrap,
                       justify=tk.LEFT).grid(row=_i, column=1, sticky='w',
                                             padx=(6, 0), pady=1)
+        # 001 §238.10：慎用日降权说明（高分但有重煞扣分，被吉日层压后）
+        if _d.get('kind') == '慎用':
+            _dn, _ds = _deduct_brief(_d)
+            if _ds:
+                tk.Label(_head,
+                         text='💡 降权说明：本日总分 %s 分，但存在“%s”等重煞扣分'
+                              '（合计 %d 分），为防止误用，系统已将其置于吉日层之后。'
+                              % (_d['score'], _dn, _ds),
+                         bg='#FFF3CD', fg='#8E0000',
+                         font=('Microsoft YaHei UI', 10, 'bold'),
+                         wraplength=_wrap + 60, justify=tk.LEFT, anchor='w',
+                         padx=8, pady=4).grid(
+                    row=_head.grid_size()[1], column=0, columnspan=2,
+                    sticky='we', padx=(0, 4), pady=(6, 2))
         # 001 §238：五行偏枯预警（与主程序同文案/同式样：黄底红字加粗）
         if _d.get('pian_ku'):
             tk.Label(_head,
@@ -1194,6 +1292,13 @@ class ReverseWindow:
         lines.append('吉　　神：%s' % (str(d.get('jishen') or '') or '—'))
         lines.append('扣分主因：%s' % _reason_text(d, compact=False))
         lines.append('评分理由：%s' % (str(d.get('reason') or '') or '—'))
+        # 001 §238.10：慎用日降权说明（分数不低但重煞扣分，被吉日层压后）
+        if d.get('kind') == '慎用':
+            _dn, _ds = _deduct_brief(d)
+            if _ds:
+                lines.append('💡 降权说明：本日总分 %s 分，但存在“%s”等重煞扣分'
+                             '（合计 %d 分），为防止误用，系统已将其置于吉日层之后。'
+                             % (d['score'], _dn, _ds))
         # 001 §238：五行偏枯预警（纯提示，不改分）
         if d.get('pian_ku'):
             lines.append('⚠ 本课五行极度偏枯（%s），请结合山家与事主命理三思，'
