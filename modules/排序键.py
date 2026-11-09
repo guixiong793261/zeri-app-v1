@@ -271,6 +271,40 @@ _SPECIAL_KEYS = {
 }
 
 
+# ---- 001 §245（2026-11-09 用户拍板）：极品 / 上品 分档 --------------------
+# 极品：日课校验 ERROR=0/WARN=0 **且** 详情页顶部决策面板为绿灯（✅ 吉课可用）。
+# 上品：仅限动土事（修造/动土/装修/拆舍）——无否决、无「绝不豁免」重煞时，
+#       允许鲁班煞、土王用事、向方三煞、五行偏枯等可制化小煞带黄牌入榜。
+_DONGTU_EVENTS = frozenset({'修造', '动土', '装修', '拆舍'})
+# 绝不豁免（命中即不得列上品）：伐日、克山、坐山三煞（三煞临山）、金神到山
+_SHANGPIN_BLOCK_NAMES = ('伐日', '克山', '三煞临山', '金神到山')
+# 可制化小煞（仅用于上品说明文案）
+_SHANGPIN_ALLOW_NAMES = ('鲁班煞', '土王用事')
+
+
+def _shangpin_scan(result):
+    """动土事上品白名单扫描：返回 (阻断项, 可制化小煞说明项)。"""
+    _r = result if isinstance(result, dict) else {}
+    _blk, _allow = [], []
+    _si = _r.get('sansha_info') or {}
+    for _h in (_si.get('heavy_sha_names') or []):
+        _s = str(_h)
+        if any(_k in _s for _k in _SHANGPIN_BLOCK_NAMES):
+            _blk.append(_s)
+        else:
+            _allow.append(_s)
+    for _s in (_r.get('shensha_list') or []):
+        if not isinstance(_s, dict):
+            continue
+        _n = str(_s.get('name') or _s.get('名称') or '')
+        if any(_k in _n for _k in _SHANGPIN_ALLOW_NAMES):
+            _allow.append(_n)
+    _pk = str(_r.get('wuxing_pian_ku') or '')
+    if _pk:
+        _allow.append('五行%s' % _pk)
+    return _blk, list(dict.fromkeys(_allow))
+
+
 def profile_plan_keys(event_type=''):
     """该事项的满分核验维名称序列（UI 图例 / 手册共用）。
 
@@ -323,7 +357,9 @@ def perfect_profile(result, owners=None, event_type='',
 
     Returns:
         {'items': [{'key','ok','detail'}]×N(5或6), 'marks': '✓✓✗✓✓',
-         'ok_count': int, 'all_ok': bool, 'tips': [缺失项说明]}
+         'ok_count': int, 'all_ok': bool, 'tips': [缺失项说明],
+         'perfect': bool（日课校验无警告 + 顶部决策绿灯；001 §245）,
+         'shangpin': bool（仅动土事的上品白名单；001 §245）}
     """
     _r = result if isinstance(result, dict) else {}
     _d = _r.get('score_details') or {}
@@ -476,6 +512,43 @@ def perfect_profile(result, owners=None, event_type='',
             _lint_note = '日课校验有 %d 项警告' % _lr.warn_count
     except Exception as _e:
         _lint_note = '日课校验未执行：%s' % _e
+
+    # 001 §245（2026-11-09 用户拍板）：极品再收口——除「日课校验无警告」外，
+    # 还须详情页顶部决策面板为绿灯。此处与详情窗调用同一 build_decision_report、
+    # 同一 score_details 输入，避免「榜单一套、详情一套」的货不对板。
+    # 动土事（修造/动土/装修/拆舍）另设「上品」白名单：无否决且无伐日/克山/
+    # 三煞临山/金神到山时，允许鲁班煞、土王用事、向方三煞、偏枯带黄牌入榜。
+    _dec_key, _dec_reason = '', ''
+    try:
+        from modules.决策分析 import build_decision_report
+        _dec = build_decision_report(_r if isinstance(_r, dict) else {},
+                                     event_type)
+        _dec_key = str(_dec.get('verdict_key') or '')
+        _dec_reason = str(_dec.get('verdict_reason') or '')
+    except Exception as _e:
+        _dec_reason = '决策面板未执行：%s' % _e
+    _dec_ok = (_dec_key == 'ok')
+    _blk, _allow = _shangpin_scan(_r)
+    _veto = [str(_v) for _v in ((_r or {}).get('veto_reasons') or [])]
+    _tier = 'none'
+    if _lint_ok and _dec_ok:
+        _tier = 'perfect'
+    elif (_lint_ok and str(event_type or '') in _DONGTU_EVENTS
+          and not _veto and not _blk):
+        _tier = 'shangpin'
+    if _lint_ok:
+        if _tier == 'perfect':
+            _lint_note = ('日课校验通过（%d 项规则，无警告），顶部决策绿灯'
+                          '（✅ 吉课可用）' % len(_lr.executed_ids))
+        elif _tier == 'shangpin':
+            _lint_note = ('上品（动土可制化）：本日含动土常态小煞（%s），'
+                          '不属于无瑕极品，但可经现场祭拜制化后安全使用'
+                          % ('、'.join(_allow) or '慎用黄牌'))
+        else:
+            _lint_note = ('日课校验通过（%d 项规则，无警告），但顶部决策为「%s」：%s'
+                          % (len(_lr.executed_ids),
+                             '慎用·需制化' if _dec_key == 'warn' else '不可用',
+                             _dec_reason or '—'))
     return {
         'items': _items,
         'marks': ''.join('✓' if _i.get('ok')
@@ -485,7 +558,10 @@ def perfect_profile(result, owners=None, event_type='',
         'all_ok': (not _any_na) and _ok == len(_items),
         'lint_ok': _lint_ok,
         'lint_note': _lint_note,
-        'perfect': _lint_ok,
+        'perfect': _tier == 'perfect',
+        'shangpin': _tier == 'shangpin',
+        'tier': _tier,
+        'decision_key': _dec_key,
         'tips': ['%s：%s' % (_i['key'], _i['detail'])
                  for _i in _items if not _i.get('ok')],
     }

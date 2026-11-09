@@ -445,6 +445,9 @@ class ReverseWindow:
         # 001 §240：五项全✓已不足以保证极品，需日课校验无警告（整行金底仍表示极品）
         self.top_tree.tag_configure('perfect', background='#FFF3CD',
                                     foreground='#7A4F00')
+        # 001 §245：动土事「上品（可制化）」——浅绿底，与无瑕极品金底区分
+        self.top_tree.tag_configure('shangpin', background='#D6F5D6',
+                                    foreground='#1B5E20')
         self.top_tree.bind('<<TreeviewSelect>>', lambda _e: self._on_tree_select())
         self.top_tree.bind('<Double-Button-1>', self._on_top_double_click)
         self.top_tree.bind('<Button-3>', self._on_top_right_click)
@@ -542,6 +545,8 @@ class ReverseWindow:
         _tv.tag_configure('cautious', background='#FFF8E1', foreground='#6D4C00')
         _tv.tag_configure('auspicious', foreground='#8E0000')
         _tv.tag_configure('perfect', background='#FFF3CD', foreground='#7A4F00')
+        # 001 §245：动土事「上品（可制化）」浅绿底
+        _tv.tag_configure('shangpin', background='#D6F5D6', foreground='#1B5E20')
         _tv.bind('<Double-Button-1>',
                  lambda _e, _t=_tv: self._on_perf_double_click(_e, _t))
         self._bind_perfect_tip(_tv, _cols)
@@ -750,16 +755,18 @@ class ReverseWindow:
                 _bh.get('score', '—'), _bh.get('level', '')))
             _lines.append('    吉　　神：%s' % (str(_d.get('jishen') or '') or '—'))
             # 001 §240：极品口径＝日课校验无警告（详情页【日课校验】通过）
+            # 001 §245：极品再须顶部决策绿灯；动土事白名单日标「上品」
             _chk = _d.get('check') or {}
             if _chk.get('items'):
+                _tier_tag = ('　★极品日课' if _chk.get('perfect')
+                             else ('　▲上品（动土可制化）'
+                                   if _chk.get('shangpin') else ''))
                 _lines.append('    满分核验：%s（%d/%d）%s' % (
                     _chk.get('marks', '—'), _chk.get('ok_count', 0),
-                    len(_chk.get('items') or []),
-                    '　★极品日课' if _chk.get('perfect') else ''))
+                    len(_chk.get('items') or []), _tier_tag))
                 _ln = str(_chk.get('lint_note') or '')
                 if _ln:
-                    _lines.append('    日课校验：%s%s' % (
-                        _ln, '' if _chk.get('perfect') else '（不列极品）'))
+                    _lines.append('    分档判定：%s' % _ln)
                 for _tip in (_chk.get('tips') or []):
                     _lines.append('              ✗ %s' % _tip)
             _lines.append('    扣分主因：%s' % _reason_text(_d, compact=True))
@@ -864,6 +871,8 @@ class ReverseWindow:
             _marks = str(_chk.get('marks') or '—')
             if _chk.get('perfect'):
                 _tag = 'perfect'
+            elif _chk.get('shangpin'):
+                _tag = 'shangpin'
             _reason = _reason_text(_d)
             if _mode == SORT_MODE_SCORE and _d['kind'] == '慎用':
                 # 001 §238.10：纯总分模式下慎用高分日红字标出扣分合计
@@ -924,6 +933,8 @@ class ReverseWindow:
                 _chk = _d.get('check') or {}
                 if _chk.get('perfect'):
                     _tag = 'perfect'
+                elif _chk.get('shangpin'):
+                    _tag = 'shangpin'
                 elif _d.get('kind') == '慎用':
                     _tag = 'cautious'
                 else:
@@ -978,10 +989,11 @@ class ReverseWindow:
             return
         _head = '满分核验  %d/%d%s' % (
             _chk.get('ok_count', 0), len(_items),
-            '  ·  极品日课' if _chk.get('perfect') else '')
+            '  ·  极品日课' if _chk.get('perfect')
+            else ('  ·  上品（动土可制化）' if _chk.get('shangpin') else ''))
         _ln = str(_chk.get('lint_note') or '')
         if _ln:
-            _head += '\n日课校验：%s' % _ln
+            _head += '\n分档判定：%s' % _ln
         _body = ['%s %s：%s' % ('✓' if _i.get('ok') else '✗',
                                 _i.get('key', ''), _i.get('detail', ''))
                  for _i in _items]

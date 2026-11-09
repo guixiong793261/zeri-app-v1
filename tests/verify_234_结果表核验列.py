@@ -45,8 +45,9 @@ check('A4 _update_result_columns 恒显集合含「核验」',
 
 # ── B：金底 tag ───────────────────────────────────────────────────
 check('B1 allok tag 注册', "tag_configure('allok', background='#FFE680')" in _src)
-check('B2 极品行替换星级 tag（非叠加；重煞行优先 heavy_warn；§240 极品=日课校验无警告）',
-      "('allok',) if _lint_ok else (row_tag,)" in _src
+check('B2 极品行替换星级 tag（§245：重煞 > 极品金底 > 上品浅绿 > 星级）',
+      "(('allok',) if _lint_ok" in _src
+      and "(('shangpin',) if _shangpin else (row_tag,))" in _src
       and "heavy_warn" in _src)
 
 # ── C：悬停弹层 ───────────────────────────────────────────────────
@@ -62,14 +63,16 @@ check('C4 _tree_column_id 通用化且核心吉神调用同行保留',
       and "self._tree_column_id('核心吉神')" in _src)
 
 # ── D：筛选下拉 ───────────────────────────────────────────────────
-check('D1 下拉变量与四档选项（§240 文案：极品(无警告)/大吉(≥4✓)）',
+check('D1 下拉变量与五档选项（§245 增补上品(动土可制化)）',
       "self._check_filter_var = tk.StringVar(value='全部')" in _src
-      and "values=('全部', '极品(无警告)', '大吉(≥4✓)', '优吉(2-3✓)')" in _src)
+      and "values=('全部', '极品(无警告)', '上品(动土可制化)'," in _src
+      and "'大吉(≥4✓)', '优吉(2-3✓)')" in _src)
 check('D2 下拉只读 + 切换即重渲',
       "state='readonly'" in _src
       and '_check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())' in _src)
-check('D3 三档过滤条件（§240：极品=日课校验无警告）',
+check('D3 四档过滤条件（§245：极品=校验无警告+决策绿灯；上品=动土白名单）',
       "if _flt == '极品(无警告)' and not _lint_ok:" in _src
+      and "if _flt == '上品(动土可制化)' and not _shangpin:" in _src
       and "if _flt == '大吉(≥4✓)' and _ok_n < 4:" in _src
       and "if _flt == '优吉(2-3✓)' and not (2 <= _ok_n <= 3):" in _src)
 

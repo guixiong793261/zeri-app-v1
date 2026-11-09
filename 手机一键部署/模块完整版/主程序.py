@@ -807,8 +807,9 @@ class ZeriApp:
         ttk.Label(_check_bar, text="核验筛选").pack(side=tk.LEFT)
         self._check_filter_var = tk.StringVar(value='全部')
         _check_cbo = ttk.Combobox(_check_bar, textvariable=self._check_filter_var,
-                                  values=('全部', '极品(无警告)', '大吉(≥4✓)', '优吉(2-3✓)'),
-                                  state='readonly', width=12)
+                                  values=('全部', '极品(无警告)', '上品(动土可制化)',
+                                          '大吉(≥4✓)', '优吉(2-3✓)'),
+                                  state='readonly', width=14)
         _check_cbo.pack(side=tk.LEFT, padx=(4, 0))
         _check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())
 
@@ -890,6 +891,8 @@ class ZeriApp:
         self.result_tree.tag_configure('veto', background='#FFE4E1', foreground='#B22222')
         # 001 §234：满分核验全✓行金底高亮（替代星级底色，与反推页签金底口径一致）
         self.result_tree.tag_configure('allok', background='#FFE680')
+        # 001 §245：动土事「上品（可制化）」——浅绿底，与无瑕极品（金底）区分
+        self.result_tree.tag_configure('shangpin', background='#D6F5D6')
         # 001 §237：高分伪装防呆——总分≥200 且犯伐日/金神/三煞等重煞行，
         # 黄底红字强制警示
         self.result_tree.tag_configure('heavy_warn', background='#FFE4B5',
@@ -4244,6 +4247,7 @@ class ZeriApp:
             _ok_n = -1
             _tot_n = 0
             _lint_ok = False
+            _shangpin = False
             _chk_text = '—'
             _chk_tip = ''
             _ck_detail = result.get('detail')
@@ -4281,7 +4285,9 @@ class ZeriApp:
                     _ok_n = int(_chk.get('ok_count', 0))
                     _tot_n = len(_chk.get('items') or [])
                     # 001 §240：极品口径＝日课校验无警告（详情页【日课校验】✅ 通过）
+                    # 001 §245：极品再收口为「校验无警告 + 顶部决策绿灯」，动土事另设上品
                     _lint_ok = bool(_chk.get('perfect'))
+                    _shangpin = bool(_chk.get('shangpin'))
                     _marks = str(_chk.get('marks') or '')
                     if _marks and '-' in _marks:
                         _chk_text = '%d/%d %s' % (_ok_n, _tot_n, _marks)
@@ -4293,10 +4299,10 @@ class ZeriApp:
                         + str(_i.get('key', ''))
                         + '：' + str(_i.get('detail', ''))
                         for _i in (_chk.get('items') or []))
-                    # 001 §240：极品判定依据＝日课校验结论，悬停展示原因
+                    # 001 §240/§245：极品/上品判定依据，悬停展示原因
                     _ln = str(_chk.get('lint_note') or '')
                     if _ln:
-                        _chk_tip = ('日课校验：%s\n' % _ln) + _chk_tip
+                        _chk_tip = ('%s\n' % _ln) + _chk_tip
                     # 001 §237：高分伪装防呆警示并入核验列悬停
                     if result.get('heavy_sha_warning'):
                         _chk_tip = (
@@ -4320,8 +4326,11 @@ class ZeriApp:
                 except Exception:
                     _ok_n = -1
             # 001 §234：核验筛选；§240：「极品」口径改为日课校验无警告，
+            # §245：极品再须顶部决策绿灯，动土事另设「上品(动土可制化)」；
             # 大吉≥4✓/优吉2-3✓阈值不变
             if _flt == '极品(无警告)' and not _lint_ok:
+                continue
+            if _flt == '上品(动土可制化)' and not _shangpin:
                 continue
             if _flt == '大吉(≥4✓)' and _ok_n < 4:
                 continue
@@ -4347,7 +4356,8 @@ class ZeriApp:
                 result.get('owners', '-'),
                 result.get('feixing', '-')
             ), tags=(('heavy_warn',) if result.get('heavy_sha_warning')
-                     else (('allok',) if _lint_ok else (row_tag,))))
+                     else (('allok',) if _lint_ok
+                           else (('shangpin',) if _shangpin else (row_tag,)))))
             # 核心吉神列完整文本（Tooltip 用；不合格模式下为空，不弹提示）
             self._jishen_full_map[_iid] = (
                 '' if _cur_mode == 'unqualified'
