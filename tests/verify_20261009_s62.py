@@ -68,10 +68,12 @@ owners_s = [dict(o) for o in OWNER1]
 run(dt.date(2024, 6, 8), '修造', owners_s)
 check('A5 单事主不打标', '_zaozhu_weight' not in owners_s[0])
 
-# A6 半权重效果：辅助成员被冲不否决。
-# 事主年命：事主1=亥（1972-01-08 立春前属辛亥）、事主2=亥、事主3=戌、事主4=寅。
-# 取日支辰日：主事人（亥）不冲辰，辅助者3（戌）冲辰——单人口无相主否决；
-# 4人口若辅助者仍否决则方案二未生效，不否决则生效。
+# A6 相主硬门槛全量升级（§238.18 2026-11-09 拍板）：所有日课地支六冲
+# （事主本命/夫妻宫/生肖 × 日课日支）→ HARD_VETO。
+# 旧规则：辅助成员被冲不否决（方案二半权重豁免）、六冲只扣分不否决；
+# 新规则：无豁免，一律否决。
+# 样本：日课日支辰日。事主1 1972-01-08 辛亥月戊戌日 → 日支戌 × 辰 六冲；
+#       事主3 1994-10-28 甲戌年 → 生肖戌 × 辰 六冲。
 d_aux = None
 d = dt.date(2024, 1, 1)
 while d <= dt.date(2024, 12, 31):
@@ -86,11 +88,13 @@ if d_aux:
     vrs4 = [str(v) for v in (r4.get('veto_reasons') or [])]
     r1 = run(d_aux, '修造', [dict(o) for o in OWNER1])
     vrs1 = [str(v) for v in (r1.get('veto_reasons') or [])]
-    check('A6a 单人口：主事人未冲则不否决',
-          not any('相主硬门槛' in v for v in vrs1),
+    # §238.18 新规则：事主1 日支戌 × 日课日支辰 六冲 → 必须 HARD_VETO
+    check('A6a §238.18 单人口：主事人日支戌×辰六冲 → 必须 VETO',
+          any('相主硬门槛' in v for v in vrs1) and any('六冲' in v for v in vrs1),
           '; '.join(vrs1))
-    check('A6b 4人口：辅助者被冲不再否决',
-          not any('相主硬门槛' in v for v in vrs4),
+    # §238.18 新规则：事主3 生肖戌 × 日课日支辰 六冲 → 也 HARD_VETO（辅助者不再豁免）
+    check('A6b §238.18 4人口：事主3生肖戌×辰六冲 → 也 VETO（辅助者无豁免）',
+          any('相主硬门槛' in v for v in vrs4) and any('六冲' in v for v in vrs4),
           '; '.join(vrs4))
 
 # ── B. 分金/正体大凶强扣分 ──

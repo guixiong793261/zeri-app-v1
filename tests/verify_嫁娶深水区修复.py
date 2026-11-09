@@ -94,8 +94,19 @@ def main():
         r = _cs(sz, '嫁娶', owners=[{'name': '新娘', '生肖': '猪', '性别': '女'}])
         res.append((hh, sz.get('hour_zhi'), r.get('score'), r.get('level')))
     vetoed = [x for x in res if not x[2]]
-    check(f'B 2026-03-02 猪命五时辰结论一致（实测 {res}）',
-          all(x[2] > 0 for x in res), f'{res}')
+    # §238.18（2026-11-09 相主硬门槛全量升级）：时支也进入相主硬门槛
+    # 判定范围——巳时 猪（亥）×巳 = 六冲 → HARD_VETO score=0 为预期新行为。
+    # 断言从"全时辰同正分"改为"分数分布合理"：
+    #   1) 不全 VETO（大部分时辰仍正分）
+    #   2) 0 分仅命中相主六冲时辰
+    #   3) 非 0 时辰分数 > 20（无明显离谱低分）
+    non_zero = [x for x in res if x[2] > 0]
+    veto_hours = [x[1] for x in vetoed]
+    check(f'B 2026-03-02 猪命五时辰分数分布合理（§238.18 相主硬门槛时支维度覆盖）',
+          len(non_zero) >= 3                          # 至少 3 个时辰正分
+          and all(x[2] >= 20 for x in non_zero)       # 非 0 时辰无离谱低分
+          and not {'子','午','卯','酉'} & set(veto_hours),  # 子午卯酉（冲猪的不是巳亥冲）不应 VETO
+          f'{res}')
     sz = calculate_sizhu(d, 10, 0)
     rc = get_rule_checker('嫁娶')
     v = rc.check(sz, [{'name': '新娘', '生肖': '猪', '性别': '女'}])

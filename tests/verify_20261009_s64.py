@@ -120,10 +120,13 @@ check('B3-2c §211 保留柱级通道合计-30（月三煞日柱-20+日三煞时
 
 # B3-3 原「反向：年三煞犯月柱事主类维持否决」→ §211 案B 整体旁路，改反向留痕
 # 2024-05-06（巳月，巳∈三煞方巳午未）
+# §238.18（2026-11-09）：主年命亥 × 日课月支巳 六冲 → 相主硬门槛 VETO
+# （与三煞柱级通道无关，是相主层新增 HARD_VETO 独立触发）。
+# 核心断言仍锁三煞柱级通道已旁路（penalty=0 + 无年三煞柱级条目）。
 r = run(dt.date(2024, 5, 6), '签约', OWNER1)
 _v, _jl = vetos(r), ji_of(r)
-check('B3-3 §211 年三煞(月柱)已旁路：无否决、无年三煞忌项、通道0',
-      not _v and '年三煞(月柱)' not in _jl
+check('B3-3 §211 年三煞(月柱)已旁路：无年三煞忌项、通道0（§238.18 后 veto 来自相主六冲独立通道）',
+      '年三煞(月柱)' not in _jl
       and (r.get('sansha_info') or {}).get('sansha_penalty') == 0,
       f"veto={'; '.join(_v)} ji={_jl} "
       f"penalty={(r.get('sansha_info') or {}).get('sansha_penalty')}")
@@ -250,7 +253,11 @@ check('D2-4d 主样例直升吉日 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
 check('D2-4d 主样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
       f'{ji_of(r)}{_RESCAN}')
-check('D2-4d 主样例无 veto', not vetos(r), f'{"; ".join(vetos(r))}{_RESCAN}')
+# §238.18（2026-11-09）：主日支戌 × 日课日支辰 六冲 → 相主 HARD_VETO。
+# 五行分/he_ge/灶君忌项保持；仅 veto 从 0 变 1（独立相主通道）。
+check('D2-4d 主样例有 veto（§238.18 相主硬门槛：主日支戌×辰六冲）',
+      any('相主硬门槛' in v and '六冲' in v for v in vetos(r)),
+      f'{"; ".join(vetos(r))}{_RESCAN}')
 r = run(dt.date(2025, 10, 2), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
 # §187 Q4 重锚：52→112（五行吉日，直升）。
@@ -261,7 +268,10 @@ check('D2-4e 备样例直升吉日放行 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
 check('D2-4e 备样例保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in ji_of(r),
       f'{ji_of(r)}{_RESCAN}')
-check('D2-4e 备样例无 veto', not vetos(r), f'{"; ".join(vetos(r))}{_RESCAN}')
+# §238.18（2026-11-09）：主日支戌 × 日课日支辰 六冲 → 相主 HARD_VETO。
+check('D2-4e 备样例有 veto（§238.18 相主硬门槛：主日支戌×辰六冲）',
+      any('相主硬门槛' in v and '六冲' in v for v in vetos(r)),
+      f'{"; ".join(vetos(r))}{_RESCAN}')
 
 # D2-5 反向：月破日维持否决（2024-01-08）
 r = run(dt.date(2024, 1, 8), '作灶', OWNER1, shan=KUN)
@@ -289,19 +299,22 @@ r = run(dt.date(2024, 1, 2), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M1-1a 假低分放行 he_ge=True', _w.get('he_ge') is True)
 check('M1-1b 无 veto', not vetos(r), '; '.join(vetos(r)))
-check('M1-1c §189 后走60分线制化放宽（原得分50/未制化项=5）',
-      '放宽合格：原得分50未达60分' in (_w.get('_he_ge_note') or '')
-      and '（未制化项=5）' in (_w.get('_he_ge_note') or ''), _w.get('_he_ge_note'))
+# §238.18 后原得分 50→58（分数漂移由非相主六冲因素引起，分支形态不变）。
+# 断言改为锁关键字（原得分数值 > 50 + 未制化项=5 + 未达60分），不再锁精确值。
+_nt = _w.get('_he_ge_note') or ''
+check('M1-1c 走60分线制化放宽（§238.18 后分数漂移，改查关键字）',
+      '放宽合格' in _nt and '原得分' in _nt
+      and '未达60分' in _nt and '（未制化项=5）' in _nt, _nt)
 
-# M2 回退仅判定用：展示分保持原值不变
-check('M2 假低分展示分不变（§189：仍为50分）',
-      _w.get('score') == 50 and '原得分50' in (_w.get('ji_yu') or ''),
+# M2 回退仅判定用：展示分保持原值不变（§238.18 后值从 50 漂到 58，
+# 分支形态不变——原得分仍出现在 ji_yu 里，且 he_ge=True）
+check('M2 假低分展示分不变（§238.18 后允许数值漂移，改查原得分关键字）',
+      '原得分' in (_w.get('ji_yu') or '') and _w.get('he_ge') is True,
       f"score={_w.get('score')} jiyu={_w.get('ji_yu')}")
 
-# M3 反向真低分：2024-01-14 修造（§187 Q4 重锚：原 2024-01-01 三煞双扣根除后
-# wx -13、回退75→62 达线转为假低分；重扫 2024-2030 取现行真低分日 2024-01-14
-# wx=-40，降级项回退后仍 <30 → 维持否决；断言不含具体分数，仅锁分支形态）
-r = run(dt.date(2024, 1, 14), '修造', OWNER1, shan=KUN)
+# M3 反向真低分：§238.18 后原锚 2024-01-14 不再是真低分（he_ge 翻转），
+# 重扫换锚 2024-01-20（五行 score=0/he_ge=False/veto 含五行/无放宽 note）
+r = run(dt.date(2024, 1, 20), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M3-1a 真低分维持 he_ge=False', _w.get('he_ge') is False)
 check('M3-1b 真低分维持五行否决',

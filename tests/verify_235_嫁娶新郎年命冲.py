@@ -77,8 +77,11 @@ def test_bride_symmetry():
 
 # ==================== C. 反向断言：无关日不否决 ====================
 def test_normal_day():
-    print('\n[C] 2026-08-28 甲戌日 → 不否决（反向断言，防误伤）')
-    r = _score(2026, 8, 28, [BRIDE, GROOM])
+    # §238.18 重锚：原 2026-08-28 是申月，月支申×新郎年命寅=六冲 → 被相主 VETO
+    # 换锚 2026-08-04 甲戌日 未月（day_zhi=戌 month_zhi=未）：
+    # 戌/未 均不冲卯（新娘年命）/亥（新娘日支）/寅（新郎年命）/巳（新郎日支）
+    print('\n[C] 2026-08-04 甲戌日 → 不否决（反向断言，防误伤）')
+    r = _score(2026, 8, 4, [BRIDE, GROOM])
     vr = r.get('veto_reasons') or []
     check(not vr, '无关日无否决', vr)
     check(int(r.get('score') or 0) > 0, '无关日分数正常', r.get('score'))
@@ -106,7 +109,7 @@ def test_xiangzhu_detail():
     check(any('新郎' in x for x in det), '明细点名新郎')
     check(any('六冲' in x for x in det), '明细写明六冲')
 
-    r2 = _score(2026, 8, 28, [BRIDE, GROOM])
+    r2 = _score(2026, 8, 4, [BRIDE, GROOM])
     sd2 = r2.get('score_details') or {}
     check(bool(sd2.get('相主核验说明')),
           '非否决日标注相主口径', sd2.get('相主核验说明'))
@@ -115,7 +118,7 @@ def test_xiangzhu_detail():
 # ==================== F. 总分口径：001 §236 B3 起相主已并入 ====================
 def test_total_includes_xiangzhu():
     print('\n[F] 非否决日总分 = 嫁娶评分+月令+喜用+太阳太阴+相主（§236 B3）')
-    r = _score(2026, 8, 28, [BRIDE, GROOM])
+    r = _score(2026, 8, 4, [BRIDE, GROOM])
     sd = r.get('score_details') or {}
     _parts = (int(sd.get('嫁娶评分') or 0) + int(sd.get('月令得分') or 0)
               + int(sd.get('喜用神得分') or 0) + int(sd.get('太阳太阴得分') or 0)
@@ -127,14 +130,18 @@ def test_total_includes_xiangzhu():
           '顶层 score 与总分一致', '%s vs %s' % (_parts, r.get('score')))
 
 
-# ==================== G. 通用通道不受影响 ====================
+# ==================== G. 通用通道相主硬门槛也升级（§238.18） ====================
 def test_general_channel():
-    print('\n[G] 同日开业（通用通道）不被嫁娶改动波及')
+    # §238.18（2026-11-09）：相主硬门槛全量升级——通用通道也不再豁免，
+    # 辅助者年命被日课六冲同样 HARD_VETO。
+    print('\n[G] §238.18 后通用通道相主硬门槛也升级')
     r = _score(2026, 8, 26, [BRIDE, GROOM], ev='开业')
-    check(int(r.get('score') or 0) != 0, '通用通道分数非 0', r.get('score'))
-    det = [str(x) for x in ((r.get('score_details') or {}).get('相主详情') or [])]
-    check(any('半权重' in x for x in det), '通用通道保留次级事主半权重口径',
-          [x for x in det if '半权重' in x][:1])
+    # 2026-08-26 壬申日：day_zhi=申 × 新郎年命寅=六冲
+    check(int(r.get('score') or 0) == 0,
+          '通用通道：辅助者年命被六冲 → 也 VETO（§238.18 无豁免）', r.get('score'))
+    vrs = [str(v) for v in (r.get('veto_reasons') or [])]
+    check(any('相主硬门槛' in v for v in vrs),
+          '通用通道 veto 来源含相主硬门槛', '; '.join(vrs))
 
 
 # ==================== H. 源码锚点（防回退） ====================
