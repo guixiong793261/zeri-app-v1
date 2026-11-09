@@ -3056,8 +3056,8 @@ class Scorer:
             _heavy_sha_warning = bool(_heavy_sha_names) and self.final_score >= 200
 
             # 001 §238 坑四·五行偏枯预警（纯展示，不改分）：四柱天干+地支共 8 字，
-            # 火系（丙丁巳午）≥5 → 过燥；水系（壬癸子亥）≥5 → 过寒。
-            # 阈值 5/8 为拟定值，待用户拍板。
+            # 火系（丙丁巳午）≥4 → 过燥；水系（壬癸子亥）≥4 → 过寒。
+            # 阈值 4/8（2026-11-09 用户拍板，由拟定 5 收紧至 4）。
             _pk_fire = 0
             _pk_water = 0
             for _pk_k in ('year_gan', 'month_gan', 'day_gan', 'hour_gan',
@@ -3068,9 +3068,9 @@ class Scorer:
                 elif _pk_c in '壬癸子亥':
                     _pk_water += 1
             _wuxing_pian_ku = None
-            if _pk_fire >= 5:
+            if _pk_fire >= 4:
                 _wuxing_pian_ku = '过燥'
-            elif _pk_water >= 5:
+            elif _pk_water >= 4:
                 _wuxing_pian_ku = '过寒'
 
             return {

@@ -10,7 +10,7 @@
 
 A. 合局克山：三合金句 -40 / 半合 -20 / 出行旁路 / 生扶不克 / 无山向不触发
 B. 自刑伏吟加重：-7（基线-8合计-15）/ 伏吟 -15 / 无同支反向
-C. 偏枯预警：过燥 / 过寒 / 平和 None / 用户案例 06-04 边界（火=4 不触发）
+C. 偏枯预警：过燥 / 过寒 / 平和 None / 用户案例 06-04 边界（火=4 触发，阈值收紧至 4 后）
 D. 6 项核验端到端：修造完美画像序列 + 空事主相主 N/A
 E. 源码锚点防回退
 """
@@ -122,9 +122,9 @@ def test_pianku():
           r.get('wuxing_pian_ku'))
     r = _xj(2026, 8, 28, 12)  # 丙午 丙申 甲戌 庚午：火 3/8 水 0/8
     check(r.get('wuxing_pian_ku') is None, 'C3 平和日 → None', r.get('wuxing_pian_ku'))
-    # C4 用户案例边界：2026-06-04 己酉日（火 4/8），阈值 5 → 不触发（锁定现状待拍板）
+    # C4 用户案例边界：2026-06-04 己酉日（火 4/8），阈值 4 → 触发（2026-11-09 收紧拍板）
     r = _xj(2026, 6, 4, 12)
-    check(r.get('wuxing_pian_ku') is None, 'C4 2026-06-04 火=4 < 阈值5 → None（边界锁定）',
+    check(r.get('wuxing_pian_ku') == '过燥', 'C4 2026-06-04 火=4 ≥ 阈值4 → 过燥（边界锁定）',
           r.get('wuxing_pian_ku'))
 
 
@@ -160,6 +160,8 @@ def test_source_anchors():
     check("'半合/拱合%s局克山（%s山属%s）'" in s1, '评分器：半合/拱合克山 -20')
     check("'自刑伏吟加重（%s）'" in s1, '评分器：自刑伏吟加重')
     check("'wuxing_pian_ku': _wuxing_pian_ku" in s1, '评分器：偏枯键入 return')
+    check('if _pk_fire >= 4:' in s1 and 'elif _pk_water >= 4:' in s1,
+          '评分器：偏枯阈值 4/8（2026-11-09 收紧拍板）')
     p2 = os.path.join(_ROOT, 'modules', '排序键.py')
     with open(p2, 'r', encoding='utf-8') as f:
         s2 = f.read()
