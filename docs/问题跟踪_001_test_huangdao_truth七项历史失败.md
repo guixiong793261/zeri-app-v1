@@ -12666,4 +12666,41 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
   `verify_决策分析` 26/26；全量 `run_all` 143/144（唯一失败项
   `verify_238` 已在修复后单跑 ALL PASS）。
 
+**（四）P1-b 改动（纯展示层，`7420e53`）**
+- 独立版事主输入行下方新增回显行：四柱（含「(真太阳时)」标注）/生肖/
+  喜神/用神/嫁娶专用/「八字详情」按钮；`_add_owner_row` 改为每位事主占
+  「输入行 + 回显行」两行（grid 2*idx-1 / 2*idx）。
+- 新增 `_owner_birth(i)`（出生年月日时分 + `_city_to_longitude` 经度）、
+  `_update_owner_sizhu(i)`（`calculate_sizhu(longitude=…)` +
+  `calculate_xishen_yongshen`；女命 `get_fuzi`/`get_yintai`，男命
+  `get_yangqi`，同主程序 L2843-2870）、`_open_owner_bazi(i)`
+  （`BaZiPanPan` + `show_bazi_dialog`，同主程序 `show_owner_bazi_detail`）。
+- 触发：年月日时分失焦/回车、性别与城市下拉、事项切换、启动载入配置后
+  自动回显；窗口 920x560 → 980x620 容纳新行。
+- `_collect_owners_data` 零改动，`verify_standalone_consistency` 10 天
+  Top-N 榜单逐字相同。
+
+**（五）P1-c 改动（接线层，`0b53d4e`）**
+- `open_reverse_panel` 由 `add_tie_callback=None` 改为
+  `self.add_record_to_zeri_tie`；工具栏新增「📜 择日贴」按钮（显示暂存数）。
+- `_build_tie_owners()`：事主 → `owners_list`，字段同主程序 `_parse_owner`
+  （name/role/sizhu/year_gz/year_sx/年/月/日/时/分/gender；女命 fu/zi/
+  yintai，男命 yangqi）。
+- `_build_tie_entry()`：反推日记录 → entry（date/sizhu/score/level/
+  event_type/owners/owners_list/jishen/reason/veto_reasons/
+  reverse_caution/action_plan/day_kind/wuxing_pian_ku），山家事项补
+  `shan_xiang`（含兼向拼接）与 `fenjin`
+  （`ZhengTiWuXingSelectorDB().evaluate_with_fengjin`，同主程序 L9345-9360）。
+- `add_record_to_zeri_tie()`：窗口已开直接 `add_entry`（同日期同用事覆盖），
+  未开则暂存 → `open_zeri_tie()` 用 `show_zeri_tie(self.root)` 灌入；
+  排盘/吉时/冲命校验/红帖文案仍全部由 `modules.择日贴` 统一产出。
+
+**（六）验证与结论**
+- 无头探针：嫁娶双事主四柱/夫星子星/阳气阴胎全部进红帖；修造「子山午向」
+  + 分金「戊子」进帖；暂存→开窗→灌入 1 课、重复加入覆盖不重复。
+- 全量 `tests/run_all.py` **144/144 PASS，0 FAIL**（442.5s）。
+- 未覆盖项（明确挂账，不属本三批范围）：农历日期输入（calendar_type_var）
+  在独立版仍缺；其余能力已对齐主程序。
+
+
 
