@@ -1167,17 +1167,20 @@ class ReverseWindow:
         # 001 §238.12：专家决策分析面板（红绿灯裁决，纯展示层汇总，
         # 不改评分/否决逻辑；须先于 _head pack 才能置顶）。
         # 榜内记录无 detail 键时，按 §232 同源链路（record_of_day）重算补齐。
-        try:
-            from modules.决策分析 import (build_decision_report,
-                                         render_decision_panel)
-            _det = _d.get('detail')
-            if not isinstance(_det, dict) \
-                    and ds in (getattr(self, '_day_map', None) or {}):
+        # 001 §238.14：补齐后的 detail 同时供「事主」页签取相主吉凶原文。
+        _det = _d.get('detail')
+        if not isinstance(_det, dict) and ds in (getattr(self, '_day_map', None) or {}):
+            try:
                 _rec2 = record_of_day(
                     date.fromisoformat(ds),
                     _meta.get('event_type') or self.event_var.get(),
                     self.owners, self.context)
                 _det = (_rec2 or {}).get('detail')
+            except Exception as _e:
+                print('详情同源重算失败（不影响正文）：%s' % _e)
+        try:
+            from modules.决策分析 import (build_decision_report,
+                                         render_decision_panel)
             if isinstance(_det, dict) and _det:
                 _dr = build_decision_report(
                     _det, _meta.get('event_type') or self.event_var.get())
@@ -1289,6 +1292,39 @@ class ReverseWindow:
                 self._hour_advice(_h, _bh['地支'], _ev, _d['score'])),
                 tags=_tags)
 
+        # 页3：事主信息（001 §238.14，纯展示：四柱/生肖/年命纳音 + 相主吉凶原文）
+        _own_rows = self._owner_rows()
+        _p3 = ttk.Frame(_nb, padding=6)
+        _nb.add(_p3, text='事主（%d）' % len(_own_rows))
+        _t3 = ttk.Treeview(
+            _p3, columns=('角色', '姓名', '性别', '生辰', '四柱', '生肖', '年命纳音'),
+            show='headings', height=5)
+        for _c, _w in (('角色', 60), ('姓名', 76), ('性别', 44), ('生辰', 128),
+                       ('四柱', 176), ('生肖', 44), ('年命纳音', 108)):
+            _t3.heading(_c, text=_c)
+            _t3.column(_c, width=_w,
+                       anchor=tk.W if _c in ('姓名', '生辰', '四柱', '年命纳音')
+                       else tk.CENTER,
+                       stretch=_c in ('生辰', '四柱', '年命纳音'))
+        if _own_rows:
+            for _r in _own_rows:
+                _t3.insert('', tk.END, values=_r)
+        else:
+            _t3.insert('', tk.END, values=('—', '未输入事主', '—', '—', '—',
+                                           '—', '—'))
+        _t3.pack(fill=tk.BOTH, expand=False)
+        _xf = ttk.Frame(_p3)
+        _xf.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
+        ttk.Label(_xf, text='相主吉凶（评分器原文）',
+                  font=('Microsoft YaHei UI', 9, 'bold')).pack(anchor='w')
+        _xz = self._xiangzhu_lines(_det if isinstance(_det, dict) else {})
+        _xt = tk.Text(_xf, height=7, wrap='word',
+                      font=('Microsoft YaHei UI', 9))
+        _xt.pack(fill=tk.BOTH, expand=True)
+        _xt.insert('1.0', '\n'.join('· ' + _x for _x in _xz) if _xz
+                   else '（未输入事主，或本日未触发相主判定）')
+        _xt.configure(state='disabled')
+
         ttk.Button(_bar, text='关闭', command=_win.destroy).pack(
             side=tk.RIGHT, padx=(4, 4))
         ttk.Button(_bar, text='打印',
@@ -1299,6 +1335,59 @@ class ReverseWindow:
                    command=lambda: self._save_day_detail(
                        _d, _ev, _bh, _stars, _fit)).pack(
             side=tk.RIGHT, padx=4)
+
+    def _owner_rows(self):
+        """事主基础信息（001 §238.14）：四柱/生肖/年命纳音。
+
+        与主程序同源：四柱走 modules.四柱计算器.calculate_sizhu，
+        年命纳音复用 modules.二十四山.NAYIN_NAMES（六十甲子纳音表）。
+        纯展示，不参与评分；计算失败仅逐行降级为「—」并 print。
+        """
+        _rows = []
+        try:
+            from modules.四柱计算器 import calculate_sizhu
+            from modules.二十四山 import NAYIN_NAMES
+        except Exception as _e:
+            print('事主四柱/纳音模块导入失败：%s' % _e)
+            return _rows
+        _SX = '鼠牛虎兔龙蛇马羊猴鸡狗猪'
+        _ZHI = '子丑寅卯辰巳午未申酉戌亥'
+        for _o in (getattr(self, 'owners', None) or []):
+            _bd = _o.get('birth_date')
+            _hh = int(_o.get('birth_hour') or 0)
+            _mm = int(_o.get('birth_minute') or 0)
+            _lng = _o.get('birth_longitude')
+            try:
+                _lng = float(_lng) if _lng not in (None, '') else None
+            except (TypeError, ValueError):
+                _lng = None
+            _siz, _sx, _ny = '—', '—', '—'
+            if _bd:
+                try:
+                    # 真太阳时 §48 同口径：事主经度透传（与主程序 L4367 一致）
+                    _sz = calculate_sizhu(_bd, _hh, _mm, longitude=_lng)
+                    _siz = ' '.join(str(_sz.get(_k, '')) for _k in
+                                    ('年柱', '月柱', '日柱', '时柱'))
+                    _yz = str(_sz.get('year_zhi') or '') \
+                        or str(_sz.get('年柱') or '')[-1:]
+                    _i = _ZHI.find(_yz)
+                    if _i >= 0:
+                        _sx = _SX[_i]
+                    _ny = NAYIN_NAMES.get(str(_sz.get('年柱') or ''), '—')
+                except Exception as _e:
+                    print('事主四柱计算失败（%s）：%s' % (_o.get('name'), _e))
+            _rows.append((
+                str(_o.get('role') or '事主'),
+                str(_o.get('name') or '—'),
+                str(_o.get('性别') or '—'),
+                ('%s %02d:%02d' % (_bd, _hh, _mm)) if _bd else '—',
+                _siz, _sx, _ny))
+        return _rows
+
+    @staticmethod
+    def _xiangzhu_lines(det):
+        """相主吉凶原文（评分器 xiangzhu_notes，纯展示不加工）。"""
+        return [str(_t) for _t in ((det or {}).get('xiangzhu_notes') or [])]
 
     def _build_detail_lines(self, d, ev, bh, stars, fit):
         """构造日课详情的纯文本行列表（保存/打印共用数据源）。"""
@@ -1342,6 +1431,22 @@ class ReverseWindow:
             lines.append('忌　　项　%s%s' % (_j, '（%d分）' % _v if _v else ''))
         for _r in _vr:
             lines.append('否决原因　%s' % _r)
+        lines.append('')
+        lines.append('【事主信息】')
+        lines.append('-' * 50)
+        # 纯文本构造器亦被自检脚本以 None 作 self 调用（只验文案），此处容错取空
+        _owner_fn = getattr(self, '_owner_rows', None)
+        _rows = _owner_fn() if callable(_owner_fn) else []
+        if _rows:
+            for _r in _rows:
+                lines.append('%s　%s　%s　生辰 %s　四柱 %s　生肖 %s　年命 %s' % _r)
+        else:
+            lines.append('（未输入事主，本日仅按日课本身评分）')
+        _xz = ReverseWindow._xiangzhu_lines(d.get('detail') or {})
+        if _xz:
+            lines.append('相主吉凶：')
+            for _x in _xz:
+                lines.append('  · ' + _x)
         lines.append('')
         lines.append('【十二时辰】')
         lines.append('-' * 50)
