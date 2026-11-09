@@ -76,6 +76,7 @@ class 精准择时版App:
         self.root.minsize(920, 560)
         self.reverse_window = None
         self.owner_rows = []
+        self._zeri_tie_pending = []       # 择日贴暂存（窗口未开时先存，开窗后灌入）
 
         self._build_toolbar()
         self._build_param_area()
@@ -94,6 +95,10 @@ class 精准择时版App:
         ttk.Button(bar, text="📅 今日黄历", command=self._open_today_huangli).pack(side=tk.LEFT, padx=6)
         ttk.Button(bar, text="📊 八字排盘", command=self._open_bazi).pack(side=tk.LEFT, padx=6)
         ttk.Button(bar, text="🔮 玄空飞星排盘", command=self._open_xuankong).pack(side=tk.LEFT, padx=6)
+        # 001 §238.14 P1-c：择日贴（反推右键「加入择日贴」的落地窗口）
+        self.zeeri_tie_btn = ttk.Button(bar, text="📜 择日贴",
+                                        command=self.open_zeri_tie)
+        self.zeeri_tie_btn.pack(side=tk.LEFT, padx=6)
 
     def _build_param_area(self):
         frm = ttk.LabelFrame(self.root, text="择时参数", padding=8)
@@ -442,12 +447,144 @@ class 精准择时版App:
             self.reverse_window = open_reverse_window(
                 self.root, self.event_var.get(), owners, ctx,
                 modify_callback=self._focus_params,
-                add_tie_callback=None,  # 独立版不接择日贴，复用反推UI内置中文降级提示
+                add_tie_callback=self.add_record_to_zeri_tie,
             )
             self.status_var.set("精准择时面板已打开。修改参数后可再次点击重新反推。")
             self._save_config()
         except Exception as e:
             messagebox.showerror("错误", f"打开精准择时面板失败：{e}")
+
+    # ---------- 择日贴（001 §238.14 P1-c） ----------
+    def _update_zeri_tie_btn(self):
+        """工具栏择日贴按钮显示暂存课数。"""
+        n = len(self._zeri_tie_pending)
+        try:
+            self.zeeri_tie_btn.configure(text=f"📜 择日贴({n})" if n else "📜 择日贴")
+        except Exception as e:
+            print('刷新择日贴按钮失败：%s' % e)
+
+    def open_zeri_tie(self):
+        """打开（或置顶）择日贴窗口，并灌入暂存日课。"""
+        try:
+            from modules.择日贴 import show_zeri_tie
+            pad = show_zeri_tie(self.root)
+            pending = list(self._zeri_tie_pending)
+            for entry in pending:
+                pad.add_entry(entry)
+            self._zeri_tie_pending = []
+            self._update_zeri_tie_btn()
+        except Exception as e:
+            messagebox.showerror('择日贴', f'打开择日贴失败：{e}')
+
+    def _build_tie_owners(self):
+        """事主 → 择日贴 owners_list（字段口径同主程序 _parse_owner）。"""
+        from modules.工具函数 import get_fuzi, get_yintai, get_yangqi
+        _zhis = '子丑寅卯辰巳午未申酉戌亥'
+        _sx = '鼠牛虎兔龙蛇马羊猴鸡狗猪'
+        out = []
+        for i in range(len(self.owner_rows)):
+            row = self.owner_rows[i]
+            try:
+                bd, hh, mm, lng = self._owner_birth(i)
+            except (ValueError, TypeError) as e:
+                print('事主 %d 出生信息不全，跳过入贴：%s' % (i + 1, e))
+                continue
+            try:
+                sz = calculate_sizhu(bd, hh, mm, longitude=lng)
+            except Exception as e:
+                print('事主 %d 四柱计算失败，跳过入贴：%s' % (i + 1, e))
+                continue
+            pillars = [str(sz.get(k) or '') for k in ('年柱', '月柱', '日柱', '时柱')]
+            if any(len(p) < 2 for p in pillars):
+                print('事主 %d 四柱不完整，跳过入贴' % (i + 1))
+                continue
+            role = row['role'].get()
+            gender = row['gender'].get()
+            year_gz = pillars[0][:2]
+            o = {
+                'name': row['name'].get().strip() or role,
+                'role': role,
+                'sizhu': ' '.join(pillars),
+                'year_gz': year_gz,
+                'year_sx': _sx[_zhis.index(year_gz[1])] if year_gz[1] in _zhis else '',
+                'year': bd.year, 'month': bd.month, 'day': bd.day,
+                'hour': hh, 'minute': mm, 'gender': gender,
+            }
+            # 婚嫁专用：女命夫星/子星/阴胎，男命阳气（同主程序 L9262-9289）
+            if gender == '女' or role in ('新娘', '坤造'):
+                fz = get_fuzi(pillars[0][0], pillars[0][1])
+                o['fu'] = fz.get('fu', '')
+                o['zi'] = fz.get('zi', '')
+                o['yintai'] = get_yintai(pillars[1][0], pillars[1][1])
+            if gender == '男' or role in ('新郎', '乾造'):
+                o['yangqi'] = get_yangqi(pillars[1][0], pillars[1][1])
+            out.append(o)
+        return out
+
+    def _build_tie_entry(self, record, event_type=None):
+        """反推日记录 → 择日贴 entry（字段同主程序 add_result_to_zeri_tie）。"""
+        ev = event_type or self.event_var.get()
+        date_s = str(record.get('date') or '').strip()
+        if not date_s:
+            raise ValueError('反推记录缺少日期')
+        owners_list = self._build_tie_owners()
+        entry = {
+            'date': date_s,
+            'sizhu': str(record.get('sizhu') or ''),
+            'score': record.get('score', ''),
+            'level': record.get('level', ''),
+            'event_type': ev,
+            'owners': '、'.join(o['name'] for o in owners_list if o.get('name')),
+            'owners_list': owners_list,
+            'jishen': str(record.get('jishen') or ''),
+            'reason': str(record.get('reason') or ''),
+            'veto_reasons': record.get('veto_reasons') or [],
+            'reverse_caution': record.get('kind') == '慎用',
+            'action_plan': record.get('action_plan'),
+            'day_kind': record.get('kind') or '',
+            # 001 §238：五行偏枯预警透传（择日贴警示区，纯提示不改分）
+            'wuxing_pian_ku': record.get('pian_ku') or '',
+        }
+        if ev in {'修造', '拆舍', '作灶', '安床', '动土', '入宅', '安葬'}:
+            shan = (self.shan_xiang_var.get() or '').strip()
+            jian = (self.jian_xiang_var.get() or '').strip()
+            if jian and jian not in ('正中', '-', '—'):
+                shan += jian
+            entry['shan_xiang'] = shan
+            # 分金：同主程序 L9345-9360，现场调用二十四山 selector
+            try:
+                from modules.二十四山 import ZhengTiWuXingSelectorDB
+                parts = entry['sizhu'].split()
+                if len(parts) == 4 and shan:
+                    mn = shan[:shan.index('山')] if '山' in shan else shan[:1]
+                    fj = ZhengTiWuXingSelectorDB().evaluate_with_fengjin(
+                        mn, jian or '正中', parts[0], parts[1], parts[2], parts[3])
+                    if isinstance(fj, dict):
+                        entry['fenjin'] = str(fj.get('fengjin_ganzhi') or '')
+            except Exception as e:
+                print('分金计算失败（不影响入贴）：%s' % e)
+        return entry
+
+    def add_record_to_zeri_tie(self, record, event_type=None):
+        """反推面板右键「加入择日贴」/「生成红纸帖」回调（签名同主程序 §210）。"""
+        try:
+            entry = self._build_tie_entry(record, event_type)
+        except Exception as e:
+            messagebox.showerror('择日贴', f'构造日课失败：{e}')
+            return
+        win = getattr(self.root, '_zeri_tie_window', None)
+        if win is not None:
+            try:
+                if win.window.winfo_exists():
+                    win.add_entry(entry)
+                    self.status_var.set(
+                        '已加入择日贴：%s %s' % (entry['date'], entry['event_type']))
+                    return
+            except Exception as e:
+                print('加入已开择日贴失败，转暂存重开：%s' % e)
+        self._zeri_tie_pending.append(entry)
+        self._update_zeri_tie_btn()
+        self.open_zeri_tie()
 
     # ---------- 扩展工具 ----------
     def _open_compass(self):
