@@ -72,7 +72,8 @@ class 精准择时版App:
     def __init__(self, root):
         self.root = root
         self.root.title(f"择日大师 · 精准择时版 {VERSION}")
-        self.root.geometry("920x560")
+        self.root.geometry("980x620")
+        self.root.minsize(920, 560)
         self.reverse_window = None
         self.owner_rows = []
 
@@ -143,7 +144,14 @@ class 精准择时版App:
         self._add_owner_row(2, "家人")
 
     def _add_owner_row(self, idx, default_role):
-        r = idx
+        """新增一位事主：输入行 + 四柱/生肖/喜用神回显行（001 §238.14 P1-b）。
+
+        idx 从 1 起：输入行占 grid 行 2*idx-1，回显行占 2*idx（表头占 0）。
+        回显与主程序 calculate_owner_sizhu 同源（calculate_sizhu 透传经度 +
+        calculate_xishen_yongshen），纯展示，不参与评分。
+        """
+        r = idx * 2 - 1
+        i = len(self.owner_rows)          # owner_rows 下标（0 起）
         role = ttk.Combobox(self.owner_frame, values=["事主", "新郎", "新娘", "家人"],
                             width=6)
         role.set(default_role)
@@ -167,11 +175,158 @@ class 精准择时版App:
         minute.grid(row=r, column=7, padx=3)
         city = ttk.Combobox(self.owner_frame, values=sorted(CITY_NAMES), width=14)
         city.grid(row=r, column=8, padx=3)
+
+        # ---- 回显行：四柱 / 生肖 / 喜神 / 用神 / 嫁娶专用 / 八字详情 ----
+        info = ttk.Frame(self.owner_frame)
+        info.grid(row=r + 1, column=0, columnspan=9, sticky=tk.W,
+                  padx=3, pady=(0, 4))
+        sizhu_var = tk.StringVar(value="未计算")
+        zodiac_var = tk.StringVar(value="")
+        xishen_var = tk.StringVar(value="")
+        yongshen_var = tk.StringVar(value="")
+        mar1_var = tk.StringVar(value="")   # 夫星（女）/ 阳气（男）
+        mar2_var = tk.StringVar(value="")   # 子星（女）
+        mar3_var = tk.StringVar(value="")   # 阴胎（女）
+        tsf_var = tk.StringVar(value="")    # 真太阳时口径标注
+        ttk.Label(info, text="四柱：").pack(side=tk.LEFT)
+        ttk.Label(info, textvariable=sizhu_var,
+                  font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT)
+        ttk.Label(info, textvariable=tsf_var,
+                  foreground="darkgreen").pack(side=tk.LEFT, padx=(2, 0))
+        ttk.Label(info, text="生肖：").pack(side=tk.LEFT, padx=(14, 0))
+        ttk.Label(info, textvariable=zodiac_var, foreground="blue",
+                  font=("Microsoft YaHei UI", 10, "bold")).pack(side=tk.LEFT)
+        ttk.Label(info, text="喜神：").pack(side=tk.LEFT, padx=(14, 0))
+        ttk.Label(info, textvariable=xishen_var, foreground="blue").pack(side=tk.LEFT)
+        ttk.Label(info, text="用神：").pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Label(info, textvariable=yongshen_var, foreground="green").pack(side=tk.LEFT)
+        ttk.Label(info, textvariable=mar1_var, foreground="purple").pack(
+            side=tk.LEFT, padx=(14, 0))
+        ttk.Label(info, textvariable=mar2_var, foreground="purple").pack(
+            side=tk.LEFT, padx=(8, 0))
+        ttk.Label(info, textvariable=mar3_var, foreground="green").pack(
+            side=tk.LEFT, padx=(8, 0))
+        ttk.Button(info, text="八字详情", width=9,
+                   command=lambda j=i: self._open_owner_bazi(j)).pack(
+                       side=tk.LEFT, padx=(14, 0))
+
         self.owner_rows.append({
             'role': role, 'name': name, 'gender': gender,
             'year': year, 'month': month, 'day': day,
             'hour': hour, 'minute': minute, 'city': city,
+            'sizhu': sizhu_var, 'zodiac': zodiac_var,
+            'xishen': xishen_var, 'yongshen': yongshen_var,
+            'mar1': mar1_var, 'mar2': mar2_var, 'mar3': mar3_var,
+            'truesolar': tsf_var,
         })
+        # 出生信息变动即重算回显（失焦 / 回车 / 下拉选择）
+        for _w in (year, month, day, hour, minute):
+            _w.bind('<FocusOut>', lambda e, j=i: self._update_owner_sizhu(j))
+            _w.bind('<Return>', lambda e, j=i: self._update_owner_sizhu(j))
+        gender.bind('<<ComboboxSelected>>', lambda e, j=i: self._update_owner_sizhu(j))
+        city.bind('<<ComboboxSelected>>', lambda e, j=i: self._update_owner_sizhu(j))
+
+    # ---------- 事主四柱 / 喜用神回显（001 §238.14 P1-b，纯展示） ----------
+    def _owner_birth(self, i):
+        """读取第 i 位事主出生信息 → (birth_date, hour, minute, longitude)。
+
+        非法/缺失抛 ValueError（文案可直接展示）；经度口径同 _city_to_longitude，
+        与 _collect_owners_data / 主程序 calculate_owner_sizhu 一致。
+        """
+        row = self.owner_rows[i]
+        y = row['year'].get().strip()
+        m = row['month'].get().strip()
+        d = row['day'].get().strip()
+        if not (y and m and d):
+            raise ValueError('年月日未填写完整')
+        year, month, day = int(y), int(m), int(d)
+        hour = int(row['hour'].get().strip() or '12')
+        minute = int(row['minute'].get().strip() or '0')
+        return date(year, month, day), hour, minute, _city_to_longitude(row['city'].get())
+
+    def _update_owner_sizhu(self, i):
+        """事主四柱/生肖/喜用神实时回显（与主程序 calculate_owner_sizhu 同源）。
+
+        嫁娶专用字段按主程序 L2843-2870 口径：女命（新娘）夫星/子星/阴胎，
+        男命（新郎）阳气。任一环节失败仅降级文案并 print，不弹窗打断输入。
+        """
+        row = self.owner_rows[i]
+        try:
+            birth_date, hour, minute, lng = self._owner_birth(i)
+        except (ValueError, TypeError):
+            row['sizhu'].set('未计算')
+            for _k in ('zodiac', 'xishen', 'yongshen', 'mar1', 'mar2', 'mar3',
+                       'truesolar'):
+                row[_k].set('')
+            return
+        try:
+            sz = calculate_sizhu(birth_date, hour, minute, longitude=lng)
+        except Exception as e:
+            print('事主四柱计算失败（%s）：%s' % (row['name'].get() or i, e))
+            row['sizhu'].set('计算失败')
+            for _k in ('zodiac', 'xishen', 'yongshen', 'mar1', 'mar2', 'mar3',
+                       'truesolar'):
+                row[_k].set('')
+            return
+
+        _pillars = [str(sz.get(_k) or '') for _k in ('年柱', '月柱', '日柱', '时柱')]
+        row['sizhu'].set(' '.join(_pillars))
+        row['truesolar'].set('(真太阳时)' if lng != 120.0 else '')
+        _zhi = _pillars[0][1:2]
+        _zhis = '子丑寅卯辰巳午未申酉戌亥'
+        row['zodiac'].set('鼠牛虎兔龙蛇马羊猴鸡狗猪'[_zhis.index(_zhi)]
+                          if _zhi in _zhis else '')
+
+        # 喜用神（字段口径同主程序 L2829-2841）
+        try:
+            from modules.喜用神计算器 import calculate_xishen_yongshen
+            _det = {_k: sz.get(_k, '') for _k in
+                    ('year_gan', 'year_zhi', 'month_gan', 'month_zhi',
+                     'day_gan', 'day_zhi', 'hour_gan', 'hour_zhi')}
+            _x, _y = calculate_xishen_yongshen(_det)
+            row['xishen'].set(_x or '')
+            row['yongshen'].set(_y or '')
+        except Exception as e:
+            print('事主喜用神计算失败：%s' % e)
+            row['xishen'].set('')
+            row['yongshen'].set('')
+
+        # 嫁娶专用：夫星/子星/阴胎（女命）、阳气（男命）
+        for _k in ('mar1', 'mar2', 'mar3'):
+            row[_k].set('')
+        try:
+            if self.event_var.get() == '嫁娶':
+                from modules.工具函数 import get_fuzi, get_yintai, get_yangqi
+                if row['gender'].get() == '女':
+                    _fz = get_fuzi(sz.get('year_gan', ''), sz.get('year_zhi', ''))
+                    row['mar1'].set('夫星：%s' % (_fz.get('fu') or '未知'))
+                    row['mar2'].set('子星：%s' % (_fz.get('zi') or '未知'))
+                    _mg, _mz = sz.get('month_gan', ''), sz.get('month_zhi', '')
+                    if _mg and _mz:
+                        row['mar3'].set('阴胎：%s' % (get_yintai(_mg, _mz) or '未知'))
+                elif row['gender'].get() == '男':
+                    _mg, _mz = sz.get('month_gan', ''), sz.get('month_zhi', '')
+                    if _mg and _mz:
+                        row['mar1'].set('阳气：%s' % (get_yangqi(_mg, _mz) or '未知'))
+        except Exception as e:
+            print('事主夫星子星/阴阳胎计算失败：%s' % e)
+
+    def _open_owner_bazi(self, i):
+        """事主八字排盘详情（与主程序 show_owner_bazi_detail 同源，含真太阳时）。"""
+        try:
+            birth_date, hour, minute, lng = self._owner_birth(i)
+        except (ValueError, TypeError) as e:
+            messagebox.showwarning('提示', '请先填写完整有效的出生年月日：%s' % e)
+            return
+        try:
+            from modules.八字排盘 import BaZiPanPan
+            from modules.八字可视化模块 import show_bazi_dialog
+            panpan = BaZiPanPan(birth_date.year, birth_date.month, birth_date.day,
+                                hour, minute, self.owner_rows[i]['gender'].get(),
+                                longitude=lng)
+            show_bazi_dialog(self.root, panpan.get_panpan_result())
+        except Exception as e:
+            messagebox.showerror('八字详情', '打开八字排盘详情失败：%s' % e)
 
     def _build_action_area(self):
         frm = ttk.Frame(self.root, padding=8)
@@ -198,6 +353,9 @@ class 精准择时版App:
         if ev in DUAL_OWNER_EVENTS:
             self.owner_rows[0]['role'].set("新郎")
             self.owner_rows[1]['role'].set("新娘")
+        # 事项影响嫁娶专用回显（夫星/子星/阴胎/阳气），随事项刷新
+        for _i in range(len(self.owner_rows)):
+            self._update_owner_sizhu(_i)
         self.status_var.set(f"当前事项：{ev}")
 
     # ---------- owners_data / context 组装（严格对齐主程序口径） ----------
