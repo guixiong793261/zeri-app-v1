@@ -1315,14 +1315,24 @@ class ReverseWindow:
         _t3.pack(fill=tk.BOTH, expand=False)
         _xf = ttk.Frame(_p3)
         _xf.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
-        ttk.Label(_xf, text='相主吉凶（评分器原文）',
-                  font=('Microsoft YaHei UI', 9, 'bold')).pack(anchor='w')
         _xz = self._xiangzhu_lines(_det if isinstance(_det, dict) else {})
+        _xsc = self._xiangzhu_score(_det if isinstance(_det, dict) else {})
+        _title = '相主吉凶'
+        if _xsc:
+            _title += '（合计 %+d 分）' % _xsc
+        if _xz:
+            _title += ' · 逐句详情（评分器原文）'
+        else:
+            _title += ' · 本日无刑冲克害（评分器判定通过）'
+        ttk.Label(_xf, text=_title,
+                  font=('Microsoft YaHei UI', 9, 'bold')).pack(anchor='w')
         _xt = tk.Text(_xf, height=7, wrap='word',
                       font=('Microsoft YaHei UI', 9))
         _xt.pack(fill=tk.BOTH, expand=True)
-        _xt.insert('1.0', '\n'.join('· ' + _x for _x in _xz) if _xz
-                   else '（未输入事主，或本日未触发相主判定）')
+        if _xz:
+            _xt.insert('1.0', '\n'.join('· ' + _x for _x in _xz))
+        else:
+            _xt.insert('1.0', '（未输入事主，或本日未触发相主判定）')
         _xt.configure(state='disabled')
 
         ttk.Button(_bar, text='关闭', command=_win.destroy).pack(
@@ -1386,8 +1396,29 @@ class ReverseWindow:
 
     @staticmethod
     def _xiangzhu_lines(det):
-        """相主吉凶原文（评分器 xiangzhu_notes，纯展示不加工）。"""
-        return [str(_t) for _t in ((det or {}).get('xiangzhu_notes') or [])]
+        """相主吉凶原文（评分器逐句详情，001 §238.15 补齐）。
+
+        评分器把逐句相主关系写在 score_details['相主详情']
+        （例："贵雄年命亥与日课月支巳六冲，-15分"），旧字段
+        xiangzhu_notes 可能为空。优先用 score_details，查不到再 fallback。
+        """
+        det = det or {}
+        _sd = det.get('score_details') or {}
+        _ph = _sd.get('相主详情')
+        if _ph:
+            return [str(_t) for _t in _ph]
+        _xn = det.get('xiangzhu_notes') or []
+        return [str(_t) for _t in _xn]
+
+    @staticmethod
+    def _xiangzhu_score(det):
+        """相主合计分值（来自 score_details['相主得分']）。"""
+        det = det or {}
+        _sd = det.get('score_details') or {}
+        try:
+            return int(_sd.get('相主得分') or 0)
+        except (TypeError, ValueError):
+            return 0
 
     def _build_detail_lines(self, d, ev, bh, stars, fit):
         """构造日课详情的纯文本行列表（保存/打印共用数据源）。"""
