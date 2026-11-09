@@ -738,6 +738,10 @@ class 精准择时版App:
                     if isinstance(widget, (ttk.Entry, ttk.Combobox)):
                         widget.delete(0, tk.END)
                         widget.insert(0, str(val))
+            # 001 §238.19：配置回填后立即刷新四柱/喜用神回显，
+            # 不必等用户点击输入框触发 FocusOut
+            for _i in range(len(self.owner_rows)):
+                self._update_owner_sizhu(_i)
         except Exception as e:
             self.status_var.set(f"读取配置失败（已忽略）：{e}")
 

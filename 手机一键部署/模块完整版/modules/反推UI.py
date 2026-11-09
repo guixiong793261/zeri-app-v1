@@ -315,9 +315,16 @@ class ReverseWindow:
         ttk.Label(inner, text='当前排盘上下文：',
                   font=('Microsoft YaHei UI', 9, 'bold')).pack(side=tk.LEFT)
 
-        # 事主回显
-        _names = [str(_o.get('name') or '').strip() for _o in self.owners]
-        _names = [_n for _n in _names if _n]
+        # 事主回显（001 §238.19：以"有效事主条数"判定，姓名可空）
+        # 旧逻辑仅看 name 非空 → 用户未填姓名时会误报"当前未输入事主"，
+        # 即使生辰/四柱都已参与计算。姓名空时回退角色名或序号。
+        _owners = [o for o in (self.owners or []) if o]
+        _names = []
+        for _i, _o in enumerate(_owners, 1):
+            _n = str(_o.get('name') or '').strip()
+            if not _n:
+                _n = str(_o.get('role') or '').strip() or ('事主%d' % _i)
+            _names.append(_n)
         if _names:
             ttk.Label(inner, text='事主：', foreground='#1565C0').pack(side=tk.LEFT, padx=(8, 0))
             ttk.Label(inner, text='[%s]' % '、'.join(_names),
