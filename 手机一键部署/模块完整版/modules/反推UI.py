@@ -70,6 +70,25 @@ def _band_status_text(band, kind):
     return ('%s·慎用' % band) if kind == '慎用' else band
 
 
+def _penalty_index(penalty_detail):
+    """扣分构成明细 → {项目名: 分值}（001 §238.9，只做展示标注）。
+
+    输入形如 ['三合木局克山（坤山属土）（-40分）', ...]；
+    供详情窗/导出文本把「忌项」标出扣分金额（三煞/克山/自刑伏吟走忌项通道）。
+    """
+    _out = {}
+    for _s in (penalty_detail or []):
+        _t = str(_s)
+        if not (_t.endswith('分）') and '（' in _t):
+            continue
+        _name, _tail = _t.rsplit('（', 1)
+        try:
+            _out[_name] = int(_tail[:-2])   # 去掉末尾「分）」
+        except ValueError:
+            continue
+    return _out
+
+
 class _GreenProgressbar:
     """Canvas 自绘绿色进度条（Windows ttk 默认主题不支持改 Progressbar 颜色）。
 
@@ -1113,11 +1132,13 @@ class ReverseWindow:
         _di = _d.get('deduct_items') or []
         _ji = _d.get('ji_items') or []
         _vr = _d.get('veto_reasons') or []
+        _pen = _penalty_index(_d.get('penalty_detail'))
         for _s in _di:
             _t1.insert('', tk.END, values=('扣分神煞', _s.get('name', ''),
                                            int(_s.get('score') or 0)))
         for _j in _ji:
-            _t1.insert('', tk.END, values=('忌　　项', _j, '—'))
+            _t1.insert('', tk.END, values=('忌　　项', _j,
+                                           _pen.get(str(_j), '—')))
         for _r in _vr:
             _t1.insert('', tk.END, values=('否决原因', _r, '—'))
         if not (_di or _ji or _vr):
@@ -1183,13 +1204,15 @@ class ReverseWindow:
         _di = d.get('deduct_items') or []
         _ji = d.get('ji_items') or []
         _vr = d.get('veto_reasons') or []
+        _pen = _penalty_index(d.get('penalty_detail'))
         if not (_di or _ji or _vr):
             lines.append('无扣分、无忌项、无否决')
         for _s in _di:
             lines.append('扣分神煞　%s　%d 分' % (_s.get('name', ''),
                                                 int(_s.get('score') or 0)))
         for _j in _ji:
-            lines.append('忌　　项　%s' % _j)
+            _v = _pen.get(str(_j))
+            lines.append('忌　　项　%s%s' % (_j, '（%d分）' % _v if _v else ''))
         for _r in _vr:
             lines.append('否决原因　%s' % _r)
         lines.append('')
