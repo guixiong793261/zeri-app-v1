@@ -6224,6 +6224,12 @@ class ZeriApp:
         main_frame = ttk.Frame(detail_window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
+        # 001 §244：底部按钮条先 pack(BOTTOM) 占位，避免决策面板过高时
+        #   被 text(expand=True) 挤压到 1px 导致「保存/关闭」按钮不可见。
+        #   按钮本身在 content 生成后再创建（save_detail 闭包延迟求值）。
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+
         # 001 §238.12：专家决策分析面板（红绿灯裁决，纯展示层汇总，
         # 不改评分/否决逻辑；须先于文本区 pack 才能置顶）
         try:
@@ -8461,10 +8467,7 @@ class ZeriApp:
             pass
         text.config(state=tk.DISABLED)
         
-        # 按钮区域
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=10)
-        
+        # 001 §244：按钮条已在窗口顶部预 pack(BOTTOM) 占位，此处只创建按钮。
         def save_detail():
             """保存日课详情"""
             file_path = filedialog.asksaveasfilename(
@@ -8481,10 +8484,19 @@ class ZeriApp:
                 return
             
             try:
+                # 001 §244：保存时一并带上顶部「重要警示」块（detail['warnings']），
+                #   与窗口渲染顺序一致（警示置顶 → 正文）。
+                _warns_save = list((detail.get('warnings')
+                                    if isinstance(detail, dict) else None) or [])
+                _warn_block = ''
+                if _warns_save:
+                    _warn_block = ('【⚠ 重要警示】\n'
+                                   + '\n'.join(str(_w) for _w in _warns_save)
+                                   + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n')
                 # 保存为文本文件
                 if file_path.endswith('.txt'):
                     with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(content)
+                        f.write(_warn_block + content)
                     messagebox.showinfo("成功", f"日课详情已保存到：{file_path}")
                 
                 # 保存为JSON文件
@@ -8495,6 +8507,7 @@ class ZeriApp:
                         'sizhu': result.get('sizhu', ''),
                         'score': result.get('score', 0),
                         'level': result.get('level', '未知'),
+                        'warnings': _warns_save,
                         'yi_list': detail['yi_list'],
                         'ji_list': detail['ji_list'],
                         'shensha_list': detail['shensha_list'],

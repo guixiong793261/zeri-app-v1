@@ -12839,6 +12839,27 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 - 仅改结果表渲染时的核验数据源，不改 `calculate_score` 分值与排序；详情页原有 lucky_hours 生成逻辑不变，两者口径继续对齐。
 
 
+**244. 日课详情保存按钮不见 + 保存须含顶部警示**
+
+**244.1 现象**
+- 双击结果行打开日课详情，底部「保存详情/关闭」按钮不可见（被挤压）。
+- 保存的 txt/json 不含窗口顶部的「【⚠ 重要警示】」块（`detail['warnings']`）。
+
+**244.2 根因**
+- 布局：决策分析面板 `pack(side=tk.TOP)` 可能高达 300+px，随后 `text.pack(fill=BOTH, expand=True)` 占满剩余空间，`button_frame` 最后 `pack(fill=tk.X)` 且无 expand，被压缩到 1px → 按钮不可见。
+- 保存：`save_detail` 写的是 `content` 变量，而顶部警示块是在 `text.insert(END, content)` 之后才 `insert("1.0", _wblock)` 置顶的，不在 `content` 内。
+
+**244.3 修复（`主程序.py` `on_result_double_click`）**
+- 按钮条 `button_frame` 提前到 main_frame 创建后、决策面板之前，`pack(side=tk.BOTTOM, fill=tk.X)` 占位；按钮本身在 content 生成后再创建（闭包延迟求值，不影响）。
+- `save_detail`：保存前从 `detail['warnings']` 拼出「【⚠ 重要警示】」块，txt 写入 `_warn_block + content`，json 新增 `warnings` 字段。
+
+**244.4 验证**
+- 布局探针：决策面板 15 行（345px）时，修复前 `button_frame` h=1，修复后 h=27 可见。
+- 保存探针：含 2 条 warnings 的 detail → 输出 txt 首段为「【⚠ 重要警示】」，json 含 `warnings` 数组。
+- py_compile 通过；`verify_234` ALL PASS。
+
+
+
 
 
 
