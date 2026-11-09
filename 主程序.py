@@ -4249,7 +4249,35 @@ class ZeriApp:
             _ck_detail = result.get('detail')
             if isinstance(_ck_detail, dict) and _ck_detail.get('score_details'):
                 try:
-                    _chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck)
+                    # 001 §243：detail 不带 lucky_hours / bride_year_zhi，
+                    #   需当场生成时辰表并提取新娘年支，否则 E003/E004 等
+                    #   关键规则被跳过、极品筛选恒为"全部"。
+                    _lh4ck = None
+                    try:
+                        from modules.推荐时柱 import resolve_recommended_hour
+                        _sz4ck = _ck_detail.get('sizhu') or {}
+                        _shan4ck = (result.get('shan_xiang')
+                                    or getattr(self, 'shan_xiang', None) or '')
+                        if hasattr(_shan4ck, 'get'):
+                            _shan4ck = _shan4ck.get() or ''
+                        _rec4ck = resolve_recommended_hour(
+                            _sz4ck, _ev_ck, _owners_ck, str(_shan4ck))
+                        if isinstance(_rec4ck, dict):
+                            _lh4ck = _rec4ck.get('lucky_hours')
+                    except Exception:
+                        _lh4ck = None
+                    _byz4ck = None
+                    for _o4ck in (_owners_ck or []):
+                        if isinstance(_o4ck, dict):
+                            _r4ck = str(_o4ck.get('role') or _o4ck.get('身份') or '')
+                            if _r4ck in ('新娘', '事主'):
+                                _yz4ck = _o4ck.get('year_zhi') or _o4ck.get('年支')
+                                if _yz4ck:
+                                    _byz4ck = str(_yz4ck)
+                                    break
+                    _chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck,
+                                           lucky_hours=_lh4ck,
+                                           bride_year_zhi=_byz4ck)
                     _ok_n = int(_chk.get('ok_count', 0))
                     _tot_n = len(_chk.get('items') or [])
                     # 001 §240：极品口径＝日课校验无警告（详情页【日课校验】✅ 通过）

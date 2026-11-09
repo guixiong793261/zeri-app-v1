@@ -12794,5 +12794,51 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 - 「粗筛 + 精筛」两步：粗筛（无时辰表）保证 365 天扫盘性能，精筛（带时辰表）仅 Top-N，与详情页绝对对齐。
 
 
+**242. 婚嫁事主影响收口 + 详情窗放大（commit 91f1204）**
+
+**242.1 背景**
+- 嫁娶日课中「夫星受克」「犯阳气」等对事主的影响散落在 `marriage_details`（负分项）与 `ji_list`，未归集到「对事主的影响」列，用户难以一眼看到事主风险。
+- 详情窗尺寸偏小（920×720），扣分明细仅 8 行，内容多时需滚动。
+
+**242.2 修复 A：事主影响归集（`modules/决策分析.py` `build_decision_report`）**
+- 新增 3b 段：扫描 `marriage_details`（负分项）与 `ji_list`，将含「夫星/阳气/阴胎」关键词的项归入 `owner_items`。
+- 按命中关键词去重（`marriage_details` 带括号详情如「犯阳气（日支冲阳气）」与 `ji_list` 纯名称「犯阳气」不重复）。
+- 正面吉神（大利月等）不进入事主列。
+
+**242.3 修复 B：详情窗放大（`modules/反推UI.py`）**
+- 窗口最大尺寸 920×720 → 1100×880，minsize 760×560 → 880×640。
+- 扣分明细 Treeview height 8 → 14。
+
+**242.4 验证**
+- 探针 mock 嫁娶数据（夫星微受克 -10、犯阳气 -30、大利月 +30）→ 夫星/阳气正确入 owner_items、大利月不误入、犯阳气去重仅 1 条。
+- 全量 `run_all.py` **144/144 PASS**（280.8s）。
+- 六副本：决策分析 / 反推UI 三份 SHA256 一致（`56BCCFC1A74E` / `CEC7DABFA349`）。
+
+
+**243. 极品(无警告)筛选不过滤修复**
+
+**243.1 现象**
+- 主程序结果表筛选下拉选「极品(无警告)」时，仍显示全部行，未过滤。
+
+**243.2 根因**
+- `perfect_profile` 内部调 `lint_lesson` 时，主程序 `result['detail']` 不带 `lucky_hours`（十二时辰表）与 `bride_year_zhi`（新娘年支），导致 E003（利月）/ E004（推荐时柱一致性）/ E102（时辰六合）等关键规则被跳过。
+- 执行的规则又全部通过，`_lint_ok` 恒为 True，`perfect` 恒为 True → 极品筛选等于无效。
+- 此外，E004 依赖 `detail['_auth_sizhu']` 标记判定时柱是否为系统推荐柱；主程序经 `_inject_best_hour_to_result` 已设此标记，但若 lucky_hours 缺失则 E004 整规则跳过，连 INFO 都不产生。
+
+**243.3 修复**
+- `modules/排序键.py` `perfect_profile`：新增 `lucky_hours=None`、`bride_year_zhi=None` 参数；优先用传入值，否则回退 detail 自带值，再不行从 owners 提取新娘/事主年支；一并传给 `lint_lesson`。
+- `主程序.py` `_render_result_tree`：在调 `perfect_profile` 前，用 `resolve_recommended_hour(detail['sizhu'], event, owners, shan)` 当场生成 lucky_hours（实测 1ms/次，30 行约 30ms，可接受），并从 owners 提取 bride_year_zhi，传入。
+
+**243.4 验证**
+- 端到端探针（2026-03 嫁娶 28 天）：评分>0 共 16 行，极品筛选后仅显示 5 行（2026-03-02/06/08/14/26），过滤生效。
+- py_compile 主程序.py / 排序键.py 通过。
+- 全量 `run_all.py` **144/144 PASS**（`verify_234_结果表核验列.py` E1 断言同步改为前缀匹配）。
+- 六副本：排序键 / 主程序 三份 SHA256 一致。
+
+**243.5 口径**
+- 仅改结果表渲染时的核验数据源，不改 `calculate_score` 分值与排序；详情页原有 lucky_hours 生成逻辑不变，两者口径继续对齐。
+
+
+
 
 

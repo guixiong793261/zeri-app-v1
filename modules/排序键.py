@@ -308,7 +308,8 @@ def _xz_line_scores(details):
     return _out
 
 
-def perfect_profile(result, owners=None, event_type=''):
+def perfect_profile(result, owners=None, event_type='',
+                    lucky_hours=None, bride_year_zhi=None):
     """满分画像核验（001 §231 通用五维 + §233 事项定制 + §238 六维）。
 
     通用底线（所有事项必有）：得令、硬忌；
@@ -448,10 +449,24 @@ def perfect_profile(result, owners=None, event_type=''):
     _lint_note = ''
     try:
         from modules.日课校验器 import lint_lesson
-        # detail 若已带十二时辰表则一并校验（E004 等时辰类规则），
-        # 未带则相关规则跳过、不计警告
-        _lh = _r.get('lucky_hours') if isinstance(_r, dict) else None
-        _lr = lint_lesson(_r, lucky_hours=_lh)
+        # 001 §243：主程序结果表 detail 通常不带 lucky_hours / bride_year_zhi，
+        #   导致 E003(利月)/E004(时辰) 等关键规则被跳过、perfect 恒为 True。
+        #   优先使用调用方传入的 lucky_hours / bride_year_zhi；未传则回退
+        #   detail 自带值，再不行从 owners 提取新娘/事主年支。
+        _lh = lucky_hours
+        if _lh is None:
+            _lh = _r.get('lucky_hours') if isinstance(_r, dict) else None
+        _byz = bride_year_zhi
+        if _byz is None:
+            for _o in (owners or []):
+                if isinstance(_o, dict):
+                    _role = str(_o.get('role') or _o.get('身份') or '')
+                    if _role in ('新娘', '事主'):
+                        _yz = _o.get('year_zhi') or _o.get('年支')
+                        if _yz:
+                            _byz = str(_yz)
+                            break
+        _lr = lint_lesson(_r, lucky_hours=_lh, bride_year_zhi=_byz)
         _lint_ok = (not _lr.has_error) and _lr.warn_count == 0
         if _lint_ok:
             _lint_note = '日课校验通过（%d 项规则，无警告）' % len(_lr.executed_ids)

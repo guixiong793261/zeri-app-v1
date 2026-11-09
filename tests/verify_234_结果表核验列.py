@@ -74,8 +74,8 @@ check('D3 三档过滤条件（§240：极品=日课校验无警告）',
       and "if _flt == '优吉(2-3✓)' and not (2 <= _ok_n <= 3):" in _src)
 
 # ── E：渲染接线与静默事主 ─────────────────────────────────────────
-check('E1 渲染处 perfect_profile(result, owners, event_type) 三参调用',
-      '_chk = perfect_profile(_ck_detail, _owners_ck, _ev_ck)' in _src)
+check('E1 渲染处 perfect_profile(result, owners, event_type) 调用（§243 增补 lucky_hours/bride_year_zhi）',
+      'perfect_profile(_ck_detail, _owners_ck, _ev_ck' in _src)
 check('E2 渲染处静默收集事主',
       '_owners_ck = self._collect_owners_data(silent=True)' in _src)
 check('E3 silent 形参 + 弹窗守卫',
