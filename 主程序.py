@@ -7016,7 +7016,7 @@ class ZeriApp:
                 _cap_note = ''
             _ss_detail = score_details.get('三煞扣分明细') or []
             if _ss_detail:
-                content += f"    三煞扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n"
+                content += f"    扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n"
             # 三煞“上管下、下不犯上”口径透明化（2026-10-08 拍板维持单向）：
             # 枚举早序柱临晚序柱三煞方的反向组合，按口径不查、不扣分，仅提示，
             # 避免反向相临被误读为“临三煞漏扣分”（hour 三煞方本模块不计算）。

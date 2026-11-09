@@ -284,6 +284,11 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
         # 001 §238：五行偏枯预警（过燥/过寒/None）透传——与主程序结果表同源同口径，
         # 供反推详情窗、详情文本导出与择日贴消费；纯展示，不参与排序与分值
         'pian_ku': best_r.get('wuxing_pian_ku'),
+        # 001 §238.9：扣分构成明细（三煞/合局克山/自刑伏吟，均带分值文本），
+        # 供反推详情把「忌项」标注出 -40/-15 等金额；纯展示，不参与分值
+        'penalty_detail': [str(_x) for _x in
+                           ((best_r.get('score_details') or {}).get('三煞扣分明细')
+                            or [])],
         'reason': str(best_r.get('reason') or ''),
         'best_hour': {
             '时柱': _gz,

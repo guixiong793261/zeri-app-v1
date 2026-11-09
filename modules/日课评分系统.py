@@ -2993,7 +2993,7 @@ class DayScoreWindow:
                 _cap_note = ''
             _ss_detail = score_details.get('三煞扣分明细') or (result.get('sansha_info') or {}).get('sansha_penalty_detail') or []
             if _ss_detail:
-                self._insert_colored_text(f"    三煞扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n")
+                self._insert_colored_text(f"    扣分构成：{'、'.join(str(_x) for _x in _ss_detail)}\n")
             # 三煞“上管下、下不犯上”反向组合提示（与主程序 6635-6655 行对齐）
             _ssz = result.get('sizhu') if isinstance(result.get('sizhu'), dict) else {}
             _yz = str(_ssz.get('年柱', '') or '')[1:2]

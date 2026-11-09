@@ -234,6 +234,43 @@ def test_reverse_ui():
     check("else ''), _d['kind'])" in _s,
           'F13b Top-N 榜单状态列仍为 吉日/慎用')
 
+    # 001 §238.9：扣分构成金额进入反推详情（克山/自刑伏吟走忌项通道）
+    _pidx = R._penalty_index([
+        '三合木局克山（坤山属土）（-40分）',
+        '自刑伏吟加重（年支日支自刑）（-7分）',
+        '月三煞(山向)（-20分）',
+        '无分值文本'])
+    check(_pidx.get('三合木局克山（坤山属土）') == -40
+          and _pidx.get('自刑伏吟加重（年支日支自刑）') == -7
+          and _pidx.get('月三煞(山向)') == -20
+          and '无分值文本' not in _pidx,
+          'F14 扣分构成解析（克山-40/自刑-7/三煞-20，非分值文本跳过）', str(_pidx))
+
+    _rec9 = record_of_day(_dt.date(2026, 6, 1), '修造',
+                          context={'shan_xiang': '坤山艮向', 'zeli_mode': 'pure'})
+    check(isinstance(_rec9.get('penalty_detail'), list),
+          'F15 反推日记录携带 penalty_detail（列表）',
+          type(_rec9.get('penalty_detail')).__name__)
+
+    _d9 = {'date': '2026-11-17', 'weekday': '周二', 'lunar': '十月初九',
+           'sizhu': '丙午 己亥 乙未 己卯', 'score': 100, 'level': '★★★★ 吉',
+           'kind': '吉日', 'jishen': '', 'reason': '', 'deduct_items': [],
+           'ji_items': ['三合木局克山（坤山属土）'],
+           'penalty_detail': ['三合木局克山（坤山属土）（-40分）'],
+           'veto_reasons': [], 'pian_ku': None}
+    _w9 = object.__new__(R.ReverseWindow)
+    _l9 = _w9._build_detail_lines(
+        _d9, '修造', {'时辰': '卯时', '时段': '05-07', '时柱': '己卯'}, 0, 0)
+    check(any('三合木局克山（坤山属土）（-40分）' in x for x in _l9),
+          'F16 反推详情文本忌项带 -40 金额',
+          [x for x in _l9 if '克山' in x])
+
+    for _rel in ('主程序.py', os.path.join('modules', '日课评分系统.py')):
+        with open(os.path.join(_ROOT, _rel), 'r', encoding='utf-8') as f:
+            _ss = f.read()
+        check('扣分构成：' in _ss and '三煞扣分构成' not in _ss,
+              'F17 %s：标题改「扣分构成」' % _rel)
+
 
 def main():
     print('=' * 74)
