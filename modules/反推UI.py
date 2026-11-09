@@ -1168,10 +1168,10 @@ class ReverseWindow:
         # 表现为"详情窗没有保存/打印"。按可用屏幕尺寸收敛后定位到左上角。
         _sw = _win.winfo_screenwidth()
         _sh = _win.winfo_screenheight()
-        _w = min(920, max(320, _sw - 40))
-        _h = min(720, max(320, _sh - 60))
+        _w = min(1100, max(320, _sw - 40))
+        _h = min(880, max(320, _sh - 60))
         _win.geometry('%dx%d+%d+%d' % (_w, _h, 10, 10))
-        _win.minsize(min(760, _w), min(560, _h))
+        _win.minsize(min(880, _w), min(640, _h))
         _win.transient(self.win)
 
         # 底部按钮条：先于内容区 pack 到底边，窗口被压缩时按钮也不会消失
@@ -1259,7 +1259,7 @@ class ReverseWindow:
         _p1 = ttk.Frame(_nb, padding=6)
         _nb.add(_p1, text='扣分明细 / 忌项')
         _t1 = ttk.Treeview(_p1, columns=('类型', '项目', '分值'),
-                           show='headings', height=8)
+                           show='headings', height=14)
         for _c, _w in (('类型', 110), ('项目', 470), ('分值', 70)):
             _t1.heading(_c, text=_c)
             _t1.column(_c, width=_w,

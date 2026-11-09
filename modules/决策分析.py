@@ -187,6 +187,43 @@ def build_decision_report(result, event_type=''):
         else:
             owner_items.append((True, t))
 
+    # 3b) 婚嫁专属事主影响项（夫星 / 阳气 / 阴胎）
+    # 婚嫁评分算法中 夫星受克、犯阳气、冲阴胎 等直接作用于事主（新郎/新娘），
+    # 但它们存储在 marriage_details（扣分明细）或 ji_list（忌项），不在
+    # xiangzhu_notes 中，需单独归入「对事主的影响」，避免出现"有夫星受克
+    # 却显示无显著影响"的矛盾。仅取负分项或忌项，正面婚嫁吉神（大利月等）
+    # 不计入事主影响列。
+    _marr_owner_kws = ('夫星', '阳气', '阴胎')
+
+    def _marr_kw(text):
+        """返回 text 命中的婚嫁事主关键词（未命中返回 None）。"""
+        for _k in _marr_owner_kws:
+            if _k in str(text):
+                return _k
+        return None
+
+    # 按关键词去重：marriage_details（带括号详情）与 ji_list（纯名称）
+    # 可能重复命中同一煞（如"犯阳气（日支冲…）" vs "犯阳气"），只保留首条。
+    _owner_seen_kws = set()
+    for _it in owner_items:
+        _k = _marr_kw(_it[1])
+        if _k:
+            _owner_seen_kws.add(_k)
+    for _md in (r.get('marriage_details') or []):
+        try:
+            _mn, _ms = str(_md[0]), int(_md[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        _k = _marr_kw(_mn)
+        if _ms < 0 and _k and _k not in _owner_seen_kws:
+            owner_items.append((False, '%s（%d分）' % (_mn, _ms)))
+            _owner_seen_kws.add(_k)
+    for _ji in (r.get('ji_list') or []):
+        _k = _marr_kw(_ji)
+        if _k and _k not in _owner_seen_kws:
+            owner_items.append((False, str(_ji)))
+            _owner_seen_kws.add(_k)
+
     # 4) 综合裁决（001 §238.15 阶梯式高分豁免）
     #
     # 核心矛盾：修造择日几乎必然向方犯三煞（日三煞/月三煞向方各 -15/-6/-3），
