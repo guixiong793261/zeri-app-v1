@@ -110,14 +110,46 @@ def build_decision_report(result, event_type=''):
             other_veto.append(v)
 
     # 2) 山家数据（全部来自 sansha_info / shanzuo_eval / sun_moon_info）
+    # 001 §238.15：评分器已把 mountain_warnings 原始列表分流为三类：
+    #   - 有制化 → mountain_warnings_mitigated（进 ✓）
+    #   - 无制化/制化不全 → sansha_penalty_detail + ji_list（进 ✗）
+    # 故此处直接消费分流结果，跳过原始 mountain_warnings，避免同一煞
+    # 同时出现在 ✗（原始）和 ✓（已制化）造成视觉混乱。
+    #
+    # 额外去重：veto（一票否决）和 sansha_penalty_detail 可能重叠
+    # （如"年三煞(山向)"既是否决又扣分），veto 已经在顶部大红色
+    # 展示过，下方山家影响里应过滤掉避免同一煞出现两次。
     si = r.get('sansha_info') or {}
+
+    def _in_veto(text):
+        """text 含任一 veto 条目的关键煞名 → True。
+
+        用"关键煞名"（去掉括号/括号内文字后的核心词）做匹配，
+        避免全角/半角括号差异导致漏匹配。
+        例：sansha_penalty_detail = "年三煞(山向)（-25分）"
+            veto = "月建丑正当年三煞（亥子丑）方" → 都含 "年三煞" → True
+        """
+        _key = str(text)
+        for _v in veto:
+            _vs = str(_v)
+            # 尝试所有常见三煞名
+            for _n in ('年三煞', '月三煞', '日三煞', '年劫煞', '时劫煞',
+                       '伐日', '山家封禁'):
+                if _n in _key and _n in _vs:
+                    return True
+        return False
+
     for d in (si.get('sansha_penalty_detail') or []):
+        if _in_veto(d):
+            continue  # 已在否决区展示，不再重复
         shan_items.append((False, str(d)))
-    for w in (si.get('mountain_warnings') or []):
-        shan_items.append((False, str(w)))
     for mt in (si.get('mountain_warnings_mitigated') or []):
+        if _in_veto(mt):
+            continue
         shan_items.append((True, '%s（已制化）' % str(mt)))
     for j in (si.get('mountain_jishen') or []):
+        if _in_veto(j):
+            continue
         shan_items.append((True, str(j)))
     _mdt = str(si.get('mountain_day_type') or '')
     if _mdt:
@@ -155,28 +187,63 @@ def build_decision_report(result, event_type=''):
         else:
             owner_items.append((True, t))
 
-    # 4) 综合裁决
+    # 4) 综合裁决（001 §238.15 阶梯式高分豁免）
+    #
+    # 核心矛盾：修造择日几乎必然向方犯三煞（日三煞/月三煞向方各 -15/-6/-3），
+    # 导致 neg_total 轻易踩 -20 阈值弹黄牌。但总分≥200 的吉日，向方扣分被
+    # 高分（五行 + 吉神 + 补龙扶山）完全覆盖，实际可用率极高。
+    #
+    # 阶梯阈值（按总分分档，越严越往上）：
+    #   否决 → 任何 veto_reasons = 🚫
+    #   上吉/大吉（≥250） → sansha_penalty < -60 或 neg_total < -70 才黄牌
+    #   吉（200~249）     → sansha_penalty < -40 或 neg_total < -50 才黄牌
+    #   普通（<200）      → 保持原逻辑 neg_total < -20 即黄牌
+    # 五行偏枯 / 重煞预警标记（鲁班煞等高危）任何分数都触发黄牌。
+    sansha_penalty = int(si.get('sansha_penalty') or 0)
     if veto:
         verdict_key = 'veto'
         verdict_reason = '；'.join(veto[:2]) + (' 等' if len(veto) > 2 else '')
     else:
         warn_reasons = []
+        # 先判高危硬触发（不看分数）
         if heavy:
-            warn_reasons.append('重煞预警')
-        if pianku:
+            warn_reasons.append('重煞预警（%s）' % heavy)
+        # 五行偏枯分数阈值偏低时触发
+        if pianku and score < 250:
             warn_reasons.append('五行极度偏枯（%s）' % pianku)
-        if neg_total <= -20:
-            warn_reasons.append('凶煞扣分合计 %d 分' % neg_total)
-        if '凶' in level:
-            warn_reasons.append('总分 %d 分（%s）' % (score, level))
+        # 阶梯式重煞扣分阈值
+        if score >= 250:
+            # 上吉/大吉：只有真重煞才黄牌，向方扣分完全豁免
+            if sansha_penalty <= -60:
+                warn_reasons.append('三煞扣分合计 %d 分（含重煞）' % sansha_penalty)
+            if neg_total <= -70:
+                warn_reasons.append('凶煞扣分合计 %d 分' % neg_total)
+        elif score >= 200:
+            # 吉：中等重煞黄牌
+            if sansha_penalty <= -40:
+                warn_reasons.append('三煞扣分合计 %d 分（含重煞）' % sansha_penalty)
+            if neg_total <= -50:
+                warn_reasons.append('凶煞扣分合计 %d 分' % neg_total)
+        else:
+            # 普通分数：保持原逻辑
+            if neg_total <= -20:
+                warn_reasons.append('凶煞扣分合计 %d 分' % neg_total)
+            if '凶' in level:
+                warn_reasons.append('总分 %d 分（%s）' % (score, level))
         if warn_reasons:
             verdict_key = 'warn'
             verdict_reason = '；'.join(warn_reasons)
         else:
             verdict_key = 'ok'
-            verdict_reason = '无一票否决，无重大凶煞叠加'
+            # 绿灯时附带简要扣分说明，让用户知道有小扣分但不影响可用
+            if neg_total < 0 or sansha_penalty < 0:
+                verdict_reason = ('无一票否决，无重煞叠加（三煞扣分 %d 分 / '
+                                  '凶煞扣分 %d 分，已被高分化解）'
+                                  % (sansha_penalty, neg_total))
+            else:
+                verdict_reason = '无一票否决，无重大凶煞叠加'
 
-    # 5) 补救与建议
+    # 5) 补救与建议（001 §238.15 对齐阶梯式裁决）
     advice = ''
     if verdict_key == 'veto':
         advice = ('此日课犯 %s 大忌，没有任何制化余地，请立刻另择吉日！'
@@ -191,10 +258,19 @@ def build_decision_report(result, event_type=''):
             advice = '此日五行过寒，建议配合上午（木火旺）的时辰使用。'
         elif heavy:
             advice = '本日有重煞扣分（%s），须确认制化到位方可使用。' % heavy
+        elif sansha_penalty <= -60:
+            advice = '三煞扣分较重（%d 分），建议确认制化条件后使用，或另择吉日。' % sansha_penalty
+        elif neg_total <= -50:
+            advice = '凶煞扣分较重（%d 分），建议另择高分吉日。' % neg_total
         elif '凶' in level:
             advice = '本课总分偏低（%d 分，%s），建议另择高分吉日。' % (score, level)
         else:
             advice = '本日存在扣分项，请结合制化条件酌情使用。'
+    else:
+        # 绿灯时若有扣分，给友好提示
+        if sansha_penalty < 0 or neg_total < 0:
+            advice = ('本日有轻微向方扣分（三煞 %d 分 / 凶煞 %d 分），但高分化解，'
+                      '可用。建议配合贵人时辰使用。' % (sansha_penalty, neg_total))
 
     style = _VERDICT_STYLES[verdict_key]
     return {
