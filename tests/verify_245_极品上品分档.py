@@ -149,6 +149,69 @@ def main():
     check('火系' in _n9 and '水系' in _n9,
           '偏枯计数对吉事同样落库（吉事阈值仍为4）', _n9)
 
+    print('\nH. §247 相主红线 + 上品兜底（2026-11-09 方案A 拍板）')
+    # 事主生肖必须用评分器真实键「生肖」（'year_sx' 是死链，相主恒 0）
+    _OX = [{'name': '贵才', 'role': '福主', '生肖': '丑'},
+           {'name': '贵林', 'role': '福主', '生肖': '未'}]
+
+    # H1 缺陷复现：2026-11-02 入宅（无山向），相主 -20，旧版被判极品
+    _h1 = _score(2026, 11, 2, '入宅', '', _OX, 'pure')
+    _c1 = _pp(_h1, '入宅', _OX)
+    _xz1 = int((_h1.get('score_details') or {}).get('相主得分') or 0)
+    check(_xz1 < 0, '11-02 相主得分为负（缺陷复现）', _xz1)
+    check(_c1.get('lint_ok') is True, '11-02 日课校验无警告（区分拦截来源）')
+    check(build_decision_report(_h1, '入宅').get('verdict_key') == 'ok',
+          '11-02 决策面板仍为绿灯（说明拦截来自相主红线）')
+    check(_c1.get('perfect') is False and _c1.get('tier') == 'none',
+          '11-02 相主负 → 剥夺极品', _c1.get('tier'))
+    check('冲克事主' in str(_c1.get('lint_note'))
+          and '剥夺极品/上品资格' in str(_c1.get('lint_note')),
+          '11-02 悬停明确写出剥夺原因', _c1.get('lint_note'))
+
+    # H2 上品兜底：2021-03-21 修造·乾山 总分 -34、相主 -28，旧版被判上品
+    _h2 = _score(2021, 3, 21, '修造', '乾山巽向', _OX, 'pure')
+    _c2 = _pp(_h2, '修造', _OX)
+    check(int(_h2.get('score') or 0) <= 0, '2021-03-21 总分非正（缺陷复现）',
+          _h2.get('score'))
+    check(_c2.get('shangpin') is False and _c2.get('tier') == 'none',
+          '2021-03-21 负分课不得列上品', _c2.get('tier'))
+
+    import datetime as _dt
+    # H3 穷举反向断言一：2026 入宅全年，极品中不得出现相主负分日
+    _bad = []
+    _d = _dt.date(2026, 1, 1)
+    _n_perf = 0
+    while _d <= _dt.date(2026, 12, 31):
+        _r = _score(_d.year, _d.month, _d.day, '入宅', '', _OX, 'pure')
+        _c = _pp(_r, '入宅', _OX)
+        _xz = int((_r.get('score_details') or {}).get('相主得分') or 0)
+        if _c.get('perfect'):
+            _n_perf += 1
+            if _xz < 0:
+                _bad.append('%s(相主%+d)' % (_d, _xz))
+        _d += _dt.timedelta(days=1)
+    check(not _bad, '2026 入宅全年 %d 个极品中相主负分 0 个' % _n_perf,
+          _bad[:5])
+
+    # H4 穷举反向断言二：2021 修造全年，上品必须 相主≥0 且 总分>0 且 等级不含凶
+    _bad2 = []
+    _n_sp = 0
+    _d = _dt.date(2021, 1, 1)
+    while _d <= _dt.date(2021, 12, 31):
+        _r = _score(_d.year, _d.month, _d.day, '修造', '乾山巽向', _OX, 'pure')
+        _c = _pp(_r, '修造', _OX)
+        if _c.get('shangpin'):
+            _n_sp += 1
+            _xz = int((_r.get('score_details') or {}).get('相主得分') or 0)
+            _sc = int(_r.get('score') or 0)
+            _lv = str(_r.get('level') or '')
+            if _xz < 0 or _sc <= 0 or '凶' in _lv:
+                _bad2.append('%s(相主%+d/总分%d/%s)' % (_d, _xz, _sc, _lv))
+        _d += _dt.timedelta(days=1)
+    check(not _bad2,
+          '2021 修造全年 %d 个上品全部满足 相主≥0 且 总分>0 且 等级不含凶' % _n_sp,
+          _bad2[:5])
+
     print('\nG. 源码锚点防回退')
     _src = os.path.join(_ROOT, 'modules', '排序键.py')
     _txt = open(_src, encoding='utf-8').read()
@@ -162,6 +225,11 @@ def main():
     check('▲上品（动土可制化）' in _ui, '反推UI含上品标记')
     _mp = open(os.path.join(_ROOT, '主程序.py'), encoding='utf-8').read()
     check('上品(动土可制化)' in _mp, '主程序筛选下拉含上品档')
+    # 001 §247 锚点
+    check('_xz_block' in _txt and '_sp_score_ok' in _txt,
+          '排序键含相主红线 _xz_block 与上品兜底 _sp_score_ok')
+    check('冲克事主' in _txt and '剥夺极品/上品资格' in _txt,
+          '排序键含「冲克事主→剥夺极品/上品」降级文案')
 
     print('\nFAIL %d' % len(FAILS))
     if FAILS:

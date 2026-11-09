@@ -539,11 +539,22 @@ def perfect_profile(result, owners=None, event_type='',
     _dec_ok = (_dec_key == 'ok')
     _blk, _allow = _shangpin_scan(_r)
     _veto = [str(_v) for _v in ((_r or {}).get('veto_reasons') or [])]
+    # 001 §247（2026-11-09 用户拍板·方案A）：相主红线——有真实事主且相主
+    # 合计为负（冲/克/刑/害/破任一扣分，哪怕 -1），直接剥夺极品与上品资格。
+    # 空事主时相主得分恒为 0，不触发，故 §238 的相主 N/A 第三态不受影响。
+    _xz_block = bool(_has_owner) and _xz < 0
+    try:
+        _score_v = int(_r.get('score') or 0)
+    except (TypeError, ValueError):
+        _score_v = 0
+    _lv = str(_r.get('level') or '')
+    # 001 §247 上品兜底：总分必须 >0 且等级不含「凶」，杜绝 -34 分课混入上品。
+    _sp_score_ok = (_score_v > 0) and ('凶' not in _lv)
     _tier = 'none'
-    if _lint_ok and _dec_ok:
+    if _lint_ok and _dec_ok and not _xz_block:
         _tier = 'perfect'
     elif (_lint_ok and str(event_type or '') in _DONGTU_EVENTS
-          and not _veto and not _blk):
+          and not _veto and not _blk and not _xz_block and _sp_score_ok):
         _tier = 'shangpin'
     if _lint_ok:
         if _tier == 'perfect':
@@ -553,6 +564,14 @@ def perfect_profile(result, owners=None, event_type='',
             _lint_note = ('上品（动土可制化）：本日含动土常态小煞（%s），'
                           '不属于无瑕极品，但可经现场祭拜制化后安全使用'
                           % ('、'.join(_allow) or '慎用黄牌'))
+        elif _xz_block:
+            # 001 §247：高分但冲主 → 档位降级，悬停必须说明原因
+            _lint_note = ('⚠️ 本日得分虽高，但冲克事主（相主得分 %+d），'
+                          '已被剥夺极品/上品资格。' % _xz)
+        elif (str(event_type or '') in _DONGTU_EVENTS and not _veto
+              and not _blk and not _sp_score_ok):
+            _lint_note = ('上品兜底拦截：本日总分 %d 分（%s），未达「总分>0 且等级'
+                          '不含凶」的上品门槛。' % (_score_v, _lv or '—'))
         else:
             _lint_note = ('日课校验通过（%d 项规则，无警告），但顶部决策为「%s」：%s'
                           % (len(_lr.executed_ids),
