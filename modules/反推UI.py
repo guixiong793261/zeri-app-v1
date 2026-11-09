@@ -1164,6 +1164,28 @@ class ReverseWindow:
         _bar = ttk.Frame(_win, padding=(4, 6, 8, 10))
         _bar.pack(side=tk.BOTTOM, fill=tk.X)
 
+        # 001 §238.12：专家决策分析面板（红绿灯裁决，纯展示层汇总，
+        # 不改评分/否决逻辑；须先于 _head pack 才能置顶）。
+        # 榜内记录无 detail 键时，按 §232 同源链路（record_of_day）重算补齐。
+        try:
+            from modules.决策分析 import (build_decision_report,
+                                         render_decision_panel)
+            _det = _d.get('detail')
+            if not isinstance(_det, dict) \
+                    and ds in (getattr(self, '_day_map', None) or {}):
+                _rec2 = record_of_day(
+                    date.fromisoformat(ds),
+                    _meta.get('event_type') or self.event_var.get(),
+                    self.owners, self.context)
+                _det = (_rec2 or {}).get('detail')
+            if isinstance(_det, dict) and _det:
+                _dr = build_decision_report(
+                    _det, _meta.get('event_type') or self.event_var.get())
+                render_decision_panel(_win, _dr).pack(
+                    side=tk.TOP, fill=tk.X, padx=12, pady=(8, 0))
+        except Exception as _e:
+            print('决策分析面板渲染失败（不影响详情正文）：%s' % _e)
+
         _head = ttk.Frame(_win, padding=(12, 10, 12, 2))
         _head.pack(fill=tk.X)
         _font_l = ('Microsoft YaHei UI', 9, 'bold')

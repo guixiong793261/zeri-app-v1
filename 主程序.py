@@ -6188,7 +6188,22 @@ class ZeriApp:
         # 创建主框架
         main_frame = ttk.Frame(detail_window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
+
+        # 001 §238.12：专家决策分析面板（红绿灯裁决，纯展示层汇总，
+        # 不改评分/否决逻辑；须先于文本区 pack 才能置顶）
+        try:
+            from modules.决策分析 import (build_decision_report,
+                                         render_decision_panel)
+            # 导入的旧记录 detail 可能为空（无评分明细），此时不渲染面板，
+            # 避免出现「总分 0 分 · 吉课可用」的误导性绿条
+            _dt = result.get('detail')
+            if isinstance(_dt, dict) and _dt:
+                _dr = build_decision_report(_dt, self.event_var.get())
+                render_decision_panel(main_frame, _dr).pack(
+                    side=tk.TOP, fill=tk.X, pady=(0, 6))
+        except Exception as _e:
+            print('决策分析面板渲染失败（不影响详情正文）：%s' % _e)
+
         # 文本显示区域（整体字号放大两级）
         _BASE_FONT = ("微软雅黑", 13)
         text = scrolledtext.ScrolledText(main_frame, wrap=tk.CHAR, padx=10, pady=10,

@@ -240,12 +240,16 @@ def _sun_moon_tag(score_result):
     return ''
 
 
-def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
+def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None,
+                with_detail=False):
     """单日展示记录（反推榜 + 热力图 + 时间轴）。
 
     001 §214 P2-B：若该事项配置了动作段序列（ACTION_SEQUENCES），调用
     plan_actions 产出 action_plan 挂入记录，供反推UI 动作轴与红帖消费。
     否决日不产出 action_plan（无可用时辰）。
+    001 §238.12：with_detail=True 时附 'detail' 键（完整评分器 result），
+    供详情窗顶部「专家决策分析」面板消费；纯展示透传，不参与排序与分值。
+    榜单/热力图批量记录默认不附，避免内存膨胀。
     """
     _level = str(best_r.get('level') or '')
     _sizhu_str = _pillar_text(best_sz)
@@ -302,6 +306,9 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
         'action_plan': (plan_actions(hours, owners, action_sequence_of(event_type))
                         if kind != '否决' and action_sequence_of(event_type)
                         else None),
+        # 001 §238.12：完整评分器 result（仅 with_detail=True 时附带），
+        # 供详情窗「专家决策分析」面板消费；纯展示透传，不参与排序与分值
+        **({'detail': best_r} if with_detail else {}),
     }
 
 
@@ -316,7 +323,8 @@ def record_of_day(d, event_type, owners=None, context=None):
     _best_sz, _best_r, _hours = scan_day(d, event_type, _owners, context)
     _kind = classify_day(_best_r, event_type)
     return _day_record(d, _best_sz, _best_r, _hours, _kind,
-                       event_type=event_type, owners=_owners)
+                       event_type=event_type, owners=_owners,
+                       with_detail=True)
 
 
 def search_top_n(days=DEFAULT_DAYS, event_type='', owners=None, start=None,
