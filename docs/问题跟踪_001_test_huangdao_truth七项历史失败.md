@@ -12406,3 +12406,40 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
   日记录透传列表、详情文本忌项带 -40、两处标题锚点。
 - 六副本（4 文件×4 路径）SHA 一致，py_compile 通过；run_all 见 commit 说明。
 
+### 238.10 Top-N 排序模式切换与慎用日降权说明（2026-11-09 用户拍板）
+
+**（一）背景**
+- 用户问「修造坤山艮向兼未 2025-10-28 正常择日第 3、精准择时第 13」。
+  核查结论：非 Bug——该日总分 288，但太岁堆黄 -15、鲁班煞 -20、土王用事 -20
+  合计 -55 ≤ -20，按 §210 安全降权判「慎用」，11 个吉日全部优先，慎用层内
+  2025-02-06（336 分）又在其前，故第 13。
+- 用户认可结论并要求提升透明度：新增排序切换（默认仍「吉日优先」）。
+
+**（二）改动（纯展示，不动引擎收录与分值）**
+- `modules/反推UI.py`：
+  - 模块级 `SORT_MODE_TIER`（吉日优先（推荐））/ `SORT_MODE_SCORE`（纯总分排序）
+    / `SORT_MODE_WARN`（二次确认警告原文）。
+  - `_top_sort_key(d, mode)`：吉日优先＝原 §210 键（kind→-score→-jishen_fit→date）；
+    纯总分＝(-score, date)。`_deduct_brief(d, limit=3)`：取负分项名称与合计。
+  - `_build_top_bar` 增加「排序:」下拉（readonly，默认吉日优先）。
+  - `_on_sort_mode_change`：切「纯总分」弹 `messagebox.askyesno`
+    （标题「排序风险确认」，icon=warning）；取消则回退「吉日优先」。
+  - `_render_top` 按当前模式排序；纯总分模式下慎用日使用 tag `cautious_score`
+    （黄底 #FFF8E1 + 红字 #C62828），原因列前缀「⚠ 合计 -N 分（名称…）｜」。
+  - 汇总行补当前排序口径（`_sort_mode_label` / `_update_summary_sort`）；
+    导出/打印文本同步按当前模式排序并注明「排序口径：纯总分（已关闭安全分层）」。
+  - `_show_day_detail` 顶部与 `_build_detail_lines` 详情节新增降权说明块：
+    「💡 降权说明：本日总分 N 分，但存在“…”等重煞扣分（合计 -N 分），
+    为防止误用，系统已将其置于吉日层之后。」
+- 引擎 `rank_day` / `classify_day` 未改：反推引擎入选集合与 §210 一致。
+
+**（三）验证**
+- verify_238 新增 F18–F22：`_top_sort_key` 双模式顺序、`_deduct_brief` 合计与
+  名称、详情文本含「降权说明」与 -55、四处源码锚点（排序风险确认 /
+  SORT_MODE_WARN / cautious_score / 「排序:」）。
+- UI 实机探针（真实 Tk ReverseWindow + 注入 2025-10-28 慎用 288 / 2025-12-16
+  吉日 78）：默认序 [12-16, 10-28]；纯总分序 [10-28(cautious_score), 12-16]；
+  详情窗命中「降权说明…合计 -55 分」→ UI_RESULT=PASS。
+- run_all：142/142 全绿（292.9s）。六副本 反推UI.py SHA 一致
+  （151370ec8b6d），py_compile 通过。
+
