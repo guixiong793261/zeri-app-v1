@@ -344,6 +344,12 @@ def rule_e001(ctx):
     else:
         keys = ['五行评分', '月令得分', '喜用神得分', '相主得分',
                 '黄道得分', '太阳太阴得分', '三煞扣分']
+    # 001 §248（2026-11-10）：评分器 final_score（评分器.py:2609）在七个基础
+    # 分项之外还并入了向方三煞、出行方位、仙命坐山等分项。E001 必须同源汇总，
+    # 否则「向方扣分 -20」这类合规扣分会被误判为总分不一致（ERROR 误报）。
+    for _opt in ('向方扣分', '出行方位得分', '仙命坐山得分', '仙命冲坐山六冲'):
+        if _opt in sd and _opt not in keys:
+            keys.append(_opt)
     missing = [k for k in keys if k not in sd]
     if missing:
         return f'score_details 缺键: {",".join(missing)}'
