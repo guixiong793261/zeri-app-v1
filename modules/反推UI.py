@@ -46,7 +46,18 @@ CELL_W, CELL_H = 66, 50
 PAD = 10
 
 # 001 §232：满分核验分档榜（用户拍板：大吉=4-5✓，优吉=2-3✓）
-PERF_BANDS = (('优吉', 2, 3), ('大吉', 4, 5))
+# 001 §238：专属事项核验改 6 项后，大吉档上限随维度数浮动——上限 None 表示
+# 「取当前事项核验维度数」（专属 6 / 通用 5），否则 6/6 日会两边都不入榜而消失。
+PERF_BANDS = (('优吉', 2, 3), ('大吉', 4, None))
+
+
+def _band_bounds(event_type, band):
+    """返回分档 (下限, 上限)；上限随当前事项核验维度数浮动（001 §238）。"""
+    _n = max(1, len(profile_plan_keys(event_type)))
+    for _b, _lo, _hi in PERF_BANDS:
+        if _b == band:
+            return _lo, (_n if _hi is None else _hi)
+    return 0, _n
 
 
 class _GreenProgressbar:
@@ -152,7 +163,9 @@ class ReverseWindow:
         if self._legend_top is not None:
             self._legend_top.configure(
                 text='满分核验：%s（✓/✗ 依次对应，悬停看缺失项）' % _keys)
-        for _band, (_lbl, _lo, _hi) in self._legend_perf.items():
+        for _band, _item in self._legend_perf.items():
+            _lbl = _item[0]
+            _lo, _hi = _band_bounds(self.event_var.get(), _band)
             _lbl.configure(
                 text='%s：满分核验命中 %d–%d 项 ✓（已排除否决日，按评分降序）'
                      '　核验顺序：%s（悬停看缺失项，双击看日课详情）'
@@ -418,7 +431,7 @@ class ReverseWindow:
 
     def _build_perf_tab(self, band, title):
         """满分核验分档榜单页（只读展示，取引擎 all_days，不重算任何分值）。"""
-        _lo, _hi = next((_l, _h) for _b, _l, _h in PERF_BANDS if _b == band)
+        _lo, _hi = _band_bounds(self.event_var.get(), band)
         _tab = ttk.Frame(self.nb)
         self.nb.add(_tab, text=title)
         _var = tk.StringVar(value='尚未反推')
@@ -772,7 +785,8 @@ class ReverseWindow:
         """优吉 / 大吉分档榜（001 §232）：按满分核验 ✓ 数分档，否决日不入榜。"""
         _days = [_d for _d in (res.get('all_days') or [])
                  if _d.get('kind') != '否决' and _d.get('check')]
-        for _band, _lo, _hi in PERF_BANDS:
+        for _band, _lo_static, _hi_static in PERF_BANDS:
+            _lo, _hi = _band_bounds(self.event_var.get(), _band)
             _tv = self.perf_trees[_band]
             for _i in _tv.get_children():
                 _tv.delete(_i)
@@ -1058,6 +1072,17 @@ class ReverseWindow:
             ttk.Label(_head, text=str(_v), wraplength=_wrap,
                       justify=tk.LEFT).grid(row=_i, column=1, sticky='w',
                                             padx=(6, 0), pady=1)
+        # 001 §238：五行偏枯预警（与主程序同文案/同式样：黄底红字加粗）
+        if _d.get('pian_ku'):
+            tk.Label(_head,
+                     text='⚠ 本课五行极度偏枯（%s），请结合山家与事主命理三思，'
+                          '切勿迷信高分。' % _d['pian_ku'],
+                     bg='#FFE4B5', fg='#B22222',
+                     font=('Microsoft YaHei UI', 10, 'bold'),
+                     wraplength=_wrap + 60, justify=tk.LEFT, anchor='w',
+                     padx=8, pady=4).grid(
+                row=_head.grid_size()[1], column=0, columnspan=2,
+                sticky='we', padx=(0, 4), pady=(6, 2))
 
         _nb = ttk.Notebook(_win)
         _nb.pack(fill=tk.BOTH, expand=True, padx=12, pady=(6, 6))
@@ -1136,6 +1161,10 @@ class ReverseWindow:
         lines.append('吉　　神：%s' % (str(d.get('jishen') or '') or '—'))
         lines.append('扣分主因：%s' % _reason_text(d, compact=False))
         lines.append('评分理由：%s' % (str(d.get('reason') or '') or '—'))
+        # 001 §238：五行偏枯预警（纯提示，不改分）
+        if d.get('pian_ku'):
+            lines.append('⚠ 本课五行极度偏枯（%s），请结合山家与事主命理三思，'
+                         '切勿迷信高分。' % d['pian_ku'])
         lines.append('')
         lines.append('【扣分明细 / 忌项】')
         lines.append('-' * 50)

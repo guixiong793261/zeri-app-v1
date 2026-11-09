@@ -175,6 +175,53 @@ def test_source_anchors():
           '主程序：偏枯警示文案（详情页+tooltip）')
 
 
+# ==================== F. 精准择时（反推）覆盖 ====================
+def test_reverse_ui():
+    print('\n[F] 精准择时：偏枯透传 + 分档上限随维度浮动')
+    from modules import 反推UI as R
+
+    check(R._band_bounds('修造', '大吉') == (4, 6),
+          'F1 修造（6 维）大吉档 4–6', str(R._band_bounds('修造', '大吉')))
+    check(R._band_bounds('开业', '大吉') == (4, 5),
+          'F2 通用事项（5 维）大吉档 4–5', str(R._band_bounds('开业', '大吉')))
+    check(R._band_bounds('修造', '优吉') == (2, 3),
+          'F3 优吉档保持 2–3', str(R._band_bounds('修造', '优吉')))
+
+    import datetime as _dt
+    from modules.反推引擎 import record_of_day
+    rec = record_of_day(_dt.date(2026, 6, 1), '修造',
+                        context={'shan_xiang': '坤山艮向', 'zeli_mode': 'pure'})
+    check('pian_ku' in rec and rec.get('pian_ku') == '过燥',
+          'F4 反推单日记录透传 pian_ku=过燥',
+          '%r / %s' % (rec.get('pian_ku'), rec.get('score')))
+    check(len((rec.get('check') or {}).get('items') or []) == 6,
+          'F5 反推日记录核验 6 维',
+          str(len((rec.get('check') or {}).get('items') or [])))
+
+    _d = {'date': '2026-06-01', 'weekday': '周一', 'lunar': '四月十六',
+          'sizhu': rec.get('sizhu', ''), 'score': rec.get('score'),
+          'level': rec.get('level'), 'kind': rec.get('kind'),
+          'jishen': '', 'reason': '', 'deduct_items': [], 'ji_items': [],
+          'veto_reasons': [], 'pian_ku': '过燥'}
+    _lines = R.ReverseWindow._build_detail_lines(
+        None, _d, '修造', {'时辰': '午时', '时段': '11:00-13:00', '时柱': '甲午'}, 0, 0)
+    check(any('极度偏枯' in x for x in _lines),
+          'F6 反推详情文本含偏枯警示')
+
+    from modules.择日贴 import compose_caution_lines  # noqa: F401  （运行需完整 entry，改用锚点断言）
+    for _rel, _need, _lbl in (
+            ('modules/反推引擎.py', "'pian_ku': best_r.get('wuxing_pian_ku')",
+             'F7 反推引擎：pian_ku 透传'),
+            ('modules/反推UI.py', "if _d.get('pian_ku'):",
+             'F8 反推详情窗：偏枯警示块'),
+            ('modules/择日贴.py', '本课五行极度偏枯',
+             'F9 择日贴：偏枯警示行'),
+            ('主程序.py', "'pian_ku': record.get('pian_ku') or ''",
+             'F10 主程序：反推→择日贴透传')):
+        with open(os.path.join(_ROOT, _rel), 'r', encoding='utf-8') as f:
+            check(_need in f.read(), _lbl)
+
+
 def main():
     print('=' * 74)
     print('001 §238 修造榜单「虚假繁荣」整改回归')
@@ -184,6 +231,7 @@ def main():
     test_pianku()
     test_six_checks()
     test_source_anchors()
+    test_reverse_ui()
     print('\n' + '=' * 74)
     if FAILS:
         print('FAIL %d 项：' % len(FAILS))

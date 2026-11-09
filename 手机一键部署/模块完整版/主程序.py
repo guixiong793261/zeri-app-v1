@@ -9161,6 +9161,9 @@ class ZeriApp:
                     entry['action_plan'] = extra.get('action_plan')
                 if extra.get('day_kind'):
                     entry['day_kind'] = str(extra.get('day_kind'))
+                # 001 §238：五行偏枯预警透传（择日贴警示区显示，纯提示不改分）
+                if extra.get('pian_ku'):
+                    entry['wuxing_pian_ku'] = str(extra.get('pian_ku'))
 
             def _parse_owner(info):
                 """通用：解析 UI owner_info → 扁平 dict（name/role/year_gz/year_sx/sizhu/阴阳胎/夫星子星）。
@@ -9431,7 +9434,9 @@ class ZeriApp:
                    # 001 §214 P2-C：动作时序方案透传（嫁娶等配置了
                    # ACTION_SEQUENCES 的事项；无则 None，红帖走原路径）
                    'action_plan': record.get('action_plan'),
-                   'day_kind': record.get('kind') or ''})
+                   'day_kind': record.get('kind') or '',
+                   # 001 §238：五行偏枯预警透传（择日贴警示区，纯提示不改分）
+                   'pian_ku': record.get('pian_ku') or ''})
         # 001 §214 P2-D：反推「生成红纸帖」按钮 → 立即开窗/前置已开窗口
         # （择日贴窗口已开则复用并 add_entry，未开则暂存+打开，F7）
         self.open_zeeri_tie()

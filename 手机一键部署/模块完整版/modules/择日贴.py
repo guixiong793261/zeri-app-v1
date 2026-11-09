@@ -676,6 +676,14 @@ def _degrade_warn_lines(e):
         out.append(('hardwarn',
                     '⚠ 本日有微瑕（榜单慎用），请结合具体扣分项酌情使用'))
 
+    # 001 §238：五行偏枯预警（反推/主程序透传 entry['wuxing_pian_ku']）：
+    # 过燥/过寒与「高分」并存时最易误用，故与慎用提示并列置顶；否决帖不叠加。
+    _pk = str(e.get('wuxing_pian_ku') or '')
+    if _pk and not e.get('_is_vetoed'):
+        out.append(('hardwarn',
+                    '⚠ 本课五行极度偏枯（%s），请结合山家与事主命理三思，'
+                    '切勿迷信高分' % _pk))
+
     names = []
     for seg in segs:
         for pref in ('凶神：', '凶煞：'):

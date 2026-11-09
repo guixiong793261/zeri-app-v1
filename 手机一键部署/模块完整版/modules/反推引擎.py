@@ -281,6 +281,9 @@ def _day_record(d, best_sz, best_r, hours, kind, event_type='', owners=None):
         # 001 §222：日月角标（只做展示，不产生分值）。
         # 白天（卯—申）太阳到山/到向、夜间（酉—寅）太阴到山/到向才标记。
         'sun_moon_tag': _sun_moon_tag(best_r),
+        # 001 §238：五行偏枯预警（过燥/过寒/None）透传——与主程序结果表同源同口径，
+        # 供反推详情窗、详情文本导出与择日贴消费；纯展示，不参与排序与分值
+        'pian_ku': best_r.get('wuxing_pian_ku'),
         'reason': str(best_r.get('reason') or ''),
         'best_hour': {
             '时柱': _gz,
