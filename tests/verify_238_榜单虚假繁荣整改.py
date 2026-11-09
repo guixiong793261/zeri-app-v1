@@ -271,6 +271,48 @@ def test_reverse_ui():
         check('扣分构成：' in _ss and '三煞扣分构成' not in _ss,
               'F17 %s：标题改「扣分构成」' % _rel)
 
+    # 001 §238.10：Top-N 排序切换（默认吉日优先；纯总分需二次确认 + 红字标注）
+    _dsample = [
+        {'date': '2025-10-28', 'score': 288, 'kind': '慎用', 'jishen_fit': 0},
+        {'date': '2025-12-16', 'score': 78, 'kind': '吉日', 'jishen_fit': 0},
+    ]
+    _tier = [d['date'] for d in sorted(
+        _dsample, key=lambda d: R._top_sort_key(d, R.SORT_MODE_TIER))]
+    _score = [d['date'] for d in sorted(
+        _dsample, key=lambda d: R._top_sort_key(d, R.SORT_MODE_SCORE))]
+    check(_tier == ['2025-12-16', '2025-10-28'],
+          'F18 吉日优先：78分吉日仍压在288分慎用之前', _tier)
+    check(_score == ['2025-10-28', '2025-12-16'],
+          'F19 纯总分：288分慎用排到前（安全分层关闭）', _score)
+
+    _dn, _ds = R._deduct_brief({'deduct_items': [
+        {'name': '鲁班煞', 'score': -20}, {'name': '土王用事', 'score': -20},
+        {'name': '太岁堆黄', 'score': -15}]})
+    check(_ds == -55 and _dn == '鲁班煞、土王用事、太岁堆黄',
+          'F20 降权说明：重煞名称与合计 -55', '%s / %s' % (_dn, _ds))
+
+    _d10 = {'date': '2025-10-28', 'weekday': '周二', 'lunar': '九月初八',
+            'sizhu': '乙巳 丙戌 庚午 癸未', 'score': 288, 'level': '★★★★★ 上吉',
+            'kind': '慎用', 'jishen': '', 'reason': '', 'ji_items': [],
+            'veto_reasons': [], 'pian_ku': None,
+            'deduct_items': [{'name': '鲁班煞', 'score': -20},
+                             {'name': '土王用事', 'score': -20},
+                             {'name': '太岁堆黄', 'score': -15}]}
+    _w10 = object.__new__(R.ReverseWindow)
+    _l10 = _w10._build_detail_lines(
+        _d10, '修造', {'时辰': '未时', '时段': '13-15', '时柱': '癸未'}, 0, 0)
+    check(any('降权说明' in x and '-55' in x for x in _l10),
+          'F21 详情文本含「降权说明」与 -55 合计',
+          [x for x in _l10 if '降权' in x])
+
+    with open(os.path.join(_ROOT, 'modules', '反推UI.py'), 'r',
+              encoding='utf-8') as f:
+        _s10 = f.read()
+    check('排序风险确认' in _s10 and 'SORT_MODE_WARN' in _s10
+          and "tag_configure('cautious_score'" in _s10
+          and '排序:'.strip() in _s10,
+          'F22 排序下拉 + 二次确认 + 红字标签锚点')
+
 
 def main():
     print('=' * 74)
