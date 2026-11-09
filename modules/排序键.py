@@ -301,7 +301,16 @@ def _shangpin_scan(result):
             _allow.append(_n)
     _pk = str(_r.get('wuxing_pian_ku') or '')
     if _pk:
-        _allow.append('五行%s' % _pk)
+        # 001 §246：动土事差异化阈值——火/水 4/8 为轻度偏枯（火生土、可生扶山家，
+        # 允许上品并提示）；≥5/8 判重度偏枯，踢出上品。
+        _cnt = ((_r.get('score_details') or {}).get('偏枯计数') or {})
+        _n = int(_cnt.get('火系' if _pk == '过燥' else '水系') or 0)
+        _wx = '火' if _pk == '过燥' else '水'
+        if _n >= 5:
+            _blk.append('重度偏枯（%s%s%d/8）' % (_pk, _wx, _n))
+        else:
+            _allow.append('五行%s（%s%d/8，%s气稍旺，有助生扶山家，动土无妨）'
+                          % (_pk, _wx, _n, _wx))
     return _blk, list(dict.fromkeys(_allow))
 
 

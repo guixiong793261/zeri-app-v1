@@ -3072,6 +3072,8 @@ class Scorer:
                 _wuxing_pian_ku = '过燥'
             elif _pk_water >= 4:
                 _wuxing_pian_ku = '过寒'
+            # 001 §246：补存偏枯计数，供「修造/动土」差异化阈值使用（火/水 ≥5 判重度）
+            score_details['偏枯计数'] = {'火系': _pk_fire, '水系': _pk_water}
 
             return {
                 'score': self.final_score,
