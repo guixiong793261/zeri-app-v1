@@ -60,6 +60,16 @@ def _band_bounds(event_type, band):
     return 0, _n
 
 
+def _band_status_text(band, kind):
+    """分档榜「状态」列文案（001 §238.8）：显示本页分档名，慎用日加·慎用尾注。
+
+    分档（优吉/大吉）按满分核验 ✓ 数，状态（吉日/慎用）按神煞负分，两者正交。
+    分档页直接显示 kind 会与页签标题（④优吉/⑤大吉）看起来矛盾，故改为以
+    分档名为主；慎用日保留·慎用尾注与黄底，警示信息不丢失。
+    """
+    return ('%s·慎用' % band) if kind == '慎用' else band
+
+
 class _GreenProgressbar:
     """Canvas 自绘绿色进度条（Windows ttk 默认主题不支持改 Progressbar 颜色）。
 
@@ -168,6 +178,7 @@ class ReverseWindow:
             _lo, _hi = _band_bounds(self.event_var.get(), _band)
             _lbl.configure(
                 text='%s：满分核验命中 %d–%d 项 ✓（已排除否决日，按评分降序）'
+                     '　状态列＝本档分档，·慎用＝神煞重扣日'
                      '　核验顺序：%s（悬停看缺失项，双击看日课详情）'
                      % (_band, _lo, _hi, _keys))
 
@@ -442,7 +453,7 @@ class ReverseWindow:
                            selectmode='browse', height=13)
         for _c, _w in (('排名', 48), ('日期', 100), ('星期', 56), ('农历', 96),
                        ('评分', 64), ('等级', 110), ('满分核验', 110),
-                       ('扣分主因', 380), ('最优时辰', 130), ('状态', 56)):
+                       ('扣分主因', 380), ('最优时辰', 130), ('状态', 86)):
             _tv.heading(_c, text=_c)
             _tv.column(_c, width=_w, anchor=tk.CENTER)
         _tv.column('扣分主因', anchor=tk.W)
@@ -809,7 +820,8 @@ class ReverseWindow:
                     _d['score'], _d['level'], str(_chk.get('marks') or '—'),
                     _reason_text(_d),
                     ('%s（%s）' % (_bh.get('时辰', ''), _bh.get('时段', ''))
-                     if _bh else '—'), _d['kind']), tags=(_tag,))
+                     if _bh else '—'),
+                    _band_status_text(_band, _d['kind'])), tags=(_tag,))
                 _mp[_d['date']] = _d
             _tv._tip_map = _mp
             self.perf_vars[_band].set(

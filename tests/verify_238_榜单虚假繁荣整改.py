@@ -221,6 +221,19 @@ def test_reverse_ui():
         with open(os.path.join(_ROOT, _rel), 'r', encoding='utf-8') as f:
             check(_need in f.read(), _lbl)
 
+    # 001 §238.8：分档页「状态」列显示本档分档，不再直接显示 kind（吉日/慎用）
+    check(R._band_status_text('大吉', '吉日') == '大吉',
+          'F11 分档状态列：吉日显示分档名', R._band_status_text('大吉', '吉日'))
+    check(R._band_status_text('大吉', '慎用') == '大吉·慎用',
+          'F12 分档状态列：慎用日加尾注', R._band_status_text('大吉', '慎用'))
+    with open(os.path.join(_ROOT, 'modules', '反推UI.py'), 'r',
+              encoding='utf-8') as f:
+        _s = f.read()
+    check("_band_status_text(_band, _d['kind'])" in _s,
+          'F13 分档页状态列接线；Top-N 仍显示 kind（不改吉凶分类）')
+    check("else ''), _d['kind'])" in _s,
+          'F13b Top-N 榜单状态列仍为 吉日/慎用')
+
 
 def main():
     print('=' * 74)
