@@ -13239,3 +13239,4 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
   - `择日大师_v2.2.1.exe` 19,058,974 B SHA256 `97C6C999A72BA653E677AC2303516E57FE1507BAEB9CCA6E1C8744DE5D17C23E`
   - `择日大师_精准择时版.exe` 14,586,809 B SHA256 `DC202B3CA965214AEAFDCB0948CF53500AC6FD3A433C185D87CD34A636C6DC9B`
 - 终极归档 `发布包\择日大师_v2.2.1_终极归档_20261110_v2.zip` 37,251,166 B SHA256 `65A1010541A819F365245B7B72513BFEBA3F6E1AF1691EFB8722FDA54FDFA94B`；内含双 exe + docs 三本 PDF（完整说明书 / 用户操作手册 / 算法与典据白皮书）；E 盘同 SHA 备份一致。
+- 双仓提交：主仓 `d0010b6`、统一版 `d6d3d92`（bare 已推）。主仓 GitHub 推送两次 443 超时（Failed to connect to github.com:443），**挂账待网络恢复补推**（本地提交已落盘，无数据风险）。
