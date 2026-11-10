@@ -776,7 +776,8 @@ def _sanyuan_dim_shan_zhu(shanzuo_eval, owner_matches, zuoshan, sz_wx):
 def build_sanyuan_analysis(sizhu=None, shan_xiang=None, yi_list=None, ji_list=None,
                            sansha_info=None, shanzuo_eval=None,
                            xishen_score=0, owner_matches=None,
-                           xiangzhu_score=0, xiangzhu_details=None):
+                           xiangzhu_score=0, xiangzhu_details=None,
+                           event_type=None):
     """三元合参聚合（§252，纯展示，不改分）。
 
     输入全部为评分流程已算出的既有产物；三个维度任一适用即返回 dict：
@@ -825,6 +826,19 @@ def build_sanyuan_analysis(sizhu=None, shan_xiang=None, yi_list=None, ji_list=No
     else:
         concl = '三元大体平和，无显著生克冲突，可结合时辰调候使用。'
 
+    # ---- §255-甲：合局对象取向小注（纯展示，不改分） ----
+    # 协纪：山向喜三合（六合轻）／主命喜六合（三合次），仅在"单一取向"时提示
+    _s255_ke_z = _s255_ke_zhi(sizhu)
+    _s255_ev = str(event_type or '')
+    if ks and _s255_ev in _S255_SHAN_EVENTS:
+        _n = _s255_note_shan(ks.get('坐山'), _s255_ke_z)
+        if _n:
+            ks['注'] = _n
+    if kz and _s255_ev in _S255_RENSHI_EVENTS:
+        _n = _s255_note_zhu(owner_matches, _s255_ke_z)
+        if _n:
+            kz['注'] = _n
+
     return {'课山': ks, '课主': kz, '山主': sz, '综合': concl}
 
 
@@ -837,12 +851,87 @@ def format_sanyuan_text(report):
              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']
     lines.append('⛰️ 日课与山家：' + (
         '%s %s' % (ks['文本'], ks['标记']) if ks else '—（本事项不涉及坐山）'))
+    if ks and ks.get('注'):
+        lines.append('   ' + str(ks['注']))
     lines.append('👤 日课与事主：' + (
         '%s %s' % (kz['文本'], kz['标记']) if kz else '—（未填事主，不参评）'))
+    if kz and kz.get('注'):
+        lines.append('   ' + str(kz['注']))
     lines.append('🧭 山家与事主：' + (
         '%s %s' % (sz['文本'], sz['标记']) if sz else '—（无坐山或事主年命，不参评）'))
     lines.append('📌 综合结论：' + str(report.get('综合') or '—'))
     return '\n'.join(lines) + '\n'
+
+
+# ============================================================
+# 001 §255-甲（2026-11-10 用户拍板）：合局对象权重差异——展示层批注
+# 协纪·利用篇：「三合之力胜於六合」「山向又喜与八字三合，而六合轻矣」
+# 「主命喜与八字六合，而三合次之」。此处只加小注，不改任何分值/判定；
+# 算分层重构（三合对山加权 / 六合对主加权）已单独立项，本轮不做。
+# ============================================================
+
+_S255_SANHE = ('申子辰', '寅午戌', '巳酉丑', '亥卯未')
+_S255_LIUHE = ('子丑', '寅亥', '卯戌', '辰酉', '巳申', '午未')
+_S255_ZHI = frozenset('子丑寅卯辰巳午未申酉戌亥')
+
+try:
+    from .事项标准 import MOUNTAIN_CENTERED_EVENTS as _S255_SHAN_EVENTS
+except Exception:  # 独立运行/循环导入兜底：与事项标准同口径
+    _S255_SHAN_EVENTS = frozenset({'修造', '动土', '拆舍', '安葬', '作灶', '安床', '入宅'})
+_S255_SHAN_EVENTS = frozenset(_S255_SHAN_EVENTS) | frozenset({'装修'})
+
+try:
+    from .事项标准 import MARRIAGE_EVENTS as _S255_RENSHI_EVENTS
+except Exception:
+    _S255_RENSHI_EVENTS = frozenset({'嫁娶', '订婚', '纳采'})
+_S255_RENSHI_EVENTS = frozenset(_S255_RENSHI_EVENTS) | frozenset(
+    {'入宅', '移徙', '搬家', '迁居'})
+
+_S255_NOTE_SHAN = '注：山向喜三合，此地支仅有六合，补山之力稍逊（协纪·利用篇）。'
+_S255_NOTE_ZHU = ('注：主命喜六合，三合之力向外，略逊于六合之亲密'
+                  '（协纪·利用篇）。')
+
+
+def _s255_ke_zhi(sizhu):
+    """日课四柱地支（仅取合法地支，按年月日时顺序）。"""
+    zs = []
+    for k in ('年柱', '月柱', '日柱', '时柱'):
+        p = str((sizhu or {}).get(k) or '')
+        if len(p) >= 2 and p[1] in _S255_ZHI:
+            zs.append(p[1])
+    return zs
+
+
+def _s255_heju_flags(ref_zhi, ke_zhis):
+    """(三合命中, 六合命中)：参考支与日课四柱地支的合局标记（只判不记分）。
+
+    三合命中＝课中另有一支与参考支同属一个三合局（含半合/拱合，依协纪
+    「三合字不必全，二字亦可」）；六合命中＝课中有参考支的六合对支。
+    """
+    if ref_zhi not in _S255_ZHI:
+        return False, False
+    san = any(ref_zhi in g and any(z != ref_zhi and z in g for z in ke_zhis)
+              for g in _S255_SANHE)
+    liu = any(ref_zhi in p and any(z != ref_zhi and z in p for z in ke_zhis)
+              for p in _S255_LIUHE)
+    return san, liu
+
+
+def _s255_note_shan(zuoshan, ke_zhis):
+    """课山取向小注：仅有六合而无三合时给出（山向喜三合）。"""
+    san, liu = _s255_heju_flags(str(zuoshan or ''), ke_zhis)
+    return _S255_NOTE_SHAN if (liu and not san) else ''
+
+
+def _s255_note_zhu(owner_matches, ke_zhis):
+    """课主取向小注：有事主仅有三合而无六合时给出（主命喜六合）。"""
+    for m in (owner_matches or []):
+        gz = str((m or {}).get('年命干支') or '')
+        if len(gz) >= 2:
+            san, liu = _s255_heju_flags(gz[-1], ke_zhis)
+            if san and not liu:
+                return _S255_NOTE_ZHU
+    return ''
 
 
 class Scorer:
@@ -2991,7 +3080,8 @@ class Scorer:
                         sansha_info=sansha_info, shanzuo_eval=shanzuo_eval,
                         xishen_score=xishen_score, owner_matches=owner_matches,
                         xiangzhu_score=xiangzhu_score,
-                        xiangzhu_details=xiangzhu_details)
+                        xiangzhu_details=xiangzhu_details,
+                        event_type=event_type)
                 except Exception:
                     _sanyuan_252 = None
 
@@ -3568,7 +3658,8 @@ class Scorer:
                     sansha_info=sansha_info, shanzuo_eval=shanzuo_eval,
                     xishen_score=xishen_score, owner_matches=owner_matches,
                     xiangzhu_score=xiangzhu_score,
-                    xiangzhu_details=xiangzhu_details)
+                    xiangzhu_details=xiangzhu_details,
+                    event_type=event_type)
             except Exception:
                 _sanyuan_252 = None
 

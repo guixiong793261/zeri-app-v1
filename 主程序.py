@@ -7583,7 +7583,8 @@ class ZeriApp:
                     xishen_score=_sd252.get('喜用神得分', 0),
                     owner_matches=_sd252.get('事主匹配'),
                     xiangzhu_score=_sd252.get('相主得分', 0),
-                    xiangzhu_details=_sd252.get('相主详情'))
+                    xiangzhu_details=_sd252.get('相主详情'),
+                    event_type=detail.get('event_type') or detail.get('事项'))
             except Exception:
                 _sy252 = None
         if _sy252:

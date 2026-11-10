@@ -1302,7 +1302,9 @@ class ReverseWindow:
                     xishen_score=_sd252.get('喜用神得分', 0),
                     owner_matches=_sd252.get('事主匹配'),
                     xiangzhu_score=_sd252.get('相主得分', 0),
-                    xiangzhu_details=_sd252.get('相主详情'))
+                    xiangzhu_details=_sd252.get('相主详情'),
+                    event_type=(_det or {}).get('event_type')
+                    or (_det or {}).get('事项'))
             if _sy252:
                 tk.Label(_head,
                          text=format_sanyuan_text(_sy252).rstrip('\n'),
