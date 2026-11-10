@@ -431,6 +431,15 @@ class CommonShenShaChecker(ShenShaChecker):
         if self._is_yuedehe(sizhu):
             self._add_shensha('月德合', 12, '诸事吉利')
 
+        # 天乙贵人（001 §250）：本方法不调 super，吉神段为手工副本，
+        # 需与基类同步发射，否则通用/入学/求医/签约四通道出现
+        # 「【吉神】有、【吉神(加分项)】无」的展示与计分割裂。
+        _ty_pillar = self._is_tianyi_guiren(sizhu)
+        if _ty_pillar:
+            self._add_shensha(
+                '天乙贵人', 15,
+                '天乙贵人临%s，主逢凶化吉、贵人扶持' % _ty_pillar)
+
         # 大黄道吉日
         da_huangdao = self._get_da_huangdao(day_zhi, month_zhi)
         if da_huangdao:

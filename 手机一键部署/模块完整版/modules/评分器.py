@@ -6902,12 +6902,13 @@ class Scorer:
             details['吉神'].append(f"月德贵人: 月支{month_zhi}见日干{day_gan}")
         
         # 6. 天乙贵人查法（以日干查地支）
-        tianyi_map = {
-            '甲': ['丑', '未'], '乙': ['子', '申'], '丙': ['亥', '酉'],
-            '丁': ['亥', '酉'], '戊': ['丑', '未'], '己': ['子', '申'],
-            '庚': ['丑', '未'], '辛': ['寅', '午'], '壬': ['卯', '巳'],
-            '癸': ['卯', '巳']
-        }
+        # 001 §250（2026-11-10）：口诀表单一来源——与神煞计分发射共用
+        # ShenShaChecker.TIANYI_GUIREN_MAP，杜绝展示层与计分层双表分叉。
+        try:
+            from .shensha.神煞基类 import ShenShaChecker as _SSC
+        except ImportError:
+            from shensha.神煞基类 import ShenShaChecker as _SSC
+        tianyi_map = _SSC.TIANYI_GUIREN_MAP
         if day_gan in tianyi_map:
             for zhi_name, zhi in zhis:
                 if zhi in tianyi_map[day_gan]:

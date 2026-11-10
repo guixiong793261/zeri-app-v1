@@ -129,15 +129,15 @@ def main():
 
     # ============ D：总分 ============
     print('[D] 通道总分（2026 全年，owners=[]）')
-    check(f'D 开业总分=13747（§209 前 12897，+850，实得 {tot_open}）',
-          tot_open == 13747)
+    check(f'D 开业总分=16087（§250 天乙 +2340；§209 前 12897，+850，实得 {tot_open}）',
+          tot_open == 16087)
     bed = get_checker('安床')
     tot_bed = 0
     for dte, sz in days:
         for s in bed.check(sz, []):
             tot_bed += s.get('score', 0)
-    check(f'D 安床总分=12738 不变（胎神降级不改变通道总分，实得 {tot_bed}）',
-          tot_bed == 12738)
+    check(f'D 安床总分=15078（§250 天乙 +2340 后重冻；胎神降级不改变通道总分，实得 {tot_bed}）',
+          tot_bed == 15078)
 
     # ============ E：死键反证 ============
     print('[E] 死键反证：15 通道小耗/大耗发射')

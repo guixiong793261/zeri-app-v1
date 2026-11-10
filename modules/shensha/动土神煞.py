@@ -213,6 +213,15 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         # 天德合
         if self._is_tiandehe(sizhu):
             self._add_shensha('天德合', 15, '动土修造吉利')
+
+        # 天乙贵人（001 §250）：本方法不调 super，吉神段为手工副本，
+        # 需与基类同步发射，否则动土通道出现「【吉神】有、【吉神(加分项)】无」
+        # 的展示与计分割裂。仅补此一项吉神，不改动其余继承差异。
+        _ty_pillar = self._is_tianyi_guiren(sizhu)
+        if _ty_pillar:
+            self._add_shensha(
+                '天乙贵人', 15,
+                '天乙贵人临%s，主逢凶化吉、贵人扶持' % _ty_pillar)
         
         # 天愿
         if self._is_tianyuan(sizhu):

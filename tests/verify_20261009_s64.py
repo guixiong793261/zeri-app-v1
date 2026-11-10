@@ -221,8 +221,10 @@ check('D2-4b 保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in _jl,
 # D2-4d 独扛（D2-4e 备样例已跨线，重扫确认无替代日）。
 # §187 Q4（2026-10-27）：三煞双扣根除后本日 wx 113→158（Δ45=3×15），
 # 仍直升「五行大吉」、不走任何放宽分支（note=None）。
-check('D2-4c 直升五行吉日（§187 Q4：score158/note=None）',
-      wx(r).get('score') == 158 and wx(r).get('_he_ge_note') is None
+# 001 §250（2026-11-10）天乙贵人入计分：本日 +15 → wx 158→173，仍直升
+# 「五行大吉」、不走任何放宽分支（note=None）。
+check('D2-4c 直升五行吉日（§250 天乙 +15：score173/note=None）',
+      wx(r).get('score') == 173 and wx(r).get('_he_ge_note') is None
       and wx(r).get('he_ge') is True,
       f"score={wx(r).get('score')} note={wx(r).get('_he_ge_note')}")
 
@@ -247,7 +249,8 @@ _RESCAN = '；样例绑定§66后规则版本，漂移请重跑 tools/audit/s68_
 r = run(dt.date(2025, 9, 20), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
 # §187 Q4 重锚：1→76（五行平平，直升），灶君忌项与无 veto 语义保持。
-check('D2-4d 主样例五行76（§187 Q4：1→76 直升五行平平）', _w.get('score') == 76,
+# 001 §250（2026-11-10）天乙贵人入计分：76→91，仍直升（note=None）。
+check('D2-4d 主样例五行91（§250 天乙 +15：76→91 直升五行平平）', _w.get('score') == 91,
       f'五行={_w.get("score")}{_RESCAN}')
 check('D2-4d 主样例直升吉日 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
@@ -295,7 +298,11 @@ check('D2-6b 同日天火 ji 仍记录但不改变否决构成', '天火日忌�
 # 修造基线整体 +30，2024-01-04 由 48→78 跨过 60 分线、该分支失效；按 2024-2027
 # 全量重扫（87 个放宽日）重锚 2024-01-02：走同一 60 分线制化放宽分支，
 # 原得分50/未制化项=5，放行 he_ge=True、无 veto、展示分为原值。
-r = run(dt.date(2024, 1, 2), '修造', OWNER1, shan=KUN)
+# 001 §250（2026-11-10 天乙贵人入计分）：2024-01-02 由 58 抬至 69 跨 60 分线，
+# 放宽分支失效；按 2024-2027 全量重扫（33 个放宽日）重锚 2025-03-20：
+# 走同一 60 分线制化放宽分支，原得分58/未制化项=5（与原锚形态全等），
+# 放行 he_ge=True、无 veto、展示分为原值。
+r = run(dt.date(2025, 3, 20), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M1-1a 假低分放行 he_ge=True', _w.get('he_ge') is True)
 check('M1-1b 无 veto', not vetos(r), '; '.join(vetos(r)))
@@ -313,8 +320,11 @@ check('M2 假低分展示分不变（§238.18 后允许数值漂移，改查原�
       f"score={_w.get('score')} jiyu={_w.get('ji_yu')}")
 
 # M3 反向真低分：§238.18 后原锚 2024-01-14 不再是真低分（he_ge 翻转），
-# 重扫换锚 2024-01-20（五行 score=0/he_ge=False/veto 含五行/无放宽 note）
-r = run(dt.date(2024, 1, 20), '修造', OWNER1, shan=KUN)
+# 重扫换锚 2024-01-20（五行 score=0/he_ge=False/veto 含五行/无放宽 note）。
+# 001 §250（2026-11-10 天乙入计分）：2024-01-20 由 0 抬至 15 且 he_ge 翻转，
+# 重扫 2024-2027（22 个真低分日）换锚 2024-01-26（五行=-16/he_ge=False/唯一 veto
+# 为五行严重不合格/无放宽 note）。
+r = run(dt.date(2024, 1, 26), '修造', OWNER1, shan=KUN)
 _w = wx(r)
 check('M3-1a 真低分维持 he_ge=False', _w.get('he_ge') is False)
 check('M3-1b 真低分维持五行否决',

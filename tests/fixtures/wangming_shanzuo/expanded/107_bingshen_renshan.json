@@ -25,9 +25,9 @@
     "veto": false,
     "level_cap": true,
     "report_level": "❌ 凶（坐山克仙命，有制化：岁德、三合）",
-    "final_score": 101
+    "final_score": 111
   },
   "notes": "2.2扩大集；公理推导=坐山克仙命/-30/凶中之凶；cross=True；集成state=no_veto；H4 清零批重冻 final 40→100、level_cap false→true（有制化无否决仍封顶判凶）",
-  "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→111 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。",
+  "refreeze_note_20261025": "重冻溯源（001 §180，2026-10-25 修造专项W2-a3）：final 100→111 系 feixing clamp(0,100) 上限取消后的真实值还原；旧值100为钳位伪影。",
   "refreeze_note_20261109": "重冻溯源（001 §238，2026-11-09 自刑伏吟加重，用户拍板）：年支月支伏吟 -15（正五行 141→126），加权 final 111→101。"
 }

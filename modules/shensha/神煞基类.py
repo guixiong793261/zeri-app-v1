@@ -1867,6 +1867,31 @@ class ShenShaChecker:
             # 映射删除（001 §126/§127）。
             self._add_shensha('归忌', -15, '归忌日忌用')
     
+    # 天乙贵人口诀（以日干查四柱地支）：甲戊庚牛羊、乙己鼠猴乡、
+    # 丙丁猪鸡位、壬癸兔蛇藏、六辛逢马虎。单一表源——评分器八字
+    # 「吉神」展示段与本计分发射共用（001 §250）。
+    TIANYI_GUIREN_MAP = {
+        '甲': ('丑', '未'), '乙': ('子', '申'), '丙': ('亥', '酉'),
+        '丁': ('亥', '酉'), '戊': ('丑', '未'), '己': ('子', '申'),
+        '庚': ('丑', '未'), '辛': ('寅', '午'), '壬': ('卯', '巳'),
+        '癸': ('卯', '巳'),
+    }
+
+    def _is_tianyi_guiren(self, sizhu):
+        """天乙贵人：日干查四柱地支，命中任一柱即为贵。
+
+        Returns:
+            命中的柱名（如「月柱」），未命中返回 None。
+        """
+        targets = self.TIANYI_GUIREN_MAP.get(sizhu.get('day_gan', ''))
+        if not targets:
+            return None
+        for pillar, key in (('年柱', 'year_zhi'), ('月柱', 'month_zhi'),
+                            ('日柱', 'day_zhi'), ('时柱', 'hour_zhi')):
+            if sizhu.get(key, '') in targets:
+                return pillar
+        return None
+
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞（通用）"""
         # 吉神
@@ -1874,6 +1899,16 @@ class ShenShaChecker:
             self._add_shensha('天德', 20, '天德吉星，诸凶皆解')
         if self._is_yuede(sizhu):
             self._add_shensha('月德', 18, '月德吉星，诸事皆宜')
+        # 001 §250（2026-11-10 用户报障）：天乙贵人此前只在评分器八字
+        # 「吉神」段展示、未进神煞计分，导致【吉神(加分项)】缺项、条件择日
+        # 勾选同名吉神无法命中。此处按日干查四柱地支发射，四柱任一柱命中
+        # 即贵，同名去重只计一次；分值 15 与天德合/三奇同档（次于天德20、
+        # 月德18），不另立表值。
+        _ty_pillar = self._is_tianyi_guiren(sizhu)
+        if _ty_pillar:
+            self._add_shensha(
+                '天乙贵人', 15,
+                '天乙贵人临%s，主逢凶化吉、贵人扶持' % _ty_pillar)
         if self._is_tiande_he(sizhu):
             self._add_shensha('天德合', 15, '天德合吉')
         if self._is_yuede_he(sizhu):

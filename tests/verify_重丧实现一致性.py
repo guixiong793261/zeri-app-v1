@@ -160,7 +160,8 @@ def main():
                 bad_ss.append((str(d), [h.get('score') for h in hit]))
     check(f'E2 入宅受死日 31 天（实得 {n_ss}）', n_ss == 31)
     check(f'E2 发射恒 0 分且唯一（异常 {len(bad_ss)}）', not bad_ss, f'{bad_ss[:3]}')
-    check(f'E3 入宅神煞全年总分=11601（实得 {tot_ru}）', tot_ru == 11601)
+    # §250（2026-11-10）天乙贵人入计分：156 天次 ×+15 = +2340（11601→13941）。
+    check(f'E3 入宅神煞全年总分=13941（实得 {tot_ru}）', tot_ru == 13941)
 
     from modules.评分器 import calculate_score
     sd = next(d for d, sz in days if is_shousi_by_zhi(sz['month_zhi'], sz['day_zhi']))
