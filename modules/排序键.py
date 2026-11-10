@@ -560,6 +560,12 @@ def perfect_profile(result, owners=None, event_type='',
     #   不冲不克不刑害即可列档（负分另由 §247 红线剥夺），正分仍利于排序；
     #   展示层 marks/ok_count 的相主 ✓ 口径不变（仍要求 >0），门槛与展示分离。
     #   实测依据：相主>0 口径下 2026Q1 修造/入宅/嫁娶 270 天次 0 列档，过严。
+    # 001 §256（2026-11-11 用户拍板·方案B）：极品门槛放宽为「三取二」——
+    #   硬忌（无警告无重煞）与相主（≥0 无硬性门槛无负分）仍为**必选**；
+    #   「得令 / 合局 / 德神」三项改为**任意两项过**即可（三取二），
+    #   专属项（扶山补龙/利月吉日/全家相合/仙命相合/出发方向）保留必选。
+    #   理由：原全六维口径下 2026 下半年真实数据 0 极品，门槛脱离实战；
+    #   三取二保留极高逼格，同时让极品在现实世界每月可达。
     _xz_hard = [str(_t) for _t in _xz_details
                 if str(_t).startswith('[硬性门槛]')]
     _xz_neg_n = sum(1 for _t, _v in _xz_line_scores(_xz_details) if _v < 0)
@@ -574,7 +580,14 @@ def perfect_profile(result, owners=None, event_type='',
                 _core_miss.append('相主')
             continue
         _core_miss.append(str(_i.get('key')))
-    _core_ok = not _core_miss
+    # 001 §256：「三取二」格局项——得令/合局/德神任意两项过即可。
+    #   其余核心项（专属项/硬忌/相主门槛）仍必须全过（必选）。
+    _PATTERN2 = ('得令', '合局', '德神')
+    _core_hard_miss = [m for m in _core_miss if m not in _PATTERN2]
+    _pattern_miss = [m for m in _core_miss if m in _PATTERN2]
+    _pattern_ok_n = 3 - len(_pattern_miss)          # 三格局项中已过的个数
+    _pattern_gate_ok = _pattern_ok_n >= 2            # 三取二
+    _core_ok = (not _core_hard_miss) and _pattern_gate_ok
     _tier = 'none'
     if _lint_ok and _dec_ok and not _xz_block and _core_ok:
         _tier = 'perfect'
@@ -599,10 +612,17 @@ def perfect_profile(result, owners=None, event_type='',
             _lint_note = ('上品兜底拦截：本日总分 %d 分（%s），未达「总分>0 且等级'
                           '不含凶」的上品门槛。' % (_score_v, _lv or '—'))
         elif _core_miss:
-            # 001 §253：校验与决策均过但六维缺项——必须明示缺哪几项
-            _lint_note = ('日课校验通过（%d 项规则，无警告），但六维核验缺「%s」'
-                          '（§253 硬门槛），不得列极品/上品。'
-                          % (len(_lr.executed_ids), '、'.join(_core_miss)))
+            # 001 §256：校验与决策均过但门槛缺项——区分「格局三取二」与「必选项」
+            if _core_hard_miss:
+                _lint_note = ('日课校验通过（%d 项规则，无警告），但必选核验缺「%s」'
+                              '（§253/§256 硬门槛），不得列极品/上品。'
+                              % (len(_lr.executed_ids), '、'.join(_core_hard_miss)))
+            else:
+                _lint_note = ('日课校验通过（%d 项规则，无警告），但格局「得令/合局/德神」'
+                              '三取二未达（缺 %d 项：%s，需至少过 2 项），'
+                              '不得列极品/上品（§256）。'
+                              % (len(_lr.executed_ids), len(_pattern_miss),
+                                 '、'.join(_pattern_miss)))
         else:
             _lint_note = ('日课校验通过（%d 项规则，无警告），但顶部决策为「%s」：%s'
                           % (len(_lr.executed_ids),

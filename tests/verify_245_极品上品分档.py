@@ -62,14 +62,15 @@ def main():
     check(c.get('lint_ok') is True, '01-08 日课校验无警告', c.get('lint_note'))
     check(build_decision_report(r, '修造').get('verdict_key') == 'warn',
           '01-08 顶部决策为黄牌（慎用）')
-    # §253 重冻（2026-11-10 核验）：01-08 缺「得令/德神/硬忌」，六维硬门槛出局，
-    # 不再列上品——与"失令日不进上品"用户判据一致，非回归。
+    # §256 重冻（2026-11-11 核验）：三取二格局项放行后，01-08 格局项（得令/德神）
+    # 已不再单独拦截，仅剩必选项「硬忌」未过 → tier=none。core_miss 仍含三项
+    # （得令/德神/硬忌），但 lint_note 只点名必选缺项「硬忌」。
     check(c.get('tier') == 'none' and c.get('shangpin') is False,
-          '01-08 六维缺「得令/德神/硬忌」出局（§253 重冻）', c.get('core_miss'))
+          '01-08 三取二后必选缺「硬忌」出局（§256 重冻）', c.get('core_miss'))
     check(c.get('perfect') is False, '01-08 不是极品')
     _n8 = str(c.get('lint_note'))
-    check('§253 硬门槛' in _n8 and '得令' in _n8 and '德神' in _n8,
-          '01-08 悬停文案点名缺项（§253 重冻）', _n8)
+    check('必选核验缺' in _n8 and '硬忌' in _n8,
+          '01-08 悬停文案点名必选缺项「硬忌」（§256 重冻）', _n8)
 
     # 用户截图原始案例：2026-10-10（火6/8 重度偏枯）现应被白名单踢出
     r0 = _score(2026, 10, 10, '修造', '坤山艮向', OWN, 'feixing')
@@ -80,12 +81,13 @@ def main():
 
     r2 = _score(2026, 1, 31, '修造', '坤山艮向', OWN, 'feixing')
     c2 = _pp(r2, '修造', OWN)
-    # §253 重冻：01-31 缺「得令/硬忌」出局（核验：core_miss 实测为此两项）
+    # §256 重冻：三取二放行格局项后，01-31 仅剩必选「硬忌」未过（core_miss 实测
+    # 为「得令/硬忌」，得令属格局项被三取二放过，lint_note 只点名必选缺项）。
     check(c2.get('tier') == 'none' and c2.get('shangpin') is False,
-          '01-31 六维缺「得令/硬忌」出局（§253 重冻）', c2.get('core_miss'))
-    check('§253 硬门槛' in str(c2.get('lint_note'))
-          and '得令' in str(c2.get('lint_note')),
-          '01-31 文案点名缺项（§253 重冻）', c2.get('lint_note'))
+          '01-31 三取二后必选缺「硬忌」出局（§256 重冻）', c2.get('core_miss'))
+    check('必选核验缺' in str(c2.get('lint_note'))
+          and '硬忌' in str(c2.get('lint_note')),
+          '01-31 文案点名必选缺项「硬忌」（§256 重冻）', c2.get('lint_note'))
 
     print('\nB. 绝不豁免重煞 → 不得上品（反向断言）')
     r3 = _score(2026, 5, 11, '修造', '坤山艮向', OWN, 'feixing')
@@ -115,21 +117,21 @@ def main():
     check(c6.get('tier') == 'none' and c6.get('shangpin') is False,
           '01-08 入宅黄牌不因动土白名单外溢', c6.get('tier'))
 
-    print('\nD. 同源断言：极品 ⇔ 校验无警告+决策绿灯+六维全√（§253 重冻）')
+    print('\nD. 同源断言：极品 ⇔ 校验无警告+决策绿灯+core_ok（§256 三取二口径）')
     _bad = 0
     _n = 0
     for _dd in range(1, 32):
         _r = _score(2026, 1, _dd, '入宅')
         _c = _pp(_r, '入宅')
         _green = build_decision_report(_r, '入宅').get('verdict_key') == 'ok'
-        # §253 重冻：空事主（相主红线恒不触发）时
-        # perfect ⇔ lint_ok 且决策绿灯 且 core_ok（六维非 N/A 项全过）。
-        # 实测 2026-01 入宅 31 天按新等价式 0 天不一致。
+        # §256 重冻：core_ok 已是「三取二」口径（得令/合局/德神任意两项过 +
+        # 必选项全过）。空事主（相主红线恒不触发）时
+        # perfect ⇔ lint_ok 且决策绿灯 且 core_ok。
         _expect = bool(_c.get('lint_ok')) and _green and bool(_c.get('core_ok'))
         if _c.get('perfect') != _expect:
             _bad += 1
         _n += 1
-    check(_bad == 0, '1月入宅 %d 天：极品⇔绿灯+校验+六维全√逐条一致（§253 重冻）'
+    check(_bad == 0, '1月入宅 %d 天：极品⇔绿灯+校验+core_ok(三取二)逐条一致（§256 重冻）'
           % _n, _bad)
 
     print('\nF. 偏枯差异化阈值（§246：动土事 火/水≥5 判重度）')
@@ -137,12 +139,12 @@ def main():
     _c7 = _pp(_r7, '修造', OWN)
     _n7 = ((_r7.get('score_details') or {}).get('偏枯计数') or {})
     check(_n7.get('火系') == 4, '01-08 偏枯计数已落库（火系=4）', _n7)
-    # §253 重冻：01-08 因缺「得令/德神/硬忌」出局（在偏枯门槛之前即被六维拦截），
-    # 偏枯计数落库与「火4/8 非重度」事实不变，仅列档结论随 §253 更新。
+    # §256 重冻：01-08 三取二放行格局项后仅剩必选「硬忌」未过（在偏枯门槛之前
+    # 即被必选拦截），偏枯计数落库与「火4/8 非重度」事实不变，仅列档结论随 §256 更新。
     check(_c7.get('tier') == 'none' and _c7.get('shangpin') is False,
-          '01-08 火4/8 因六维缺项出局（§253 重冻）', _c7.get('core_miss'))
-    check('§253 硬门槛' in str(_c7.get('lint_note')),
-          '01-08 悬停明示 §253 缺项（§253 重冻）', _c7.get('lint_note'))
+          '01-08 火4/8 因必选缺「硬忌」出局（§256 重冻）', _c7.get('core_miss'))
+    check('必选核验缺' in str(_c7.get('lint_note')),
+          '01-08 悬停明示必选缺项（§256 重冻）', _c7.get('lint_note'))
 
     _r8 = _score(2026, 6, 24, '修造', '坤山艮向', OWN, 'feixing')
     _c8 = _pp(_r8, '修造', OWN)
