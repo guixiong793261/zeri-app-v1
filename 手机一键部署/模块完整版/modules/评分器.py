@@ -518,6 +518,300 @@ def format_wuxing_bias_text(report):
     return '\n'.join(lines) + '\n'
 
 
+# ============================================================
+# 001 §252（2026-11-10 用户指令）：三元合参——日课·山家·事主
+# 纯展示层聚合：只读 sizhu/山向/宜忌/三煞/仙命坐山/喜用神/相主等
+# 既有计分产物，不产生任何新分值、不改变任何评分与否决逻辑。
+# ============================================================
+
+def _sanyuan_zuoshan_info(shan_xiang, shanzuo_eval):
+    """坐山名 + 坐山五行：优先 shanzuo_eval（安葬通道已解析），否则按山向串解析。"""
+    zuoshan = str((shanzuo_eval or {}).get('坐山') or '').strip()
+    sz_wx = str((shanzuo_eval or {}).get('坐山五行') or '').strip()
+    if not zuoshan and shan_xiang and '山' in str(shan_xiang):
+        zuoshan = str(shan_xiang).split('山')[0].strip()
+    if zuoshan and not sz_wx:
+        try:
+            from .二十四山 import get_mountain_info
+        except ImportError:
+            from 二十四山 import get_mountain_info
+        try:
+            sz_wx = str((get_mountain_info(zuoshan) or {}).get('wuxing') or '')
+        except Exception:
+            sz_wx = ''
+    return zuoshan, sz_wx
+
+
+def _sanyuan_dim_ke_shan(sizhu, shan_xiang, yi_list, ji_list,
+                         sansha_info, shanzuo_eval):
+    """日课 × 山家：扶山/克山规则文本 + 日课旺行与坐山五行生克 + 三煞/岁破提示。"""
+    if not shan_xiang:
+        return None
+    zuoshan, sz_wx = _sanyuan_zuoshan_info(shan_xiang, shanzuo_eval)
+    yi_list = [str(t) for t in (yi_list or [])]
+    ji_list = [str(t) for t in (ji_list or [])]
+
+    bad, good = [], []
+    for t in ji_list:
+        if re.search(r'山被.{1,3}克制', t):
+            bad.append(t)
+        elif '局克山' in t:
+            bad.append(t)
+        elif '克山运' in t and '有制化' not in t and '已制化' not in t:
+            bad.append(t)
+    for t in yi_list:
+        if re.search(r'山得.{1,3}生扶', t):
+            good.append(t)
+
+    # 日课旺行 × 坐山五行（复用 §251 五行统计；旺行仅在单行≥4 时存在）
+    rel_txt, rel_ji = '', None
+    try:
+        wang = (build_wuxing_bias_report(sizhu) or {}).get('旺行')
+    except Exception:
+        wang = None
+    if wang and sz_wx:
+        try:
+            from .二十四山 import WuxingRelation
+        except ImportError:
+            from 二十四山 import WuxingRelation
+        if WuxingRelation.is_bihe(wang, sz_wx):
+            rel_txt = '日课%s气旺，与%s山（属%s）比和（旺山）' % (wang, zuoshan, sz_wx)
+            rel_ji = True
+        elif WuxingRelation.is_sheng(wang, sz_wx):
+            rel_txt = '日课%s气旺，生扶%s山家（属%s），课生山（扶山）' % (
+                wang, zuoshan, sz_wx)
+            rel_ji = True
+        elif WuxingRelation.is_ke(wang, sz_wx):
+            rel_txt = '日课%s气旺，克伐%s山家（属%s），课克山（毁基之虞）' % (
+                wang, zuoshan, sz_wx)
+            rel_ji = False
+        elif WuxingRelation.is_sheng(sz_wx, wang):
+            rel_txt = '日课%s气旺，%s山（属%s）反生日课，山家略有泄气' % (
+                wang, zuoshan, sz_wx)
+            rel_ji = None
+        elif WuxingRelation.is_ke(sz_wx, wang):
+            rel_txt = '日课%s气旺，%s山（属%s）制日课，山家掌权' % (
+                wang, zuoshan, sz_wx)
+            rel_ji = None
+
+    # 三煞/岁破顺带提示（聚合成一句话，不改分）
+    notes = []
+    si = sansha_info or {}
+    fans = []
+    if si.get('year_sansha_fan'):
+        fans.append('年三煞')
+    if si.get('month_sansha_fan'):
+        fans.append('月三煞')
+    if si.get('day_sansha_fan'):
+        fans.append('日三煞')
+    if fans:
+        _pen = si.get('sansha_penalty', 0)
+        notes.append('坐山犯%s（%s分）' % ('、'.join(fans), _pen)
+                     if _pen else '坐山犯' + '、'.join(fans))
+    if any('岁破' in t for t in ji_list):
+        notes.append('涉岁破')
+    if any('月破' in t for t in ji_list) and '月破' not in ''.join(fans):
+        notes.append('涉月破')
+
+    if bad or rel_ji is False:
+        verdict, mark = '凶', '❌'
+    elif good or rel_ji is True:
+        verdict, mark = '吉', '✅'
+    else:
+        verdict, mark = '平', '⚠️'
+
+    segs = []
+    if bad:
+        segs.append('；'.join(bad))
+    if good:
+        segs.append('；'.join(good))
+    if rel_txt:
+        segs.append(rel_txt)
+    if not segs:
+        segs.append('日课五行与%s山家（属%s）无显著生克' % (zuoshan or '坐山', sz_wx or '未知'))
+    if notes:
+        segs.append('另：' + '，'.join(notes))
+    return {'适用': True, '文本': '；'.join(segs), '判定': verdict, '标记': mark,
+            '坐山': zuoshan, '坐山五行': sz_wx, '克山': bool(bad) or rel_ji is False}
+
+
+def _sanyuan_dim_ke_zhu(xishen_score, owner_matches, xiangzhu_score,
+                        xiangzhu_details):
+    """日课 × 事主：喜用神补益 + 相主冲合（聚合既有分值与明细文本）。"""
+    owner_matches = owner_matches or []
+    xiangzhu_details = [str(d) for d in (xiangzhu_details or [])]
+    if not owner_matches and not xiangzhu_details:
+        return None
+
+    segs, hard, neg, pos = [], False, [], []
+    xishen_score = int(xishen_score or 0)
+    if xishen_score > 0:
+        names = []
+        for om in owner_matches:
+            if int(om.get('score', 0) or 0) > 0:
+                _nm = om.get('name') or '事主'
+                _ys = om.get('yongshen') or om.get('xishen') or ''
+                names.append('%s（喜用%s）+%d' % (_nm, _ys, int(om['score']))
+                             if _ys else '%s +%d' % (_nm, int(om['score'])))
+        segs.append('日课五行补益事主喜用神（总%+d分：%s）'
+                    % (xishen_score, '、'.join(names) if names else '详见明细'))
+    elif owner_matches:
+        segs.append('日课对事主喜用神无明显补益（0分）')
+
+    for d in xiangzhu_details:
+        _clean = d.replace('[硬性门槛]', '')
+        if '[硬性门槛]' in d:
+            hard = True
+            neg.append(_nm_short(_clean))
+        elif re.search(r'[冲刑破害].*[—-]\d+分', _clean) or re.search(r'-\d+分', _clean):
+            neg.append(_nm_short(_clean))
+        elif '+%d' in _clean or re.search(r'\+\d+分', _clean):
+            pos.append(_nm_short(_clean))
+    if neg:
+        segs.append('；'.join(neg))
+    if pos:
+        segs.append('；'.join(pos))
+
+    if hard:
+        verdict, mark = '凶', '❌'
+    elif neg and xishen_score > 0:
+        verdict, mark = '凶', '⚠️'
+    elif neg:
+        verdict, mark = '凶', '❌'
+    elif xishen_score > 0 or pos:
+        verdict, mark = '吉', '✅'
+    else:
+        verdict, mark = '平', '⚠️'
+    return {'适用': True, '文本': '；'.join(segs) if segs else '日课与事主无显著生克',
+            '判定': verdict, '标记': mark, '硬门槛': hard,
+            '有冲': bool(neg)}
+
+
+def _nm_short(txt):
+    """相主明细文本压缩：取首个逗号前的描述 + 分值，便于一行展示。"""
+    s = str(txt)
+    m = re.search(r'([+-]?\d+)分', s)
+    head = s.split('，')[0]
+    return '%s（%s分）' % (head, m.group(1)) if m else head
+
+
+def _sanyuan_dim_shan_zhu(shanzuo_eval, owner_matches, zuoshan, sz_wx):
+    """山家 × 事主：安葬取仙命×坐山判定；其余通道按事主年命纳音 × 坐山五行。"""
+    if not sz_wx:
+        return None
+    if shanzuo_eval and shanzuo_eval.get('relation') not in (None, '未知'):
+        relation = shanzuo_eval.get('relation')
+        level = shanzuo_eval.get('level', '平')
+        _wm = shanzuo_eval.get('坐山') or zuoshan
+        text = '%s（坐山%s，属%s）' % (shanzuo_eval.get('reason', ''), zuoshan, sz_wx)
+        _jx = shanzuo_eval.get('兼向判定')
+        if _jx:
+            text += '；兼向%s（属%s）：%s（%s）' % (
+                _jx.get('坐山', ''), _jx.get('坐山五行', ''),
+                _jx.get('relation', ''), _jx.get('level', ''))
+        if level in ('大吉', '小吉'):
+            verdict, mark = '吉', '✅'
+        elif level in ('小凶', '凶中之凶'):
+            verdict, mark = '凶', '❌'
+        else:
+            verdict, mark = '平', '⚠️'
+        return {'适用': True, '文本': text, '判定': verdict, '标记': mark,
+                'relation': relation, 'level': level}
+
+    owner_matches = owner_matches or []
+    rows = []
+    worst = '吉'
+    for om in owner_matches:
+        nm_wx = str(om.get('年命五行') or '').strip()
+        if not nm_wx:
+            continue
+        ev = evaluate_wangming_vs_shanzuo(nm_wx, sz_wx)
+        _lv = ev.get('level', '平')
+        rows.append('%s年命属%s（%s），坐山属%s，%s（%s）' % (
+            om.get('name') or '事主', nm_wx, om.get('年命干支') or '年命',
+            sz_wx, str(ev.get('relation', '')).replace('仙命', '主命'), _lv))
+        if _lv in ('小凶', '凶中之凶'):
+            worst = '凶'
+        elif _lv == '平' and worst == '吉':
+            worst = '平'
+    if not rows:
+        return None
+    mark = {'吉': '✅', '平': '⚠️', '凶': '❌'}[worst]
+    return {'适用': True, '文本': '；'.join(rows), '判定': worst, '标记': mark}
+
+
+def build_sanyuan_analysis(sizhu=None, shan_xiang=None, yi_list=None, ji_list=None,
+                           sansha_info=None, shanzuo_eval=None,
+                           xishen_score=0, owner_matches=None,
+                           xiangzhu_score=0, xiangzhu_details=None):
+    """三元合参聚合（§252，纯展示，不改分）。
+
+    输入全部为评分流程已算出的既有产物；三个维度任一适用即返回 dict：
+      课山/课主/山主: {适用/文本/判定/标记}；综合: 一句话评断。
+    三维皆不适用（无山向且无事主）→ None。
+    """
+    ks = _sanyuan_dim_ke_shan(sizhu, shan_xiang, yi_list, ji_list,
+                              sansha_info, shanzuo_eval)
+    kz = _sanyuan_dim_ke_zhu(xishen_score, owner_matches, xiangzhu_score,
+                             xiangzhu_details)
+    sz = _sanyuan_dim_shan_zhu(shanzuo_eval, owner_matches,
+                               (ks or {}).get('坐山', ''),
+                               (ks or {}).get('坐山五行', '')
+                               or str((shanzuo_eval or {}).get('坐山五行') or ''))
+    if not ks and not kz and not sz:
+        return None
+
+    # ---- 综合结论（仅聚合三维判定，措辞模板固定） ----
+    ke_shan = bool(ks and ks.get('克山'))
+    hard_zhu = bool(kz and kz.get('硬门槛'))
+    zhu_xiong = bool(kz and kz.get('判定') == '凶')
+    shan_zhu_xiong = bool(sz and sz.get('判定') == '凶')
+    shan_name = (ks or {}).get('坐山', '')
+    shan_wx = (ks or {}).get('坐山五行', '')
+
+    if hard_zhu:
+        concl = '日课冲犯事主年命（相主硬门槛），纵有他吉亦不可用，必须换日。'
+    elif ke_shan and zhu_xiong:
+        concl = ('日课既克%s山家、又冲事主，三元两伤，坚决换日另择。'
+                 % (shan_name or ''))
+    elif ke_shan:
+        concl = ('日课克伐%s山家（属%s），动土如伤根基%s；建议换日，'
+                 '或择吉神有力制化之日慎用。'
+                 % (shan_name, shan_wx or '未知',
+                    '，虽于事主有所补益，亦难抵克山之害' if (kz and kz.get('判定') == '吉') else ''))
+    elif shan_zhu_xiong:
+        concl = ('日课与山家无冲，但坐山与事主年命相克，主耗费气力；'
+                 '宜换山向，或以时辰五行通关调候。')
+    elif zhu_xiong:
+        concl = '日课于事主小有冲刑，三元大体无碍；慎用，或择时辰化解。'
+    elif (ks and ks.get('判定') == '吉') and (kz and kz.get('判定') == '吉') \
+            and (not sz or sz.get('判定') == '吉'):
+        concl = '日课、山家、事主三元相生，天时地利人和俱全，放心使用。'
+    elif (kz and kz.get('判定') == '吉') and not ks:
+        concl = '日课生扶事主，本事项不涉坐山，人和天时兼得，可用。'
+    else:
+        concl = '三元大体平和，无显著生克冲突，可结合时辰调候使用。'
+
+    return {'课山': ks, '课主': kz, '山主': sz, '综合': concl}
+
+
+def format_sanyuan_text(report):
+    """§252 三元合参 → 详情文本块（主程序/评分详情/导出文本/反推详情同源共用）。"""
+    if not report:
+        return ''
+    ks, kz, sz = report.get('课山'), report.get('课主'), report.get('山主')
+    lines = ['【三元合参：日课 · 山家 · 事主】',
+             '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']
+    lines.append('⛰️ 日课与山家：' + (
+        '%s %s' % (ks['文本'], ks['标记']) if ks else '—（本事项不涉及坐山）'))
+    lines.append('👤 日课与事主：' + (
+        '%s %s' % (kz['文本'], kz['标记']) if kz else '—（未填事主，不参评）'))
+    lines.append('🧭 山家与事主：' + (
+        '%s %s' % (sz['文本'], sz['标记']) if sz else '—（无坐山或事主年命，不参评）'))
+    lines.append('📌 综合结论：' + str(report.get('综合') or '—'))
+    return '\n'.join(lines) + '\n'
+
+
 class Scorer:
     """评分器"""
 
@@ -2654,6 +2948,20 @@ class Scorer:
 
                 final_reason = '；'.join(reason_parts)
 
+                # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，
+                # 不改分；否决日同样携带；出行无坐山传 None；失败仅降级不炸）
+                try:
+                    _sanyuan_252 = build_sanyuan_analysis(
+                        sizhu=sizhu,
+                        shan_xiang=(None if _is_travel else shan_xiang),
+                        yi_list=self.yi_list, ji_list=self.ji_list,
+                        sansha_info=sansha_info, shanzuo_eval=shanzuo_eval,
+                        xishen_score=xishen_score, owner_matches=owner_matches,
+                        xiangzhu_score=xiangzhu_score,
+                        xiangzhu_details=xiangzhu_details)
+                except Exception:
+                    _sanyuan_252 = None
+
                 return {
                     'score': 0,
                     'level': '❌ 凶',
@@ -2694,6 +3002,9 @@ class Scorer:
                     'shan_xiang': shan_xiang,
                     'wangming_info': wangming_info,   # §59.3 否决日携带
                     'shanzuo_eval': shanzuo_eval,     # §59.3 否决日携带
+                    # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，
+                    # 不改分；否决日同样携带，出行无坐山传 None）
+                    'sanyuan_analysis': _sanyuan_252,
                     # §190 C2 / §199 P2：否决日同样携带山向缺失警示（无山向时
                     # 五行门槛亦可能否决，此时警示不可缺）。2026-10-29 用户拍板
                     # 扩面：由"仅入宅"扩展到全部山向类事项（出行除外，见
@@ -3214,6 +3525,20 @@ class Scorer:
             # （纯展示，不改分；火/水计数与上方 _pk_fire/_pk_water 同源同值）
             score_details['五行偏枯分析'] = build_wuxing_bias_report(sizhu)
 
+            # 001 §252（2026-11-10 用户指令）：三元合参聚合（纯展示，不改分；
+            # 出行无坐山传 None；失败仅降级为 None，不影响主返回）
+            try:
+                _sanyuan_252 = build_sanyuan_analysis(
+                    sizhu=sizhu,
+                    shan_xiang=(None if _is_travel else shan_xiang),
+                    yi_list=self.yi_list, ji_list=self.ji_list,
+                    sansha_info=sansha_info, shanzuo_eval=shanzuo_eval,
+                    xishen_score=xishen_score, owner_matches=owner_matches,
+                    xiangzhu_score=xiangzhu_score,
+                    xiangzhu_details=xiangzhu_details)
+            except Exception:
+                _sanyuan_252 = None
+
             return {
                 'score': self.final_score,
                 'level': self.level,
@@ -3240,6 +3565,7 @@ class Scorer:
                 'travel_direction': travel_direction,  # 001 §201：出行"出发方向"
                 'travel_dir_info': travel_dir_info,    # 001 §201：出行方位吉凶明细
                 'feixing_info': feixing_info,  # 玄空飞星评分信息
+                'sanyuan_analysis': _sanyuan_252,  # 001 §252：三元合参（纯展示）
                 'pipeline': 'general',  # 阶段1增量字段
                 'shensha_audit': self._build_shensha_audit_general(),
             }
@@ -5515,13 +5841,42 @@ class Scorer:
                 match_details.append("辅助事主，按半权重计分")
 
             total_score += owner_score
+            # 001 §252（2026-11-10）：事主年命纳音五行透出（纯展示，
+            # 供三元合参「山家×事主」维度使用；不参与任何计分）
+            _nm_gz, _nm_wx = '', ''
+            try:
+                if owner.get('sizhu'):
+                    _parts = str(owner['sizhu']).split()
+                    if _parts:
+                        _nm_gz = _parts[0]
+                if not _nm_gz and owner.get('birth_date'):
+                    try:
+                        from .四柱计算器 import calculate_sizhu as _calc_sz252
+                    except ImportError:
+                        from 四柱计算器 import calculate_sizhu as _calc_sz252
+                    _osz252 = _calc_sz252(owner['birth_date'],
+                                          owner.get('birth_hour', 12),
+                                          owner.get('birth_minute', 0),
+                                          longitude=owner.get('birth_longitude'))
+                    _nm_gz = (_osz252.get('year_gan', '')
+                              + _osz252.get('year_zhi', ''))
+                if _nm_gz:
+                    try:
+                        from .二十四山 import NAYIN_WUXING as _NYWX252
+                    except ImportError:
+                        from 二十四山 import NAYIN_WUXING as _NYWX252
+                    _nm_wx = _NYWX252.get(_nm_gz, '') or ''
+            except Exception:
+                _nm_gz, _nm_wx = '', ''
             owner_matches.append({
                 'name': owner_name,
                 'score': owner_score,
                 'weight': _xw,
                 'details': match_details,
                 'xishen': owner_xishen,
-                'yongshen': owner_yongshen
+                'yongshen': owner_yongshen,
+                '年命干支': _nm_gz,
+                '年命五行': _nm_wx
             })
 
         return total_score, owner_matches

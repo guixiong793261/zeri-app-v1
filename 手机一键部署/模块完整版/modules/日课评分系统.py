@@ -3195,6 +3195,29 @@ class DayScoreWindow:
         except Exception as _e:
             print('五行偏枯分析渲染失败（不影响详情正文）：%s' % _e)
 
+        # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，不改分）
+        try:
+            from modules.评分器 import (build_sanyuan_analysis,
+                                        format_sanyuan_text)
+            _sy252 = result.get('sanyuan_analysis')
+            if not _sy252:
+                _sd252 = result.get('score_details') or {}
+                _sy252 = build_sanyuan_analysis(
+                    sizhu=result.get('sizhu'),
+                    shan_xiang=(None if result.get('travel_direction')
+                                else result.get('shan_xiang')),
+                    yi_list=result.get('yi_list'), ji_list=result.get('ji_list'),
+                    sansha_info=result.get('sansha_info'),
+                    shanzuo_eval=result.get('shanzuo_eval'),
+                    xishen_score=_sd252.get('喜用神得分', 0),
+                    owner_matches=_sd252.get('事主匹配'),
+                    xiangzhu_score=_sd252.get('相主得分', 0),
+                    xiangzhu_details=_sd252.get('相主详情'))
+            if _sy252:
+                self._insert_colored_text(format_sanyuan_text(_sy252) + "\n")
+        except Exception as _e:
+            print('三元合参渲染失败（不影响详情正文）：%s' % _e)
+
         # 黄道信息
         if result.get('huangdao_info'):
             huangdao = result['huangdao_info']
@@ -4454,6 +4477,31 @@ class DayScoreWindow:
                     result_text.insert(tk.END, "\n")
             except Exception as _e:
                 print('五行偏枯分析渲染失败（不影响导出正文）：%s' % _e)
+
+            # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，不改分）
+            try:
+                from modules.评分器 import (build_sanyuan_analysis,
+                                            format_sanyuan_text)
+                _sy252 = result.get('sanyuan_analysis')
+                if not _sy252:
+                    _sd252 = result.get('score_details') or {}
+                    _sy252 = build_sanyuan_analysis(
+                        sizhu=result.get('sizhu'),
+                        shan_xiang=(None if result.get('travel_direction')
+                                    else result.get('shan_xiang')),
+                        yi_list=result.get('yi_list'),
+                        ji_list=result.get('ji_list'),
+                        sansha_info=result.get('sansha_info'),
+                        shanzuo_eval=result.get('shanzuo_eval'),
+                        xishen_score=_sd252.get('喜用神得分', 0),
+                        owner_matches=_sd252.get('事主匹配'),
+                        xiangzhu_score=_sd252.get('相主得分', 0),
+                        xiangzhu_details=_sd252.get('相主详情'))
+                if _sy252:
+                    result_text.insert(tk.END, format_sanyuan_text(_sy252))
+                    result_text.insert(tk.END, "\n")
+            except Exception as _e:
+                print('三元合参渲染失败（不影响导出正文）：%s' % _e)
 
             # 黄道信息
             if result.get('huangdao_info'):

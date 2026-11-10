@@ -112,7 +112,9 @@ APP_DIR = os.path.dirname(os.path.abspath(sys.executable)) if getattr(sys, 'froz
 from modules.四柱计算器 import calculate_sizhu, analyze_sizhu, get_lunar_date
 from modules.评分器 import calculate_score, Scorer
 from modules.评分器 import (build_wuxing_bias_report,      # 001 §251 偏枯分析
-                            format_wuxing_bias_text)
+                            format_wuxing_bias_text,
+                            build_sanyuan_analysis,        # 001 §252 三元合参
+                            format_sanyuan_text)
 from modules.评分器 import (ENABLE_LEVEL_NORMALIZATION,
                             map_marriage_level_score,
                             map_marriage_level_wx)  # 阶段3·方案A（001 §179）
@@ -7558,6 +7560,28 @@ class ZeriApp:
                 _pk_report = None
         if _pk_report:
             content += format_wuxing_bias_text(_pk_report) + "\n"
+
+        # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，不改分）
+        # 与评分详情窗/导出文本/反推详情四处同源共用同一格式函数
+        _sy252 = detail.get('sanyuan_analysis')
+        if not _sy252:
+            try:
+                _sd252 = detail.get('score_details') or {}
+                _sy252 = build_sanyuan_analysis(
+                    sizhu=detail.get('sizhu'),
+                    shan_xiang=(None if detail.get('travel_direction')
+                                else detail.get('shan_xiang')),
+                    yi_list=detail.get('yi_list'), ji_list=detail.get('ji_list'),
+                    sansha_info=detail.get('sansha_info'),
+                    shanzuo_eval=detail.get('shanzuo_eval'),
+                    xishen_score=_sd252.get('喜用神得分', 0),
+                    owner_matches=_sd252.get('事主匹配'),
+                    xiangzhu_score=_sd252.get('相主得分', 0),
+                    xiangzhu_details=_sd252.get('相主详情'))
+            except Exception:
+                _sy252 = None
+        if _sy252:
+            content += format_sanyuan_text(_sy252) + "\n"
 
         # 黄道信息
         huangdao_info = detail.get('huangdao_info', {})

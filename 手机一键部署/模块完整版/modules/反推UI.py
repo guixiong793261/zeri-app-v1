@@ -1283,6 +1283,38 @@ class ReverseWindow:
         except Exception as _e:
             print('五行偏枯分析渲染失败（不影响详情正文）：%s' % _e)
 
+        # 001 §252（2026-11-10 用户指令）：三元合参（纯展示聚合，不改分，
+        # 与主程序日课详情/评分详情窗/导出文本四处同源共用同一格式函数）
+        try:
+            from modules.评分器 import (build_sanyuan_analysis,
+                                        format_sanyuan_text)
+            _sy252 = (_det or {}).get('sanyuan_analysis')
+            if not _sy252:
+                _sd252 = ((_det or {}).get('score_details') or {})
+                _sy252 = build_sanyuan_analysis(
+                    sizhu=(_det or {}).get('sizhu'),
+                    shan_xiang=(None if (_det or {}).get('travel_direction')
+                                else (_det or {}).get('shan_xiang')),
+                    yi_list=(_det or {}).get('yi_list'),
+                    ji_list=(_det or {}).get('ji_list'),
+                    sansha_info=(_det or {}).get('sansha_info'),
+                    shanzuo_eval=(_det or {}).get('shanzuo_eval'),
+                    xishen_score=_sd252.get('喜用神得分', 0),
+                    owner_matches=_sd252.get('事主匹配'),
+                    xiangzhu_score=_sd252.get('相主得分', 0),
+                    xiangzhu_details=_sd252.get('相主详情'))
+            if _sy252:
+                tk.Label(_head,
+                         text=format_sanyuan_text(_sy252).rstrip('\n'),
+                         bg='#F7F7F7', fg='#333333',
+                         font=('Microsoft YaHei UI', 9),
+                         wraplength=_wrap + 60, justify=tk.LEFT, anchor='w',
+                         padx=8, pady=4).grid(
+                    row=_head.grid_size()[1], column=0, columnspan=2,
+                    sticky='we', padx=(0, 4), pady=(6, 2))
+        except Exception as _e:
+            print('三元合参渲染失败（不影响详情正文）：%s' % _e)
+
         _nb = ttk.Notebook(_win)
         _nb.pack(fill=tk.BOTH, expand=True, padx=12, pady=(6, 6))
 
