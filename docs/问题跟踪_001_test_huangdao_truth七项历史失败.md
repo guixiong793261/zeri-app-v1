@@ -13208,3 +13208,5 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 - 六副本（主仓双份 + 统一版双份）：主程序.py `f7aee8ea98a7`、modules/评分器.py `48b5bacbd3ee`、modules/日课评分系统.py `9d54d361dca1`，check_six_copies **FAIL 0**。
 - 全量 run_all：**TOTAL=151 PASS=151 FAIL=0 TIMEOUT=0，336.9s**（判定逻辑零改动，无用例漂移）。
 - 双 exe 重建 + PYZ 取证：`择日大师_v2.2.1.exe` 19,058,077 B SHA256 `BB280670F91A080E043C2B32891538C1340564D317AD14EF8F2378CECACCDEAC`；`择日大师_精准择时版.exe` 14,583,766 B SHA256 `6EFF105AD15B7B9722B7BC2763C61291FD324CA8AB8694F3FAA72DD11D4ED084`；双 exe 均命中 `annotate_heju_relation` 与三条批注文案（RESULT: PASS）。
+- 双仓提交并推送：主仓 `ca07907`（GitHub 已推，main 由 7c60de7 前进）、统一版 `7b38220`（bare 已推）；补推 `v2.2.1-final4` 标签至主仓（统一版此前已推），§252 遗留的 GitHub 推送挂账清零。
+- 覆盖说明：「保存详情」导出的 .txt 复用同一 `content` 串，故导出文本自动带批注；择日贴（红帖）不含【地支关系】段，无需改动；结果表列保持原样（列宽 300，避免挤压）。
