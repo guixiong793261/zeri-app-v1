@@ -13021,3 +13021,15 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 - verify_249：ALL PASS，EXIT=0；主程序 py_compile 通过。
 - 首轮 run_all 147 项 FAIL 2（verify_longitude_pipeline、大考 S1-1/S1-3），根因均为主程序副本未同步；六副本同步（主程序.py 包头 e88f774816fc，FAIL 0）后重跑：**TOTAL=147 PASS=147 FAIL=0 TIMEOUT=0**，耗时 368.2s（EXIT=0）。
 - 遗留挂账：月令表「兼山山家三煞」忌项文案仍进 ji_list（通书口径警示保留，不记分不否决）；E008 两条 WARN 仍在（展示与评分出处不一致的提示，按本次拍板保留警示文案，不放大为硬门槛）。
+
+**249.5 定版（2026-11-10 收官）**
+- 推送：主仓 78fc470..3e5364c → GitHub main（首次 DNS/443 失败，重试成功）；统一版仓 b40877c..3d871de → 本地 bare。
+- 双 exe 重建（PyInstaller，两次 EXIT=0，--clean 后串行避免 build 缓存冲突）：
+  - `dist/择日大师_v2.2.1.exe` 19,039,031 B，SHA256 `DBAD01264FA9C29BB1FF6FE5B04E9FF49667D5405863D29EC347D9687A9CDBBC`
+  - `dist/择日大师_精准择时版.exe` 14,566,475 B，SHA256 `6CC5E02A066F86C9D35F3664B1E46F4B632F67834A26CE9B5C311EB34CE83C37`
+- 分发：主仓 `发布包\`、`发布包\择日大师_v2.2.1\`；统一版 `dist\`、`发布包\择日大师_v2.2.1\`，四份主程序 exe 与主仓 dist 同 SHA；精准择时版同步至统一版 dist。
+- 标签：主仓 + 统一版仓均打 `v2.2.1-final2`（指向 3e5364c / 3d871de），主仓 Tag 已推送。原 `v2.2.1-final`（5eb097b）保留为历史里程碑。
+- 文档：Release Notes 第六节 SHA256 刷新为新双 exe，并标注对应 `v2.2.1-final2`。
+- 归档：`D:\archive\releases\择日大师_v2.2.1_终极归档_20261110.zip`（含新双 exe + 三本 PDF + Release Notes）。
+- 归档校验：`择日大师_v2.2.1_终极归档_20261110.zip` 37,220,382 B，SHA256 `D72A68C8FA626BF8E295E3310333BE83025EAC734AD2FD7F083D6F8EF5FE13DD`；包内 7 项（双 exe + 三 PDF + Release Notes + 三煞兼山检索报告）。双副本：`D:\archive\releases\` 与 `E:\择日大师_归档备份\`，两处 SHA 相同。
+- 原 `v2.2.1-final`（5eb097b）与两个旧 zip 均保留，便于回滚。
