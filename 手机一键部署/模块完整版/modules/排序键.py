@@ -550,11 +550,37 @@ def perfect_profile(result, owners=None, event_type='',
     _lv = str(_r.get('level') or '')
     # 001 §247 上品兜底：总分必须 >0 且等级不含「凶」，杜绝 -34 分课混入上品。
     _sp_score_ok = (_score_v > 0) and ('凶' not in _lv)
+    # 001 §253（2026-11-10 用户拍板）：六维核验合流为分档硬门槛——
+    #   得令 / 合局 / 德神 / 专属项（修造=扶山补龙、嫁娶=利月吉日、入宅=全家相合、
+    #   安葬=仙命相合、出行=出发方向）/ 相主 / 硬忌，凡非 N/A 项必须全 ✓，
+    #   方有资格列极品/上品；N/A 第三态（未填事主、无仙命）不挡。
+    #   判据冻结：合局同作硬门槛；6√ 必要非充分（lint 无警告+决策绿灯仍把关）；
+    #   「等级=总分纯函数」铁律不动，仅收分档。
+    #   相主门槛二次拍板（同日）：有事主时放宽为「相主≥0 不扣分」——
+    #   不冲不克不刑害即可列档（负分另由 §247 红线剥夺），正分仍利于排序；
+    #   展示层 marks/ok_count 的相主 ✓ 口径不变（仍要求 >0），门槛与展示分离。
+    #   实测依据：相主>0 口径下 2026Q1 修造/入宅/嫁娶 270 天次 0 列档，过严。
+    _xz_hard = [str(_t) for _t in _xz_details
+                if str(_t).startswith('[硬性门槛]')]
+    _xz_neg_n = sum(1 for _t, _v in _xz_line_scores(_xz_details) if _v < 0)
+    _xz_gate_ok = ((not _has_owner)
+                   or (_xz >= 0 and not _xz_hard and _xz_neg_n == 0))
+    _core_miss = []
+    for _i in _items:
+        if _i.get('ok') or _i.get('na'):
+            continue
+        if _i.get('key') == '相主':
+            if not _xz_gate_ok:
+                _core_miss.append('相主')
+            continue
+        _core_miss.append(str(_i.get('key')))
+    _core_ok = not _core_miss
     _tier = 'none'
-    if _lint_ok and _dec_ok and not _xz_block:
+    if _lint_ok and _dec_ok and not _xz_block and _core_ok:
         _tier = 'perfect'
     elif (_lint_ok and str(event_type or '') in _DONGTU_EVENTS
-          and not _veto and not _blk and not _xz_block and _sp_score_ok):
+          and not _veto and not _blk and not _xz_block and _sp_score_ok
+          and _core_ok):
         _tier = 'shangpin'
     if _lint_ok:
         if _tier == 'perfect':
@@ -572,6 +598,11 @@ def perfect_profile(result, owners=None, event_type='',
               and not _blk and not _sp_score_ok):
             _lint_note = ('上品兜底拦截：本日总分 %d 分（%s），未达「总分>0 且等级'
                           '不含凶」的上品门槛。' % (_score_v, _lv or '—'))
+        elif _core_miss:
+            # 001 §253：校验与决策均过但六维缺项——必须明示缺哪几项
+            _lint_note = ('日课校验通过（%d 项规则，无警告），但六维核验缺「%s」'
+                          '（§253 硬门槛），不得列极品/上品。'
+                          % (len(_lr.executed_ids), '、'.join(_core_miss)))
         else:
             _lint_note = ('日课校验通过（%d 项规则，无警告），但顶部决策为「%s」：%s'
                           % (len(_lr.executed_ids),
@@ -586,6 +617,8 @@ def perfect_profile(result, owners=None, event_type='',
         'all_ok': (not _any_na) and _ok == len(_items),
         'lint_ok': _lint_ok,
         'lint_note': _lint_note,
+        'core_ok': _core_ok,
+        'core_miss': _core_miss,
         'perfect': _tier == 'perfect',
         'shangpin': _tier == 'shangpin',
         'tier': _tier,
