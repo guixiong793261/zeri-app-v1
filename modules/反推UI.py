@@ -1264,6 +1264,25 @@ class ReverseWindow:
                 row=_head.grid_size()[1], column=0, columnspan=2,
                 sticky='we', padx=(0, 4), pady=(6, 2))
 
+        # 001 §251（2026-11-10 用户指令）：五行偏枯分级与偏向（纯展示，
+        # 与主程序日课详情/评分详情窗/导出文本四处同源共用同一格式函数）
+        try:
+            from modules.评分器 import (build_wuxing_bias_report,
+                                        format_wuxing_bias_text)
+            _pk251 = ((_det or {}).get('score_details') or {}).get('五行偏枯分析')
+            if not _pk251 and isinstance((_det or {}).get('sizhu'), dict):
+                _pk251 = build_wuxing_bias_report(_det['sizhu'])
+            if _pk251:
+                tk.Label(_head, text=format_wuxing_bias_text(_pk251).rstrip('\n'),
+                         bg='#F7F7F7', fg='#333333',
+                         font=('Microsoft YaHei UI', 9),
+                         wraplength=_wrap + 60, justify=tk.LEFT, anchor='w',
+                         padx=8, pady=4).grid(
+                    row=_head.grid_size()[1], column=0, columnspan=2,
+                    sticky='we', padx=(0, 4), pady=(6, 2))
+        except Exception as _e:
+            print('五行偏枯分析渲染失败（不影响详情正文）：%s' % _e)
+
         _nb = ttk.Notebook(_win)
         _nb.pack(fill=tk.BOTH, expand=True, padx=12, pady=(6, 6))
 

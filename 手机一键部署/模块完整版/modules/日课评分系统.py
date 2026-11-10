@@ -3181,7 +3181,20 @@ class DayScoreWindow:
             if wu_xing.get('ke_zhi'):
                 self._insert_colored_text(f"  克制关系: {wu_xing['ke_zhi']}\n")
             self._insert_colored_text("\n")
-        
+
+        # 001 §251（2026-11-10 用户指令）：五行偏枯分析（纯展示，不改分）
+        # 与主程序日课详情/导出文本/反推详情四处同源共用同一格式函数
+        try:
+            from modules.评分器 import (build_wuxing_bias_report,
+                                        format_wuxing_bias_text)
+            _pk_report = (result.get('score_details') or {}).get('五行偏枯分析')
+            if not _pk_report and isinstance(result.get('sizhu'), dict):
+                _pk_report = build_wuxing_bias_report(result['sizhu'])
+            if _pk_report:
+                self._insert_colored_text(format_wuxing_bias_text(_pk_report))
+        except Exception as _e:
+            print('五行偏枯分析渲染失败（不影响详情正文）：%s' % _e)
+
         # 黄道信息
         if result.get('huangdao_info'):
             huangdao = result['huangdao_info']
@@ -4426,9 +4439,22 @@ class DayScoreWindow:
                         result_text.insert(tk.END, "\n  【五行生克关系】\n")
                         for relation in details['五行生克']:
                             result_text.insert(tk.END, f"    • {relation}\n")
-                
+
                 result_text.insert(tk.END, "\n")
-            
+
+            # 001 §251（2026-11-10 用户指令）：五行偏枯分析（纯展示）
+            try:
+                from modules.评分器 import (build_wuxing_bias_report,
+                                            format_wuxing_bias_text)
+                _pk_report = (result.get('score_details') or {}).get('五行偏枯分析')
+                if not _pk_report and isinstance(result.get('sizhu'), dict):
+                    _pk_report = build_wuxing_bias_report(result['sizhu'])
+                if _pk_report:
+                    result_text.insert(tk.END, format_wuxing_bias_text(_pk_report))
+                    result_text.insert(tk.END, "\n")
+            except Exception as _e:
+                print('五行偏枯分析渲染失败（不影响导出正文）：%s' % _e)
+
             # 黄道信息
             if result.get('huangdao_info'):
                 huangdao = result['huangdao_info']

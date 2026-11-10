@@ -382,6 +382,142 @@ def map_marriage_level_wx(marriage_score):
     return _piecewise_percentile_map(marriage_score, _MARRIAGE_MAP_WX)
 
 
+# 001 §251（2026-11-10 用户指令）：五行偏枯分级与偏向（纯展示，不改分）。
+# 统计口径：四柱天干 + 地支本气共 8 字（不含藏干），与 §238 偏枯预警
+# 「丙丁巳午 / 壬癸子亥」的火系/水系口径保持同源——本函数的火/水计数
+# 恒等于 score_details['偏枯计数'] 的火系/水系值。
+_WUXING_MAIN_QI = {
+    '甲': '木', '乙': '木', '丙': '火', '丁': '火',
+    '戊': '土', '己': '土', '庚': '金', '辛': '金',
+    '壬': '水', '癸': '水',
+    '子': '水', '丑': '土', '寅': '木', '卯': '木',
+    '辰': '土', '巳': '火', '午': '火', '未': '土',
+    '申': '金', '酉': '金', '戌': '土', '亥': '水',
+}
+_WUXING_ORDER = ('金', '木', '水', '火', '土')
+_WUXING_ADJUST_HOUR = {
+    '金': '申/酉时', '木': '寅/卯时', '水': '亥/子时',
+    '火': '巳/午时', '土': '辰/戌/丑/未时',
+}
+_WUXING_ADJUST_CTRL = {
+    # 制{旺行}之五行 → 用事时辰建议
+    '金': '“火”旺之时（如巳/午时）制金，或“水”旺之时（如亥/子时）泄金',
+    '木': '“金”旺之时（如申/酉时）修剪，或“火”旺之时（如巳/午时）泄秀',
+    '水': '“火/土”旺之时（如巳/午/未时）以调候制衡',
+    '火': '“水”旺之时（如亥/子时）以调候制衡',
+    '土': '“木”旺之时（如寅/卯时）疏土，或“水”旺之时（如亥/子时）润土',
+}
+_WUXING_LACK_DESC = {
+    '金': '肃杀不足', '木': '生发不足', '水': '偏于干燥',
+    '火': '偏于寒湿', '土': '承载不足',
+}
+
+
+def build_wuxing_bias_report(sizhu):
+    """五行偏枯分级与偏向（§251，纯展示）。统计四柱 8 字（天干+地支本气）。
+
+    分级判据（用户拍板，事先冻结）：
+      极度偏枯：某一五行 ≥5，或 ≥2 个五行为 0；
+      偏枯（轻度）：某一五行 =4；
+      缺项：某一五行 =0（仅 1 项且无旺行时独立成档）；
+      平衡：五行俱全且单行 ≤3。
+    Returns dict，键：五行统计/偏枯等级/偏枯标签/旺行/缺行/判定/格局解析。
+    """
+    cnt = {'金': 0, '木': 0, '水': 0, '火': 0, '土': 0}
+    for _k in ('year_gan', 'month_gan', 'day_gan', 'hour_gan',
+               'year_zhi', 'month_zhi', 'day_zhi', 'hour_zhi'):
+        _c = str((sizhu or {}).get(_k) or '')[:1]
+        _w = _WUXING_MAIN_QI.get(_c)
+        if _w:
+            cnt[_w] += 1
+
+    zero_list = [w for w in _WUXING_ORDER if cnt[w] == 0]
+    wang = max(cnt, key=lambda w: cnt[w])
+    wang_n = cnt[wang]
+
+    if wang_n >= 5 or len(zero_list) >= 2:
+        grade, marker = '极度偏枯', '⛔'
+    elif wang_n == 4:
+        grade, marker = '偏枯', '❌'
+    elif zero_list:
+        grade, marker = '缺项', '⚠️'
+    else:
+        grade, marker = '平衡', '✅'
+
+    # 偏枯标签：沿用 §238 火水口径（过燥/过寒），其余五行以「X旺」标注
+    if wang == '火' and wang_n >= 4:
+        tag = '过燥'
+    elif wang == '水' and wang_n >= 4:
+        tag = '过寒'
+    elif grade in ('极度偏枯', '偏枯'):
+        tag = wang + '旺'
+    else:
+        tag = None
+
+    # 判定行
+    parts = []
+    if grade == '平衡':
+        verdict = '✅ 平衡 - 五行俱全，气场中和。'
+    else:
+        if grade == '极度偏枯':
+            parts.append('%s气过旺（%d/8，占%d%%）' % (wang, wang_n, wang_n * 100 // 8)
+                         if wang_n >= 5 else '')
+        elif grade == '偏枯':
+            parts.append('%s气独旺（%d/8，占%d%%）' % (wang, wang_n, wang_n * 100 // 8))
+        if zero_list:
+            _z_txt = '五行双缺' + '、'.join(zero_list) if len(zero_list) >= 2 \
+                else '五行缺' + zero_list[0]
+            parts.append(_z_txt)
+        _gr = '%s（%s）' % (grade, tag) if tag else grade
+        verdict = '%s %s - %s。' % (marker, _gr, '，'.join(p for p in parts if p))
+
+    # 格局解析（调候建议）
+    if grade == '平衡':
+        analysis = '五行流通，气场中和，无需刻意调候。'
+    else:
+        seg = []
+        if wang_n >= 4:
+            if wang == '火':
+                seg.append('火旺生土，全局缺水温润则恐有焦躁、火险之虞')
+            elif wang == '水':
+                seg.append('水旺泛滥，恐有寒湿、漂荡之虞')
+            elif wang == '金':
+                seg.append('金气肃杀，恐有刑伤、决断过刚之虞')
+            elif wang == '木':
+                seg.append('木气过盛，恐有倔强、生发无制之虞')
+            else:
+                seg.append('土气壅滞，恐有闭塞、迟滞之虞')
+            seg.append('建议用事时辰选用' + _WUXING_ADJUST_CTRL[wang])
+        for _z in zero_list:
+            seg.append('八字无%s（%s），急需时辰补%s（用%s）'
+                       % (_z, _WUXING_LACK_DESC[_z], _z, _WUXING_ADJUST_HOUR[_z]))
+        analysis = '。'.join(seg) + '。' if seg else '五行气场有待调匀，可结合事主喜忌斟酌。'
+
+    return {
+        '五行统计': cnt,
+        '偏枯等级': grade,
+        '偏枯标签': tag,
+        '旺行': wang if wang_n >= 4 else None,
+        '缺行': zero_list,
+        '判定': verdict,
+        '格局解析': analysis,
+    }
+
+
+def format_wuxing_bias_text(report):
+    """§251 偏枯分析 → 详情文本块（主程序/评分详情/导出文本三处同源共用）。"""
+    if not report:
+        return ''
+    cnt = report.get('五行统计') or {}
+    lines = ['【五行偏枯分析】',
+             '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+             '  五行统计: ' + ' ｜ '.join(
+                 '%s %d' % (w, cnt.get(w, 0)) for w in _WUXING_ORDER),
+             '  偏枯判定: ' + str(report.get('判定') or '—'),
+             '  格局解析: ' + str(report.get('格局解析') or '—')]
+    return '\n'.join(lines) + '\n'
+
+
 class Scorer:
     """评分器"""
 
@@ -3074,6 +3210,9 @@ class Scorer:
                 _wuxing_pian_ku = '过寒'
             # 001 §246：补存偏枯计数，供「修造/动土」差异化阈值使用（火/水 ≥5 判重度）
             score_details['偏枯计数'] = {'火系': _pk_fire, '水系': _pk_water}
+            # 001 §251（2026-11-10 用户指令）：五行偏枯分级与偏向透出
+            # （纯展示，不改分；火/水计数与上方 _pk_fire/_pk_water 同源同值）
+            score_details['五行偏枯分析'] = build_wuxing_bias_report(sizhu)
 
             return {
                 'score': self.final_score,
