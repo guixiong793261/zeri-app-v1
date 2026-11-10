@@ -1443,6 +1443,11 @@ class ZeriApp:
             ttk.Button(self.special_frame, text="罗盘", width=6,
                       command=self._show_compass_dialog).grid(row=0, column=6, sticky=tk.W, padx=5)
 
+            # §249（2026-11-10 拍板）：三煞口径小字提示（纯展示层，不改评分）
+            ttk.Label(self.special_frame,
+                      text="注：三煞以主山主向为准，兼山不减免三煞凶性。",
+                      foreground="#888888").grid(row=1, column=0, columnspan=8, sticky=tk.W, padx=5)
+
         elif event_type == "安葬":
             # 安葬（阴宅）择日必以墓穴坐山为纲：坐山+兼向+罗盘（_azss0914）
             ttk.Label(self.special_frame, text="坐山：").grid(row=0, column=0, sticky=tk.W, padx=5)
@@ -1476,6 +1481,11 @@ class ZeriApp:
                       command=self._show_compass_dialog).grid(row=0, column=4, sticky=tk.W, padx=5)
             ttk.Label(self.special_frame, text="安葬必选坐山").grid(
                 row=0, column=5, columnspan=2, sticky=tk.W, padx=2)
+
+            # §249（2026-11-10 拍板）：三煞口径小字提示（纯展示层，不改评分）
+            ttk.Label(self.special_frame,
+                      text="注：三煞以主山主向为准，兼山不减免三煞凶性。",
+                      foreground="#888888").grid(row=1, column=0, columnspan=8, sticky=tk.W, padx=2)
 
         elif event_type == "作灶":
             ttk.Label(self.special_frame, text="灶向：").grid(row=0, column=0, sticky=tk.W, padx=5)
