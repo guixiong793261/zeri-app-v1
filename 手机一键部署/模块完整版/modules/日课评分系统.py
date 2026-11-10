@@ -3124,8 +3124,10 @@ class DayScoreWindow:
                     _dz_rels.append(_ln)
                 if _dz_rels:
                     self._insert_colored_text("\n  【地支关系】\n")
+                    # §254：合局名目典据批注（纯展示，不改判定/分值）
+                    from .评分器 import annotate_heju_relation as _annot_he
                     for relation in _dz_rels:
-                        self._insert_colored_text(f"    • {relation}\n")
+                        self._insert_colored_text(f"    • {_annot_he(relation)}\n")
                     # 合刑并存声明（与主程序 7019-7023 行对齐）
                     if any(any(_k in str(_r) for _k in ('三合', '六合', '半合'))
                            for _r in _dz_rels) and any('刑' in str(_r) for _r in _dz_rels):
@@ -4429,8 +4431,10 @@ class DayScoreWindow:
                     # 2. 地支关系（三合、六合、六冲、六害、三刑）
                     if details.get('地支关系') and len(details['地支关系']) > 0:
                         result_text.insert(tk.END, "\n  【地支关系】\n")
+                        # §254：合局名目典据批注（纯展示，不改判定/分值）
+                        from .评分器 import annotate_heju_relation as _annot_he2
                         for relation in details['地支关系']:
-                            result_text.insert(tk.END, f"    • {relation}\n")
+                            result_text.insert(tk.END, f"    • {_annot_he2(relation)}\n")
                     else:
                         result_text.insert(tk.END, "\n  【地支关系】\n    无明显合冲刑害关系\n")
                     

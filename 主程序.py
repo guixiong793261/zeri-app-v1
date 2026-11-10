@@ -7491,8 +7491,14 @@ class ZeriApp:
                 if wu_xing_details.get('地支关系') and len(wu_xing_details['地支关系']) > 0:
                     content += "\n  【地支关系】\n"
                     _dz_rels = wu_xing_details['地支关系']
+                    # §254：合局名目典据批注（纯展示，不改判定/分值）
+                    try:
+                        from modules.评分器 import annotate_heju_relation as _annot_he
+                    except Exception:
+                        _annot_he = None
                     for relation in _dz_rels:
-                        content += f"    • {relation}\n"
+                        _line = _annot_he(relation) if _annot_he else relation
+                        content += f"    • {_line}\n"
                     # 裁定4（2026-10-08 拍板）：同段合与刑并存时，固定声明各自计分，
                     # 与 Q2"全量并列"原则一致，避免误读为"合能解刑/刑能破合"。
                     if any(any(_k in str(_r) for _k in ('三合', '六合', '半合'))
