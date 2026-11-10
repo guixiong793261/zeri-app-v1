@@ -13141,4 +13141,11 @@ Top-N 榜单增加醒目的「满分核验」列，纯展示层提取 `calculate
 
 **252.5 记账**
 - 纯展示层零漂移：评分总分、否决结论、等级判定逐字未动，`sanyuan_analysis` 为独立键，不进入任何计分分支。
-- 主仓提交 `f704f3e`（feat §252）；双 exe 重建后 SHA 刷新至 Release Notes 第六节。
+- 主仓提交 `f704f3e`（feat §252）、`707e999`（docs §252）；统一版镜像 `dbeaa84`（feat）、`16c50b2`（docs）。
+
+**252.6 标签、推送与终极归档（2026-11-10）**
+- 标签：两仓均打 `v2.2.1-final4`（主仓指向 `707e999`，统一版指向 `16c50b2`）；`v2.2.1-final3` 保留为历史里程碑。
+- 推送：统一版仓 `649b820..16c50b2` → 本地 bare，Tag 已推（PUSH_MAIN=0 / PUSH_TAG=0）。
+- **GitHub 推送未完成**：`github.com:443` 连接超时（沙箱内外各试一次、`http.version=HTTP/1.1` 亦失败，无代理配置），主仓 `v2.2.1-final4` 与 `main`（远程停在 `7c60de7`）待网络恢复后补推。
+- 本地物理归档（推送前备份）：`D:\archive\backups\择日大师_v2.2.1_源码备份_20261110_§252.zip`，21.5 MB，SHA256 `BA79B73194B94731F5CDE78CD5559908FAC083E82DC974239D1AAAF07B755E06`。
+- 终极归档包：`D:\archive\releases\择日大师_v2.2.1_终极归档_20261110_final4.zip`，37,255,455 B，SHA256 `D18BBB0DA631DB08F6D34DDEDCEF2D3532D7C4E96F7FA424C6A31BF9C800F8F0`；包内 7 项（双 exe + 三 PDF + Release Notes + 三煞兼山检索报告）；`E:\择日大师_归档备份\` 同 SHA 备份。
