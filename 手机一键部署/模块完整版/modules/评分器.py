@@ -826,18 +826,19 @@ def build_sanyuan_analysis(sizhu=None, shan_xiang=None, yi_list=None, ji_list=No
     else:
         concl = '三元大体平和，无显著生克冲突，可结合时辰调候使用。'
 
-    # ---- §255-甲：合局对象取向小注（纯展示，不改分） ----
-    # 协纪：山向喜三合（六合轻）／主命喜六合（三合次），仅在"单一取向"时提示
+    # ---- §255-甲／§270：合局对象取向小注（纯展示，不改分） ----
+    # 协纪：山向喜三合（六合轻）／主命喜六合（三合次）；§270 起三合/六合均给出，
+    # 并作为「日课与山家」行后缀（用户反馈：此前只在单一取向时另起一行，且取支恒空）。
     _s255_ke_z = _s255_ke_zhi(sizhu)
-    _s255_ev = str(event_type or '')
-    if ks and _s255_ev in _S255_SHAN_EVENTS:
-        _n = _s255_note_shan(ks.get('坐山'), _s255_ke_z)
+    _s270_ke_ju = next((str(t) for t in (ji_list or []) if '局克山' in str(t)), '')
+    if ks:
+        _n = _s255_note_shan(ks.get('坐山'), _s255_ke_z, _s270_ke_ju)
         if _n:
-            ks['注'] = _n
-    if kz and _s255_ev in _S255_RENSHI_EVENTS:
+            ks['文本'] = _s270_append_note(ks.get('文本'), _n)
+    if kz:
         _n = _s255_note_zhu(owner_matches, _s255_ke_z)
         if _n:
-            kz['注'] = _n
+            kz['文本'] = _s270_append_note(kz.get('文本'), _n)
 
     return {'课山': ks, '课主': kz, '山主': sz, '综合': concl}
 
@@ -874,31 +875,36 @@ _S255_SANHE = ('申子辰', '寅午戌', '巳酉丑', '亥卯未')
 _S255_LIUHE = ('子丑', '寅亥', '卯戌', '辰酉', '巳申', '午未')
 _S255_ZHI = frozenset('子丑寅卯辰巳午未申酉戌亥')
 
-try:
-    from .事项标准 import MOUNTAIN_CENTERED_EVENTS as _S255_SHAN_EVENTS
-except Exception:  # 独立运行/循环导入兜底：与事项标准同口径
-    _S255_SHAN_EVENTS = frozenset({'修造', '动土', '拆舍', '安葬', '作灶', '安床', '入宅'})
-_S255_SHAN_EVENTS = frozenset(_S255_SHAN_EVENTS) | frozenset({'装修'})
+# 001 §270：取向小注不再按事项白名单开关——三元合参里该维度存在即生效，
+# 避免「动土/装修有课主行却不出小注」的口径分裂。
 
-try:
-    from .事项标准 import MARRIAGE_EVENTS as _S255_RENSHI_EVENTS
-except Exception:
-    _S255_RENSHI_EVENTS = frozenset({'嫁娶', '订婚', '纳采'})
-_S255_RENSHI_EVENTS = frozenset(_S255_RENSHI_EVENTS) | frozenset(
-    {'入宅', '移徙', '搬家', '迁居'})
-
-_S255_NOTE_SHAN = '注：山向喜三合，此地支仅有六合，补山之力稍逊（协纪·利用篇）。'
-_S255_NOTE_ZHU = ('注：主命喜六合，三合之力向外，略逊于六合之亲密'
-                  '（协纪·利用篇）。')
+_S255_NOTE_SHAN_BOTH = '（注：山向喜三合，补山力大；六合次之——协纪·利用篇）'
+_S255_NOTE_SHAN_SAN = '（注：山向喜三合，补山力大——协纪·利用篇）'
+_S255_NOTE_SHAN_LIU = '（注：山向喜三合，此地支仅有六合，补山之力稍逊——协纪·利用篇）'
+_S255_NOTE_ZHU_BOTH = '（注：主命喜六合，主恩爱和合；三合向外——协纪·利用篇）'
+_S255_NOTE_ZHU_SAN = ('（注：主命喜六合，三合之力向外，略逊于六合之亲密'
+                      '——协纪·利用篇）')
+_S255_NOTE_ZHU_LIU = '（注：主命喜六合，主恩爱和合——协纪·利用篇）'
+_S255_NOTE_SHAN_KE = ('（注：三合本为山向所喜，本课合局却克坐山，故不作吉论、'
+                      '合分不计——001 §270）')
 
 
 def _s255_ke_zhi(sizhu):
-    """日课四柱地支（仅取合法地支，按年月日时顺序）。"""
+    """日课四柱地支（仅取合法地支，按年月日时顺序）。
+
+    001 §270：引擎传入的 sizhu 用 year_zhi/month_zhi/day_zhi/hour_zhi，
+    仅兼容 '年柱'… 会恒取空 → 权重小注永不显示（本次用户反馈根因之一）。
+    """
     zs = []
-    for k in ('年柱', '月柱', '日柱', '时柱'):
-        p = str((sizhu or {}).get(k) or '')
+    for _pk, _zk in (('年柱', 'year_zhi'), ('月柱', 'month_zhi'),
+                     ('日柱', 'day_zhi'), ('时柱', 'hour_zhi')):
+        p = str((sizhu or {}).get(_pk) or '')
         if len(p) >= 2 and p[1] in _S255_ZHI:
             zs.append(p[1])
+            continue
+        z = str((sizhu or {}).get(_zk) or '')
+        if z in _S255_ZHI:
+            zs.append(z)
     return zs
 
 
@@ -917,20 +923,58 @@ def _s255_heju_flags(ref_zhi, ke_zhis):
     return san, liu
 
 
-def _s255_note_shan(zuoshan, ke_zhis):
-    """课山取向小注：仅有六合而无三合时给出（山向喜三合）。"""
+def _s270_append_note(text, note):
+    """把取向小注插到行尾评标（✅/❌/⚠️/➖）之前，避免出现「…（注：…）✅」。"""
+    t = str(text or '')
+    for tail in (' ✅', ' ❌', ' ⚠️', ' ➖'):
+        if t.endswith(tail):
+            return t[:-len(tail)] + note + tail
+    return t + note
+
+
+def _s255_any_heju(ke_zhis):
+    """课中是否出现三合局（含半合/拱合，二字即可）与六合对。"""
+    san = any(sum(1 for z in g if z in ke_zhis) >= 2 for g in _S255_SANHE)
+    liu = any(sum(1 for z in p if z in ke_zhis) == 2 for p in _S255_LIUHE)
+    return san, liu
+
+
+def _s255_note_shan(zuoshan, ke_zhis, ke_ju_txt=''):
+    """课山取向小注（001 §270：三合/六合均给出权重口径，克山局则改判）。"""
     san, liu = _s255_heju_flags(str(zuoshan or ''), ke_zhis)
-    return _S255_NOTE_SHAN if (liu and not san) else ''
+    if not (san or liu):
+        # 24 山中乾/坤/艮/巽与十天干山不在十二支内，退化为「课中合局」通则小注
+        san, liu = _s255_any_heju(ke_zhis)
+    if ke_ju_txt and san:
+        return _S255_NOTE_SHAN_KE
+    if san and liu:
+        return _S255_NOTE_SHAN_BOTH
+    if san:
+        return _S255_NOTE_SHAN_SAN
+    if liu:
+        return _S255_NOTE_SHAN_LIU
+    return ''
 
 
 def _s255_note_zhu(owner_matches, ke_zhis):
-    """课主取向小注：有事主仅有三合而无六合时给出（主命喜六合）。"""
+    """课主取向小注（001 §270：三合/六合均给出权重口径）。"""
     for m in (owner_matches or []):
         gz = str((m or {}).get('年命干支') or '')
         if len(gz) >= 2:
             san, liu = _s255_heju_flags(gz[-1], ke_zhis)
-            if san and not liu:
-                return _S255_NOTE_ZHU
+            if san and liu:
+                return _S255_NOTE_ZHU_BOTH
+            if san:
+                return _S255_NOTE_ZHU_SAN
+            if liu:
+                return _S255_NOTE_ZHU_LIU
+    san, liu = _s255_any_heju(ke_zhis)
+    if san and liu:
+        return _S255_NOTE_ZHU_BOTH
+    if san:
+        return _S255_NOTE_ZHU_SAN
+    if liu:
+        return _S255_NOTE_ZHU_LIU
     return ''
 
 
@@ -2633,6 +2677,9 @@ class Scorer:
             # 坐山五行 → -40；仅两支半合/拱合克山 → -20（同组合局只扣一次、
             # 取最强档）。走 sansha_penalty 通道、入忌项、入 heavy_sha_names
             # （触发 §237 高分防呆）。分值系拟定，待拍板（001 台账 §238）。
+            # 001 §270：克山合局上下文，透传给五行评分，用于拦截「地支关系」
+            # 合局正分（避免同一合局一边加 +6/+18、一边又被克山重扣）。
+            _heju_ctx = None
             if shan_xiang and not _no_sansha:
                 _zs238 = (_jx_pp or {}).get('主山') or ''
                 _sz_wx238 = ''
@@ -2649,6 +2696,7 @@ class Scorer:
                                 ('year_zhi', 'month_zhi', 'day_zhi', 'hour_zhi')) if _z]
                     _heju_pen = 0
                     _heju_ji = ''
+                    _heju_zhis = ()
                     for _g1, _g2, _g3, _wx in (('申', '子', '辰', '水'),
                                                ('寅', '午', '戌', '火'),
                                                ('巳', '酉', '丑', '金'),
@@ -2659,11 +2707,16 @@ class Scorer:
                         if _hit >= 3 and _heju_pen > -40:
                             _heju_pen = -40
                             _heju_ji = '三合%s局克山（%s山属%s）' % (_wx, _zs238, _sz_wx238)
+                            _heju_zhis = (_g1, _g2, _g3)
                         elif _hit == 2 and _heju_pen > -20:
                             _heju_pen = -20
                             _heju_ji = '半合/拱合%s局克山（%s山属%s）' % (
                                 _wx, _zs238, _sz_wx238)
+                            _heju_zhis = (_g1, _g2, _g3)
                     if _heju_pen:
+                        _heju_ctx = {'局支': _heju_zhis, '档位': _heju_pen,
+                                     '文案': _heju_ji, '五行': _heju_ji[2:3],
+                                     '坐山': _zs238, '坐山五行': _sz_wx238}
                         if _heju_ji not in self.ji_list:
                             self.ji_list.append(_heju_ji)
                         self.final_score += _heju_pen
@@ -2785,7 +2838,8 @@ class Scorer:
                                                     house_type, shan_xiang,
                                                     zaoxiang, zaowei, chuangwei,
                                                     direction=direction,
-                                                    zaozhu_mode=zaozhu_mode)
+                                                    zaozhu_mode=zaozhu_mode,
+                                                    ke_shan_heju=_heju_ctx)
 
             # 如果五行不合格（犯三杀、冲山等大忌），直接返回"❌ 凶"
             # 2026-09-03 用户放宽：若score≥30且所有"硬否决类"凶煞均已被吉神制化（忌项
@@ -2981,7 +3035,8 @@ class Scorer:
                         '旺衰得分': self._calculate_wangxiang(sizhu),
                         '支支关系得分': self._calculate_zhizhi_relation(sizhu),
                     }
-                    _hs, _hl = self._calc_hour_zhi_relations_detail(sizhu)
+                    _hs, _hl = self._calc_hour_zhi_relations_detail(
+                        sizhu, ke_shan_heju=_heju_ctx)
                     score_details['时柱关系得分'] = _hs
                     score_details['时柱关系明细'] = _hl
                 except Exception:
@@ -3522,7 +3577,8 @@ class Scorer:
             # 时柱地支关系得分/明细（评分器单一数据源，规则同 _calculate_zhizhi_relations；
             # 分数已含于五行评分·地支关系得分，此处仅拆出给展示层读取，主程序不再自算）
             try:
-                _hs, _hl = self._calc_hour_zhi_relations_detail(sizhu)
+                _hs, _hl = self._calc_hour_zhi_relations_detail(
+                    sizhu, ke_shan_heju=_heju_ctx)
                 score_details['时柱关系得分'] = _hs
                 score_details['时柱关系明细'] = _hl
             except Exception:
@@ -6589,7 +6645,8 @@ class Scorer:
 
         return total_score, details
     
-    def _build_wu_xing_breakdown(self, sizhu, owners, event_type=None):
+    def _build_wu_xing_breakdown(self, sizhu, owners, event_type=None,
+                                 ke_shan_heju=None):
         """构建五行评分明细构成 + 五行分（供一票否决路径也能展示完整基础分构成）。
         2026-09-08：原否决路径只返回空score_breakdown，导致【评分详情】五行评分只显示
         "基础分：100"而缺神煞/宜事/忌事等分项。明细与score解耦：否决仅把score置0，
@@ -6671,7 +6728,8 @@ class Scorer:
             zs, _zs_lines = self._calc_zhangsheng_detail(sizhu)
             bd['十二长生得分'] = zs; sc += zs
             bd['十二长生明细'] = _zs_lines
-            zz, _zz_lines = self._calc_all_zhi_relations_detail(sizhu)
+            zz, _zz_lines = self._calc_all_zhi_relations_detail(
+                sizhu, ke_shan_heju=ke_shan_heju)
             bd['地支关系得分'] = zz; sc += zz
             bd['地支关系明细'] = _zz_lines
             ny, _ny_lines = self._calculate_nayin_match(sizhu, owners)
@@ -6686,7 +6744,8 @@ class Scorer:
         return bd, sc
 
     def _check_wu_xing(self, sizhu, event_type, owners, house_type, shan_xiang,
-                      zaoxiang, zaowei, chuangwei, direction=None, zaozhu_mode=None):
+                      zaoxiang, zaowei, chuangwei, direction=None, zaozhu_mode=None,
+                      ke_shan_heju=None):
         """
         正五行审核（核心门槛）
         
@@ -6883,9 +6942,11 @@ class Scorer:
 
         # 检查一票否决（规则否决；分金/正体大凶已改强扣分，不再参与否决 §62）
         if veto:
-            details = self._generate_wu_xing_details(sizhu, owners)
+            details = self._generate_wu_xing_details(sizhu, owners,
+                                                     ke_shan_heju=ke_shan_heju)
             details['ji_list'] = self.ji_list
-            _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+            _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type,
+                                                      ke_shan_heju=ke_shan_heju)
             return {
                 'he_ge': False,
                 'score': 0,
@@ -6910,9 +6971,11 @@ class Scorer:
             # 例如匹配"忌修造"或"忌修造。"但不匹配"建除平日忌修造"
             if re.search(rf'^忌{re.escape(event_type)}[。\s]?$', ji_text):
                 # 生成完整的五行分析信息
-                details = self._generate_wu_xing_details(sizhu, owners)
+                details = self._generate_wu_xing_details(sizhu, owners,
+                                                         ke_shan_heju=ke_shan_heju)
                 details['ji_list'] = self.ji_list
-                _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+                _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type,
+                                                      ke_shan_heju=ke_shan_heju)
                 return {
                     'he_ge': False,
                     'score': 0,
@@ -6949,7 +7012,8 @@ class Scorer:
                     # 2026-09-10 否决文案只列真实触发项（同月份不宜口径）
                     _ya_info = set(year_analysis.get('info_reasons') or [])
                     _ya_rs = [r for r in year_analysis['reasons'] if r not in _ya_info]
-                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type,
+                                                      ke_shan_heju=ke_shan_heju)
                     return {
                         'he_ge': False,
                         'score': 0,
@@ -6997,7 +7061,8 @@ class Scorer:
                     _ma_rs = [r for r in month_analysis['reasons']
                               if r not in _ma_info
                               and not any(_k in r for _k in ('六合', '三合'))]
-                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+                    _bd, _ = self._build_wu_xing_breakdown(sizhu, owners, event_type,
+                                                      ke_shan_heju=ke_shan_heju)
                     return {
                         'he_ge': False,
                         'score': 0,
@@ -7060,7 +7125,8 @@ class Scorer:
                             })
         
         # 统一构建五行评分明细与五行分（含神煞/宜事/忌事/十二长生/地支/纳音；相主仅入明细键，不计入五行分）
-        score_breakdown, wu_xing_score = self._build_wu_xing_breakdown(sizhu, owners, event_type)
+        score_breakdown, wu_xing_score = self._build_wu_xing_breakdown(sizhu, owners, event_type,
+                                                      ke_shan_heju=ke_shan_heju)
 
         # §62（2026-10-09 拍板）：分金/正体大凶强扣分计入五行评分；
         # 扣分单列 breakdown 键保持明细透明（0 时不加键，避免所有山向日多空键）
@@ -7087,7 +7153,8 @@ class Scorer:
         ji_yu = self._generate_wu_xing_jiyu(wu_xing_score, he_ge)
         
         # 生成详细的五行分析信息
-        details = self._generate_wu_xing_details(sizhu, owners)
+        details = self._generate_wu_xing_details(sizhu, owners,
+                                                 ke_shan_heju=ke_shan_heju)
         
         return {
             'he_ge': he_ge,
@@ -7283,7 +7350,8 @@ class Scorer:
             '_std_event': std_ev,
         }
 
-    def _generate_wu_xing_details(self, sizhu, owners, is_demo_hour=True):
+    def _generate_wu_xing_details(self, sizhu, owners, is_demo_hour=True,
+                                  ke_shan_heju=None):
         """
         生成详细的五行分析信息
         
@@ -7364,11 +7432,19 @@ class Scorer:
             present_zhis = [z for z in group if z in zhi_counter]
             unique_count = len(present_zhis)
             total_count = sum(zhi_counter[z] for z in present_zhis)
+            # 001 §270：克坐山合局在【地支关系】直接反转为 ❌ 提示
+            _kh = ke_shan_heju or {}
+            _kh_zhis = tuple(_kh.get('局支') or ())
+            if _kh_zhis and _kh_zhis[0] in group:
+                _kh_note = ('❌克坐山：本局不作吉论，合分不计入，另按克山%d分扣'
+                            '（001 §270）' % int(_kh.get('档位') or 0))
+            else:
+                _kh_note = _heju_note
 
             if unique_count == 3:
                 # 三支齐备（2026-09-01 用户规范：主体在前+列齐三支）："年柱亥、日柱未、时柱卯 三合木局（亥卯未）"
                 _cols = '、'.join([z[0]+z[1] for z in zhis if z[1] in group])
-                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）{_heju_note}")
+                details['地支关系'].append(f"{_cols} 三合{ju}（{''.join(group)}）{_kh_note}")
             elif unique_count == 2:
                 # 两个不同地支：按宫位区分生地半合(长生+帝旺)/墓地半合(帝旺+墓)/拱合(长生+墓)
                 missing_zhi = [z for z in group if z not in zhi_counter][0]
@@ -7378,13 +7454,19 @@ class Scorer:
                 _pair = f"{_za} 与 {_zb}"
                 if _pos == [0, 1]:
                     # 生地半合（长生+帝旺），力量较强
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_kh_note}")
                 elif _pos == [1, 2]:
                     # 墓地半合（帝旺+墓），力量较弱
-                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_heju_note}")
+                    details['地支关系'].append(f"{_pair} 半合{ju}（缺{missing_zhi}）{_kh_note}")
                 else:
                     # 生地+墓（长生+墓库）：拱合，不称半合
-                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）{_heju_note}")
+                    details['地支关系'].append(f"{_pair} 拱合{ju}（拱{missing_zhi}）{_kh_note}")
+
+        # 001 §270：克坐山合局在段首给出显式红标（用户反馈：只见合局加分、不见克山）
+        if _kh_zhis and any('❌克坐山' in str(_l) for _l in details['地支关系']):
+            details['地支关系'].insert(
+                0, '❌ %s：合局不作吉论、合分不计入，另扣 %d 分（001 §270）'
+                   % (_kh.get('文案') or '合局克坐山', int(_kh.get('档位') or 0)))
 
         # 伏吟/自刑（独立检测以免漏报）：同一地支出现多次——
         #   两柱干支完全相同 = 伏吟；仅地支相同：辰午酉亥同支为自刑，
@@ -7747,17 +7829,24 @@ class Scorer:
             return '墓地半合%s局' % _ju
         return '拱合%s局' % _ju
 
-    def _calc_all_zhi_relations_detail(self, sizhu):
+    def _calc_all_zhi_relations_detail(self, sizhu, ke_shan_heju=None):
         """四柱六对全局地支关系明细（2026-09-10：解决“地支关系得分+4与
         时柱关系-2无法对账”）。规则/分值与 _calculate_zhizhi_relations 完全一致：
         六合+8/半合+6/六冲-15/六害-6/相刑-8/相破-4；同支非自刑为伏吟（0分不计分）。
         时柱参与的关系行尾注“（时柱参与）”，便于与时柱关系块对账：
         全局合计 = 年月日三柱关系 + 时柱参与。Returns: (score:int, lines:list[str])
+
+        001 §270：ke_shan_heju 非空（该合局五行克坐山、已按 §238 重扣）时，
+        本局成员的半合/拱合正分（+6/对）不予计入，并在首行标出克山合计，
+        避免「一边加合局分、一边扣克山分」的口径撕裂；扣分仍只走 §238 一次。
         """
         score = 0
         lines = []
         if not HAS_BAZI_TOOLS:
             return score, lines
+        _ke_zhis = tuple((ke_shan_heju or {}).get('局支') or ())
+        _ke_pen = int((ke_shan_heju or {}).get('档位') or 0)
+        _ke_suppressed = 0
         pillars = []
         for key, cn in (('year_zhi', '年支'), ('month_zhi', '月支'),
                         ('day_zhi', '日支'), ('hour_zhi', '时支')):
@@ -7777,9 +7866,15 @@ class Scorer:
                     else:
                         is_banhe, _bn = self._check_banhe(z1, z2)
                         if is_banhe:
-                            score += 6
                             _lb = self._banhe_pos_label(z1, z2) or _bn or '半合'
-                            seg.append('%s：+6分' % _lb)
+                            if _ke_zhis and z1 in _ke_zhis and z2 in _ke_zhis:
+                                # §270：克山局的正分拦截（合局已按克山重扣）
+                                _ke_suppressed += 6
+                                seg.append('❌%s克坐山：+6分不予计入（见克山%d分）'
+                                           % (_lb, _ke_pen))
+                            else:
+                                score += 6
+                                seg.append('%s：+6分' % _lb)
                     # §Q2 冲/害/刑/破为各自独立布尔条件，并列累加（原 if/elif 互斥
                     # 会在复合关系日漏报：丑未/寅申冲+刑、寅巳害+刑、巳申/戌未刑+破）
                     if check_liuchong(z1, z2):
@@ -7801,8 +7896,13 @@ class Scorer:
                         lines.append('%s%s 与 %s%s %s%s' % (n1, z1, n2, z2, _s, _hour_tag))
                 except Exception:
                     pass
+        if _ke_suppressed:
+            lines.insert(0, '❌ %s：本局合分 +%d 分不予计入，另按克山 %d 分扣'
+                             '（001 §270，不双计）'
+                         % ((ke_shan_heju or {}).get('文案', '合局克坐山'),
+                            _ke_suppressed, _ke_pen))
         return score, lines
-    
+
     def _check_banhe(self, zhi1, zhi2):
         """
         检查两个地支是否构成半合（属于同一三合局且不是相同地支）
@@ -7887,13 +7987,15 @@ class Scorer:
         
         return score
 
-    def _calc_hour_zhi_relations_detail(self, sizhu):
+    def _calc_hour_zhi_relations_detail(self, sizhu, ke_shan_heju=None):
         """
         时支与年/月/日支的关系明细（单一数据源）。
 
         规则/分值与 _calculate_zhizhi_relations 完全一致（六合+8、半合+6、六冲-15、
         六害-6、相刑-8、相破-4），仅把"时柱参与的三对关系"单独拆出展示。
         该分数本就含在"五行评分·地支关系得分"内，不再重复累加。
+
+        001 §270：克坐山合局中的时柱半合同样标 ❌ 且不计正分（与全局明细同口径）。
 
         Returns:
             (score:int, details:list[str])
@@ -7902,6 +8004,8 @@ class Scorer:
         lines = []
         if not HAS_BAZI_TOOLS:
             return score, lines
+        _ke_zhis = tuple((ke_shan_heju or {}).get('局支') or ())
+        _ke_pen = int((ke_shan_heju or {}).get('档位') or 0)
         hz = sizhu.get('hour_zhi', '') if isinstance(sizhu, dict) else ''
         if not hz:
             return score, lines
@@ -7919,7 +8023,6 @@ class Scorer:
                 else:
                     is_banhe, banhe_name = self._check_banhe(hz, z)
                     if is_banhe:
-                        score += 6
                         _bh = banhe_name or '半合'
                         _sg = (('申', '子', '辰'), ('寅', '午', '戌'), ('巳', '酉', '丑'), ('亥', '卯', '未'))
                         _g = next((g for g in _sg if hz in g and z in g), None)
@@ -7932,7 +8035,12 @@ class Scorer:
                                 _bh = '墓地半合%s局' % _ju
                             else:
                                 _bh = '拱合%s局' % _ju
-                        lines.append(f"{_bh}（时支{hz}与{nm}{z}）：+6分")
+                        if _ke_zhis and hz in _ke_zhis and z in _ke_zhis:
+                            lines.append(
+                                f"❌{_bh}克坐山（时支{hz}与{nm}{z}）：+6分不予计入（见克山{_ke_pen}分）")
+                        else:
+                            score += 6
+                            lines.append(f"{_bh}（时支{hz}与{nm}{z}）：+6分")
                 # §Q2 冲/害/刑/破为各自独立布尔条件，并列累加（原 elif 互斥在复合
                 # 时辰如寅巳（害+刑）、巳申（刑+破）会漏列，与全局明细对不上）
                 if check_liuchong(hz, z):
