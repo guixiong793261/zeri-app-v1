@@ -9107,6 +9107,19 @@ def calculate_score(sizhu, event_type, owners=None, house_type=None, shan_xiang=
     Returns:
         dict: 评分结果
     """
-    return scorer.score(sizhu, event_type, owners, house_type, shan_xiang, zaoxiang, zaowei, chuangwei, None, jian_xiang, zaozhu_mode=zaozhu_mode, zeli_mode=zeli_mode)  # _zm0915
+    _res = scorer.score(sizhu, event_type, owners, house_type, shan_xiang, zaoxiang, zaowei, chuangwei, None, jian_xiang, zaozhu_mode=zaozhu_mode, zeli_mode=zeli_mode)  # _zm0915
+    # 001 §271（纯展示兜底）：偏枯分析只在「正五行主流水线」末尾写入，
+    #  嫁娶独立返回（pipeline='marriage'）、一票否决早退、异常兜底等路径都没写，
+    #  导致结果表「偏枯判定」列显示 '-'。此处按同一函数补齐，口径与 §251 完全一致，
+    #  不改任何分值/否决/等级。
+    try:
+        _sd = _res.get('score_details')
+        if isinstance(_sd, dict) and '五行偏枯分析' not in _sd:
+            _sz = _res.get('sizhu')
+            _sd['五行偏枯分析'] = build_wuxing_bias_report(
+                _sz if isinstance(_sz, dict) else sizhu)
+    except Exception:
+        pass
+    return _res
 
 # 2026-09-14 补丁指纹 nayin-jishen-zaoxiang：纳音齐备明细/吉神口径/灶向依据
