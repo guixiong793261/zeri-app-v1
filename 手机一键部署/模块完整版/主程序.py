@@ -800,7 +800,7 @@ class ZeriApp:
         result_button_frame.pack(fill=tk.X, pady=(0, 10))
         
         # 垂直排列按钮，适应屏幕
-        ttk.Button(result_button_frame, text="全部导入到评分系统", 
+        ttk.Button(result_button_frame, text="导入筛选结果到评分系统", 
                   command=self.import_all_to_score_system, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
         ttk.Button(result_button_frame, text="清空结果",
                   command=self.clear_results, width=25).pack(side=tk.TOP, pady=2, fill=tk.X)
@@ -4247,6 +4247,9 @@ class ZeriApp:
         self._hide_jishen_tooltip()
         self._jishen_full_map = {}
         self._check_full_map = {}  # 001 §234：核验列悬停五项逐条明细
+        # 001 §267：当前筛选命中的完整 result（顺序＝表格行序），
+        # 供「保存当前筛选」与「导入筛选结果到评分系统」共用同一份数据源
+        self._filtered_results = []
         for item in self.result_tree.get_children():
             self.result_tree.delete(item)
 
@@ -4356,6 +4359,8 @@ class ZeriApp:
             # 得分列统一±号格式化；2026-09-03 四柱并入首列两行显示；
             # 不合格输出模式下"核心吉神"列显示不合格原因
             _display_jishen = result.get('unqualified_reasons') or result.get('jishen', '-')
+            # 001 §267：通过全部筛选条件的行才计入（切档即换集）
+            self._filtered_results.append(result)
             _iid = self.result_tree.insert("", tk.END, values=(
                 _fmt_tree_date_sizhu(result.get('date', ''), result.get('sizhu', '-')),
                 result.get('score', 0),
@@ -9051,9 +9056,25 @@ class ZeriApp:
             messagebox.showerror("错误", f"打开评分系统失败：{str(e)}")
     
     def import_all_to_score_system(self):
-        """将所有择日结果导入到评分系统（embedded 精简版：仅显示日课输入+按钮+日课列表+评分结果）"""
+        """将当前「核验筛选」档位命中的择日结果导入评分系统
+        （001 §267：切到极品导极品、切到上品导上品；筛选=全部时即全量）
+
+        embedded 精简版：仅显示日课输入+按钮+日课列表+评分结果
+        """
         if not self.results:
             messagebox.showwarning("提示", "没有可导入的择日结果")
+            return
+
+        # 数据源与表格渲染同源：_filtered_results 由 _render_result_tree 维护，
+        # 未渲染过（如程序刚启动）时回退全量，避免误报空集。
+        _src = getattr(self, '_filtered_results', None)
+        if not isinstance(_src, list):
+            _src = list(self.results)
+        if not _src:
+            _flt_var = getattr(self, '_check_filter_var', None)
+            _flt = _flt_var.get() if _flt_var is not None else '全部'
+            messagebox.showwarning(
+                "提示", "当前筛选【%s】下没有可导入的择日结果" % _flt)
             return
 
         try:
@@ -9090,9 +9111,9 @@ class ZeriApp:
                 except:
                     pass
             
-            # 导入结果
+            # 导入结果（当前筛选命中集）
             score_window.import_results(
-                self.results,
+                _src,
                 self.event_var.get(),
                 owners_data
             )
