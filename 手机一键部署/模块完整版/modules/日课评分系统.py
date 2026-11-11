@@ -296,13 +296,18 @@ class DayScoreWindow:
         # 创建界面
         self.create_widgets()
     
-    def import_results(self, results, event_type, owners_data):
+    def import_results(self, results, event_type, owners_data,
+                       shan_xiang=None, house_type=None, jian_xiang=None):
         """从主程序导入择日结果
 
         Args:
             results: 主程序的择日结果列表
             event_type: 事项类型
             owners_data: 事主数据列表
+            shan_xiang: 山向（001 §269：不传则重算取不到坐山，
+                        三元合参会显示「本事项不涉及坐山」）
+            house_type: 宅型（阳宅/阴宅）
+            jian_xiang: 兼向（正中/兼左/兼右/兼X）
         """
         try:
             # 设置事项类型
@@ -311,6 +316,16 @@ class DayScoreWindow:
             self.update_owners_frame()
             # 更新特殊选项
             self.update_special_options()
+
+            # 001 §269：同步主程序的山向/宅型/兼向。
+            # update_special_options 会重建这几个 StringVar，故必须在其之后赋值；
+            # 先设山向（其 trace 会把兼向重置为正中），再设兼向。
+            if house_type and hasattr(self, 'house_type'):
+                self.house_type.set(house_type)
+            if shan_xiang and hasattr(self, 'shan_xiang'):
+                self.shan_xiang.set(shan_xiang)
+            if jian_xiang and hasattr(self, 'jian_xiang') and jian_xiang != '正中':
+                self.jian_xiang.set(jian_xiang)
 
             # 强制刷新界面（Toplevel窗口需要更强的刷新）
             self.window.update_idletasks()

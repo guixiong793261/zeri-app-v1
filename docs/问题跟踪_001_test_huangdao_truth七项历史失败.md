@@ -13458,3 +13458,42 @@ CRLF（或混合换行），会把 `\r\n` 二次转义成 `\r\r\n`，在 Windows
 展示列换数据源时，**旧字段不要删**——`xishen_score`/`huangdao_score` 仍被详情页、
 导出与综合评语引用；只新增展示专用键并在构建点填充，是最小风险路径。
 同步脚本改为「全流程 LF 域替换 → 最后统一重建 CRLF」，彻底杜绝 §267 的双 CR 复发。
+
+---
+
+## §269 导入评分系统丢失山向 → 三元合参显示「本事项不涉及坐山」（2026-11-11）
+
+### 现象
+用户从主程序「导入筛选结果到评分系统」后，评分系统的「日课与山家」段显示
+`—（本事项不涉及坐山）`，即评分重算时 `zuoshan` 为空。
+
+### 根因（数据链路断点，非评分器缺陷）
+`日课评分系统.import_results(results, event_type, owners_data)` 只导入了事项与事主，
+**未导入山向/宅型/兼向**；而 `update_special_options()` 每次都会重建
+`self.shan_xiang / self.house_type / self.jian_xiang` 三个 StringVar（初值空/阳宅/正中），
+评分入口 L2175 又从这三个变量取 `shan_xiang` → 重算必为空 → 评分器
+`build_sanyuan_analysis` 的 ⛰️ 行按无坐山分支输出「本事项不涉及坐山」。
+
+### 修复（导入链路补齐，评分逻辑零改动）
+- `import_results` 新增三个可选参数 `shan_xiang / house_type / jian_xiang`；
+  在 `update_special_options()` **之后**赋值（该方法会重建变量，顺序不可颠倒）：
+  先设山向（其 trace 会把兼向重置为正中），再设兼向。
+- 主程序两处调用（`open_score_system` 完整版、`import_all_to_score_system` 筛选版）
+  均传入 `self.shan_xiang / self.house_type / self.jian_xiang` 的当前值（hasattr 防御）。
+
+### 验证
+- 评分系统侧：`import_results` 后 `shan_xiang='甲山庚向'`、`house_type='阳宅'`；
+  对未评分日 2026-11-26 触发 `start_scoring`，打桩捕获到 `calculate_score` 实收
+  `shan_xiang='甲山庚向'`、`house_type='阳宅'`；三元合参 ⛰️ 行输出
+  「日课五行与甲山家（属木）无显著生克 ⚠️」，**不再出现「本事项不涉及坐山」**。
+- 主程序侧：真实 ZeriApp 设 `shan_xiang='甲山庚向'` 后点击导入，打桩窗口收到
+  `{'shan':'甲山庚向','house':'阳宅','jian':'正中','n':1}`。
+- 四副本全文 SHA 一致：日课评分系统 `091d0d2ce1a8ef90` ×4、主程序 `e518f0618d76f241` ×4；
+  8 个文件 `py_compile` 全过。
+- 全量 `run_all.py`：151/151 PASS。
+
+### 教训
+**跨窗口导入必须覆盖"评分函数读取的全部输入"**，而不只是"列表要显示的数据"。
+本次断点不在展示数据本身（result 里并不携带 shan_xiang），而在评分系统把山向
+只当 UI 变量、导入时没有回填 → 典型的「UI 变量即评分输入」耦合陷阱。今后新增评分输入项时，
+`import_results` 必须同步扩展形参并回填对应 StringVar。

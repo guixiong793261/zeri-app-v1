@@ -9082,11 +9082,14 @@ class ZeriApp:
                 except:
                     pass
             
-            # 导入当前事项类型和事主数据
+            # 导入当前事项类型和事主数据（001 §269：山向/宅型/兼向一并导入）
             score_window.import_results(
                 self.results if hasattr(self, 'results') else [],
                 self.event_var.get(),
-                owners_data
+                owners_data,
+                (self.shan_xiang.get() if hasattr(self, 'shan_xiang') else None),
+                (self.house_type.get() if hasattr(self, 'house_type') else None),
+                (self.jian_xiang.get() if hasattr(self, 'jian_xiang') else None)
             )
             
             # 直接启动日课评分系统
@@ -9150,11 +9153,14 @@ class ZeriApp:
                 except:
                     pass
             
-            # 导入结果（当前筛选命中集）
+            # 导入结果（当前筛选命中集；001 §269：山向/宅型/兼向一并导入）
             score_window.import_results(
                 _src,
                 self.event_var.get(),
-                owners_data
+                owners_data,
+                (self.shan_xiang.get() if hasattr(self, 'shan_xiang') else None),
+                (self.house_type.get() if hasattr(self, 'house_type') else None),
+                (self.jian_xiang.get() if hasattr(self, 'jian_xiang') else None)
             )
             
             score_window.run()
