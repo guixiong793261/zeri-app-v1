@@ -7436,8 +7436,7 @@ class Scorer:
             _kh = ke_shan_heju or {}
             _kh_zhis = tuple(_kh.get('局支') or ())
             if _kh_zhis and _kh_zhis[0] in group:
-                _kh_note = ('❌克坐山：本局不作吉论，合分不计入，另按克山%d分扣'
-                            '（001 §270）' % int(_kh.get('档位') or 0))
+                _kh_note = '  ❌克坐山（合分停计，见段首）'
             else:
                 _kh_note = _heju_note
 
