@@ -248,8 +248,8 @@ def build_decision_report(result, event_type=''):
                   if any(kw in str(n) for kw in _ZHEN_KW)]
     has_zhen_heavy = bool(zhen_heavy)
     # 鲁班煞属于 shensha_list 里的重煞（不在 heavy_sha_names），也硬触发
-    _has_luban = any('鲁班' in str(s) for s in (r.get('shensha_list') or []))
-    real_heavy = has_zhen_heavy or _has_luban
+    # 001 §272：鲁班煞已降为 -5 提示（非硬忌），不再硬触发黄牌；杀师日/时同理
+    real_heavy = has_zhen_heavy
 
     if veto:
         verdict_key = 'veto'
@@ -258,8 +258,7 @@ def build_decision_report(result, event_type=''):
         warn_reasons = []
         # 先判真重煞硬触发（不看分数）
         if real_heavy:
-            _hit = zhen_heavy + (['鲁班煞'] if _has_luban else [])
-            warn_reasons.append('重煞预警（%s）' % '；'.join(_hit))
+            warn_reasons.append('重煞预警（%s）' % '；'.join(zhen_heavy))
         # 五行偏枯分数阈值偏低时触发
         if pianku and score < 250:
             warn_reasons.append('五行极度偏枯（%s）' % pianku)
@@ -301,16 +300,13 @@ def build_decision_report(result, event_type=''):
         advice = ('此日课犯 %s 大忌，没有任何制化余地，请立刻另择吉日！'
                   % (veto[0] if veto else ''))
     elif verdict_key == 'warn':
-        # 用外层已解析好的 real_heavy / zhen_heavy / _has_luban，不重复定义
-        if _has_luban:
-            advice = '犯鲁班煞，建议择吉时并依规制化（如动土前祭拜），或另择吉日。'
-        elif '燥' in pianku:
+        # 001 §272：鲁班煞降为 -5 提示，不再单独触发裁决文案；仍保留真重煞分支
+        if '燥' in pianku:
             advice = '此日五行过燥，建议配合下午（金水旺）的时辰使用。'
         elif '寒' in pianku:
             advice = '此日五行过寒，建议配合上午（木火旺）的时辰使用。'
         elif real_heavy:
-            _hit = zhen_heavy + (['鲁班煞'] if _has_luban else [])
-            advice = '本日有真重煞（%s），须确认制化到位方可使用。' % '；'.join(_hit)
+            advice = '本日有真重煞（%s），须确认制化到位方可使用。' % '；'.join(zhen_heavy)
         elif sansha_penalty <= -60:
             advice = '三煞扣分较重（%d 分），建议确认制化条件后使用，或另择吉日。' % sansha_penalty
         elif neg_total <= -50:

@@ -75,7 +75,7 @@ class ConstructionShenShaChecker(ShenShaChecker):
         
         # 鲁班煞（按季节判断）
         if self._is_lubansha(sizhu):
-            self._add_shensha('鲁班煞', -20, '修建不宜，犯之主损工匠')
+            self._add_shensha('鲁班煞', -5, '修建不宜，犯之主损工匠（001 §272 降为提示）')
         
         # 土符
         if self._is_tufu(sizhu):
@@ -181,11 +181,11 @@ class ConstructionShenShaChecker(ShenShaChecker):
 
         # 杀师日（修造大忌，伤工匠）
         if self._is_shashi(sizhu):
-            self._add_shensha('杀师日', -30, '修造大忌，犯之伤害工匠')
+            self._add_shensha('杀师日', -5, '修造提示，传统忌伤工匠（001 §272 降为提示）')
 
         # 杀师时（时柱逢戊午，部分严谨修造流派大忌，伤工匠）
         if sizhu.get('hour_gan') == '戊' and sizhu.get('hour_zhi') == '午':
-            self._add_shensha('杀师时', -30, '时辰逢戊午为杀师时，对现场工匠不利，宜避开')
+            self._add_shensha('杀师时', -5, '时辰逢戊午为杀师时，提示对工匠不利（001 §272 降为提示）')
 
         # ===== 吉神 =====
 

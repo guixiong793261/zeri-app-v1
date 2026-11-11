@@ -45,7 +45,7 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
     
     继承修造神煞，添加动土专属规则：
     - 土王用事（动土大忌）
-    - 杀师日（动土专属，扣分更高）
+    - 杀师日（001 §272 续：已降为 -5 提示级，与修造同值）
     - 天赦日（动土大吉）
     """
     
@@ -150,8 +150,8 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
 
     def _check_day_shensha(self, sizhu, **kwargs):
         """检查日神煞"""
-        # 不调用 super()：历史原因为杀师日分值差异（现已同为 -30 且 _add_shensha
-        # 按名去重不会双计），但本手抄副本与修造日检查已存在差异（缺刀砧煞/斧头煞/
+        # 不调用 super()：历史原因为杀师日分值差异（001 §272 续后已同为 -5 提示级，
+        # _add_shensha 按名去重不会双计），但本手抄副本与修造日检查已存在差异（缺刀砧煞/斧头煞/
         # 木马煞/天地转煞/山曜/八专/四忌及岁合/益后/续世/福生/天恩等），
         # 贸然改走继承会引入大范围行为变化——如需收口须专项处理，勿在本方法随手改。
         
@@ -184,13 +184,13 @@ class DiggingShenShaChecker(ConstructionShenShaChecker):
         if self._is_jiangjunjian(sizhu):
             self._add_shensha('将军箭', -20, '忌修造，犯之主伤')
 
-        # 杀师日（动土大忌，扣分更高）
+        # 杀师日（001 §272 续 用户拍板：-30→-5，仅提示不再硬忌/黄牌，对齐修造）
         if self._is_shashi(sizhu):
-            self._add_shensha('杀师日', -30, '动土大忌，犯之伤害工匠')
+            self._add_shensha('杀师日', -5, '动土提示，传统忌伤工匠（001 §272 降为提示）')
 
-        # 杀师时（时柱逢戊午，部分严谨流派大忌，伤工匠）
+        # 杀师时（时柱逢戊午，001 §272 续：-30→-5，仅提示）
         if sizhu.get('hour_gan') == '戊' and sizhu.get('hour_zhi') == '午':
-            self._add_shensha('杀师时', -30, '时辰逢戊午为杀师时，对现场工匠不利，宜避开')
+            self._add_shensha('杀师时', -5, '时辰逢戊午为杀师时，提示对工匠不利（001 §272 降为提示）')
         
         # 受死日
         if self._is_shousi_day(sizhu):

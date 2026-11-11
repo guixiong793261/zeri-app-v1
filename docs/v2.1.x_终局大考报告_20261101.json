@@ -1,12 +1,12 @@
 {
  "meta": {
   "title": "v2.1.x 终局大考 · 黄金课全景报告",
-  "generated_at": "2026-11-10 11:23:32",
+  "generated_at": "2026-11-11 13:59:36",
   "root": "D:\\自编择日软件\\专业级正五行择日软件",
   "golden_count": 20,
   "channels": 16,
   "quick": false,
-  "elapsed": 23.0
+  "elapsed": 19.8
  },
  "s1_baseline": {
   "checks": [
@@ -21,16 +21,16 @@
   },
   "sha": {
    "主程序.py": [
-    "78a6aec50d3df9c10c6d0a9065a182da5ee1c4c1a193e1c9025f004f73ec49da",
-    "78a6aec50d3df9c10c6d0a9065a182da5ee1c4c1a193e1c9025f004f73ec49da"
+    "ec1700f910e37423e7fed6c4deb7df20d1df8f912384a7cfccdb8593d467a2cb",
+    "ec1700f910e37423e7fed6c4deb7df20d1df8f912384a7cfccdb8593d467a2cb"
    ],
    "modules\\评分器.py": [
-    "8e10ae8f2bd6ec2c5514e6a923310578b5d3cbe637b46ef9b67ab053b8775cc6",
-    "8e10ae8f2bd6ec2c5514e6a923310578b5d3cbe637b46ef9b67ab053b8775cc6"
+    "b2a7abcba3531be6841635d5bf91455d018da60e628ddc3444f062def676d040",
+    "b2a7abcba3531be6841635d5bf91455d018da60e628ddc3444f062def676d040"
    ],
    "modules\\事项标准.py": [
-    "51f2572df8c6fe062b3a7a440fbf108d3551a55c12bf2db0ac58468c2d914bfa",
-    "51f2572df8c6fe062b3a7a440fbf108d3551a55c12bf2db0ac58468c2d914bfa"
+    "1180855accfff4ea93d5a10927af707f7e3785b201c5e055300e801059c83a1f",
+    "1180855accfff4ea93d5a10927af707f7e3785b201c5e055300e801059c83a1f"
    ],
    "modules\\反推引擎.py": [
     "6ceb7db5de256f5c963055f3206dd65a5c89ff0b646cc461c5244b52741a3db6",
@@ -45,8 +45,8 @@
     "96652c0c36096fff8c7811e719b320be04b9358ae3b63a6469eede7c7bcf7c59"
    ],
    "modules\\排序键.py": [
-    "7db884dc2dcef38bb5c1a9f59dc295e0516251493a62222bed0e10be32b31496",
-    "7db884dc2dcef38bb5c1a9f59dc295e0516251493a62222bed0e10be32b31496"
+    "223c1346e2d8a1b508f169af017959b43cdad984c4d2f0114aeb150010b40ca8",
+    "223c1346e2d8a1b508f169af017959b43cdad984c4d2f0114aeb150010b40ca8"
    ]
   },
   "six_copies_main_exit": 0,
@@ -71,7 +71,7 @@
    "签约",
    "安葬"
   ],
-  "elapsed": 16.5,
+  "elapsed": 15.2,
   "matrix": {
    "2026-01-05": {
     "kind": "交节·小寒",
@@ -2904,7 +2904,7 @@
        },
        {
         "zhi": "寅",
-        "score": 53,
+        "score": 47,
         "disabled": false,
         "veto": 0
        },
@@ -3612,7 +3612,7 @@
        },
        {
         "zhi": "戌",
-        "score": 25,
+        "score": 21,
         "disabled": false,
         "veto": 0
        },
@@ -11260,7 +11260,7 @@
       ]
      },
      "修造": {
-      "score": 161,
+      "score": 172,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -11286,7 +11286,7 @@
        "扶山",
        "补龙"
       ],
-      "sd_total": 161,
+      "sd_total": 172,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -11304,31 +11304,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 154,
+        "score": 165,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 161,
+        "score": 172,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 86,
+        "score": 96,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 112,
+        "score": 123,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 145,
+        "score": 156,
         "disabled": false,
         "veto": 0
        },
@@ -11340,13 +11340,13 @@
        },
        {
         "zhi": "午",
-        "score": 109,
+        "score": 137,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 132,
+        "score": 142,
         "disabled": false,
         "veto": 0
        },
@@ -11358,13 +11358,13 @@
        },
        {
         "zhi": "酉",
-        "score": 161,
+        "score": 171,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 135,
+        "score": 145,
         "disabled": false,
         "veto": 0
        },
@@ -11377,7 +11377,7 @@
       ]
      },
      "动土": {
-      "score": 135,
+      "score": 145,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -11396,7 +11396,7 @@
        "福生",
        "天乙贵人"
       ],
-      "sd_total": 135,
+      "sd_total": 145,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -11414,31 +11414,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 135,
+        "score": 145,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 120,
+        "score": 130,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 90,
+        "score": 101,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 114,
+        "score": 124,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 118,
+        "score": 128,
         "disabled": false,
         "veto": 0
        },
@@ -11450,13 +11450,13 @@
        },
        {
         "zhi": "午",
-        "score": 88,
+        "score": 116,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 100,
+        "score": 110,
         "disabled": false,
         "veto": 0
        },
@@ -11468,13 +11468,13 @@
        },
        {
         "zhi": "酉",
-        "score": 127,
+        "score": 137,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 114,
+        "score": 125,
         "disabled": false,
         "veto": 0
        },
@@ -11487,7 +11487,7 @@
       ]
      },
      "拆舍": {
-      "score": 149,
+      "score": 159,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -11507,7 +11507,7 @@
        "天乙贵人",
        "母仓"
       ],
-      "sd_total": 149,
+      "sd_total": 159,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -11525,31 +11525,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 149,
+        "score": 159,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 134,
+        "score": 144,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 104,
+        "score": 115,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 127,
+        "score": 138,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 132,
+        "score": 142,
         "disabled": false,
         "veto": 0
        },
@@ -11561,13 +11561,13 @@
        },
        {
         "zhi": "午",
-        "score": 102,
+        "score": 130,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 114,
+        "score": 124,
         "disabled": false,
         "veto": 0
        },
@@ -11579,13 +11579,13 @@
        },
        {
         "zhi": "酉",
-        "score": 141,
+        "score": 151,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 128,
+        "score": 139,
         "disabled": false,
         "veto": 0
        },
@@ -14856,11 +14856,11 @@
       ],
       "ji_list": [
        "月三煞(日柱)",
+       "月三煞(时柱)",
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）",
+       "半合/拱合火局克山（酉山属金）",
        "建除收日忌修造",
        "酉山被午克制",
        "酉山卯向山家三煞：忌亥日",
@@ -14879,7 +14879,9 @@
        "圣心",
        "母仓",
        "六合",
-       "补龙"
+       "时与坐山三合",
+       "补龙",
+       "福星"
       ],
       "sd_total": 0,
       "sd_shensha_neg": [],
@@ -14888,13 +14890,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "丁丑"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "丁丑"
       },
       "hours": [
        {
@@ -14982,8 +14984,7 @@
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）",
+       "半合/拱合火局克山（酉山属金）",
        "建除收日忌动土",
        "酉山被午克制",
        "酉山卯向山家三煞：忌亥日",
@@ -15007,13 +15008,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "hours": [
        {
@@ -15101,8 +15102,7 @@
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）",
+       "半合/拱合火局克山（酉山属金）",
        "酉山被午克制",
        "酉山卯向山家三煞：忌亥日",
        "酉山卯向正阴府：忌乙日干",
@@ -15126,13 +15126,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "hours": [
        {
@@ -15221,8 +15221,7 @@
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）",
+       "半合/拱合火局克山（酉山属金）",
        "酉山被午克制",
        "酉山卯向山家三煞：忌亥日",
        "酉山卯向正阴府：忌乙日干",
@@ -15244,13 +15243,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "hours": [
        {
@@ -15554,8 +15553,7 @@
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）",
+       "半合/拱合火局克山（酉山属金）",
        "建除收日忌安床",
        "安床"
       ],
@@ -15574,13 +15572,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "hours": [
        {
@@ -15668,8 +15666,7 @@
        "日三煞(山向)",
        "乙庚年月日时干全见，犯乙庚合化金克木，酉山纳辛属木，受克，大凶",
        "伐日",
-       "三合火局克山（酉山属金）",
-       "自刑伏吟加重（月支时支伏吟）"
+       "半合/拱合火局克山（酉山属金）"
       ],
       "shensha_neg": [
        "月煞"
@@ -15687,13 +15684,13 @@
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "庚寅",
        "日柱": "乙亥",
-       "时柱": "戊寅"
+       "时柱": "癸未"
       },
       "hours": [
        {
@@ -16202,7 +16199,7 @@
       ]
      },
      "安葬": {
-      "score": 59,
+      "score": 55,
       "level": "❌ 凶",
       "veto_reasons": [],
       "ji_list": [
@@ -16222,7 +16219,7 @@
        "母仓",
        "六合"
       ],
-      "sd_total": 59,
+      "sd_total": 55,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -16240,31 +16237,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 8,
+        "score": 4,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 43,
+        "score": 39,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 37,
+        "score": 28,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 54,
+        "score": 50,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 41,
+        "score": 37,
         "disabled": false,
         "veto": 0
        },
@@ -16276,37 +16273,37 @@
        },
        {
         "zhi": "午",
-        "score": 5,
+        "score": 0,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 59,
+        "score": 55,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 35,
+        "score": 31,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 37,
+        "score": 33,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 34,
+        "score": 22,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 1,
+        "score": 0,
         "disabled": false,
         "veto": 0
        }
@@ -17338,7 +17335,7 @@
       ]
      },
      "安床": {
-      "score": 137,
+      "score": 125,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -17357,7 +17354,7 @@
        "天赦",
        "床公床母日"
       ],
-      "sd_total": 137,
+      "sd_total": 125,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -17375,19 +17372,19 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 60,
+        "score": 48,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 86,
+        "score": 74,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 96,
+        "score": 78,
         "disabled": true,
         "veto": 0
        },
@@ -17399,43 +17396,43 @@
        },
        {
         "zhi": "辰",
-        "score": 118,
-        "disabled": false,
-        "veto": 0
-       },
-       {
-        "zhi": "巳",
-        "score": 62,
-        "disabled": false,
-        "veto": 0
-       },
-       {
-        "zhi": "午",
-        "score": 111,
-        "disabled": false,
-        "veto": 0
-       },
-       {
-        "zhi": "未",
-        "score": 137,
-        "disabled": false,
-        "veto": 0
-       },
-       {
-        "zhi": "申",
-        "score": 74,
-        "disabled": false,
-        "veto": 0
-       },
-       {
-        "zhi": "酉",
         "score": 106,
         "disabled": false,
         "veto": 0
        },
        {
+        "zhi": "巳",
+        "score": 50,
+        "disabled": false,
+        "veto": 0
+       },
+       {
+        "zhi": "午",
+        "score": 87,
+        "disabled": false,
+        "veto": 0
+       },
+       {
+        "zhi": "未",
+        "score": 125,
+        "disabled": false,
+        "veto": 0
+       },
+       {
+        "zhi": "申",
+        "score": 62,
+        "disabled": false,
+        "veto": 0
+       },
+       {
+        "zhi": "酉",
+        "score": 94,
+        "disabled": false,
+        "veto": 0
+       },
+       {
         "zhi": "戌",
-        "score": 126,
+        "score": 96,
         "disabled": false,
         "veto": 0
        },
@@ -18468,6 +18465,7 @@
        "四离日",
        "魁罡日",
        "将军箭",
+       "杀师日",
        "羊刃"
       ],
       "shensha_pos": [
@@ -18585,6 +18583,7 @@
       "shensha_neg": [
        "四离日",
        "将军箭",
+       "杀师日",
        "受死日",
        "羊刃"
       ],
@@ -18701,6 +18700,7 @@
        "四离日",
        "魁罡日",
        "将军箭",
+       "杀师日",
        "羊刃"
       ],
       "shensha_pos": [
@@ -20338,7 +20338,7 @@
        },
        {
         "zhi": "戌",
-        "score": 147,
+        "score": 143,
         "disabled": false,
         "veto": 0
        },
@@ -20446,7 +20446,7 @@
        },
        {
         "zhi": "戌",
-        "score": 109,
+        "score": 105,
         "disabled": false,
         "veto": 0
        },
@@ -20555,7 +20555,7 @@
        },
        {
         "zhi": "戌",
-        "score": 125,
+        "score": 121,
         "disabled": false,
         "veto": 0
        },
@@ -20663,7 +20663,7 @@
        },
        {
         "zhi": "戌",
-        "score": 147,
+        "score": 143,
         "disabled": false,
         "veto": 0
        },
@@ -20940,7 +20940,7 @@
        },
        {
         "zhi": "寅",
-        "score": 186,
+        "score": 180,
         "disabled": false,
         "veto": 0
        },
@@ -20988,7 +20988,7 @@
        },
        {
         "zhi": "戌",
-        "score": 186,
+        "score": 180,
         "disabled": false,
         "veto": 0
        },
@@ -21048,7 +21048,7 @@
        },
        {
         "zhi": "寅",
-        "score": 131,
+        "score": 125,
         "disabled": false,
         "veto": 0
        },
@@ -21096,7 +21096,7 @@
        },
        {
         "zhi": "戌",
-        "score": 131,
+        "score": 125,
         "disabled": false,
         "veto": 0
        },
@@ -21637,7 +21637,7 @@
        },
        {
         "zhi": "戌",
-        "score": 116,
+        "score": 111,
         "disabled": false,
         "veto": 0
        },
@@ -22050,7 +22050,7 @@
        },
        {
         "zhi": "寅",
-        "score": 83,
+        "score": 79,
         "disabled": false,
         "veto": 0
        },
@@ -22098,7 +22098,7 @@
        },
        {
         "zhi": "戌",
-        "score": 138,
+        "score": 134,
         "disabled": false,
         "veto": 0
        },
@@ -22164,7 +22164,7 @@
        },
        {
         "zhi": "寅",
-        "score": 95,
+        "score": 91,
         "disabled": false,
         "veto": 0
        },
@@ -22212,7 +22212,7 @@
        },
        {
         "zhi": "戌",
-        "score": 147,
+        "score": 143,
         "disabled": false,
         "veto": 0
        },
@@ -22280,7 +22280,7 @@
        },
        {
         "zhi": "寅",
-        "score": 95,
+        "score": 91,
         "disabled": false,
         "veto": 0
        },
@@ -22328,7 +22328,7 @@
        },
        {
         "zhi": "戌",
-        "score": 147,
+        "score": 143,
         "disabled": false,
         "veto": 0
        },
@@ -22392,7 +22392,7 @@
        },
        {
         "zhi": "寅",
-        "score": 137,
+        "score": 133,
         "disabled": false,
         "veto": 0
        },
@@ -22440,7 +22440,7 @@
        },
        {
         "zhi": "戌",
-        "score": 189,
+        "score": 185,
         "disabled": false,
         "veto": 0
        },
@@ -22721,7 +22721,7 @@
        },
        {
         "zhi": "寅",
-        "score": 170,
+        "score": 164,
         "disabled": false,
         "veto": 0
        },
@@ -22769,7 +22769,7 @@
        },
        {
         "zhi": "戌",
-        "score": 235,
+        "score": 229,
         "disabled": false,
         "veto": 0
        },
@@ -22836,7 +22836,7 @@
        },
        {
         "zhi": "寅",
-        "score": 138,
+        "score": 132,
         "disabled": false,
         "veto": 0
        },
@@ -22884,7 +22884,7 @@
        },
        {
         "zhi": "戌",
-        "score": 203,
+        "score": 197,
         "disabled": false,
         "veto": 0
        },
@@ -23394,7 +23394,7 @@
        },
        {
         "zhi": "寅",
-        "score": 81,
+        "score": 77,
         "disabled": false,
         "veto": 0
        },
@@ -23442,7 +23442,7 @@
        },
        {
         "zhi": "戌",
-        "score": 133,
+        "score": 129,
         "disabled": false,
         "veto": 0
        },
@@ -23806,7 +23806,7 @@
       ]
      },
      "修造": {
-      "score": 138,
+      "score": 134,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -23835,7 +23835,7 @@
        "扶山",
        "补龙"
       ],
-      "sd_total": 138,
+      "sd_total": 134,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -23853,31 +23853,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 106,
+        "score": 101,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 138,
+        "score": 134,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 88,
+        "score": 79,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 88,
+        "score": 83,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 116,
+        "score": 112,
         "disabled": false,
         "veto": 0
        },
@@ -23889,44 +23889,44 @@
        },
        {
         "zhi": "午",
-        "score": 68,
+        "score": 77,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 132,
+        "score": 128,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 100,
+        "score": 96,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 132,
+        "score": 128,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 99,
+        "score": 86,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 103,
+        "score": 99,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "动土": {
-      "score": 130,
+      "score": 125,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -23948,7 +23948,7 @@
        "驿马",
        "天赦"
       ],
-      "sd_total": 130,
+      "sd_total": 125,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -23966,31 +23966,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 115,
+        "score": 111,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 127,
+        "score": 122,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 108,
+        "score": 100,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 118,
+        "score": 114,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 118,
+        "score": 114,
         "disabled": false,
         "veto": 0
        },
@@ -24002,44 +24002,44 @@
        },
        {
         "zhi": "午",
-        "score": 76,
+        "score": 85,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 130,
+        "score": 125,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 120,
+        "score": 116,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 128,
+        "score": 124,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 108,
+        "score": 95,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 113,
+        "score": 109,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "拆舍": {
-      "score": 123,
+      "score": 118,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -24063,7 +24063,7 @@
        "天赦",
        "生气"
       ],
-      "sd_total": 123,
+      "sd_total": 118,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -24081,31 +24081,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 108,
+        "score": 104,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 120,
+        "score": 115,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 101,
+        "score": 93,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 111,
+        "score": 107,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 111,
+        "score": 107,
         "disabled": false,
         "veto": 0
        },
@@ -24117,44 +24117,44 @@
        },
        {
         "zhi": "午",
-        "score": 69,
+        "score": 78,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 123,
+        "score": 118,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 113,
+        "score": 109,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 121,
+        "score": 117,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 101,
+        "score": 88,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 106,
+        "score": 102,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "入宅": {
-      "score": 151,
+      "score": 146,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -24176,7 +24176,7 @@
        "天赦",
        "生气"
       ],
-      "sd_total": 151,
+      "sd_total": 146,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -24194,31 +24194,31 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 136,
+        "score": 132,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 148,
+        "score": 143,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 129,
+        "score": 121,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 139,
+        "score": 135,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 139,
+        "score": 135,
         "disabled": false,
         "veto": 0
        },
@@ -24230,37 +24230,37 @@
        },
        {
         "zhi": "午",
-        "score": 118,
+        "score": 110,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 151,
+        "score": 146,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 141,
+        "score": 137,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 149,
+        "score": 145,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 129,
+        "score": 116,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 134,
+        "score": 130,
         "disabled": false,
         "veto": 0
        }
@@ -25751,7 +25751,7 @@
        },
        {
         "zhi": "戌",
-        "score": 174,
+        "score": 170,
         "disabled": false,
         "veto": 0
        },
@@ -25862,7 +25862,7 @@
        },
        {
         "zhi": "戌",
-        "score": 161,
+        "score": 157,
         "disabled": false,
         "veto": 0
        },
@@ -25977,7 +25977,7 @@
        },
        {
         "zhi": "戌",
-        "score": 168,
+        "score": 164,
         "disabled": false,
         "veto": 0
        },
@@ -26092,7 +26092,7 @@
        },
        {
         "zhi": "戌",
-        "score": 161,
+        "score": 157,
         "disabled": false,
         "veto": 0
        },
@@ -26382,7 +26382,7 @@
        },
        {
         "zhi": "寅",
-        "score": 132,
+        "score": 126,
         "disabled": false,
         "veto": 0
        },
@@ -26430,7 +26430,7 @@
        },
        {
         "zhi": "戌",
-        "score": 238,
+        "score": 232,
         "disabled": false,
         "veto": 0
        },
@@ -26497,7 +26497,7 @@
        },
        {
         "zhi": "寅",
-        "score": 102,
+        "score": 96,
         "disabled": false,
         "veto": 0
        },
@@ -26545,7 +26545,7 @@
        },
        {
         "zhi": "戌",
-        "score": 208,
+        "score": 202,
         "disabled": false,
         "veto": 0
        },
@@ -27105,7 +27105,7 @@
        },
        {
         "zhi": "戌",
-        "score": 104,
+        "score": 100,
         "disabled": false,
         "veto": 0
        },
@@ -29243,8 +29243,8 @@
       ]
      },
      "修造": {
-      "score": 100,
-      "level": "★★★★ 大吉",
+      "score": 97,
+      "level": "★★★ 吉",
       "veto_reasons": [],
       "ji_list": [
        "月三煞(日柱)",
@@ -29255,7 +29255,8 @@
       ],
       "shensha_neg": [
        "三煞",
-       "四离日"
+       "四离日",
+       "杀师日"
       ],
       "shensha_pos": [
        "阴德",
@@ -29267,7 +29268,7 @@
        "扶山",
        "补龙"
       ],
-      "sd_total": 100,
+      "sd_total": 97,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -29285,25 +29286,25 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 52,
+        "score": 48,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 72,
+        "score": 68,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 87,
+        "score": 75,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 72,
+        "score": 68,
         "disabled": false,
         "veto": 0
        },
@@ -29315,19 +29316,19 @@
        },
        {
         "zhi": "巳",
-        "score": 70,
+        "score": 66,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "午",
-        "score": 22,
+        "score": 19,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 73,
+        "score": 69,
         "disabled": false,
         "veto": 0
        },
@@ -29339,26 +29340,26 @@
        },
        {
         "zhi": "酉",
-        "score": 100,
+        "score": 97,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 68,
+        "score": 56,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 50,
+        "score": 47,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "动土": {
-      "score": 67,
+      "score": 63,
       "level": "★ 平",
       "veto_reasons": [],
       "ji_list": [
@@ -29370,13 +29371,14 @@
       ],
       "shensha_neg": [
        "三煞",
-       "四离日"
+       "四离日",
+       "杀师日"
       ],
       "shensha_pos": [
        "阴德",
        "圣心"
       ],
-      "sd_total": 67,
+      "sd_total": 63,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -29394,25 +29396,25 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 20,
+        "score": 16,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 39,
+        "score": 35,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 64,
+        "score": 52,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 62,
+        "score": 59,
         "disabled": false,
         "veto": 0
        },
@@ -29424,19 +29426,19 @@
        },
        {
         "zhi": "巳",
-        "score": 46,
+        "score": 42,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "午",
-        "score": 1,
+        "score": 0,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 64,
+        "score": 61,
         "disabled": false,
         "veto": 0
        },
@@ -29448,26 +29450,26 @@
        },
        {
         "zhi": "酉",
-        "score": 67,
+        "score": 63,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 46,
+        "score": 34,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 29,
+        "score": 25,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "拆舍": {
-      "score": 74,
+      "score": 70,
       "level": "★ 平",
       "veto_reasons": [],
       "ji_list": [
@@ -29479,13 +29481,14 @@
       ],
       "shensha_neg": [
        "三煞",
-       "四离日"
+       "四离日",
+       "杀师日"
       ],
       "shensha_pos": [
        "阴德",
        "圣心"
       ],
-      "sd_total": 74,
+      "sd_total": 70,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -29503,25 +29506,25 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 27,
+        "score": 23,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 46,
+        "score": 42,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 71,
+        "score": 59,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 69,
+        "score": 66,
         "disabled": false,
         "veto": 0
        },
@@ -29533,19 +29536,19 @@
        },
        {
         "zhi": "巳",
-        "score": 53,
+        "score": 49,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "午",
-        "score": 8,
+        "score": 4,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 71,
+        "score": 68,
         "disabled": false,
         "veto": 0
        },
@@ -29557,19 +29560,19 @@
        },
        {
         "zhi": "酉",
-        "score": 74,
+        "score": 70,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 53,
+        "score": 41,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 36,
+        "score": 32,
         "disabled": false,
         "veto": 0
        }
@@ -29623,7 +29626,7 @@
        },
        {
         "zhi": "寅",
-        "score": 85,
+        "score": 76,
         "disabled": false,
         "veto": 0
        },
@@ -29671,7 +29674,7 @@
        },
        {
         "zhi": "戌",
-        "score": 67,
+        "score": 58,
         "disabled": false,
         "veto": 0
        },
@@ -31036,6 +31039,9 @@
        "玄空飞星大忌：坐酉（西方）五黄到山，切忌动土修造（飞星-7分，一票否决）"
       ],
       "ji_list": [
+       "月三煞(时柱)",
+       "日三煞(时柱)",
+       "月日三煞叠犯(时柱)",
        "三合火局克山（酉山属金）",
        "自刑伏吟加重（年支月支自刑）",
        "酉山被午克制",
@@ -31058,9 +31064,9 @@
        "天恩",
        "三合",
        "建除十二神-成",
+       "时与坐山三合",
        "山家贵人",
-       "补龙",
-       "福星"
+       "补龙"
       ],
       "sd_total": 0,
       "sd_shensha_neg": [],
@@ -31069,13 +31075,13 @@
        "年柱": "丙午",
        "月柱": "甲午",
        "日柱": "丙寅",
-       "时柱": "戊戌"
+       "时柱": "己丑"
       },
       "result_pillars": {
        "年柱": "丙午",
        "月柱": "甲午",
        "日柱": "丙寅",
-       "时柱": "戊戌"
+       "时柱": "己丑"
       },
       "hours": [
        {
@@ -31731,7 +31737,7 @@
       ]
      },
      "安床": {
-      "score": 274,
+      "score": 244,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -31754,7 +31760,7 @@
        "床公床母日",
        "福星"
       ],
-      "sd_total": 274,
+      "sd_total": 244,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -31772,80 +31778,80 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 148,
+        "score": 136,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 203,
+        "score": 191,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 208,
+        "score": 184,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 199,
+        "score": 187,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 211,
+        "score": 199,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "巳",
-        "score": 181,
+        "score": 169,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "午",
-        "score": 173,
+        "score": 155,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 223,
+        "score": 211,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 173,
+        "score": 161,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 207,
+        "score": 195,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 274,
+        "score": 244,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 176,
+        "score": 164,
         "disabled": false,
         "veto": 0
        }
       ]
      },
      "作灶": {
-      "score": 257,
+      "score": 227,
       "level": "★★★★★ 上吉",
       "veto_reasons": [],
       "ji_list": [
@@ -31868,7 +31874,7 @@
        "丙丁日",
        "福星"
       ],
-      "sd_total": 257,
+      "sd_total": 227,
       "sd_shensha_neg": [],
       "pipeline": "general",
       "pillars": {
@@ -31886,73 +31892,73 @@
       "hours": [
        {
         "zhi": "子",
-        "score": 131,
+        "score": 119,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "丑",
-        "score": 186,
+        "score": 174,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "寅",
-        "score": 191,
+        "score": 167,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "卯",
-        "score": 182,
+        "score": 170,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "辰",
-        "score": 194,
+        "score": 182,
         "disabled": true,
         "veto": 0
        },
        {
         "zhi": "巳",
-        "score": 164,
+        "score": 152,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "午",
-        "score": 156,
+        "score": 138,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "未",
-        "score": 206,
+        "score": 194,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "申",
-        "score": 156,
+        "score": 144,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "酉",
-        "score": 190,
+        "score": 178,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "戌",
-        "score": 257,
+        "score": 227,
         "disabled": false,
         "veto": 0
        },
        {
         "zhi": "亥",
-        "score": 159,
+        "score": 147,
         "disabled": false,
         "veto": 0
        }
@@ -34793,7 +34799,7 @@
        },
        {
         "zhi": "寅",
-        "score": 35,
+        "score": 30,
         "disabled": false,
         "veto": 0
        },
@@ -34841,7 +34847,7 @@
        },
        {
         "zhi": "戌",
-        "score": 85,
+        "score": 81,
         "disabled": false,
         "veto": 0
        },
@@ -34905,7 +34911,7 @@
        },
        {
         "zhi": "寅",
-        "score": 45,
+        "score": 41,
         "disabled": false,
         "veto": 0
        },
@@ -34953,7 +34959,7 @@
        },
        {
         "zhi": "戌",
-        "score": 95,
+        "score": 91,
         "disabled": false,
         "veto": 0
        },
@@ -35018,7 +35024,7 @@
        },
        {
         "zhi": "寅",
-        "score": 38,
+        "score": 34,
         "disabled": false,
         "veto": 0
        },
@@ -35066,7 +35072,7 @@
        },
        {
         "zhi": "戌",
-        "score": 88,
+        "score": 84,
         "disabled": false,
         "veto": 0
        },
@@ -35130,7 +35136,7 @@
        },
        {
         "zhi": "寅",
-        "score": 66,
+        "score": 62,
         "disabled": false,
         "veto": 0
        },
@@ -35178,7 +35184,7 @@
        },
        {
         "zhi": "戌",
-        "score": 116,
+        "score": 112,
         "disabled": false,
         "veto": 0
        },
@@ -36355,7 +36361,7 @@
    "score": 0,
    "level": "❌ 计算错误"
   },
-  "json_len": 354655,
+  "json_len": 354662,
   "unknown_event": {
    "score": 158,
    "pipeline": "general"
@@ -36367,11 +36373,13 @@
   "runner_shell": false,
   "pyproject": false,
   "uni_exists": true,
-  "uni_same": 3,
-  "uni_diff": [],
+  "uni_same": 2,
+  "uni_diff": [
+   "主程序.py"
+  ],
   "copy_aware": {
    "aware": 8,
-   "total": 151
+   "total": 152
   }
  },
  "checks": [
@@ -36607,7 +36615,7 @@
    "id": "S6-2",
    "name": "副本感知脚本覆盖（>4 个）",
    "ok": true,
-   "detail": "{'aware': 8, 'total': 151}"
+   "detail": "{'aware': 8, 'total': 152}"
   },
   {
    "id": "S1-1",

@@ -137,6 +137,10 @@ def main():
         days.append(calculate_sizhu(d, 10, 0))
         d += datetime.timedelta(days=1)
     bad = []
+    # §272续（2026-11-11）：杀师日/杀师时/鲁班煞 -30/-30/-20→全 -5 提示级，
+    # 修建三类（修造/动土/拆舍）在 §250 +2340 基础上再 +650 → 增量 2990；
+    # 其余 12 通道维持 +2340。
+    _DELTA = {'修造': 2990, '动土': 2990, '拆舍': 2990}
     for ev in EV15:
         ck = get_checker(ev)
         tot, nty, dup = 0, 0, 0
@@ -148,9 +152,12 @@ def main():
                 nty += 1
                 if len(ty) > 1:
                     dup += 1
-        if nty != 156 or dup or tot - OLD[ev] != 2340:
-            bad.append('%s 天数%d 重复%d 增量%d' % (ev, nty, dup, tot - OLD[ev]))
-    check('E1 15 通道各 156 天次、增量 2340、无重复', not bad, bad)
+        exp_delta = _DELTA.get(ev, 2340)
+        if nty != 156 or dup or tot - OLD[ev] != exp_delta:
+            bad.append('%s 天数%d 重复%d 增量%d(期望%d)' % (
+                ev, nty, dup, tot - OLD[ev], exp_delta))
+    check('E1 15 通道各 156 天次、修建三类增量 2990/其余 2340、无重复',
+          not bad, bad)
 
     print()
     if _fail:

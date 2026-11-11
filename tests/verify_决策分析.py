@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """专家决策分析面板验证（001 §238.12，tests/verify_决策分析.py）。
 
-A 段（合成，零扫描）：三场景分类断言（veto/warn/ok）、鲁班煞与偏枯建议
-    文案、纯度断言（build_decision_report 不变异入参）、明细折叠。
+A 段（合成，零扫描）：三场景分类断言（veto/warn/ok）、鲁班煞提示级回归
+    （001 §272 续：-5 提示，不再黄牌）、偏枯建议文案、纯度断言
+    （build_decision_report 不变异入参）、明细折叠。
 B 段（真实链路）：2023-01-12 庚午日嫁娶（owners_0111_g85.json 夹具，
     基线确认一票否决）→ verdict_key == 'veto' 且事主列非空；
     2026 年 1 月嫁娶有限扫描（≤8 天）找首个非否决日，断言报告结构完整。
@@ -60,7 +61,8 @@ def main():
           str(rep['shan_items']))
     check('A1 否决建议含「另择吉日」', '另择吉日' in rep['advice'])
 
-    # A2 鲁班煞高分日 → warn + 鲁班建议
+    # A2 鲁班煞高分日（001 §272 续：鲁班煞降为 -5 提示级，不再硬触发黄牌，
+    #    合成单日 -10 未达普通档 neg_total<=-20 阈值）→ ok，且无鲁班专属建议
     r_luban = {
         'score': 96, 'level': '★★★★ 吉',
         'veto_reasons': [],
@@ -71,11 +73,10 @@ def main():
         'xiangzhu_notes': [],
     }
     rep2 = build_decision_report(r_luban, '修造')
-    check('A2 鲁班煞高分裁决为 warn', rep2['verdict_key'] == 'warn',
+    check('A2 鲁班煞提示级不再黄牌（裁决为 ok）', rep2['verdict_key'] == 'ok',
           rep2['verdict_key'])
-    check('A2 建议含「鲁班煞」与「祭拜」',
-          '鲁班煞' in rep2['advice'] and '祭拜' in rep2['advice'],
-          rep2['advice'])
+    check('A2 建议不再含「鲁班煞」专属文案',
+          '鲁班煞' not in rep2['advice'], rep2['advice'])
 
     # A3 偏枯过燥 → warn + 金水时辰建议
     r_pk = {'score': 80, 'level': '★★★ 中吉', 'veto_reasons': [],
