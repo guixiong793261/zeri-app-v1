@@ -816,6 +816,9 @@ class ZeriApp:
                                   state='readonly', width=14)
         _check_cbo.pack(side=tk.LEFT, padx=(4, 0))
         _check_cbo.bind("<<ComboboxSelected>>", lambda *_a: self._render_result_tree())
+        # 001 §266：按当前筛选档位保存（所见即所存：切到极品存极品、切到上品存上品）
+        ttk.Button(_check_bar, text="保存当前筛选",
+                   command=self.save_check_filtered).pack(side=tk.LEFT, padx=(6, 0))
 
         # 结果列表包装器 - 使用网格布局
         tree_frame = ttk.Frame(result_frame)
@@ -8627,6 +8630,50 @@ class ZeriApp:
         ttk.Button(button_frame, text="保存详情", command=save_detail).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="关闭", command=detail_window.destroy).pack(side=tk.RIGHT, padx=5)
     
+    def save_check_filtered(self):
+        """001 §266：保存「核验筛选」当前档位下的可见结果（所见即所存）。
+
+        数据源为结果表当前行，故与筛选下拉、输出模式（含不合格原因列）
+        完全一致：切到极品存极品、切到上品存上品、切到大吉存大吉。
+        纯导出，不改动评分/排序/筛选逻辑。
+        """
+        _rows = self.result_tree.get_children()
+        if not _rows:
+            messagebox.showwarning("警告", "当前筛选下没有可保存的结果")
+            return
+        _flt_var = getattr(self, '_check_filter_var', None)
+        _flt = _flt_var.get() if _flt_var is not None else '全部'
+        _safe = ''.join(_c if (_c.isalnum() or _c in '-_') else '_'
+                        for _c in str(_flt))
+        import csv as _csv
+        file_path = filedialog.asksaveasfilename(
+            defaultextension='.csv',
+            filetypes=[("CSV表格", "*.csv"), ("所有文件", "*.*")],
+            initialfile='核验筛选_%s_%s.csv' % (
+                _safe, date.today().strftime('%Y%m%d')),
+            title="保存当前筛选结果（%s）" % _flt
+        )
+        if not file_path:
+            return
+        try:
+            _cols = tuple(self.result_tree['columns'])
+            with open(file_path, 'w', encoding='utf-8-sig', newline='') as f:
+                _w = _csv.writer(f)
+                _w.writerow(list(_cols))
+                for _iid in _rows:
+                    # 日期/四柱列含两行文本，落 CSV 前压成单行，避免断行
+                    _vals = [str(_v).replace('\r', ' ').replace('\n', ' ')
+                             for _v in self.result_tree.item(_iid, 'values')]
+                    _w.writerow(_vals)
+            messagebox.showinfo(
+                "成功",
+                "已保存 %d 条【%s】结果到：\n%s\n\n（可直接用 Excel 打开）"
+                % (len(_rows), _flt, file_path))
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("错误", "保存失败：%s" % str(e))
+
     def export_results(self):
         """导出结果（支持文本、HTML、PDF格式）"""
         if not self.results:
