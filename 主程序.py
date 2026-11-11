@@ -169,6 +169,32 @@ def _fmt_score(v, empty='-'):
             return str(v)
     return '0' if num == 0 else f"{num:+d}"
 
+
+def _fmt_pianku(score_details):
+    """五行偏枯判定短文本（001 §268，结果表「偏枯判定」列）。
+
+    数据源为评分器 build_wuxing_bias_report 产出的 score_details['五行偏枯分析']
+    （§251 五级：平衡/缺项/偏枯/极度偏枯），本函数只做展示压缩，不改任何分值与判定。
+    无该分析时返回 '-'。
+    """
+    try:
+        _pk = (score_details or {}).get('五行偏枯分析') or {}
+        _grade = str(_pk.get('偏枯等级') or '').strip()
+        if not _grade:
+            return '-'
+        if _grade == '平衡':
+            return '✅平衡'
+        _marker = {'极度偏枯': '⛔', '偏枯': '❌', '缺项': '⚠️'}.get(_grade, '⚠️')
+        _tag = str(_pk.get('偏枯标签') or '').strip()
+        if _tag:
+            return _marker + _tag
+        _miss = _pk.get('缺行') or []
+        if _miss:
+            return _marker + '缺' + '/'.join(str(x) for x in _miss)
+        return _marker + _grade
+    except Exception:
+        return '-'
+
 def _parse_owner_longitude(longitude_var, show_warning=True):
     """事主经度输入解析（真太阳时立项，2026-09-29，001 §43.9 拍板③/§48）。
 
@@ -826,7 +852,7 @@ class ZeriApp:
         
         # 结果列表（2026-09-03：四柱并入"日期/四柱"列两行显示，删除独立四柱列；
         # 001 §234：新增"核验"列，显示满分核验 N/5 ✓，全✓行金底高亮）
-        columns = ("日期/四柱", "评分", "等级", "核验", "五行得分", "月令得分", "喜用神得分", "黄道得分", "地支关系", "核心吉神", "利月", "事主信息", "玄空")
+        columns = ("日期/四柱", "评分", "等级", "核验", "五行得分", "月令得分", "相主得分", "偏枯判定", "地支关系", "核心吉神", "利月", "事主信息", "玄空")
         self.result_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
 
         # 设置列宽（2026-09-08 用户反馈：地支关系太宽挤占吉神列）：
@@ -838,8 +864,8 @@ class ZeriApp:
         self.result_tree.column("核验", width=58, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("五行得分", width=62, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("月令得分", width=62, anchor=tk.CENTER, stretch=False)
-        self.result_tree.column("喜用神得分", width=76, anchor=tk.CENTER, stretch=False)
-        self.result_tree.column("黄道得分", width=62, anchor=tk.CENTER, stretch=False)
+        self.result_tree.column("相主得分", width=76, anchor=tk.CENTER, stretch=False)
+        self.result_tree.column("偏枯判定", width=76, anchor=tk.CENTER, stretch=False)
         self.result_tree.column("地支关系", width=300, anchor=tk.W, stretch=False)
         self.result_tree.column("核心吉神", width=230, anchor=tk.W, stretch=True)
         self.result_tree.column("利月", width=56, anchor=tk.CENTER, stretch=False)
@@ -3328,7 +3354,7 @@ class ZeriApp:
             return
         try:
             cols = ["日期/四柱", "评分", "等级", "核验", "五行得分", "月令得分",
-                    "喜用神得分", "黄道得分", "地支关系", "核心吉神"]
+                    "相主得分", "偏枯判定", "地支关系", "核心吉神"]
             if self.event_var.get() in MARRIAGE_EVENTS:
                 cols.append("利月")
             if self.event_var.get() in FEIXING_EVENTS and self._get_zeli_mode() == 'feixing':  # _zm0915
@@ -3677,6 +3703,14 @@ class ZeriApp:
                         result['level'] = score_result.get('level', '')
                 except Exception as _e55:
                     print(f"[最佳吉时] 权威重算失败，保留原评分: {_e55}")
+
+                # 001 §268：结果表第7/8列（相主得分/偏枯判定）随权威时柱同步刷新，
+                # 避免出现「列表偏枯按午时、详情按推荐时柱」的口径分裂。
+                _sd_now = score_result.get('score_details')
+                if not isinstance(_sd_now, dict):
+                    _sd_now = {}
+                result['xiangzhu_score'] = _sd_now.get('相主得分', 0)
+                result['pianku'] = _fmt_pianku(_sd_now)
 
                 # ============================================================
                 # (4') 时柱地支关系展示（评分器单一数据源）
@@ -4368,10 +4402,8 @@ class ZeriApp:
                 _chk_text,
                 self._fmt_score(result.get('wuxing_score', 0), '0'),
                 self._fmt_score(result.get('yueling_score', 0), '0'),
-                self._fmt_score(result.get('xishen_score', 0), '0'),
-                self._fmt_score(result.get('huangdao_score', 0), '0')
-                if not result.get('huangdao_merged')
-                else '已并入',
+                self._fmt_score(result.get('xiangzhu_score', 0), '0'),
+                result.get('pianku', '-'),
                 _fmt_tree_relation(result.get('dizhi_relation', '')),
                 _display_jishen,
                 result.get('daliyue', '-'),
@@ -4754,6 +4786,10 @@ class ZeriApp:
                     'yueling_score': yueling_score,
                     'xishen_score': xishen_score,
                     'huangdao_score': huangdao_score,
+                    # 001 §268：结果表第7/8列改为「相主得分」「偏枯判定」，
+                    # 喜用神/黄道仍保留在 result 中供详情与导出使用，仅不再上表。
+                    'xiangzhu_score': score_details.get('相主得分', 0),
+                    'pianku': _fmt_pianku(score_details),
                     # 001 §230：嫁娶路径黄道已并入五行评分，score_details 无「黄道得分」键；
                     # 结果表据此显示「已并入」，不再误显示 0。
                     'huangdao_merged': '黄道得分' not in score_details,
@@ -6110,6 +6146,9 @@ class ZeriApp:
                         'yueling_score': yueling_score,
                         'xishen_score': xishen_score,
                         'huangdao_score': huangdao_score,
+                        # 001 §268：结果表第7/8列改为「相主得分」「偏枯判定」
+                        'xiangzhu_score': score_details.get('相主得分', 0),
+                        'pianku': _fmt_pianku(score_details),
                         # 001 §230：嫁娶黄道已并入五行评分时，结果表显示「已并入」。
                         'huangdao_merged': '黄道得分' not in score_details,
                         'dizhi_relation': dizhi_text,
@@ -8849,8 +8888,8 @@ class ZeriApp:
                                 '—',  # 001 §234：导入路径无 detail，核验列占位
                                 self._fmt_score(result.get('wuxing_score', '-'), '-'),
                                 self._fmt_score(result.get('yueling_score', '-'), '-'),
-                                self._fmt_score(result.get('xishen_score', '-'), '-'),
-                                self._fmt_score(result.get('huangdao_score', '-'), '-'),
+                                self._fmt_score(result.get('xiangzhu_score', '-'), '-'),
+                                result.get('pianku', '-'),
                                 _fmt_tree_relation(result.get('dizhi_relation', '-')),
                                 result.get('jishen', result.get('yi', '-')),
                                 result.get('daliyue', '-'),
@@ -8889,8 +8928,8 @@ class ZeriApp:
                                 '—',  # 001 §234：导入路径无 detail，核验列占位
                                 self._fmt_score(result.get('wuxing_score', '-'), '-'),
                                 self._fmt_score(result.get('yueling_score', '-'), '-'),
-                                self._fmt_score(result.get('xishen_score', '-'), '-'),
-                                self._fmt_score(result.get('huangdao_score', '-'), '-'),
+                                self._fmt_score(result.get('xiangzhu_score', '-'), '-'),
+                                result.get('pianku', '-'),
                                 _fmt_tree_relation(result.get('dizhi_relation', '-')),
                                 result.get('jishen', result.get('yi', '-')),
                                 result.get('daliyue', '-'),
