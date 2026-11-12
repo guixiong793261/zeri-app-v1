@@ -1410,6 +1410,9 @@ def rule_e203(ctx):
     _text_lab = re.sub(r'（事主[1-4]）', '', text)
     _text_lab = re.sub(r'事主[1-4](生肖|日支|年命)', '', _text_lab)
     _text_lab = re.sub(r'事主[1-4]：', '', _text_lab)
+    # 001 §273：三元合参「事主N（喜用水）+6」同属有意保留的角色标签，
+    # 原正则未覆盖导致每天必报 E203 假警告（把标签误判成未替换占位符）。
+    _text_lab = re.sub(r'事主[1-4]（[^）]*）[+-]?\d*', '', _text_lab)
     placeholders = ['事主1', '事主2', '事主3', '事主4', '{{姓名}}', '{{日期}}']
     for ph in placeholders:
         if ph in _text_lab:

@@ -15,6 +15,19 @@
 """
 import re
 
+# 001 §273：事项别名归一（入宅/移徙/搬家/迁居 → '入宅'）。
+# 优先复用唯一事实源 事项标准.canonical_event；独立运行/顶层导入时退回本地表。
+try:
+    from .事项标准 import canonical_event as _canonical_event
+except ImportError:  # pragma: no cover - 独立脚本/顶层导入路径
+    try:
+        from 事项标准 import canonical_event as _canonical_event
+    except ImportError:
+        _RZ_ALIASES = frozenset({'入宅', '移徙', '搬家', '迁居'})
+
+        def _canonical_event(event_type):
+            return '入宅' if event_type in _RZ_ALIASES else event_type
+
 # ── 否决项分类关键词（事主优先，避免「本命三煞」被「三煞」抢分类）──────────
 _OWNER_KEYS = ('事主', '命主', '年命', '生肖', '仙命', '亡命', '相主',
                '新郎', '新娘', '福主', '户主', '冲命', '生合')
@@ -187,6 +200,29 @@ def build_decision_report(result, event_type=''):
         else:
             owner_items.append((True, t))
 
+    # 3a) 001 §273：相主明细兜底接入（修复「相主空转」显示缺陷）
+    # 背景：xiangzhu_notes 只在修造规则「扶山且冲命」分支写入，入宅/安葬/嫁娶等
+    # 事项即便算了相主得分，决策面板也恒显示「— 无显著影响」，用户会误以为
+    # 系统没核对事主。此处改读 score_details['相主详情']（全事项通用产物）：
+    #   - [硬性门槛] 行已由 veto 覆盖，跳过防重复
+    #   - 其余行按尾部 ±N 分定吉凶
+    # 纯展示补全，不改任何计分/否决/等级。
+    for line in ((r.get('score_details') or {}).get('相主详情') or []):
+        t = str(line)
+        if '[硬性门槛]' in t:
+            continue
+        sc = _line_score(t)
+        owner_items.append((sc is None or sc >= 0, t))
+    # 相主合计兜底：无逐条明细但相主得分非 0 时，至少给出总分，避免「空转」观感
+    # （得分为 0 且无明细 = 确实无冲无合，不生成噪音行）
+    if not owner_items:
+        try:
+            _xz = int((r.get('score_details') or {}).get('相主得分') or 0)
+        except (TypeError, ValueError):
+            _xz = 0
+        if _xz:
+            owner_items.append((_xz >= 0, '相主得分 %+d 分' % _xz))
+
     # 3b) 婚嫁专属事主影响项（夫星 / 阳气 / 阴胎）
     # 婚嫁评分算法中 夫星受克、犯阳气、冲阴胎 等直接作用于事主（新郎/新娘），
     # 但它们存储在 marriage_details（扣分明细）或 ji_list（忌项），不在
@@ -251,11 +287,23 @@ def build_decision_report(result, event_type=''):
     # 001 §272：鲁班煞已降为 -5 提示（非硬忌），不再硬触发黄牌；杀师日/时同理
     real_heavy = has_zhen_heavy
 
+    # 001 §273（2026-11-12 用户拍板）：入宅看大门向首，向方三煞不可被高分豁免。
+    # 修造的「可坐不可向」阶梯豁免不适用于入宅——大门天天犯三煞，即便总分
+    # 300 也必须给黄牌（001 §238.15 阶梯只保留给修造/动土等营造事项）。
+    # 001 §273：canonical 归并——入宅/移徙/搬家/迁居同一口径统一黄牌。
+    _ev = str(event_type or '')
+    _is_ruzai = _canonical_event(_ev) == '入宅'
+    _xf_sansha = [str(d) for d in (si.get('sansha_penalty_detail') or [])
+                  if '三煞' in str(d) and '向' in str(d)]
+
     if veto:
         verdict_key = 'veto'
         verdict_reason = '；'.join(veto[:2]) + (' 等' if len(veto) > 2 else '')
     else:
         warn_reasons = []
+        if _is_ruzai and _xf_sansha:
+            warn_reasons.append('入宅向首犯三煞（%s）'
+                                % '；'.join(_xf_sansha))
         # 先判真重煞硬触发（不看分数）
         if real_heavy:
             warn_reasons.append('重煞预警（%s）' % '；'.join(zhen_heavy))
@@ -301,7 +349,10 @@ def build_decision_report(result, event_type=''):
                   % (veto[0] if veto else ''))
     elif verdict_key == 'warn':
         # 001 §272：鲁班煞降为 -5 提示，不再单独触发裁决文案；仍保留真重煞分支
-        if '燥' in pianku:
+        if _is_ruzai and _xf_sansha:
+            advice = ('入宅重「入门的吉凶」，向首（大门朝向）犯三煞属大忌，'
+                      '高分不能豁免；建议另择向方清净之日，或改开他方吉门。')
+        elif '燥' in pianku:
             advice = '此日五行过燥，建议配合下午（金水旺）的时辰使用。'
         elif '寒' in pianku:
             advice = '此日五行过寒，建议配合上午（木火旺）的时辰使用。'

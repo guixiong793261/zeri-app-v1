@@ -6672,6 +6672,21 @@ class Scorer:
             sc += s
         # H1：当日神煞族已注册自身分的锚点规则文本 → 仅展示、不计分
         _h1_skip = set()
+        # 001 §273：入宅/移徙山家正分降权判据（仅入宅通道生效）
+        _rz_mode = bool(event_type) and _canonical_event(event_type) == '入宅'
+
+        def _rz_shanjia_zheng(_tx):
+            """入宅山家正分项识别（扶山 / 补龙 / 山家三合）。"""
+            if not _rz_mode:
+                return False
+            if any(k in _tx for k in ('扶山', '补龙', '山家三合')):
+                return True
+            # 规则宜项原文：'{山}山得{支}生扶' / '{山}山与{支}半合{局}'
+            if '山得' in _tx and '生扶' in _tx:
+                return True
+            if '山与' in _tx and ('半合' in _tx or '三合' in _tx):
+                return True
+            return False
         if event_type:
             _ss_names = {_s.get('name') for _s in self.shensha_list if isinstance(_s, dict)}
             for _ss_name, _tx in H1_ANCHOR_MAP.get(_canonical_event(event_type), []):
@@ -6682,8 +6697,15 @@ class Scorer:
                 _yi if isinstance(_yi, str) else str(_yi))
             if _t in _h1_skip:
                 continue
-            bd['宜事得分'] += 10
-            sc += 10
+            # 001 §273（2026-11-12 用户拍板）：入宅/移徙重「人和」，山家正分
+            # （扶山 / 补龙 / 山家三合）由每项 +10 降权至 0.2 倍（+2），
+            # 使入宅五行回归「日主旺衰 + 生扶事主喜用」主线。
+            # 避忌（克山/三煞/岁破/阴府/山家封禁）一律不动，仍全额计分/否决。
+            _add = 10
+            if _rz_shanjia_zheng(_t):
+                _add = 2
+            bd['宜事得分'] += _add
+            sc += _add
         for _ji in self.ji_list:
             _t = _ji.get('name', '') if isinstance(_ji, dict) else (
                 _ji if isinstance(_ji, str) else str(_ji))

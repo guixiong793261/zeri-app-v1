@@ -109,6 +109,37 @@ def main():
           any(g and '六合' in t for g, t in rep5['owner_items']),
           str(rep5['owner_items']))
 
+    # A5b 001 §273：入宅 300 分 + 向方三煞 → 必须黄牌（修造同数据仍绿灯）
+    r_rz = {
+        'score': 300, 'level': '★★★★★ 上吉', 'veto_reasons': [],
+        'heavy_sha_warning': '', 'heavy_sha_names': [],
+        'wuxing_pian_ku': None,
+        'shensha_list': [{'name': '月德', 'score': 18}],
+        'xiangzhu_notes': [],
+        'sansha_info': {'sansha_penalty': -20,
+                        'sansha_penalty_detail': ['年三煞(向方)（-10分）',
+                                                  '日三煞(向方)（-3分）']},
+        'score_details': {'相主得分': 29,
+                          '相主详情': ['事主1年命属金（辛亥），与日课相生 +6分']},
+    }
+    check('A5b 入宅300分向方三煞=黄牌',
+          build_decision_report(dict(r_rz), '入宅')['verdict_key'] == 'warn')
+    check('A5b 入宅黄牌文案含「向首」',
+          '向首' in build_decision_report(dict(r_rz), '入宅')['verdict_reason'])
+    check('A5b 修造300分同数据仍绿灯（阶梯豁免不受影响）',
+          build_decision_report(dict(r_rz), '修造')['verdict_key'] == 'ok')
+    # A5b-2 001 §273：canonical 归并——移徙/搬家/迁居同属入宅，向首三煞同样黄牌
+    for _alias in ('移徙', '搬家', '迁居'):
+        _rep = build_decision_report(dict(r_rz), _alias)
+        check('A5b-2 %s向首三煞=黄牌（canonical归并）' % _alias,
+              _rep['verdict_key'] == 'warn', _rep['verdict_key'])
+        check('A5b-2 %s黄牌文案含「向首」' % _alias,
+              '向首' in _rep['verdict_reason'], _rep['verdict_reason'])
+    # A5c 001 §273：相主详情接入「对事主的影响」，修复相主空转
+    _it = build_decision_report(dict(r_rz), '入宅')['owner_items']
+    check('A5c 相主详情进入事主影响列', len(_it) >= 1, str(_it))
+    check('A5c 相主行带分值', all('分' in str(t) for _, t in _it), str(_it))
+
     # A6 纯度断言：build_decision_report 不变异入参
     r_pure = copy.deepcopy(r_veto)
     build_decision_report(r_veto, '嫁娶')
