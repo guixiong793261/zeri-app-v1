@@ -223,8 +223,10 @@ check('D2-4b 保留灶君忌日忌作灶忌项', '灶君忌日忌作灶' in _jl,
 # 仍直升「五行大吉」、不走任何放宽分支（note=None）。
 # 001 §250（2026-11-10）天乙贵人入计分：本日 +15 → wx 158→173，仍直升
 # 「五行大吉」、不走任何放宽分支（note=None）。
-check('D2-4c 直升五行吉日（§250 天乙 +15：score173/note=None）',
-      wx(r).get('score') == 173 and wx(r).get('_he_ge_note') is None
+# 001 §275（2026-11-12）作灶吉神正向加分封顶 +40：本日 173→141，仍直升
+# 「五行大吉」、不走任何放宽分支（note=None）。
+check('D2-4c 直升五行吉日（§275 吉神封顶：score141/note=None）',
+      wx(r).get('score') == 141 and wx(r).get('_he_ge_note') is None
       and wx(r).get('he_ge') is True,
       f"score={wx(r).get('score')} note={wx(r).get('_he_ge_note')}")
 
@@ -250,7 +252,8 @@ r = run(dt.date(2025, 9, 20), '作灶', OWNER1, shan=KUN)
 _w = wx(r)
 # §187 Q4 重锚：1→76（五行平平，直升），灶君忌项与无 veto 语义保持。
 # 001 §250（2026-11-10）天乙贵人入计分：76→91，仍直升（note=None）。
-check('D2-4d 主样例五行91（§250 天乙 +15：76→91 直升五行平平）', _w.get('score') == 91,
+# 001 §275（2026-11-12）作灶吉神正向加分封顶 +40：91→84，仍直升。
+check('D2-4d 主样例五行84（§275 吉神封顶：76→91→84 直升五行平平）', _w.get('score') == 84,
       f'五行={_w.get("score")}{_RESCAN}')
 check('D2-4d 主样例直升吉日 he_ge=True', _w.get('he_ge') is True,
       f'he_ge={_w.get("he_ge")}{_RESCAN}')
