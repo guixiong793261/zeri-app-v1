@@ -920,6 +920,51 @@ def rule_e207(ctx):
     claimed = bd.get('地支关系得分')
     if claimed is None:
         return '无五行恒等式地支关系分项'
+    # 001 §274（2026-11-12）：克山局合分抑制口径对齐。
+    # §270 起，评分器对「合局五行克坐山」的半合/拱合正分 +6/对不予计入
+    # （避免同一合局一边加 +6、一边按克山重扣）。本规则独立重算六对时必须
+    # 同口径剔除，否则修造/动土克山日会每天误报 E207 假红。
+    # 此处独立推导（不读评分器结果）：坐山五行 → 唯一克它的三合局 → 该局局支。
+    _SHAN_WX = {'壬': '水', '子': '水', '癸': '水', '丑': '土', '艮': '土',
+                '寅': '木', '甲': '木', '卯': '木', '乙': '木', '辰': '土',
+                '巽': '木', '巳': '火', '丙': '火', '午': '火', '丁': '火',
+                '未': '土', '坤': '土', '申': '金', '庚': '金', '酉': '金',
+                '辛': '金', '戌': '土', '乾': '金', '亥': '水'}
+    _KE_OF = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'}
+    _JU_OF = {'水': ('申', '子', '辰'), '火': ('寅', '午', '戌'),
+              '金': ('巳', '酉', '丑'), '木': ('亥', '卯', '未')}
+    _sx = str(ctx.detail.get('shan_xiang') or '')
+    _zs = ''
+    if _sx:
+        _zs = _sx.split('山')[0][:1] if '山' in _sx else _sx[:1]
+    _ke_zhis = ()
+    _shan_wx = _SHAN_WX.get(_zs, '')
+    if _shan_wx:
+        for _jw, _ke_tgt in _KE_OF.items():
+            if _ke_tgt == _shan_wx:      # 该局五行克坐山
+                _ke_zhis = _JU_OF[_jw]
+                break
+    if _ke_zhis:
+        calc = 0
+        for i in range(4):
+            for j in range(i + 1, 4):
+                a, b = zhis[i], zhis[j]
+                if check_liuhe(a, b):
+                    calc += 8
+                elif _is_banhe(a, b):
+                    # 克山局成员的半合/拱合正分不计入（与评分器 §270 同口径）
+                    if a in _ke_zhis and b in _ke_zhis:
+                        pass
+                    else:
+                        calc += 6
+                if check_liuchong(a, b):
+                    calc -= 15
+                if check_liuhai(a, b):
+                    calc -= 6
+                if check_xing(a, b):
+                    calc -= 8
+                if check_po(a, b):
+                    calc -= 4
     if int(claimed) != calc:
         ctx.issue(
             'E207',

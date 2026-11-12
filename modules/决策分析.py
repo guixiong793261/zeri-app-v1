@@ -296,6 +296,14 @@ def build_decision_report(result, event_type=''):
     _xf_sansha = [str(d) for d in (si.get('sansha_penalty_detail') or [])
                   if '三煞' in str(d) and '向' in str(d)]
 
+    # 001 §274（2026-11-12 用户拍板）：修造/动土的事主流年冲太岁是命理红线，
+    # 动土主家业不安，绝不因五行高分被豁免——只要命中就一律黄牌（1000 分也不放行）。
+    # 数据源为 评分器 的 相主详情（"[流年冲太岁]某某年命亥与流年巳六冲…"）。
+    _is_zaoxiu = _canonical_event(_ev) in ('修造', '动土')
+    _taisui_lines = [str(x) for x in
+                     ((r.get('score_details') or {}).get('相主详情') or [])
+                     if '冲太岁' in str(x)]
+
     if veto:
         verdict_key = 'veto'
         verdict_reason = '；'.join(veto[:2]) + (' 等' if len(veto) > 2 else '')
@@ -304,6 +312,9 @@ def build_decision_report(result, event_type=''):
         if _is_ruzai and _xf_sansha:
             warn_reasons.append('入宅向首犯三煞（%s）'
                                 % '；'.join(_xf_sansha))
+        if _is_zaoxiu and _taisui_lines:
+            warn_reasons.append('事主流年冲太岁（%s）'
+                                % '；'.join(_taisui_lines[:2]))
         # 先判真重煞硬触发（不看分数）
         if real_heavy:
             warn_reasons.append('重煞预警（%s）' % '；'.join(zhen_heavy))
@@ -352,6 +363,10 @@ def build_decision_report(result, event_type=''):
         if _is_ruzai and _xf_sansha:
             advice = ('入宅重「入门的吉凶」，向首（大门朝向）犯三煞属大忌，'
                       '高分不能豁免；建议另择向方清净之日，或改开他方吉门。')
+        elif _is_zaoxiu and _taisui_lines:
+            # 001 §274：修造/动土冲太岁红线，文案须明确否定「高分可用」
+            advice = ('本日虽总分极高，但事主流年冲太岁，动土主家业不安，'
+                      '切勿强行开工！建议避开该事主太岁年，或另择不冲太岁之日。')
         elif '燥' in pianku:
             advice = '此日五行过燥，建议配合下午（金水旺）的时辰使用。'
         elif '寒' in pianku:
@@ -373,9 +388,15 @@ def build_decision_report(result, event_type=''):
                       '可用。建议配合贵人时辰使用。' % (sansha_penalty, neg_total))
 
     style = _VERDICT_STYLES[verdict_key]
+    # 001 §274：修造/动土冲太岁须在顶部黄底大字点明具体红线，
+    # 避免用户只看到笼统的「需制化」而忽略太岁杀局。
+    _label = style['label']
+    if verdict_key == 'warn' and _is_zaoxiu and _taisui_lines:
+        _label = '慎用（事主流年犯太岁）'
     return {
         'verdict_key': verdict_key,
-        'verdict': '%s %s' % (style['icon'], style['label']),
+        'verdict': '%s %s' % (style['icon'], _label),
+        'verdict_label': _label,
         'verdict_reason': verdict_reason,
         'shan_items': _tail_items(shan_items),
         'owner_items': _tail_items(owner_items),
@@ -405,7 +426,8 @@ def render_decision_panel(parent, report):
 
     # ── 顶部大色块裁决条 ────────────────────────────────────────────
     head_text = '%s 【综合裁决：%s】　总分 %s 分 · %s' % (
-        style['icon'], style['label'], rep.get('score', 0),
+        style['icon'], rep.get('verdict_label') or style['label'],
+        rep.get('score', 0),
         rep.get('level', '') or '—')
     tk.Label(root, text=head_text, bg=bg_main, fg=fg_main,
              font=('Microsoft YaHei UI', 13, 'bold'),

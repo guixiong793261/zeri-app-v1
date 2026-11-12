@@ -181,5 +181,57 @@ _d = {'score': 126, 'level': '★★★★★ 上吉',
 check('B9b 非嫁娶 126 分上吉不报 E002（旧口径不变）',
       not any(i.rule_id == 'E002' for i in lint_lesson(_d).issues))
 
+# ===== C. E207 克山局合分抑制口径（001 §274）=====
+print('C. E207 克山局抑制（坤山属土·亥卯半合木局克山）')
+from modules.八字工具整合 import (check_liuhe, check_liuchong, check_liuhai,
+                                  check_xing, check_po)
+
+_ZHIS = ['亥', '卯', '丑', '寅']      # 亥卯半合木局；坤山属土，木克土
+_SANHE_G = (('申', '子', '辰'), ('寅', '午', '戌'),
+            ('巳', '酉', '丑'), ('亥', '卯', '未'))
+
+def _raw_zhizhi():
+    """按校验器旧口径（不抑制）独立重算六对。"""
+    total = 0
+    for i in range(4):
+        for j in range(i + 1, 4):
+            a, b = _ZHIS[i], _ZHIS[j]
+            if check_liuhe(a, b):
+                total += 8
+            elif a != b and any(a in g and b in g for g in _SANHE_G):
+                total += 6
+            if check_liuchong(a, b):
+                total -= 15
+            if check_liuhai(a, b):
+                total -= 6
+            if check_xing(a, b):
+                total -= 8
+            if check_po(a, b):
+                total -= 4
+    return total
+
+def _mk274(claimed, shan='坤山艮向'):
+    d = {'score': 200, 'level': '★★★★ 大吉',
+         'sizhu': {k: '甲' + z for k, z in
+                   zip(('年柱', '月柱', '日柱', '时柱'), _ZHIS)},
+         'wu_xing_result': {'score_breakdown': {'地支关系得分': claimed}}}
+    if shan is not None:
+        d['shan_xiang'] = shan
+    return d
+
+def _e207_hit(d):
+    return any(i.rule_id == 'E207' and '地支关系恒等式' in i.message
+               for i in lint_lesson(d).issues)
+
+_raw = _raw_zhizhi()
+_sup = _raw - 6                       # 亥卯半合木局 +6 被抑制
+check('C1 坤山克山局：抑制后记 %+d 分不报 E207' % _sup, not _e207_hit(_mk274(_sup)))
+check('C2 反向：仍记未抑制 %+d 分必报 E207' % _raw, _e207_hit(_mk274(_raw)))
+check('C3 非克山坐山（午山木局生火）：未抑制 %+d 分合法' % _raw,
+      not _e207_hit(_mk274(_raw, shan='午山子向')))
+check('C4 无山向信息：不套用抑制，未抑制 %+d 分合法' % _raw,
+      not _e207_hit(_mk274(_raw, shan=None)))
+
+
 print(f'\n==== {"ALL PASS" if not FAILS else "FAIL %d" % len(FAILS)} ====')
 sys.exit(1 if FAILS else 0)

@@ -140,6 +140,40 @@ def main():
     check('A5c 相主详情进入事主影响列', len(_it) >= 1, str(_it))
     check('A5c 相主行带分值', all('分' in str(t) for _, t in _it), str(_it))
 
+    # A5d 001 §274：修造/动土 + 事主流年冲太岁 = 命理红线，
+    # 绝不被五行高分豁免（1000 分也不放行，必须黄牌）。
+    r_ts = {
+        'score': 327, 'level': '★★★★★ 上吉', 'veto_reasons': [],
+        'heavy_sha_warning': '', 'heavy_sha_names': [],
+        'wuxing_pian_ku': None,
+        'shensha_list': [{'name': '月德', 'score': 18}],
+        'xiangzhu_notes': [],
+        'sansha_info': {'sansha_penalty': 0, 'sansha_penalty_detail': []},
+        'score_details': {
+            '相主得分': -23,
+            '相主详情': [
+                '[流年冲太岁]贵雄年命亥与流年巳六冲（冲太岁），此年课慎用，-15分',
+                '[流年冲太岁]美园年命亥与流年巳六冲（冲太岁），此年课慎用，-8分']},
+    }
+    rep_ts = build_decision_report(dict(r_ts), '修造')
+    check('A5d 修造327分冲太岁=黄牌', rep_ts['verdict_key'] == 'warn',
+          rep_ts['verdict_key'])
+    check('A5d 裁决头标注「事主流年犯太岁」',
+          '犯太岁' in rep_ts.get('verdict_label', ''), rep_ts.get('verdict_label'))
+    check('A5d 裁决依据含「冲太岁」', '冲太岁' in rep_ts['verdict_reason'],
+          rep_ts['verdict_reason'])
+    check('A5d 建议含「切勿强行开工」', '切勿强行开工' in rep_ts['advice'],
+          rep_ts['advice'])
+    check('A5d 1000分仍黄牌（高分不得豁免）',
+          build_decision_report(dict(r_ts, score=1000), '修造')['verdict_key']
+          == 'warn')
+    check('A5d 动土同口径黄牌',
+          build_decision_report(dict(r_ts), '动土')['verdict_key'] == 'warn')
+    check('A5d 嫁娶不套用修造红线（同数据仍绿灯）',
+          build_decision_report(dict(r_ts), '嫁娶')['verdict_key'] == 'ok')
+    check('A5d 无冲太岁明细的修造高分日不误伤',
+          build_decision_report(dict(r_rz), '修造')['verdict_key'] == 'ok')
+
     # A6 纯度断言：build_decision_report 不变异入参
     r_pure = copy.deepcopy(r_veto)
     build_decision_report(r_veto, '嫁娶')
