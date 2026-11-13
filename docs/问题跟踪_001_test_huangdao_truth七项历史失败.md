@@ -13907,3 +13907,22 @@ E207 由每份 1 条 → 0 条；冲太岁由「绿灯掩护」→ 强制黄牌�
 - 四副本 SHA256 一致：`评分器.py` 8D86CD6C…、`排序键.py` F6D490E3…、
   `反推UI.py` 7E9EE900…、`主程序.py` 80A9BDC4…。
 
+## §279（2026-11-13 用户拍板）：历史探针清理 + 终极发布包
+
+### 清理范围
+- 删除 `tests/fixtures/` 下 9 个一次性取证脚本（`_probe_0111.py`、`_verify_0112.py`、
+  `_cmp_hours_0707.py` 等），fixture 的 JSON 黄金数据保留。
+- 清理全仓 12 处 `__pycache__`、`*.pyc/*.pyo`、`build/`、`logs/` 运行日志、
+  `C:\Temp` 下全部一次性探针脚本。
+- **保留**：`tests/` 152 个回归用例 + `run_all.py` + `shensha_verify_engine.py` +
+  `大考_黄金课探针.py`（大考套件本体），删除后 `run_all.py` 仍 **153/153 PASS**。
+
+### 终极发布包
+`择日大师_v2.2.1_Ultimate_Final.zip`（35.61 MB）内含：
+`择日大师_v2.2.1.exe`、`择日大师_精准择时版.exe`、
+`择日大师_完整说明书_v2.2.1.pdf`、`择日大师_算法与典据白皮书_v2.2.1.pdf`、
+`择日大师_用户操作手册_v2.2.1.pdf`、`Release_Notes_择日大师_v2.2.1_终极版.md`。
+
+三处备份，SHA256 完全一致（B5CB3BFF9E3F90B0…）：
+`D:\`、`E:\`、`C:\Users\Administrator\Documents\择日大师_发布\`。
+
