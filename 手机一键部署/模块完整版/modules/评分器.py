@@ -8805,7 +8805,7 @@ class Scorer:
         if ji_jiaqu_capped:
             seg.append('等级因犯嫁娶大忌降格封顶，非大吉之日，慎用')
         elif minor_downgrade:
-            seg.append('等级因闭日、夫星等嫁娶小忌降星一档，详见等级行')
+            seg.append('等级因建除黑道、夫星等嫁娶小忌降星一档，详见等级行')
 
         return '；'.join(seg)
 
