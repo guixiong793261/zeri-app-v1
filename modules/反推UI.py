@@ -758,12 +758,14 @@ class ReverseWindow:
             # 001 §245：极品再须顶部决策绿灯；动土事白名单日标「上品」
             _chk = _d.get('check') or {}
             if _chk.get('items'):
-                # 001 §277：实战上品（四要素快捷通道）单列标签，与动土制化上品区分
+                # 001 §277：实战上品单列标签；001 §278：双上品合并为「双绝」不重复
+                _tk277 = str(_chk.get('tier_kind') or '')
                 _tier_tag = ('　★极品日课' if _chk.get('perfect')
-                             else ('　🌟 实战上品'
-                                   if _chk.get('tier_kind') == 'practical_shangpin'
-                                   else ('　▲上品（动土可制化）'
-                                         if _chk.get('shangpin') else '')))
+                             else ('　🌟 上品·双绝' if _tk277 == 'dual_shangpin'
+                                   else ('　🌟 实战上品'
+                                         if _tk277 == 'practical_shangpin'
+                                         else ('　▲ 制化上品'
+                                               if _chk.get('shangpin') else ''))))
                 _lines.append('    满分核验：%s（%d/%d）%s' % (
                     _chk.get('marks', '—'), _chk.get('ok_count', 0),
                     len(_chk.get('items') or []), _tier_tag))
@@ -872,9 +874,13 @@ class ReverseWindow:
             # 001 §240：极品口径＝日课校验无警告（五项核验仅作展示与分档）
             _chk = _d.get('check') or {}
             _marks = str(_chk.get('marks') or '—')
-            # 001 §277：实战上品行加【上品】前缀（浅绿底由 shangpin tag 提供）
-            if _chk.get('tier_kind') == 'practical_shangpin':
-                _marks = '【上品】' + _marks
+            # 001 §277：实战上品行加标记前缀；001 §278：双上品合并为「双绝」，不重叠
+            _tk278 = str(_chk.get('tier_kind') or '')
+            _mark_prefix = {'dual_shangpin': '【上品·双绝】',
+                            'practical_shangpin': '【实战上品】',
+                            'dongtu_shangpin': '【制化上品】'}.get(_tk278, '')
+            if _mark_prefix:
+                _marks = _mark_prefix + _marks
             if _chk.get('perfect'):
                 _tag = 'perfect'
             elif _chk.get('shangpin'):
@@ -993,12 +999,16 @@ class ReverseWindow:
         if not _items:
             self._hide_tip()
             return
+        _tk = str(_chk.get('tier_kind') or '')
         _head = '满分核验  %d/%d%s' % (
             _chk.get('ok_count', 0), len(_items),
             '  ·  极品日课' if _chk.get('perfect')
-            else ('  ·  🌟 实战上品：%s' % (_chk.get('tier_reason') or '四要素俱全')
-                  if _chk.get('tier_kind') == 'practical_shangpin'
-                  else ('  ·  上品（动土可制化）' if _chk.get('shangpin') else '')))
+            else ('  ·  🌟 上品·双绝：%s' % (_chk.get('tier_reason') or '双通道俱备')
+                  if _tk == 'dual_shangpin'
+                  else ('  ·  🌟 实战上品：%s' % (_chk.get('tier_reason') or '四要素俱全')
+                        if _tk == 'practical_shangpin'
+                        else ('  ·  ▲ 制化上品（动土可制化）'
+                              if _chk.get('shangpin') else ''))))
         _ln = str(_chk.get('lint_note') or '')
         if _ln:
             _head += '\n分档判定：%s' % _ln

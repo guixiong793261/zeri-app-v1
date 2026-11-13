@@ -671,9 +671,14 @@ def perfect_profile(result, owners=None, event_type='',
 
     # 001 §277（2026-11-13 用户拍板）：实战上品快捷通道。
     #   与极品/动土上品并行：不要求六维全绿、不要求决策面板全绿，
-    #   只要求「无否决 + 日课校验零警告 + 总分>0 且不含凶」为前提，
+    #   只要求「无否决 + 日课校验零警告 + 总分达标且不含凶」为前提，
     #   再凑齐该通道的四要素（嫁娶看利月+六合，山向看扶山补龙+合局不克山）。
     #   目的：把"零瑕疵"的完美主义死胡同，换成实战可用的高分通道。
+    # 001 §278（2026-11-13 用户拍板）：上品必须配得上分数——嫁娶 ≥100、
+    #   山向（修造/入宅等，基础分 100）≥150；未达门槛即使吉格齐备也只算「可用」，
+    #   杜绝 68 分★平之类低分日混入上品行列。
+    _TIER_MIN_SCORE_MARRIAGE = 100
+    _TIER_MIN_SCORE_SHAN = 150
     _tf = tier_flags(_r, owners, event_type)
     _ev_c = str(event_type or '')
     try:
@@ -685,17 +690,33 @@ def perfect_profile(result, owners=None, event_type='',
                            '入宅', '移徙', '搬家', '迁居', '安葬', '作灶', '安床'})
     _practical_ok = False
     _practical_reason = ''
+    _min_score_note = ''
     if not _veto and _lint_ok and _sp_score_ok:
-        if (_ev_c in _M277
-                and _tf['flag_deling'] and _tf['flag_xiangzhu']
-                and _tf['flag_liuhe'] and _tf['flag_dali_or_xiaoli']):
-            _practical_ok = True
-            _practical_reason = '得令、相主、六合、大利月俱全'
-        elif (_ev_c in _S277
-              and _tf['flag_deling'] and _tf['flag_xiangzhu']
-              and _tf['flag_fushan_bulong'] and _tf['flag_heju_li_shan']):
-            _practical_ok = True
-            _practical_reason = '得令、相主、扶山补龙、合局不克山俱全'
+        _four_m = (_ev_c in _M277
+                   and _tf['flag_deling'] and _tf['flag_xiangzhu']
+                   and _tf['flag_liuhe'] and _tf['flag_dali_or_xiaoli'])
+        _four_s = (_ev_c in _S277
+                   and _tf['flag_deling'] and _tf['flag_xiangzhu']
+                   and _tf['flag_fushan_bulong'] and _tf['flag_heju_li_shan'])
+        if _four_m:
+            if _score_v >= _TIER_MIN_SCORE_MARRIAGE:
+                _practical_ok = True
+                _practical_reason = '得令、相主、六合、大利月俱全'
+            else:
+                _min_score_note = ('嫁娶四要素齐备但总分 %d 分＜%d 分门槛'
+                                   % (_score_v, _TIER_MIN_SCORE_MARRIAGE))
+        elif _four_s:
+            if _score_v >= _TIER_MIN_SCORE_SHAN:
+                _practical_ok = True
+                _practical_reason = '得令、相主、扶山补龙、合局不克山俱全'
+            else:
+                _min_score_note = ('山向四要素齐备但总分 %d 分＜%d 分门槛'
+                                   % (_score_v, _TIER_MIN_SCORE_SHAN))
+
+    # 001 §278：动土制化白名单单列，便于与实战通道判「双绝」
+    _dongtu_ok = (_lint_ok and _ev_c in _DONGTU_EVENTS
+                  and not _veto and not _blk and not _xz_block
+                  and _sp_score_ok and _core_ok)
 
     _tier = 'none'
     _tier_kind = 'none'
@@ -703,9 +724,12 @@ def perfect_profile(result, owners=None, event_type='',
     if _lint_ok and _dec_ok and not _xz_block and _core_ok:
         _tier = 'perfect'
         _tier_kind = 'perfect'
-    elif (_lint_ok and str(event_type or '') in _DONGTU_EVENTS
-          and not _veto and not _blk and not _xz_block and _sp_score_ok
-          and _core_ok):
+    elif _dongtu_ok and _practical_ok:
+        # 001 §278：两套上品同时成立 —— 合并为最高优先级的「双绝」，不重复显示
+        _tier = 'shangpin'
+        _tier_kind = 'dual_shangpin'
+        _tier_reason = _practical_reason + '；且六维核验全过（动土小煞可制化）'
+    elif _dongtu_ok:
         _tier = 'shangpin'
         _tier_kind = 'dongtu_shangpin'
     elif _practical_ok:
@@ -717,13 +741,27 @@ def perfect_profile(result, owners=None, event_type='',
             _lint_note = ('日课校验通过（%d 项规则，无警告），顶部决策绿灯'
                           '（✅ 吉课可用）' % len(_lr.executed_ids))
         elif _tier == 'shangpin':
-            if _tier_kind == 'practical_shangpin':
-                _lint_note = ('🌟 实战上品：%s；日课校验无警告、无否决，'
-                              '不以动土制化论，可直接取用' % _tier_reason)
+            if _tier_kind == 'dual_shangpin':
+                _lint_note = ('🌟 上品·双绝：%s；总分 %d 分；六维核验全过、'
+                              '无克山伐日（动土常态小煞可现场制化），'
+                              '两条上品通道同时成立，按最高优先级取用'
+                              % (_tier_reason, _score_v))
+            elif _tier_kind == 'practical_shangpin':
+                _lint_note = ('🌟 实战上品：%s；总分 %d 分（门槛 %d 分），'
+                              '日课校验无警告、无否决，可直接取用'
+                              % (_tier_reason, _score_v,
+                                 _TIER_MIN_SCORE_MARRIAGE if _ev_c in _M277
+                                 else _TIER_MIN_SCORE_SHAN))
             else:
-                _lint_note = ('上品（动土可制化）：本日含动土常态小煞（%s），'
-                              '不属于无瑕极品，但可经现场祭拜制化后安全使用'
-                              % ('、'.join(_allow) or '慎用黄牌'))
+                _lint_note = ('▲ 制化上品（动土可制化）：本日含动土常态小煞（%s），'
+                              '总分 %d 分；不属于无瑕极品，'
+                              '但可经现场祭拜制化后安全使用'
+                              % ('、'.join(_allow) or '慎用黄牌', _score_v))
+        elif _min_score_note:
+            _lint_note = ('上品分数门槛拦截：%s（§278：嫁娶≥%d / 山向≥%d），'
+                          '吉格虽齐也只算「可用」。'
+                          % (_min_score_note, _TIER_MIN_SCORE_MARRIAGE,
+                             _TIER_MIN_SCORE_SHAN))
         elif _xz_block:
             # 001 §247：高分但冲主 → 档位降级，悬停必须说明原因
             _lint_note = ('⚠️ 本日得分虽高，但冲克事主（相主得分 %+d），'

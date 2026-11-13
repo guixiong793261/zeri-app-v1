@@ -177,10 +177,10 @@ def _fake_result(ev, flags, veto=None, score=88, level='★★★★ 大吉'):
 
 
 def test_practical_marriage():
-    print('\n[4] 嫁娶通道：四要素齐备 → 实战上品')
+    print('\n[4] 嫁娶通道：四要素齐备 + 总分≥100 → 实战上品')
     _patch_lint()
     _f = {k: True for k in FLAG_KEYS}
-    _r = perfect_profile(_fake_result('嫁娶', _f), [BRIDE], '嫁娶')
+    _r = perfect_profile(_fake_result('嫁娶', _f, score=120), [BRIDE], '嫁娶')
     check(_r.get('tier_kind') == 'practical_shangpin', '嫁娶四要素齐 → practical_shangpin',
           _r.get('tier_kind'))
     check(_r.get('tier') == 'shangpin' and _r.get('shangpin') is True,
@@ -190,16 +190,25 @@ def test_practical_marriage():
     check('🌟 实战上品' in str(_r.get('lint_note')), '悬停文案含🌟实战上品',
           _r.get('lint_note'))
 
+    # 001 §278 新增：总分门槛（嫁娶 100）
+    _r99 = perfect_profile(_fake_result('嫁娶', _f, score=99), [BRIDE], '嫁娶')
+    check(_r99.get('tier') == 'none', '总分99 → 不上品（门槛100）', _r99.get('tier'))
+    check('门槛' in str(_r99.get('lint_note')), '悬停写明分数门槛拦截',
+          _r99.get('lint_note'))
+    _r100 = perfect_profile(_fake_result('嫁娶', _f, score=100), [BRIDE], '嫁娶')
+    check(_r100.get('tier') == 'shangpin', '总分100 → 恰好达标（边界）', _r100.get('tier'))
+
     # 反向：缺六合
     _f2 = dict(_f); _f2['flag_liuhe'] = False
-    _r2 = perfect_profile(_fake_result('嫁娶', _f2), [BRIDE], '嫁娶')
+    _r2 = perfect_profile(_fake_result('嫁娶', _f2, score=120), [BRIDE], '嫁娶')
     check(_r2.get('tier') == 'none', '缺六合 → 不上品', _r2.get('tier'))
     # 反向：缺利月
     _f3 = dict(_f); _f3['flag_dali_or_xiaoli'] = False
-    _r3 = perfect_profile(_fake_result('嫁娶', _f3), [BRIDE], '嫁娶')
+    _r3 = perfect_profile(_fake_result('嫁娶', _f3, score=120), [BRIDE], '嫁娶')
     check(_r3.get('tier') == 'none', '缺大利月 → 不上品', _r3.get('tier'))
     # 反向：有否决
-    _r4 = perfect_profile(_fake_result('嫁娶', _f, veto=['年命伏吟']), [BRIDE], '嫁娶')
+    _r4 = perfect_profile(_fake_result('嫁娶', _f, veto=['年命伏吟'], score=120),
+                          [BRIDE], '嫁娶')
     check(_r4.get('tier') == 'none', '有 veto_reasons → 不上品', _r4.get('tier'))
     # 反向：总分 ≤0
     _r5 = perfect_profile(_fake_result('嫁娶', _f, score=0, level='❌ 凶'),
@@ -208,21 +217,31 @@ def test_practical_marriage():
 
 
 def test_practical_shan():
-    print('\n[5] 山向通道：得令+相主+扶山补龙+合局不克山 → 实战上品')
+    print('\n[5] 山向通道：得令+相主+扶山补龙+合局不克山 + 总分≥150 → 实战上品')
     _f = {k: True for k in FLAG_KEYS}
-    _r = perfect_profile(_fake_result('修造', _f), [BRIDE], '修造')
+    _r = perfect_profile(_fake_result('修造', _f, score=200), [BRIDE], '修造')
     check(_r.get('tier_kind') == 'practical_shangpin', '修造四要素齐 → practical_shangpin',
           _r.get('tier_kind'))
     check('扶山补龙' in str(_r.get('tier_reason')), 'tier_reason 含扶山补龙',
           _r.get('tier_reason'))
+    # 001 §278 新增：总分门槛（山向 150）；68 / 149 分一律剔除
+    _r68 = perfect_profile(_fake_result('修造', _f, score=68, level='★ 平'),
+                           [BRIDE], '修造')
+    check(_r68.get('tier') == 'none', '★平 68 分 → 不上品（§278 核心回归）',
+          _r68.get('tier'))
+    _r149 = perfect_profile(_fake_result('修造', _f, score=149), [BRIDE], '修造')
+    check(_r149.get('tier') == 'none', '149 分 → 不上品（门槛150）', _r149.get('tier'))
+    _r150 = perfect_profile(_fake_result('修造', _f, score=150), [BRIDE], '修造')
+    check(_r150.get('tier') == 'shangpin', '150 分 → 恰好达标（边界）',
+          _r150.get('tier'))
     _f2 = dict(_f); _f2['flag_heju_li_shan'] = False
-    _r2 = perfect_profile(_fake_result('修造', _f2), [BRIDE], '修造')
+    _r2 = perfect_profile(_fake_result('修造', _f2, score=200), [BRIDE], '修造')
     check(_r2.get('tier') == 'none', '合局克山 → 不上品', _r2.get('tier'))
     _f3 = dict(_f); _f3['flag_fushan_bulong'] = False
-    _r3 = perfect_profile(_fake_result('入宅', _f3), [BRIDE], '入宅')
+    _r3 = perfect_profile(_fake_result('入宅', _f3, score=200), [BRIDE], '入宅')
     check(_r3.get('tier') == 'none', '入宅缺扶山补龙 → 不上品', _r3.get('tier'))
     # 别名口径：装修/移徙同属通道
-    _r4 = perfect_profile(_fake_result('装修', _f), [BRIDE], '装修')
+    _r4 = perfect_profile(_fake_result('装修', _f, score=200), [BRIDE], '装修')
     check(_r4.get('tier_kind') == 'practical_shangpin', '别名「装修」同走山向通道',
           _r4.get('tier_kind'))
 
@@ -230,8 +249,30 @@ def test_practical_shan():
 def test_other_event_not_affected():
     print('\n[6] 反向：非嫁娶/非山向事项不受影响')
     _f = {k: True for k in FLAG_KEYS}
-    _r = perfect_profile(_fake_result('开业', _f), [BRIDE], '开业')
+    _r = perfect_profile(_fake_result('开业', _f, score=200), [BRIDE], '开业')
     check(_r.get('tier') == 'none', '开业四要素齐也不列实战上品', _r.get('tier'))
+
+
+def test_278_dual_and_thresholds_source():
+    print('\n[7] 001 §278：双上品合并 + 门槛常量源码锚点')
+    p = os.path.join(_ROOT, 'modules', '排序键.py')
+    with open(p, 'r', encoding='utf-8') as f:
+        s = f.read()
+    check('_TIER_MIN_SCORE_MARRIAGE = 100' in s, '嫁娶门槛常量=100')
+    check('_TIER_MIN_SCORE_SHAN = 150' in s, '山向门槛常量=150')
+    check("_tier_kind = 'dual_shangpin'" in s, '双上品合并分支存在')
+    check("elif _dongtu_ok and _practical_ok:" in s, '双绝判定先于单通道')
+    check('上品分数门槛拦截' in s, '门槛拦截悬停文案')
+    p2 = os.path.join(_ROOT, '主程序.py')
+    with open(p2, 'r', encoding='utf-8') as f:
+        s2 = f.read()
+    check('【上品·双绝】' in s2 and '【实战上品】' in s2 and '【制化上品】' in s2,
+          '主程序三档上品标签齐全且不重叠')
+    p3 = os.path.join(_ROOT, 'modules', '反推UI.py')
+    with open(p3, 'r', encoding='utf-8') as f:
+        s3 = f.read()
+    check('🌟 上品·双绝' in s3 and '🌟 实战上品' in s3 and '▲ 制化上品' in s3,
+          '反推UI三档标签齐全')
 
 
 def main():
@@ -245,6 +286,7 @@ def main():
     test_practical_marriage()
     test_practical_shan()
     test_other_event_not_affected()
+    test_278_dual_and_thresholds_source()
     print('\n' + '=' * 62)
     if FAILS:
         print('FAILED %d 项：%s' % (len(FAILS), '；'.join(FAILS)))

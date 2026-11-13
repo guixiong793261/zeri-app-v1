@@ -238,7 +238,7 @@ def main():
                    encoding='utf-8').read()
     check("score_details['偏枯计数']" in _pk_src, '评分器已补存偏枯计数')
     _ui = open(os.path.join(_ROOT, 'modules', '反推UI.py'), encoding='utf-8').read()
-    check('▲上品（动土可制化）' in _ui, '反推UI含上品标记')
+    check('▲ 制化上品' in _ui, '反推UI含上品标记')
     _mp = open(os.path.join(_ROOT, '主程序.py'), encoding='utf-8').read()
     check('上品(动土可制化)' in _mp, '主程序筛选下拉含上品档')
     # 001 §247 锚点
