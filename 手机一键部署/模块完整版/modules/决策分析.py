@@ -304,6 +304,21 @@ def build_decision_report(result, event_type=''):
                      ((r.get('score_details') or {}).get('相主详情') or [])
                      if '冲太岁' in str(x)]
 
+    # 001 §275（2026-11-12 用户拍板）：作灶通道两条高分不可豁免红线——
+    #   ① 红嘴朱雀临震宫（木克火，作灶进火大忌）；
+    #   ② 伐日（年干死绝之支）。
+    # 作灶重火，这两类重煞不得被吉神刷出的高分豁免，命中即黄牌
+    # （伐日若已被评分器升级为一票否决，则此处为兜底展示）。
+    _is_zaozao = _canonical_event(_ev) == '作灶'
+    _zao_hongsha = [str(s.get('description') or s.get('name'))
+                    for s in (r.get('shensha_list') or [])
+                    if isinstance(s, dict) and '红嘴朱雀' in str(s.get('name', ''))]
+    _has_fari = any('伐日' in str(n) for n in (si.get('heavy_sha_names') or []))
+    if not _has_fari:
+        _has_fari = any('伐日' in str(d)
+                        for d in (si.get('sansha_penalty_detail') or []))
+    _zao_redline = _zao_hongsha or _has_fari
+
     if veto:
         verdict_key = 'veto'
         verdict_reason = '；'.join(veto[:2]) + (' 等' if len(veto) > 2 else '')
@@ -315,6 +330,13 @@ def build_decision_report(result, event_type=''):
         if _is_zaoxiu and _taisui_lines:
             warn_reasons.append('事主流年冲太岁（%s）'
                                 % '；'.join(_taisui_lines[:2]))
+        if _is_zaozao and _zao_redline:
+            _parts = []
+            if _zao_hongsha:
+                _parts.append('红嘴朱雀临震宫忌修厨')
+            if _has_fari:
+                _parts.append('伐日')
+            warn_reasons.append('作灶重煞必避（%s）' % '；'.join(_parts))
         # 先判真重煞硬触发（不看分数）
         if real_heavy:
             warn_reasons.append('重煞预警（%s）' % '；'.join(zhen_heavy))
@@ -367,6 +389,11 @@ def build_decision_report(result, event_type=''):
             # 001 §274：修造/动土冲太岁红线，文案须明确否定「高分可用」
             advice = ('本日虽总分极高，但事主流年冲太岁，动土主家业不安，'
                       '切勿强行开工！建议避开该事主太岁年，或另择不冲太岁之日。')
+        elif _is_zaozao and _zao_redline:
+            # 001 §275：作灶重火，红嘴朱雀临震宫（木克火）与伐日均为大忌，
+            # 高分不得豁免。
+            advice = ('作灶重火，红嘴朱雀临震宫（木克火）与伐日均为作灶大忌，'
+                      '高分不可豁免；请另择清净之日作灶，切勿因分数高强行用事。')
         elif '燥' in pianku:
             advice = '此日五行过燥，建议配合下午（金水旺）的时辰使用。'
         elif '寒' in pianku:
@@ -393,6 +420,8 @@ def build_decision_report(result, event_type=''):
     _label = style['label']
     if verdict_key == 'warn' and _is_zaoxiu and _taisui_lines:
         _label = '慎用（事主流年犯太岁）'
+    elif verdict_key == 'warn' and _is_zaozao and _zao_redline:
+        _label = '慎用（作灶重煞必避）'
     return {
         'verdict_key': verdict_key,
         'verdict': '%s %s' % (style['icon'], _label),

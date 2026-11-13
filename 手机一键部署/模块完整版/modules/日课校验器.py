@@ -784,6 +784,15 @@ def rule_e008(ctx):
         sources += [str(x) for x in (_sd.get('三煞扣分明细') or [])]
     veto_srcs = [str(v) for v in (ctx.detail.get('veto_reasons') or [])]
     sources += veto_srcs
+    # 001 §275（2026-11-12 用户拍板）：作灶专属煞（灶君忌日/地火日等）走
+    # 忌事扣分通道，不进 shensha_list/三煞扣分明细，曾被 E008 误报"无出处"。
+    # 将 wu_xing_result.score_breakdown 的忌事明细/神煞明细一并纳入出处集。
+    _wxr = ctx.detail.get('wu_xing_result') if isinstance(
+        ctx.detail.get('wu_xing_result'), dict) else None
+    _bd = _wxr.get('score_breakdown') if isinstance(_wxr, dict) else None
+    if _bd:
+        sources += [str(x) for x in (_bd.get('忌事明细') or [])]
+        sources += [str(x) for x in (_bd.get('神煞明细') or [])]
 
     # 结构性硬规则来源（规则检查器 deterministic 产出，非神煞扣分项）
     # 注意：黄沙/红纱不在其列——它们出现在忌项就必须有扣分，正是 E008 要抓的问题。

@@ -2630,7 +2630,9 @@ class Scorer:
             # 伐日 = 年干死绝之支，修造类山家用事大凶，原仅作「日类」展示未计分，
             # 导致 2026-06-04 乙酉日（丙年酉为丙死地）仍给 313 上吉。
             # 修正：山向类用事命中伐日 → 高权重 -40 并入三煞扣分通道、入忌项；
-            # 伐日属制煞可论制化，不升级为一票否决。
+            # 伐日属制煞可论制化，其余事项不升级为一票否决。
+            # 001 §275（2026-11-12 用户拍板）：作灶通道例外——作灶重火，
+            # 伐日为进火大忌，古法严禁，升级为一票否决（zao_fari_veto）。
             if day_type == '伐日':
                 _fari_ji = '伐日'
                 if _fari_ji not in self.ji_list:
@@ -2645,6 +2647,8 @@ class Scorer:
                     _ssj = set()
                     self._sansha_scored_ji = _ssj
                 _ssj.add(_fari_ji)
+                if _canonical_event(event_type) == '作灶':
+                    sansha_info['zao_fari_veto'] = True
 
             # 001 §237 高分伪装防呆：汇总重煞名（伐日/金神到山/三煞临山/三煞向方），
             # 供 UI 在总分≥200 时弹出黄底红字警示，避免高分掩盖重煞。
@@ -3003,6 +3007,12 @@ class Scorer:
                 
                 # 计算神煞得分
                 shensha_score = sum(s.get('score', 0) for s in self.shensha_list if isinstance(s, dict))
+                # 001 §275：作灶通道吉神正向加分封顶 +40（与主路径同口径）
+                if _canonical_event(event_type) == '作灶':
+                    _zao_pos_v = sum(max(0, (s.get('score', 0) if isinstance(s, dict) else 0))
+                                     for s in self.shensha_list)
+                    if _zao_pos_v > 40:
+                        shensha_score += (40 - _zao_pos_v)
                 
                 # 构建完整的评分详情（6 分项与正常日的计算公式保持一致）
                 score_details = {
@@ -3167,7 +3177,12 @@ class Scorer:
                          '犯者不吉、屢見甚驗，入宅归火大忌（一票否决）']
                         if _canonical_event(event_type) == '入宅' and any(
                             isinstance(_s, dict) and _s.get('name') == '红嘴朱雀'
-                            for _s in self.shensha_list) else []),  # _fc0915
+                            for _s in self.shensha_list) else []) + (
+                        # 001 §275：五行门槛提前否决日同样申报作灶伐日否决
+                        # （伐日 zao_fari_veto 已在三煞段置位，此处防漏报归因）
+                        ['作灶大忌：伐日（年干死绝之支，作灶进火大凶，一票否决）']
+                        if (_canonical_event(event_type) == '作灶'
+                            and sansha_info.get('zao_fari_veto')) else []),  # _fc0915
                     'huangdao_info': self.huangdao_info,
                     'wu_xing_result': wu_xing_result,
                     'score_details': score_details,
@@ -3286,6 +3301,9 @@ class Scorer:
                 _block_reasons = sansha_info.get('mountain_block_reasons', [])
                 _block_text = '；'.join(str(r) for r in _block_reasons) if _block_reasons else '坐山犯五黄，宜静不宜动'
                 veto_reasons.append(f"山家封禁：{_block_text}（一票否决）")
+            # 001 §275：作灶伐日一票否决（年干死绝之支，作灶进火大忌）
+            if sansha_info.get('zao_fari_veto'):
+                veto_reasons.append('作灶大忌：伐日（年干死绝之支，作灶进火大凶，一票否决）')
 
             # 仙命真冲三级判定（2026-10-04 用户验收补档，显式 VETO）：
             # 基础 -30（相主通道）
@@ -3476,6 +3494,7 @@ class Scorer:
 
             if (sansha_fan_da_ji or xiangzhu_veto_items
                     or sansha_info.get('mountain_blocked')
+                    or sansha_info.get('zao_fari_veto')
                     or wangming_veto or shanzuo_veto or dual_veto
                     or wm_shan_chong_veto
                     or jianxiang_veto or jianxiang_dual_veto
@@ -6670,6 +6689,16 @@ class Scorer:
             s = shensha.get('score', 0) if isinstance(shensha, dict) else 0
             bd['神煞得分'] += s
             sc += s
+        # 001 §275（2026-11-12 用户拍板）：作灶通道吉神正向加分封顶 +40。
+        # 防止天乙贵人/岁德/月德合等把本应"平/慎用"的日子刷到 200+
+        # 触发高分豁免。仅钳制正向（吉神）加分，凶煞负分不受影响。
+        if event_type and _canonical_event(event_type) == '作灶':
+            _zao_pos = sum(max(0, (ss.get('score', 0) if isinstance(ss, dict) else 0))
+                           for ss in self.shensha_list)
+            if _zao_pos > 40:
+                _zao_cap = 40 - _zao_pos  # 负数
+                bd['神煞得分'] += _zao_cap
+                sc += _zao_cap
         # H1：当日神煞族已注册自身分的锚点规则文本 → 仅展示、不计分
         _h1_skip = set()
         # 001 §273：入宅/移徙山家正分降权判据（仅入宅通道生效）
