@@ -1483,11 +1483,14 @@ class Scorer:
             if isinstance(_om, dict):
                 _xishen += int(_om.get('score', 0) or 0)
         _is_shan = str(event_type or '') in _TIER_SHAN_EVENTS
-        if _is_shan:
+        # 001 §280（2026-11-14 用户拍板）：未填事主时相主维度不适用，视为已过
+        if not owners:
+            _flag_xz = True
+        elif _is_shan:
             # 山向通道：事主无冲刑（相主≥0）且喜用神确有补益
-            _flag_xz = bool(owners) and (_xz >= 0) and (_xishen > 0)
+            _flag_xz = (_xz >= 0) and (_xishen > 0)
         else:
-            _flag_xz = bool(owners) and (_xz > 0)
+            _flag_xz = (_xz > 0)
         _rels = [str(_x) for _x in ((wu_xing_details or {}).get('地支关系') or [])]
         _rel_text = ' '.join(_rels)
         _pos_names = [str(_s.get('name') or '')
@@ -1803,9 +1806,9 @@ class Scorer:
                         # 口径边界（拍板仅覆盖「相冲」，快照亦只统计冲日）：
                         #   仅合并含「六冲」的硬门槛；「自刑」维持嫁娶现状不否决，
                         #   改写为提示行待裁（BACKLOG G-4），避免未经快照扩大否决面。
-                        # 001 §236 B4 修订（2026-11-13 用户拍板）：年命伏吟（日课日支与
-                        # 事主年命同字＝本命日）由 -15 扣分升级为 HARD_VETO，其
-                        # [硬性门槛] 前缀须原样保留（下方降级分支已排除「伏吟」）。
+                        # 001 §236 B4（2026-11-13 升级 HARD_VETO）→ 001 §280（2026-11-14
+                        # 用户拍板回退）：年命伏吟（日课日支与事主年命同字＝本命日）
+                        # 恢复为 -15 扣分、不否决；HARD_VETO 曾误杀 2026-02-22 大吉日。
                         xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(
                             sizhu, owners, strict_fuyin=True)
                         # 001 §236 A 档（2026-11-08 用户拍板）：嫁娶相主核验提示，
@@ -6292,7 +6295,7 @@ class Scorer:
                 if hour_zhi and liuchong_map.get(hour_zhi) == owner_day_zhi:
                     notes.append(f"时支{hour_zhi}冲{name}夫妻宫（日支{owner_day_zhi}）：该时辰禁用，不否决整日")
             if owner_year_zhi and day_zhi == owner_year_zhi:
-                notes.append(f"日课日支{day_zhi}与{name}年命{owner_year_zhi}同字（年命伏吟·本命日）：已列一票否决")
+                notes.append(f"日课日支{day_zhi}与{name}年命{owner_year_zhi}同字（年命伏吟·本命日）：-15 分，不否决（§280）")
         return notes
 
     def _detect_wm_resolvers(self, wu_xing_result=None, sun_moon_info=None):
@@ -6523,7 +6526,8 @@ class Scorer:
         - 日课日支与事主日支相同（伏吟）：默认小吉 +3 分；
           strict_fuyin=True（001 §236 B4，嫁娶从严）时改判 -15 分
         - 年命伏吟（日课日支与事主年命同字）：默认 0 分；
-          strict_fuyin=True 时升级为 [硬性门槛] 一票否决（-100 占位）
+          strict_fuyin=True（嫁娶从严）时判 -15 分，不否决
+          （001 §280，2026-11-14 用户拍板；11-13 的 HARD_VETO 已回退）
         
         Args:
             sizhu: 日课四柱信息
@@ -6637,15 +6641,16 @@ class Scorer:
                         score = 10
                         total_score += score
                         details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}三合（年支合），+{score}分")
-                    # 年命伏吟（001 §236 B4 修订，2026-11-13 用户拍板）：
-                    # 日课日支与事主年命同字（本命日，如属兔见卯日）原判 -15 不否决。
-                    # 用户明确要求嫁娶通道升级为 HARD_VETO（"谁结婚敢用自己的本命日"），
-                    # 故与年命六冲/自刑同格：-100 占位分 + [硬性门槛] 前缀，由嫁娶通道
-                    # 上层并入 veto_reasons。strict_fuyin=False 的通用/其他事项不受影响。
+                    # 年命伏吟（001 §236 B4 → 001 §280 修订，2026-11-14 用户拍板）：
+                    # 日课日支与事主年命同字（本命日，如属兔见卯日）判 -15 扣分，
+                    # **不否决**。曾于 11-13 升级为 HARD_VETO，因"本命日为民间常见择日
+                    # 方案、一票否决会误杀大吉日"而回退；《协纪》嫁娶诸条亦不以本命日为忌。
+                    # 口径边界：仍限嫁娶通道（strict_fuyin=True），其他事项维持 0 分不动，
+                    # 避免安葬/修造等全事项分值漂移（亡命 fixtures 已按 0 分重冻）。
                     elif strict_fuyin and day_zhi == owner_year_zhi:
-                        score = -100
+                        score = -15
                         total_score += score
-                        details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟·本命日，一票否决），{score}分")
+                        details.append(f"{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟·本命日），{score}分")
                 
                 # 然后检查日课日支与事主日柱地支的关系。
                 # 001 §238.18：用户拍板——所有日课地支六冲事主本命/日支 = HARD_VETO

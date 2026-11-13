@@ -84,11 +84,16 @@ def test_flag_semantics():
     _d2 = {'月令详细': {'旺衰得分': 10}, '相主得分': 15}
     sc._attach_tier_flags(_d2, _ss, _wx, {'heavy_sha_names': ['克山运']}, [BRIDE])
     check(_d2.get('flag_heju_li_shan') is False, '重煞含克山运 → 合局不克山 False')
-    # 反向：空事主 → 相主 False
+    # 空事主 → 相主维度不适用，视为已过（001 §280，2026-11-14 用户拍板）
     _d3 = {'月令详细': {'旺衰得分': -5}, '相主得分': 0}
     sc._attach_tier_flags(_d3, [], {'地支关系': []}, {}, [])
-    check(_d3.get('flag_deling') is False and _d3.get('flag_xiangzhu') is False,
-          '囚地 + 空事主 → 得令/相主均 False')
+    check(_d3.get('flag_deling') is False and _d3.get('flag_xiangzhu') is True,
+          '囚地 + 空事主 → 得令 False、相主视为不适用 True')
+    # 反向：有事主且相主为 0 → 相主 False（不适用豁免不得外溢到有事主场景）
+    _d4x = {'月令详细': {'旺衰得分': 5}, '相主得分': 0}
+    sc._attach_tier_flags(_d4x, [], {'地支关系': []}, {}, [BRIDE])
+    check(_d4x.get('flag_xiangzhu') is False,
+          '有事主且相主0 → 相主 False（反向）')
 
 
 def test_shan_dual_standards():

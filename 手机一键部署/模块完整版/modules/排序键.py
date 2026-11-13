@@ -381,8 +381,14 @@ def tier_flags(result, owners=None, event_type=''):
         if isinstance(_om, dict):
             _xishen += int(_om.get('score', 0) or 0)
     _is_shan = str(event_type or '') in _SHAN_TIER_EVENTS_277
-    _flag_xz = ((bool(owners) and _xz >= 0 and _xishen > 0) if _is_shan
-                else (bool(owners) and _xz > 0))
+    # 001 §280（2026-11-14 用户拍板）：未填事主时「相主」维度不适用，视为已过；
+    # 否则修造/入宅等无事主择日会被永久判死（2025-10-28 实证：仅此一项卡住）。
+    if not owners:
+        _flag_xz = True
+    elif _is_shan:
+        _flag_xz = (_xz >= 0 and _xishen > 0)
+    else:
+        _flag_xz = (_xz > 0)
     _rels = [str(_x) for _x in
              (((_r.get('wu_xing_result') or {}).get('details') or {})
               .get('地支关系') or [])]

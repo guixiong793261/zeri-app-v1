@@ -82,16 +82,17 @@ def test_b2_hour_disable():
 
 
 def test_b4_fuyin():
-    print('\n[B4] 年命伏吟 → 一票否决；事主日支伏吟 → -15（不否决）')
+    print('\n[B4] 年命伏吟 → -15 不否决（§280 回退）；事主日支伏吟 → -15（不否决）')
     r = _score(2026, 2, 22, 4)
     sd = r.get('score_details') or {}
     det = [str(x) for x in (sd.get('相主详情') or [])]
     vr = '；'.join(str(v) for v in (r.get('veto_reasons') or []))
-    check(any('年命伏吟' in x and '一票否决' in x for x in det),
-          '02-22 女年命卯伏吟 → 硬性门槛', det)
-    check('年命伏吟' in vr and '新娘' in vr, '否决原因写明新娘年命伏吟', vr)
-    check(int(r.get('score') or 0) == 0, '伏吟日总分归零', r.get('score'))
-    check('凶' in str(r.get('level') or ''), '伏吟日等级为凶', r.get('level'))
+    check(any('年命伏吟' in x and '-15' in x for x in det),
+          '02-22 女年命卯伏吟 → -15 扣分', det)
+    check('年命伏吟' not in vr, '年命伏吟不再进否决原因（§280 反向断言）', vr)
+    check(int(r.get('score') or 0) > 0, '伏吟日分数正常（不归零）', r.get('score'))
+    check('凶' not in str(r.get('level') or ''), '伏吟日等级不为凶（反向断言）',
+          r.get('level'))
 
     # 反向：非嫁娶通道 strict_fuyin=False，年命伏吟不得否决（避免全事项漂移）
     own_y = [{'name': '事主', 'role': '福主', 'sizhu': '己卯 丁卯 丁亥 癸卯'}]
