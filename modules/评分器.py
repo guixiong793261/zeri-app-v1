@@ -129,6 +129,10 @@ except ImportError:
         OPENING_EVENTS as _OPENING_EVENTS,
     )
 
+# 001 §277（2026-11-13 用户拍板）：实战上品「山向通道」事项集。
+# 取 UI 要求填山向的事项，剔除无固定坐山的「出行」。
+_TIER_SHAN_EVENTS = frozenset(_SHAN_UI_EVENTS) - {'出行'}
+
 # ============================================================================
 # 山家封禁 / 山向缺失警示的适用事项（2026-10-29 用户拍板，001 §199 P1/P2）
 # ============================================================================
@@ -1444,6 +1448,83 @@ class Scorer:
             })
         return audit
 
+    # ========== 001 §277（2026-11-13 用户拍板）：榜单「实战上品」六标志位 ==========
+    _TIER_FLAG_KEYS = ('flag_deling', 'flag_xiangzhu', 'flag_liuhe',
+                       'flag_dali_or_xiaoli', 'flag_fushan_bulong',
+                       'flag_heju_li_shan')
+
+    def _attach_tier_flags(self, score_details, shensha_list=None,
+                           wu_xing_details=None, sansha_info=None,
+                           owners=None, heavy_sha_names=None,
+                           event_type='', sanyuan_analysis=None):
+        """把「实战上品」六个布尔标志写入 score_details（001 §277）。
+
+        纯分档辅助：只从既有评分产出提取布尔值，**不改任何加减分、不改否决、
+        不改等级**。排序键 perfect_profile 读取本组键；历史记录缺键时由
+        modules.排序键.tier_flags 按同源规则回退重算（向后兼容）。
+
+        标志口径（与 排序键.perfect_profile 展示维度同源）：
+          flag_deling         月令旺衰得分 > 0（旺/相）
+          flag_xiangzhu       相主过关：嫁娶通道=相主得分>0；
+                              山向通道=相主得分≥0（无冲刑）且事主喜用神匹配>0
+                              （001 §277 用户拍板：修造底层无相主正分，按实测口径适配）
+          flag_liuhe          地支关系含「六合」
+          flag_dali_or_xiaoli 嫁娶分项/神煞正向命中大利月/小利月
+          flag_fushan_bulong  神煞正向命中扶山/补龙，或三元合参「课山」判定=吉
+          flag_heju_li_shan   地支有三合/六合/半合/拱合，且无克山类凶煞
+        """
+        if not isinstance(score_details, dict):
+            return score_details
+        _d = score_details
+        _wang = int((_d.get('月令详细') or {}).get('旺衰得分') or 0)
+        _xz = int(_d.get('相主得分') or 0)
+        _xishen = 0
+        for _om in (_d.get('事主匹配') or []):
+            if isinstance(_om, dict):
+                _xishen += int(_om.get('score', 0) or 0)
+        _is_shan = str(event_type or '') in _TIER_SHAN_EVENTS
+        if _is_shan:
+            # 山向通道：事主无冲刑（相主≥0）且喜用神确有补益
+            _flag_xz = bool(owners) and (_xz >= 0) and (_xishen > 0)
+        else:
+            _flag_xz = bool(owners) and (_xz > 0)
+        _rels = [str(_x) for _x in ((wu_xing_details or {}).get('地支关系') or [])]
+        _rel_text = ' '.join(_rels)
+        _pos_names = [str(_s.get('name') or '')
+                      for _s in (shensha_list or [])
+                      if isinstance(_s, dict)
+                      and int(_s.get('score', 0) or 0) > 0]
+        # 嫁娶「利月」等分项在展示侧清单里会被同名收敛过滤，补充读分项明细，
+        # 否则 flag_dali_or_xiaoli 会在「小利月 +15」的日子漏判（2026-08-04 实证）
+        for _it in (_d.get('嫁娶明细(分项)') or []):
+            if (isinstance(_it, (list, tuple)) and len(_it) >= 2
+                    and int(_it[1] or 0) != 0):
+                _pos_names.append(str(_it[0] or ''))
+        # 克山判据：重煞名单 / 三煞通道 / 神煞清单中非正分的「克山」条目
+        _keshan_names = [str(_x) for _x in (heavy_sha_names or [])]
+        _keshan_names += [str(_x) for _x in
+                          ((sansha_info or {}).get('heavy_sha_names') or [])]
+        _keshan = any('克山' in _n for _n in _keshan_names)
+        if not _keshan:
+            _keshan = any('克山' in str(_s.get('name') or '')
+                          and int(_s.get('score', 0) or 0) <= 0
+                          for _s in (shensha_list or []) if isinstance(_s, dict))
+        _fushan = any(('扶山' in _n or '补龙' in _n) for _n in _pos_names)
+        if not _fushan and isinstance(sanyuan_analysis, dict):
+            # 修造/入宅等通道的扶山不是神煞计分项，改读三元合参「课山」判定
+            _ks = sanyuan_analysis.get('课山') or {}
+            _fushan = (str(_ks.get('判定') or '') == '吉')
+        _d['flag_deling'] = _wang > 0
+        _d['flag_xiangzhu'] = _flag_xz
+        _d['flag_liuhe'] = ('六合' in _rel_text)
+        _d['flag_dali_or_xiaoli'] = any(
+            ('大利月' in _n or '小利月' in _n) for _n in _pos_names)
+        _d['flag_fushan_bulong'] = _fushan
+        _d['flag_heju_li_shan'] = (
+            any(_k in _rel_text for _k in ('三合', '六合', '半合', '拱合'))
+            and not _keshan)
+        return _d
+
     # ========== 001 §178（2026-10-25 拍板）：嫁娶神煞展示清单统一 ==========
     def _unify_marriage_shensha(self, base_list, branch_list, marriage_details):
         """婚嫁神煞展示清单统一收口：否决分支与正常分支同源同口径。
@@ -1912,6 +1993,12 @@ class Scorer:
                                 if _j and _j not in _reject_ji_list:
                                     _reject_ji_list.append(_j)
 
+                            self._attach_tier_flags(
+                                score_details, self.shensha_list,
+                                (wu_xing_result or {}).get('details'),
+                                locals().get('sansha_info'), owners,
+                                locals().get('_heavy_sha_names'),
+                                event_type, locals().get('_sanyuan_252'))
                             return {
                                 'score': 0,
                                 'level': '❌ 凶',
@@ -2129,6 +2216,12 @@ class Scorer:
                                     _base_ss, self.shensha_list,
                                     marriage_result.get('details'))
 
+                                self._attach_tier_flags(
+                                    score_details, self.shensha_list,
+                                    (wu_xing_result or {}).get('details'),
+                                    locals().get('sansha_info'), owners,
+                                    locals().get('_heavy_sha_names'),
+                                    event_type, locals().get('_sanyuan_252'))
                                 return {
                                     'score': 0,
                                     'level': '❌ 凶',  # 添加缺失的level键
@@ -2336,6 +2429,12 @@ class Scorer:
                         if wu_xing_result and isinstance(wu_xing_result, dict):
                             wu_xing_result['ji_yu'] = final_reason
                         
+                        self._attach_tier_flags(
+                            score_details, shensha_list,
+                            (wu_xing_result or {}).get('details'),
+                            locals().get('sansha_info'), owners,
+                            locals().get('_heavy_sha_names'),
+                            event_type, locals().get('_sanyuan_252'))
                         return {
                             'score': total_score,
                             'level': level,
@@ -3157,6 +3256,12 @@ class Scorer:
                 except Exception:
                     _sanyuan_252 = None
 
+                self._attach_tier_flags(
+                    score_details, self.shensha_list,
+                    (wu_xing_result or {}).get('details'),
+                    sansha_info, owners,
+                    locals().get('_heavy_sha_names'),
+                    event_type, locals().get('_sanyuan_252'))
                 return {
                     'score': 0,
                     'level': '❌ 凶',
@@ -3745,6 +3850,12 @@ class Scorer:
             except Exception:
                 _sanyuan_252 = None
 
+            self._attach_tier_flags(
+                score_details, self.shensha_list,
+                (wu_xing_result or {}).get('details'),
+                sansha_info, owners,
+                locals().get('_heavy_sha_names'),
+                event_type, locals().get('_sanyuan_252'))
             return {
                 'score': self.final_score,
                 'level': self.level,

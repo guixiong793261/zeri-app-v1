@@ -4343,11 +4343,16 @@ class ZeriApp:
                     # 001 §245：极品再收口为「校验无警告 + 顶部决策绿灯」，动土事另设上品
                     _lint_ok = bool(_chk.get('perfect'))
                     _shangpin = bool(_chk.get('shangpin'))
+                    # 001 §277：实战上品（四要素快捷通道）单独标识，
+                    # 结果表打【上品】前缀，悬停由 lint_note 给出凑齐要素
+                    _tier_kind = str(_chk.get('tier_kind') or '')
                     _marks = str(_chk.get('marks') or '')
                     if _marks and '-' in _marks:
                         _chk_text = '%d/%d %s' % (_ok_n, _tot_n, _marks)
                     else:
                         _chk_text = '%d/%d ✓' % (_ok_n, _tot_n)
+                    if _tier_kind == 'practical_shangpin':
+                        _chk_text = '【上品】' + _chk_text
                     _chk_tip = '\n'.join(
                         ('✓ ' if _i.get('ok')
                          else ('- ' if _i.get('na') else '✗ '))

@@ -345,6 +345,80 @@ def _positive_hit(result, names):
     return _hit
 
 
+_FLAG_KEYS_277 = ('flag_deling', 'flag_xiangzhu', 'flag_liuhe',
+                  'flag_dali_or_xiaoli', 'flag_fushan_bulong',
+                  'flag_heju_li_shan')
+
+try:  # 与评分器 _TIER_SHAN_EVENTS 同源：UI 要求山向的事项，剔除无坐山的出行
+    from .事项标准 import SHAN_UI_EVENTS as _SHAN_UI_277
+except ImportError:  # 兼容 python modules/排序键.py 直跑
+    try:
+        from 事项标准 import SHAN_UI_EVENTS as _SHAN_UI_277
+    except ImportError:
+        _SHAN_UI_277 = ()
+_SHAN_TIER_EVENTS_277 = frozenset(_SHAN_UI_277) - {'出行'}
+
+
+def tier_flags(result, owners=None, event_type=''):
+    """「实战上品」六标志位（001 §277，2026-11-13 用户拍板）。
+
+    优先读评分器写入 score_details 的 flag_*；历史记录（旧 JSON/旧报告）
+    缺键时按同源规则从既有产出回退重算，保证新旧数据同口径。
+    纯只读：不产生任何分值、不影响否决与等级。
+
+    双重口径（与评分器 _attach_tier_flags 严格同源）：
+      flag_xiangzhu 嫁娶=相主得分>0；山向=相主得分≥0 且事主喜用神匹配>0
+      flag_fushan_bulong 神煞命中扶山/补龙，或三元合参「课山」判定=吉
+    """
+    _r = result if isinstance(result, dict) else {}
+    _d = _r.get('score_details') or {}
+    if all(_k in _d for _k in _FLAG_KEYS_277):
+        return {_k: bool(_d.get(_k)) for _k in _FLAG_KEYS_277}
+    _wang = int((_d.get('月令详细') or {}).get('旺衰得分') or 0)
+    _xz = int(_d.get('相主得分') or 0)
+    _xishen = 0
+    for _om in (_d.get('事主匹配') or []):
+        if isinstance(_om, dict):
+            _xishen += int(_om.get('score', 0) or 0)
+    _is_shan = str(event_type or '') in _SHAN_TIER_EVENTS_277
+    _flag_xz = ((bool(owners) and _xz >= 0 and _xishen > 0) if _is_shan
+                else (bool(owners) and _xz > 0))
+    _rels = [str(_x) for _x in
+             (((_r.get('wu_xing_result') or {}).get('details') or {})
+              .get('地支关系') or [])]
+    _rel_text = ' '.join(_rels)
+    _pos = [str(_s.get('name') or '')
+            for _s in (_r.get('shensha_list') or [])
+            if isinstance(_s, dict) and int(_s.get('score', 0) or 0) > 0]
+    # 与评分器同源：嫁娶利月分项在展示清单里会被同名收敛过滤，回退读分项明细
+    for _it in (_d.get('嫁娶明细(分项)') or []):
+        if (isinstance(_it, (list, tuple)) and len(_it) >= 2
+                and int(_it[1] or 0) != 0):
+            _pos.append(str(_it[0] or ''))
+    _heavy = [str(_x) for _x in (_r.get('heavy_sha_names') or [])]
+    _heavy += [str(_x) for _x in
+               ((_r.get('sansha_info') or {}).get('heavy_sha_names') or [])]
+    _keshan = any('克山' in _n for _n in _heavy) or any(
+        '克山' in str(_s.get('name') or '')
+        and int(_s.get('score', 0) or 0) <= 0
+        for _s in (_r.get('shensha_list') or []) if isinstance(_s, dict))
+    _fushan = any(('扶山' in _n or '补龙' in _n) for _n in _pos)
+    if not _fushan:
+        _ks = (_r.get('sanyuan_analysis') or {}).get('课山') or {}
+        _fushan = (str(_ks.get('判定') or '') == '吉')
+    return {
+        'flag_deling': _wang > 0,
+        'flag_xiangzhu': _flag_xz,
+        'flag_liuhe': ('六合' in _rel_text),
+        'flag_dali_or_xiaoli': any(
+            ('大利月' in _n or '小利月' in _n) for _n in _pos),
+        'flag_fushan_bulong': _fushan,
+        'flag_heju_li_shan': (
+            any(_k in _rel_text for _k in ('三合', '六合', '半合', '拱合'))
+            and not _keshan),
+    }
+
+
 def _xz_line_scores(details):
     """相主详情逐条尾部分值（格式 '……，±N分'）；提取不到分值的条目跳过。"""
     import re as _re
@@ -594,21 +668,62 @@ def perfect_profile(result, owners=None, event_type='',
     _pattern_ok_n = 3 - len(_pattern_miss)          # 三格局项中已过的个数
     _pattern_gate_ok = _pattern_ok_n >= 2            # 三取二
     _core_ok = (not _core_hard_miss) and _pattern_gate_ok
+
+    # 001 §277（2026-11-13 用户拍板）：实战上品快捷通道。
+    #   与极品/动土上品并行：不要求六维全绿、不要求决策面板全绿，
+    #   只要求「无否决 + 日课校验零警告 + 总分>0 且不含凶」为前提，
+    #   再凑齐该通道的四要素（嫁娶看利月+六合，山向看扶山补龙+合局不克山）。
+    #   目的：把"零瑕疵"的完美主义死胡同，换成实战可用的高分通道。
+    _tf = tier_flags(_r, owners, event_type)
+    _ev_c = str(event_type or '')
+    try:
+        from modules.事项标准 import (MARRIAGE_EVENTS as _M277,
+                                      MOUNTAIN_CENTERED_EVENTS as _S277)
+    except Exception:
+        _M277 = frozenset({'嫁娶', '订婚', '纳采'})
+        _S277 = frozenset({'修造', '装修', '动土', '破土', '拆舍', '拆除',
+                           '入宅', '移徙', '搬家', '迁居', '安葬', '作灶', '安床'})
+    _practical_ok = False
+    _practical_reason = ''
+    if not _veto and _lint_ok and _sp_score_ok:
+        if (_ev_c in _M277
+                and _tf['flag_deling'] and _tf['flag_xiangzhu']
+                and _tf['flag_liuhe'] and _tf['flag_dali_or_xiaoli']):
+            _practical_ok = True
+            _practical_reason = '得令、相主、六合、大利月俱全'
+        elif (_ev_c in _S277
+              and _tf['flag_deling'] and _tf['flag_xiangzhu']
+              and _tf['flag_fushan_bulong'] and _tf['flag_heju_li_shan']):
+            _practical_ok = True
+            _practical_reason = '得令、相主、扶山补龙、合局不克山俱全'
+
     _tier = 'none'
+    _tier_kind = 'none'
+    _tier_reason = ''
     if _lint_ok and _dec_ok and not _xz_block and _core_ok:
         _tier = 'perfect'
+        _tier_kind = 'perfect'
     elif (_lint_ok and str(event_type or '') in _DONGTU_EVENTS
           and not _veto and not _blk and not _xz_block and _sp_score_ok
           and _core_ok):
         _tier = 'shangpin'
+        _tier_kind = 'dongtu_shangpin'
+    elif _practical_ok:
+        _tier = 'shangpin'
+        _tier_kind = 'practical_shangpin'
+        _tier_reason = _practical_reason
     if _lint_ok:
         if _tier == 'perfect':
             _lint_note = ('日课校验通过（%d 项规则，无警告），顶部决策绿灯'
                           '（✅ 吉课可用）' % len(_lr.executed_ids))
         elif _tier == 'shangpin':
-            _lint_note = ('上品（动土可制化）：本日含动土常态小煞（%s），'
-                          '不属于无瑕极品，但可经现场祭拜制化后安全使用'
-                          % ('、'.join(_allow) or '慎用黄牌'))
+            if _tier_kind == 'practical_shangpin':
+                _lint_note = ('🌟 实战上品：%s；日课校验无警告、无否决，'
+                              '不以动土制化论，可直接取用' % _tier_reason)
+            else:
+                _lint_note = ('上品（动土可制化）：本日含动土常态小煞（%s），'
+                              '不属于无瑕极品，但可经现场祭拜制化后安全使用'
+                              % ('、'.join(_allow) or '慎用黄牌'))
         elif _xz_block:
             # 001 §247：高分但冲主 → 档位降级，悬停必须说明原因
             _lint_note = ('⚠️ 本日得分虽高，但冲克事主（相主得分 %+d），'
@@ -648,6 +763,11 @@ def perfect_profile(result, owners=None, event_type='',
         'perfect': _tier == 'perfect',
         'shangpin': _tier == 'shangpin',
         'tier': _tier,
+        # 001 §277：实战上品区分（dongtu_shangpin=原动土制化白名单，
+        # practical_shangpin=四要素快捷通道），供 UI 显示不同的悬停文案
+        'tier_kind': _tier_kind,
+        'tier_reason': _tier_reason,
+        'tier_flags': _tf,
         'decision_key': _dec_key,
         'tips': ['%s：%s' % (_i['key'], _i['detail'])
                  for _i in _items if not _i.get('ok')],
