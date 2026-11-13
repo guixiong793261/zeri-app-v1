@@ -152,8 +152,10 @@ def test_source_anchors():
         s1 = f.read()
     check('xiangzhu_hard = [_d for _d in _xz_display' in s1,
           '评分器：婚嫁分支接入统一硬门槛清单')
-    check("if _s.startswith('[硬性门槛]') and '六冲' not in _s:" in s1,
-          '评分器：婚嫁分支仅合并六冲（自刑留待裁，BACKLOG G-4）')
+    check(("if (_s.startswith('[硬性门槛]')" in s1
+            and "'六冲' not in _s" in s1
+            and "'伏吟' not in _s" in s1),
+          '评分器：婚嫁分支合并六冲+年命伏吟（自刑仍留待裁，BACKLOG G-4）')
     check("'相主核验说明': '相主为硬门槛项（冲夫妻宫/年命冲即否决），相主得分已并入总分'" in s1,
           '评分器：非否决日相主已并入总分声明')
     p2 = os.path.join(_ROOT, 'modules', '婚嫁评分算法.py')

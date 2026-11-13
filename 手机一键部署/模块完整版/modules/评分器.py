@@ -1722,6 +1722,9 @@ class Scorer:
                         # 口径边界（拍板仅覆盖「相冲」，快照亦只统计冲日）：
                         #   仅合并含「六冲」的硬门槛；「自刑」维持嫁娶现状不否决，
                         #   改写为提示行待裁（BACKLOG G-4），避免未经快照扩大否决面。
+                        # 001 §236 B4 修订（2026-11-13 用户拍板）：年命伏吟（日课日支与
+                        # 事主年命同字＝本命日）由 -15 扣分升级为 HARD_VETO，其
+                        # [硬性门槛] 前缀须原样保留（下方降级分支已排除「伏吟」）。
                         xiangzhu_score, xiangzhu_details = self._check_owner_day_zhichong(
                             sizhu, owners, strict_fuyin=True)
                         # 001 §236 A 档（2026-11-08 用户拍板）：嫁娶相主核验提示，
@@ -1731,7 +1734,8 @@ class Scorer:
                         _xz_display = []
                         for _d in xiangzhu_details:
                             _s = str(_d)
-                            if _s.startswith('[硬性门槛]') and '六冲' not in _s:
+                            if (_s.startswith('[硬性门槛]') and '六冲' not in _s
+                                    and '伏吟' not in _s):
                                 _s = (_s.replace('[硬性门槛]', '[自刑提示]')
                                       .replace('，不可用', '，嫁娶通道暂不否决（待裁）'))
                             _xz_display.append(_s)
@@ -6177,7 +6181,7 @@ class Scorer:
                 if hour_zhi and liuchong_map.get(hour_zhi) == owner_day_zhi:
                     notes.append(f"时支{hour_zhi}冲{name}夫妻宫（日支{owner_day_zhi}）：该时辰禁用，不否决整日")
             if owner_year_zhi and day_zhi == owner_year_zhi:
-                notes.append(f"日课日支{day_zhi}与{name}年命{owner_year_zhi}同字（年命伏吟）：扣15分，不否决")
+                notes.append(f"日课日支{day_zhi}与{name}年命{owner_year_zhi}同字（年命伏吟·本命日）：已列一票否决")
         return notes
 
     def _detect_wm_resolvers(self, wu_xing_result=None, sun_moon_info=None):
@@ -6408,7 +6412,7 @@ class Scorer:
         - 日课日支与事主日支相同（伏吟）：默认小吉 +3 分；
           strict_fuyin=True（001 §236 B4，嫁娶从严）时改判 -15 分
         - 年命伏吟（日课日支与事主年命同字）：默认 0 分；
-          strict_fuyin=True 时改判 -15 分（不否决）
+          strict_fuyin=True 时升级为 [硬性门槛] 一票否决（-100 占位）
         
         Args:
             sizhu: 日课四柱信息
@@ -6522,13 +6526,15 @@ class Scorer:
                         score = 10
                         total_score += score
                         details.append(f"{owner_name}生肖{owner_year_zhi}与日课日支{day_zhi}三合（年支合），+{score}分")
-                    # 年命伏吟（001 §236 B4，2026-11-08 用户拍板）：
-                    # 日课日支与事主年命同字（如属虎见寅日）原为 0 分，
-                    # 嫁娶从严改判 -15（不否决，体现民俗忌讳）。
+                    # 年命伏吟（001 §236 B4 修订，2026-11-13 用户拍板）：
+                    # 日课日支与事主年命同字（本命日，如属兔见卯日）原判 -15 不否决。
+                    # 用户明确要求嫁娶通道升级为 HARD_VETO（"谁结婚敢用自己的本命日"），
+                    # 故与年命六冲/自刑同格：-100 占位分 + [硬性门槛] 前缀，由嫁娶通道
+                    # 上层并入 veto_reasons。strict_fuyin=False 的通用/其他事项不受影响。
                     elif strict_fuyin and day_zhi == owner_year_zhi:
-                        score = -15
+                        score = -100
                         total_score += score
-                        details.append(f"{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟），{score}分")
+                        details.append(f"[硬性门槛]{owner_name}年命{owner_year_zhi}与日课日支{day_zhi}相同（年命伏吟·本命日，一票否决），{score}分")
                 
                 # 然后检查日课日支与事主日柱地支的关系。
                 # 001 §238.18：用户拍板——所有日课地支六冲事主本命/日支 = HARD_VETO

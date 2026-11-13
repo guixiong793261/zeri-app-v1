@@ -5,7 +5,7 @@
 - B1 月支（提纲）冲事主日支 → 一票否决
 - B2 时支冲事主日支 → 只禁用该时辰，不否决整日
 - B3 相主得分并入嫁娶总分
-- B4 年命伏吟 -15；事主日支伏吟 -15；日课内部伏吟维持 0
+- B4 年命伏吟 → 一票否决（2026-11-13 用户拍板修订；原 -15 不否决）；事主日支伏吟 -15；日课内部伏吟维持 0
 """
 import os
 import sys
@@ -82,18 +82,30 @@ def test_b2_hour_disable():
 
 
 def test_b4_fuyin():
-    print('\n[B4] 年命伏吟 / 事主日支伏吟 → -15（不否决）')
+    print('\n[B4] 年命伏吟 → 一票否决；事主日支伏吟 → -15（不否决）')
     r = _score(2026, 2, 22, 4)
     sd = r.get('score_details') or {}
     det = [str(x) for x in (sd.get('相主详情') or [])]
-    check(any('年命伏吟' in x and '-15' in x for x in det), '02-22 女年命卯伏吟 -15', det)
-    check(int(r.get('score') or 0) > 0, '伏吟不否决（分数仍为正）', r.get('score'))
+    vr = '；'.join(str(v) for v in (r.get('veto_reasons') or []))
+    check(any('年命伏吟' in x and '一票否决' in x for x in det),
+          '02-22 女年命卯伏吟 → 硬性门槛', det)
+    check('年命伏吟' in vr and '新娘' in vr, '否决原因写明新娘年命伏吟', vr)
+    check(int(r.get('score') or 0) == 0, '伏吟日总分归零', r.get('score'))
+    check('凶' in str(r.get('level') or ''), '伏吟日等级为凶', r.get('level'))
+
+    # 反向：非嫁娶通道 strict_fuyin=False，年命伏吟不得否决（避免全事项漂移）
+    own_y = [{'name': '事主', 'role': '福主', 'sizhu': '己卯 丁卯 丁亥 癸卯'}]
+    r_y = _score(2026, 2, 22, 4, own_y, ev='开业')
+    vr_y = r_y.get('veto_reasons') or []
+    check(not any('年命伏吟' in str(v) for v in vr_y),
+          '开业通道年命伏吟不否决（反向断言）', vr_y)
 
     own = [{'name': '事主', 'role': '新娘', 'sizhu': '甲子 丙寅 庚戌 丁亥'}]
     r_m = _score(2026, 3, 13, 0, own)
     det_m = [str(x) for x in ((r_m.get('score_details') or {}).get('相主详情') or [])]
     check(any('夫妻宫伏吟' in x and '-15' in x for x in det_m),
-          '嫁娶：事主日支伏吟 -15', det_m)
+          '嫁娶：事主日支伏吟仍 -15（不在本次升级范围）', det_m)
+    check(int(r_m.get('score') or 0) > 0, '夫妻宫伏吟不否决（反向断言）', r_m.get('score'))
 
     r_g = _score(2026, 3, 13, 0, own, ev='开业')
     det_g = [str(x) for x in ((r_g.get('score_details') or {}).get('相主详情') or [])]
